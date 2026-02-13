@@ -1,74 +1,869 @@
 'use client';
 
 import TopBar from '@/components/layout/TopBar';
-import { FileText, Download, Calendar, Zap } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  FileText, Download, Calendar, Zap, BarChart3, TrendingDown,
+  CalendarDays, Eye, Trash2, Printer, X, Clock, Settings2,
+  CheckCircle, AlertCircle, Loader2, ChevronDown, Play,
+  FileJson, FileCode, FilePlus, CalendarClock,
+} from 'lucide-react';
 
-const reports = [
-  { title: 'Weekly Progress Report', type: 'Weekly', date: '2026-02-10', status: 'ready', icon: FileText },
-  { title: 'Executive Summary — January', type: 'Monthly', date: '2026-02-01', status: 'ready', icon: FileText },
-  { title: 'Variance Analysis Report', type: 'Weekly', date: '2026-02-10', status: 'ready', icon: FileText },
-  { title: 'PPC Trend Report', type: 'Weekly', date: '2026-02-10', status: 'ready', icon: FileText },
-  { title: 'Constraint Log Report', type: 'On-Demand', date: '2026-02-09', status: 'ready', icon: FileText },
+// ── Types ───────────────────────────────────────────────
+type ReportType = 'weekly' | 'executive' | 'variance' | 'custom';
+type ReportFormat = 'html' | 'pdf' | 'json';
+type ReportStatus = 'ready' | 'generating' | 'failed';
+
+interface ReportTemplate {
+  type: ReportType;
+  title: string;
+  description: string;
+  icon: typeof CalendarDays;
+  color: string;
+  estimatedTime: string;
+}
+
+interface HistoricalReport {
+  id: string;
+  type: ReportType;
+  title: string;
+  date: string;
+  format: ReportFormat;
+  status: ReportStatus;
+  size: string;
+  htmlContent?: string;
+}
+
+interface ScheduleItem {
+  id: string;
+  label: string;
+  description: string;
+  enabled: boolean;
+  cron: string;
+}
+
+// ── Report Templates ────────────────────────────────────
+const REPORT_TEMPLATES: ReportTemplate[] = [
+  {
+    type: 'weekly',
+    title: 'Weekly Progress',
+    description: 'Track weekly PPC, trade performance, and constraints',
+    icon: CalendarDays,
+    color: 'var(--color-accent)',
+    estimatedTime: '~30 seconds',
+  },
+  {
+    type: 'executive',
+    title: 'Executive Summary',
+    description: 'High-level project overview for stakeholders',
+    icon: BarChart3,
+    color: 'var(--color-purple)',
+    estimatedTime: '~45 seconds',
+  },
+  {
+    type: 'variance',
+    title: 'Variance Analysis',
+    description: 'Root cause analysis of plan deviations',
+    icon: TrendingDown,
+    color: 'var(--color-warning)',
+    estimatedTime: '~1 minute',
+  },
+  {
+    type: 'custom',
+    title: 'Custom Report',
+    description: 'Build your own report with selected sections',
+    icon: FileText,
+    color: 'var(--color-cyan)',
+    estimatedTime: '~2 minutes',
+  },
 ];
 
-export default function ReportsPage() {
-  return (
-    <>
-      <TopBar title="Reports" />
-      <div className="flex-1 overflow-auto p-6 space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* AI-generated report card */}
-          <div className="lg:col-span-2 rounded-xl border p-5" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
-            <div className="flex items-center gap-2 mb-4">
-              <Zap size={16} style={{ color: 'var(--color-purple)' }} />
-              <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)' }}>AI-Generated Reports</h3>
-            </div>
-            <div className="space-y-2.5">
-              {reports.map((r, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'var(--color-bg-input)' }}>
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(139,92,246,0.12)' }}>
-                    <r.icon size={14} style={{ color: 'var(--color-purple)' }} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>{r.title}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>{r.type}</span>
-                      <span className="text-[9px]" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>{r.date}</span>
-                    </div>
-                  </div>
-                  <button className="w-7 h-7 rounded-lg border flex items-center justify-center" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}>
-                    <Download size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
+// ── Mock report HTML generator ──────────────────────────
+function generateMockReportHTML(type: ReportType, startDate: string, endDate: string): string {
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-          {/* Quick actions */}
-          <div className="space-y-4">
-            <div className="rounded-xl border p-5" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
-              <h4 className="text-xs font-bold mb-3" style={{ fontFamily: 'var(--font-display)' }}>Generate New Report</h4>
-              <div className="space-y-2">
-                {['Weekly Progress', 'Executive Summary', 'Variance Analysis', 'Custom Report'].map((type) => (
-                  <button key={type} className="w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium border transition-colors"
-                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'var(--color-bg-input)' }}>
-                    {type}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="rounded-xl border p-5" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
-              <div className="flex items-center gap-2 mb-2">
-                <Calendar size={14} style={{ color: 'var(--color-text-muted)' }} />
-                <span className="text-xs font-bold" style={{ fontFamily: 'var(--font-display)' }}>Schedule</span>
-              </div>
-              <p className="text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
-                Weekly reports auto-generate every Friday at 5:00 PM.
-              </p>
-            </div>
+  const commonHeader = `
+    <div style="font-family: Inter, sans-serif; max-width: 800px; margin: 0 auto; padding: 24px;">
+      <div style="border-bottom: 3px solid #3B82F6; padding-bottom: 16px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: inherit;">TaktFlow AI</h1>
+            <p style="margin: 4px 0 0; font-size: 12px; opacity: 0.6;">Intelligent Takt Planning Platform</p>
+          </div>
+          <div style="text-align: right;">
+            <p style="margin: 0; font-size: 11px; opacity: 0.5;">Generated: ${today}</p>
+            <p style="margin: 2px 0 0; font-size: 11px; opacity: 0.5;">Period: ${startDate} to ${endDate}</p>
           </div>
         </div>
       </div>
+  `;
+
+  const commonFooter = `
+      <div style="border-top: 1px solid rgba(128,128,128,0.2); margin-top: 32px; padding-top: 16px; text-align: center;">
+        <p style="font-size: 10px; opacity: 0.4;">Generated by TaktFlow AI Reporting Service (Layer 2) | AI-Enhanced Narrative</p>
+      </div>
+    </div>
+  `;
+
+  if (type === 'weekly') {
+    return `${commonHeader}
+      <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Weekly Progress Report</h2>
+      <p style="font-size: 13px; opacity: 0.7; margin-bottom: 24px;">Hotel Sapphire | Week of ${startDate}</p>
+
+      <div style="background: rgba(59,130,246,0.08); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+        <h3 style="font-size: 14px; font-weight: 700; margin: 0 0 12px;">Executive Summary</h3>
+        <p style="font-size: 13px; line-height: 1.6; margin: 0;">
+          Hotel Sapphire project is <strong>45% complete</strong> and on track for the August 15th target completion date.
+          PPC improved to <strong>93%</strong> this week, up from 91% last week, marking the fourth consecutive week of improvement.
+          All critical path activities are proceeding as planned with the exception of MEP Rough-in, which shows a 1.5-day delay in Zone D due to material delivery constraints.
+        </p>
+      </div>
+
+      <h3 style="font-size: 14px; font-weight: 700; margin: 20px 0 12px;">Takt Progress</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: rgba(128,128,128,0.1);">
+            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid rgba(128,128,128,0.2);">Trade</th>
+            <th style="padding: 10px 12px; text-align: center; border-bottom: 2px solid rgba(128,128,128,0.2);">Current Zone</th>
+            <th style="padding: 10px 12px; text-align: center; border-bottom: 2px solid rgba(128,128,128,0.2);">Status</th>
+            <th style="padding: 10px 12px; text-align: center; border-bottom: 2px solid rgba(128,128,128,0.2);">PPC</th>
+            <th style="padding: 10px 12px; text-align: center; border-bottom: 2px solid rgba(128,128,128,0.2);">Variance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Structure</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Zone D</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);"><span style="color: #10B981;">&#9679; Ahead</span></td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">98%</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #10B981;">+2.0 days</td></tr>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">MEP Rough</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Zone C</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);"><span style="color: #EF4444;">&#9679; Behind</span></td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">87%</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #EF4444;">-1.5 days</td></tr>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Drywall</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Zone B</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);"><span style="color: #F59E0B;">&#9679; Minor Delay</span></td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">91%</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #F59E0B;">-0.5 days</td></tr>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">MEP Finish</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Zone A</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);"><span style="color: #10B981;">&#9679; On Track</span></td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">94%</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #10B981;">0.0 days</td></tr>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Flooring</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Zone A</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);"><span style="color: #10B981;">&#9679; On Track</span></td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">95%</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #10B981;">0.0 days</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-size: 14px; font-weight: 700; margin: 24px 0 12px;">Constraint Summary</h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+        <div style="background: rgba(239,68,68,0.08); border-radius: 8px; padding: 12px; text-align: center;">
+          <div style="font-size: 24px; font-weight: 800; color: #EF4444;">3</div>
+          <div style="font-size: 11px; opacity: 0.6;">Open</div>
+        </div>
+        <div style="background: rgba(16,185,129,0.08); border-radius: 8px; padding: 12px; text-align: center;">
+          <div style="font-size: 24px; font-weight: 800; color: #10B981;">2</div>
+          <div style="font-size: 11px; opacity: 0.6;">Resolved This Week</div>
+        </div>
+        <div style="background: rgba(59,130,246,0.08); border-radius: 8px; padding: 12px; text-align: center;">
+          <div style="font-size: 24px; font-weight: 800; color: #3B82F6;">78%</div>
+          <div style="font-size: 11px; opacity: 0.6;">CRR</div>
+        </div>
+      </div>
+
+      <h3 style="font-size: 14px; font-weight: 700; margin: 24px 0 12px;">AI Recommendations</h3>
+      <ol style="font-size: 13px; line-height: 1.8; padding-left: 20px;">
+        <li><strong>Priority 1:</strong> Expedite MEP duct delivery for Zone E. Contact supplier for air freight option. Estimated cost: $2,400 vs. $12,000 delay cost.</li>
+        <li><strong>Priority 2:</strong> Reallocate 2 crew members from Structure to Drywall. Structure is 2 days ahead and can absorb the temporary reduction.</li>
+        <li><strong>Priority 3:</strong> Consider pulling MEP Finish forward to Zone B to take advantage of Structure's buffer in that zone.</li>
+      </ol>
+    ${commonFooter}`;
+  }
+
+  if (type === 'executive') {
+    return `${commonHeader}
+      <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Executive Summary Report</h2>
+      <p style="font-size: 13px; opacity: 0.7; margin-bottom: 24px;">Hotel Sapphire | ${startDate} to ${endDate}</p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+        <div style="background: rgba(16,185,129,0.08); border-radius: 8px; padding: 16px; text-align: center;">
+          <div style="font-size: 28px; font-weight: 800; color: #10B981;">45%</div>
+          <div style="font-size: 11px; opacity: 0.6;">Complete</div>
+        </div>
+        <div style="background: rgba(59,130,246,0.08); border-radius: 8px; padding: 16px; text-align: center;">
+          <div style="font-size: 28px; font-weight: 800; color: #3B82F6;">93%</div>
+          <div style="font-size: 11px; opacity: 0.6;">PPC</div>
+        </div>
+        <div style="background: rgba(139,92,246,0.08); border-radius: 8px; padding: 16px; text-align: center;">
+          <div style="font-size: 28px; font-weight: 800; color: #8B5CF6;">87</div>
+          <div style="font-size: 11px; opacity: 0.6;">AI Score</div>
+        </div>
+        <div style="background: rgba(245,158,11,0.08); border-radius: 8px; padding: 16px; text-align: center;">
+          <div style="font-size: 28px; font-weight: 800; color: #F59E0B;">T5</div>
+          <div style="font-size: 11px; opacity: 0.6;">of T11</div>
+        </div>
+      </div>
+
+      <h3 style="font-size: 14px; font-weight: 700; margin: 20px 0 12px;">Project Overview</h3>
+      <p style="font-size: 13px; line-height: 1.7;">
+        The Hotel Sapphire project continues to perform well against baseline targets. With 45% of physical work complete across 6 takt zones and 7 active trades, the project maintains a strong trajectory toward the August 15, 2026 completion date.
+      </p>
+      <p style="font-size: 13px; line-height: 1.7; margin-top: 12px;">
+        The Takt Time Construction methodology has delivered measurable benefits: PPC has improved from 78% to 93% over the past 8 weeks, significantly exceeding the industry benchmark of 80%. Flowline analysis shows minimal trade stacking, with proactive constraint management keeping the work flowing smoothly through zones.
+      </p>
+
+      <h3 style="font-size: 14px; font-weight: 700; margin: 24px 0 12px;">Key Risks</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: rgba(128,128,128,0.1);">
+            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid rgba(128,128,128,0.2);">Risk</th>
+            <th style="padding: 10px 12px; text-align: center; border-bottom: 2px solid rgba(128,128,128,0.2);">Severity</th>
+            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid rgba(128,128,128,0.2);">Mitigation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">MEP material delay</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #EF4444;">Critical</td><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Expedite delivery, alt supplier</td></tr>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Drywall crew shortage</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #F59E0B;">High</td><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Reallocate from Structure</td></tr>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">RFI #042 pending</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #3B82F6;">Medium</td><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Follow up with architect</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-size: 14px; font-weight: 700; margin: 24px 0 12px;">Schedule Forecast</h3>
+      <p style="font-size: 13px; line-height: 1.7;">
+        Based on current performance and AI simulation modeling, the project has a <strong>92% probability</strong> of completing on or before the target date. The Monte Carlo simulation (1,000 iterations) yields a P50 completion of August 10, 2026 -- five days ahead of the contractual date.
+      </p>
+    ${commonFooter}`;
+  }
+
+  if (type === 'variance') {
+    return `${commonHeader}
+      <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Variance Analysis Report</h2>
+      <p style="font-size: 13px; opacity: 0.7; margin-bottom: 24px;">Hotel Sapphire | ${startDate} to ${endDate}</p>
+
+      <h3 style="font-size: 14px; font-weight: 700; margin: 20px 0 12px;">Schedule Variance Summary</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px;">
+        <thead>
+          <tr style="background: rgba(128,128,128,0.1);">
+            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid rgba(128,128,128,0.2);">Trade</th>
+            <th style="padding: 10px 12px; text-align: center; border-bottom: 2px solid rgba(128,128,128,0.2);">Planned</th>
+            <th style="padding: 10px 12px; text-align: center; border-bottom: 2px solid rgba(128,128,128,0.2);">Actual</th>
+            <th style="padding: 10px 12px; text-align: center; border-bottom: 2px solid rgba(128,128,128,0.2);">Variance</th>
+            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid rgba(128,128,128,0.2);">Root Cause</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">MEP Rough</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Zone D</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Zone C</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #EF4444;">-1.5 days</td><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Material delivery delay</td></tr>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Drywall</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Zone C</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Zone B</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #F59E0B;">-0.5 days</td><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Crew shortage (2 absent)</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-size: 14px; font-weight: 700; margin: 24px 0 12px;">Root Cause Analysis</h3>
+      <div style="background: rgba(239,68,68,0.06); border-left: 3px solid #EF4444; padding: 16px; border-radius: 0 8px 8px 0; margin-bottom: 16px;">
+        <h4 style="font-size: 13px; font-weight: 700; margin: 0 0 8px; color: #EF4444;">MEP Rough-In Delay (1.5 Days)</h4>
+        <p style="font-size: 12px; line-height: 1.6; margin: 0;">
+          <strong>Category:</strong> Material | <strong>Constraint:</strong> C1 -- MEP duct delivery delayed<br/>
+          The primary supplier experienced a production bottleneck affecting duct fabrication. The delivery originally scheduled for Feb 10 has been pushed to Feb 18. This delay cascades into Zone D and E start dates for MEP Rough.
+        </p>
+        <p style="font-size: 12px; line-height: 1.6; margin: 8px 0 0;">
+          <strong>Impact Analysis:</strong> If unresolved, this creates a 78% probability of trade stacking with Drywall in Zone E during T8, potentially reducing combined productivity by 15-20%.
+        </p>
+      </div>
+      <div style="background: rgba(245,158,11,0.06); border-left: 3px solid #F59E0B; padding: 16px; border-radius: 0 8px 8px 0; margin-bottom: 16px;">
+        <h4 style="font-size: 13px; font-weight: 700; margin: 0 0 8px; color: #F59E0B;">Drywall Delay (0.5 Days)</h4>
+        <p style="font-size: 12px; line-height: 1.6; margin: 0;">
+          <strong>Category:</strong> Labor | <strong>Constraint:</strong> C2 -- Drywall crew shortage<br/>
+          Two crew members were reassigned to another project without coordination. Current crew of 6 (vs. planned 8) reduces daily output by approximately 25%. The existing buffer of 1 day absorbs most of this variance.
+        </p>
+      </div>
+
+      <h3 style="font-size: 14px; font-weight: 700; margin: 24px 0 12px;">Corrective Actions</h3>
+      <ol style="font-size: 13px; line-height: 1.8; padding-left: 20px;">
+        <li>Contact alternate MEP supplier for expedited duct sections (partial delivery by Feb 14)</li>
+        <li>Approve overtime for MEP Rough crew in Zone C to reduce delay to &lt;1 day</li>
+        <li>Restore Drywall crew to full complement by Feb 17</li>
+        <li>Monitor stacking indicators daily using TaktFlow AI warning system</li>
+      </ol>
+    ${commonFooter}`;
+  }
+
+  // Custom report
+  return `${commonHeader}
+    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Custom Report</h2>
+    <p style="font-size: 13px; opacity: 0.7; margin-bottom: 24px;">Hotel Sapphire | ${startDate} to ${endDate}</p>
+
+    <div style="background: rgba(6,182,212,0.08); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+      <p style="font-size: 13px; line-height: 1.6; margin: 0;">
+        This is a custom report generated from your selected parameters. In the full implementation, you will be able to choose which sections to include: KPIs, trade performance, constraints, flowline snapshots, AI recommendations, and more.
+      </p>
+    </div>
+
+    <h3 style="font-size: 14px; font-weight: 700; margin: 20px 0 12px;">Project Snapshot</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div style="background: rgba(128,128,128,0.05); border-radius: 8px; padding: 12px;">
+        <div style="font-size: 11px; opacity: 0.5; margin-bottom: 4px;">Project</div>
+        <div style="font-size: 14px; font-weight: 700;">Hotel Sapphire</div>
+      </div>
+      <div style="background: rgba(128,128,128,0.05); border-radius: 8px; padding: 12px;">
+        <div style="font-size: 11px; opacity: 0.5; margin-bottom: 4px;">Location</div>
+        <div style="font-size: 14px; font-weight: 700;">Istanbul, Turkey</div>
+      </div>
+      <div style="background: rgba(128,128,128,0.05); border-radius: 8px; padding: 12px;">
+        <div style="font-size: 11px; opacity: 0.5; margin-bottom: 4px;">Overall Progress</div>
+        <div style="font-size: 14px; font-weight: 700; color: #10B981;">45%</div>
+      </div>
+      <div style="background: rgba(128,128,128,0.05); border-radius: 8px; padding: 12px;">
+        <div style="font-size: 11px; opacity: 0.5; margin-bottom: 4px;">PPC</div>
+        <div style="font-size: 14px; font-weight: 700; color: #3B82F6;">93%</div>
+      </div>
+    </div>
+  ${commonFooter}`;
+}
+
+// ── Mock Historical Reports ─────────────────────────────
+const MOCK_REPORTS: HistoricalReport[] = [
+  { id: 'r1', type: 'weekly', title: 'Weekly Progress Report - W06', date: '2026-02-10', format: 'html', status: 'ready', size: '245 KB' },
+  { id: 'r2', type: 'executive', title: 'Executive Summary - January 2026', date: '2026-02-01', format: 'pdf', status: 'ready', size: '1.2 MB' },
+  { id: 'r3', type: 'variance', title: 'Variance Analysis - MEP Delay', date: '2026-02-08', format: 'html', status: 'ready', size: '189 KB' },
+  { id: 'r4', type: 'weekly', title: 'Weekly Progress Report - W05', date: '2026-02-03', format: 'html', status: 'ready', size: '231 KB' },
+  { id: 'r5', type: 'weekly', title: 'Weekly Progress Report - W07', date: '2026-02-13', format: 'html', status: 'generating', size: '--' },
+  { id: 'r6', type: 'custom', title: 'Custom: Trade Performance Q1', date: '2026-01-31', format: 'json', status: 'ready', size: '67 KB' },
+];
+
+// ── Schedule Items ──────────────────────────────────────
+const INITIAL_SCHEDULES: ScheduleItem[] = [
+  { id: 's1', label: 'Weekly Progress Report', description: 'Every Friday at 5:00 PM', enabled: true, cron: '0 17 * * 5' },
+  { id: 's2', label: 'Monthly Executive Summary', description: '1st of each month at 8:00 AM', enabled: true, cron: '0 8 1 * *' },
+  { id: 's3', label: 'Daily Variance Check', description: 'Every weekday at 6:00 PM', enabled: false, cron: '0 18 * * 1-5' },
+];
+
+// ── Status badge helper ─────────────────────────────────
+function StatusBadge({ status }: { status: ReportStatus }) {
+  const config = {
+    ready: { label: 'Ready', color: 'var(--color-success)', bg: 'rgba(16,185,129,0.12)', icon: CheckCircle },
+    generating: { label: 'Generating', color: 'var(--color-warning)', bg: 'rgba(245,158,11,0.12)', icon: Loader2 },
+    failed: { label: 'Failed', color: 'var(--color-danger)', bg: 'rgba(239,68,68,0.12)', icon: AlertCircle },
+  }[status];
+
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: config.bg, color: config.color }}>
+      {status === 'generating' ? (
+        <Loader2 size={10} className="animate-spin" />
+      ) : (
+        <config.icon size={10} />
+      )}
+      {config.label}
+    </span>
+  );
+}
+
+// ── Format icon helper ──────────────────────────────────
+function FormatIcon({ format }: { format: ReportFormat }) {
+  const icons = {
+    html: { icon: FileCode, color: 'var(--color-accent)' },
+    pdf: { icon: FileText, color: 'var(--color-danger)' },
+    json: { icon: FileJson, color: 'var(--color-success)' },
+  };
+  const cfg = icons[format];
+  return <cfg.icon size={13} style={{ color: cfg.color }} />;
+}
+
+// ── Main Component ──────────────────────────────────────
+export default function ReportsPage() {
+  const [selectedType, setSelectedType] = useState<ReportType>('weekly');
+  const [selectedFormat, setSelectedFormat] = useState<ReportFormat>('html');
+  const [startDate, setStartDate] = useState('2026-02-03');
+  const [endDate, setEndDate] = useState('2026-02-10');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateProgress, setGenerateProgress] = useState(0);
+  const [reports, setReports] = useState<HistoricalReport[]>(MOCK_REPORTS);
+  const [previewReport, setPreviewReport] = useState<HistoricalReport | null>(null);
+  const [previewHTML, setPreviewHTML] = useState<string>('');
+  const [schedules, setSchedules] = useState<ScheduleItem[]>(INITIAL_SCHEDULES);
+  const [showFormatDropdown, setShowFormatDropdown] = useState(false);
+
+  const handleGenerate = useCallback(async () => {
+    setIsGenerating(true);
+    setGenerateProgress(0);
+
+    // Try real API first
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/reports/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: selectedType, format: selectedFormat, startDate, endDate }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const newReport: HistoricalReport = {
+          id: `r-${Date.now()}`,
+          type: selectedType,
+          title: json.data?.title || `${REPORT_TEMPLATES.find(t => t.type === selectedType)?.title} Report`,
+          date: new Date().toISOString().split('T')[0],
+          format: selectedFormat,
+          status: 'ready',
+          size: json.data?.size || '~200 KB',
+          htmlContent: json.data?.html,
+        };
+        setReports((prev) => [newReport, ...prev]);
+        setIsGenerating(false);
+        setGenerateProgress(100);
+        return;
+      }
+    } catch {
+      // Backend unavailable -- generate locally
+    }
+
+    // Simulate generation with progress bar
+    const interval = setInterval(() => {
+      setGenerateProgress((prev) => {
+        if (prev >= 95) return prev;
+        return prev + Math.random() * 15;
+      });
+    }, 200);
+
+    setTimeout(() => {
+      clearInterval(interval);
+      setGenerateProgress(100);
+
+      const template = REPORT_TEMPLATES.find(t => t.type === selectedType);
+      const htmlContent = generateMockReportHTML(selectedType, startDate, endDate);
+      const newReport: HistoricalReport = {
+        id: `r-${Date.now()}`,
+        type: selectedType,
+        title: `${template?.title} - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+        date: new Date().toISOString().split('T')[0],
+        format: selectedFormat,
+        status: 'ready',
+        size: `${Math.floor(Math.random() * 300 + 100)} KB`,
+        htmlContent,
+      };
+
+      setReports((prev) => [newReport, ...prev]);
+      setIsGenerating(false);
+    }, 2500);
+  }, [selectedType, selectedFormat, startDate, endDate]);
+
+  const handleView = useCallback((report: HistoricalReport) => {
+    const html = report.htmlContent || generateMockReportHTML(report.type, '2026-02-03', '2026-02-10');
+    setPreviewHTML(html);
+    setPreviewReport(report);
+  }, []);
+
+  const handleDelete = useCallback((id: string) => {
+    setReports((prev) => prev.filter(r => r.id !== id));
+  }, []);
+
+  const handlePrint = useCallback(() => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`<html><head><title>${previewReport?.title}</title></head><body>${previewHTML}</body></html>`);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  }, [previewHTML, previewReport]);
+
+  const handleDownload = useCallback(() => {
+    const blob = new Blob([previewHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${previewReport?.title?.replace(/\s+/g, '_') || 'report'}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [previewHTML, previewReport]);
+
+  const toggleSchedule = useCallback((id: string) => {
+    setSchedules(prev => prev.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s));
+  }, []);
+
+  const typeColors: Record<ReportType, string> = {
+    weekly: 'var(--color-accent)',
+    executive: 'var(--color-purple)',
+    variance: 'var(--color-warning)',
+    custom: 'var(--color-cyan)',
+  };
+
+  return (
+    <>
+      <TopBar title="Reports" />
+      <div className="flex-1 overflow-auto p-6 space-y-5">
+
+        {/* ── Report Templates ───────────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {REPORT_TEMPLATES.map((template) => (
+            <motion.button
+              key={template.type}
+              onClick={() => setSelectedType(template.type)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="rounded-xl border p-4 text-left transition-all"
+              style={{
+                background: selectedType === template.type ? `${template.color}12` : 'var(--color-bg-card)',
+                borderColor: selectedType === template.type ? template.color : 'var(--color-border)',
+                boxShadow: selectedType === template.type ? `0 0 0 1px ${template.color}40` : 'none',
+              }}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: `${template.color}18` }}>
+                  <template.icon size={18} style={{ color: template.color }} />
+                </div>
+                {selectedType === template.type && (
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: template.color }} />
+                )}
+              </div>
+              <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-display)' }}>{template.title}</h3>
+              <p className="text-[11px] leading-relaxed mb-2" style={{ color: 'var(--color-text-secondary)' }}>{template.description}</p>
+              <div className="flex items-center gap-1">
+                <Clock size={10} style={{ color: 'var(--color-text-muted)' }} />
+                <span className="text-[10px]" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>{template.estimatedTime}</span>
+              </div>
+            </motion.button>
+          ))}
+        </div>
+
+        {/* ── Generator + Schedule Row ───────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Report Generator */}
+          <div className="lg:col-span-2 rounded-xl border p-5" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
+            <div className="flex items-center gap-2 mb-4">
+              <Zap size={16} style={{ color: 'var(--color-purple)' }} />
+              <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)' }}>Generate Report</h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              {/* Date Range - Start */}
+              <div>
+                <label className="text-[11px] font-semibold block mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Start Date</label>
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border" style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)' }}>
+                  <Calendar size={13} style={{ color: 'var(--color-text-muted)' }} />
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="bg-transparent border-none outline-none text-xs flex-1"
+                    style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}
+                  />
+                </div>
+              </div>
+
+              {/* Date Range - End */}
+              <div>
+                <label className="text-[11px] font-semibold block mb-1.5" style={{ color: 'var(--color-text-muted)' }}>End Date</label>
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border" style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)' }}>
+                  <Calendar size={13} style={{ color: 'var(--color-text-muted)' }} />
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="bg-transparent border-none outline-none text-xs flex-1"
+                    style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}
+                  />
+                </div>
+              </div>
+
+              {/* Format Selector */}
+              <div>
+                <label className="text-[11px] font-semibold block mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Format</label>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowFormatDropdown(!showFormatDropdown)}
+                    className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border text-xs"
+                    style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <FormatIcon format={selectedFormat} />
+                      <span className="uppercase font-semibold">{selectedFormat}</span>
+                    </div>
+                    <ChevronDown size={13} style={{ color: 'var(--color-text-muted)' }} />
+                  </button>
+                  <AnimatePresence>
+                    {showFormatDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        className="absolute top-full left-0 right-0 mt-1 rounded-lg border overflow-hidden z-10"
+                        style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+                      >
+                        {(['html', 'pdf', 'json'] as ReportFormat[]).map((fmt) => (
+                          <button
+                            key={fmt}
+                            onClick={() => { setSelectedFormat(fmt); setShowFormatDropdown(false); }}
+                            className="w-full flex items-center gap-2 px-3 py-2.5 text-xs transition-colors"
+                            style={{
+                              background: selectedFormat === fmt ? 'var(--color-bg-input)' : 'transparent',
+                              color: 'var(--color-text)',
+                            }}
+                          >
+                            <FormatIcon format={fmt} />
+                            <span className="uppercase font-semibold">{fmt}</span>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            {isGenerating && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="mb-4"
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+                    Generating {REPORT_TEMPLATES.find(t => t.type === selectedType)?.title}...
+                  </span>
+                  <span className="text-[11px] font-bold" style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>
+                    {Math.round(generateProgress)}%
+                  </span>
+                </div>
+                <div className="h-2 rounded-full w-full overflow-hidden" style={{ background: 'var(--color-bg-input)' }}>
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{ background: 'linear-gradient(90deg, var(--color-accent), var(--color-purple))' }}
+                    animate={{ width: `${generateProgress}%` }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {/* Generate Button */}
+            <button
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-all hover:scale-[1.02] disabled:opacity-50 disabled:scale-100"
+              style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))' }}
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Play size={15} />
+                  Generate Report
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Schedule Panel */}
+          <div className="rounded-xl border p-5" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
+            <div className="flex items-center gap-2 mb-4">
+              <CalendarClock size={16} style={{ color: 'var(--color-warning)' }} />
+              <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)' }}>Auto-Generation Schedule</h3>
+            </div>
+            <div className="space-y-3">
+              {schedules.map((schedule) => (
+                <div key={schedule.id} className="flex items-start gap-3 p-3 rounded-lg" style={{ background: 'var(--color-bg-input)' }}>
+                  <button
+                    onClick={() => toggleSchedule(schedule.id)}
+                    className="w-9 h-5 rounded-full flex-shrink-0 mt-0.5 transition-colors relative"
+                    style={{ background: schedule.enabled ? 'var(--color-success)' : 'var(--color-border)' }}
+                  >
+                    <motion.div
+                      className="w-4 h-4 rounded-full absolute top-0.5"
+                      style={{ background: 'white' }}
+                      animate={{ left: schedule.enabled ? 18 : 2 }}
+                      transition={{ duration: 0.2 }}
+                    />
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-semibold" style={{ color: schedule.enabled ? 'var(--color-text)' : 'var(--color-text-muted)' }}>
+                      {schedule.label}
+                    </p>
+                    <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                      {schedule.description}
+                    </p>
+                  </div>
+                  <Settings2 size={12} style={{ color: 'var(--color-text-muted)', flexShrink: 0, marginTop: 2 }} />
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
+              <button
+                className="flex items-center gap-1.5 text-[11px] font-semibold transition-colors hover:opacity-80"
+                style={{ color: 'var(--color-accent)' }}
+              >
+                <FilePlus size={12} />
+                Add Schedule
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Report History ─────────────────────────── */}
+        <div className="rounded-xl border overflow-hidden" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
+          <div className="flex items-center justify-between p-5 pb-0">
+            <div className="flex items-center gap-2">
+              <FileText size={16} style={{ color: 'var(--color-text-muted)' }} />
+              <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)' }}>Report History</h3>
+            </div>
+            <span className="text-[11px] font-medium px-2 py-0.5 rounded" style={{ background: 'var(--color-bg-input)', color: 'var(--color-text-muted)' }}>
+              {reports.length} reports
+            </span>
+          </div>
+
+          <div className="p-5 overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr>
+                  <th className="text-left text-[10px] font-semibold uppercase tracking-wider pb-3 px-3" style={{ color: 'var(--color-text-muted)' }}>Type</th>
+                  <th className="text-left text-[10px] font-semibold uppercase tracking-wider pb-3 px-3" style={{ color: 'var(--color-text-muted)' }}>Title</th>
+                  <th className="text-left text-[10px] font-semibold uppercase tracking-wider pb-3 px-3" style={{ color: 'var(--color-text-muted)' }}>Date</th>
+                  <th className="text-center text-[10px] font-semibold uppercase tracking-wider pb-3 px-3" style={{ color: 'var(--color-text-muted)' }}>Format</th>
+                  <th className="text-center text-[10px] font-semibold uppercase tracking-wider pb-3 px-3" style={{ color: 'var(--color-text-muted)' }}>Status</th>
+                  <th className="text-center text-[10px] font-semibold uppercase tracking-wider pb-3 px-3" style={{ color: 'var(--color-text-muted)' }}>Size</th>
+                  <th className="text-right text-[10px] font-semibold uppercase tracking-wider pb-3 px-3" style={{ color: 'var(--color-text-muted)' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <AnimatePresence>
+                  {reports.map((report) => (
+                    <motion.tr
+                      key={report.id}
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.25 }}
+                      className="border-t"
+                      style={{ borderColor: 'var(--color-border)' }}
+                    >
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-6 rounded-full" style={{ background: typeColors[report.type] }} />
+                          <span className="text-[11px] font-semibold capitalize" style={{ color: typeColors[report.type] }}>{report.type}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="text-xs font-medium" style={{ color: 'var(--color-text)' }}>{report.title}</span>
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="text-[11px]" style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>{report.date}</span>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <FormatIcon format={report.format} />
+                          <span className="text-[10px] uppercase font-semibold" style={{ color: 'var(--color-text-muted)' }}>{report.format}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <StatusBadge status={report.status} />
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className="text-[11px]" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>{report.size}</span>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {report.status === 'ready' && (
+                            <>
+                              <button
+                                onClick={() => handleView(report)}
+                                className="w-7 h-7 rounded-lg border flex items-center justify-center transition-colors hover:opacity-80"
+                                style={{ borderColor: 'var(--color-border)', color: 'var(--color-accent)' }}
+                                title="View report"
+                              >
+                                <Eye size={13} />
+                              </button>
+                              <button
+                                onClick={() => handleView(report)}
+                                className="w-7 h-7 rounded-lg border flex items-center justify-center transition-colors hover:opacity-80"
+                                style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
+                                title="Download report"
+                              >
+                                <Download size={13} />
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={() => handleDelete(report.id)}
+                            className="w-7 h-7 rounded-lg border flex items-center justify-center transition-colors hover:opacity-80"
+                            style={{ borderColor: 'var(--color-border)', color: 'var(--color-danger)' }}
+                            title="Delete report"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
+              </tbody>
+            </table>
+
+            {reports.length === 0 && (
+              <div className="text-center py-12">
+                <FileText size={32} style={{ color: 'var(--color-text-muted)', margin: '0 auto' }} />
+                <p className="text-sm mt-3" style={{ color: 'var(--color-text-muted)' }}>No reports yet. Generate your first report above.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Report Preview Modal ─────────────────────── */}
+      <AnimatePresence>
+        {previewReport && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.6)' }}
+            onClick={() => setPreviewReport(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-4xl max-h-[90vh] rounded-xl border overflow-hidden flex flex-col"
+              style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal header */}
+              <div className="flex items-center justify-between px-5 py-3 border-b flex-shrink-0" style={{ borderColor: 'var(--color-border)' }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${typeColors[previewReport.type]}18` }}>
+                    <FileText size={15} style={{ color: typeColors[previewReport.type] }} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>{previewReport.title}</h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px]" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>{previewReport.date}</span>
+                      <StatusBadge status={previewReport.status} />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrint}
+                    className="w-8 h-8 rounded-lg border flex items-center justify-center transition-colors hover:opacity-80"
+                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
+                    title="Print report"
+                  >
+                    <Printer size={14} />
+                  </button>
+                  <button
+                    onClick={handleDownload}
+                    className="w-8 h-8 rounded-lg border flex items-center justify-center transition-colors hover:opacity-80"
+                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
+                    title="Download report"
+                  >
+                    <Download size={14} />
+                  </button>
+                  <button
+                    onClick={() => setPreviewReport(null)}
+                    className="w-8 h-8 rounded-lg border flex items-center justify-center transition-colors hover:opacity-80"
+                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
+                    title="Close"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Report content */}
+              <div
+                className="flex-1 overflow-auto p-6"
+                style={{ background: 'var(--color-bg-secondary)', color: 'var(--color-text-secondary)' }}
+                dangerouslySetInnerHTML={{ __html: previewHTML }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

@@ -1,4 +1,4 @@
-// ── Mock data for Phase 1 frontend ─────────────────────
+// ── Mock data for Phase 1 + Phase 2 frontend ─────────────────────
 
 export const DEMO_ZONES = [
   { id: 'z1', name: 'Zone A — Ground Floor', y_index: 0 },
@@ -25,6 +25,13 @@ export interface FlowlineSegment {
   x_end: number;
   y: number;
   status: 'completed' | 'in_progress' | 'planned' | 'delayed';
+  percentComplete: number;
+  isCriticalPath: boolean;
+  plannedStart: string;
+  plannedEnd: string;
+  actualStart?: string;
+  actualEnd?: string;
+  crew?: string;
 }
 
 export interface FlowlineWagon {
@@ -33,27 +40,163 @@ export interface FlowlineWagon {
   segments: FlowlineSegment[];
 }
 
+export interface BufferZone {
+  tradeBeforeName: string;
+  tradeAfterName: string;
+  colorBefore: string;
+  colorAfter: string;
+  segments: {
+    zone_index: number;
+    y: number;
+    x_start: number;
+    x_end: number;
+    health: 'healthy' | 'warning' | 'critical';
+  }[];
+}
+
 // Generate flowline mock data
 const TAKT_TIME = 1;
 const BUFFER = 1;
 const TOTAL_PERIODS = DEMO_ZONES.length + DEMO_TRADES.length - 1 + (DEMO_TRADES.length - 1) * BUFFER;
 const TODAY_PERIOD = Math.floor(TOTAL_PERIODS * 0.45);
 
+// Critical path: first and last trades are on critical path
+const CRITICAL_TRADES = new Set(['Structure', 'Finishes']);
+
+// Some segments are delayed for realism
+const DELAYED_SEGMENTS: Record<string, Set<number>> = {
+  'MEP Rough': new Set([4]),
+  'Drywall': new Set([3]),
+};
+
+// Project start date for readable dates
+const PROJECT_START = new Date('2026-01-12');
+function taktPeriodToDate(period: number): string {
+  const d = new Date(PROJECT_START);
+  d.setDate(d.getDate() + period * 5); // 5 calendar days per takt period
+  return d.toISOString().split('T')[0];
+}
+
+const CREW_NAMES: Record<string, string> = {
+  'Structure': 'Alpha Crew (12)',
+  'MEP Rough': 'Bravo MEP (8)',
+  'Drywall': 'Charlie DW (6)',
+  'MEP Finish': 'Delta MEP (5)',
+  'Flooring': 'Echo Floor (4)',
+  'Paint': 'Foxtrot Paint (6)',
+  'Finishes': 'Golf Finish (8)',
+};
+
 export const DEMO_FLOWLINE: FlowlineWagon[] = DEMO_TRADES.map((trade, tradeIdx) => {
   const tradeOffset = tradeIdx * (1 + BUFFER);
   const segments: FlowlineSegment[] = DEMO_ZONES.map((_, zoneIdx) => {
     const xStart = tradeOffset + zoneIdx * TAKT_TIME;
     const xEnd = xStart + TAKT_TIME;
+    const isDelayed = DELAYED_SEGMENTS[trade.name]?.has(zoneIdx) ?? false;
+
     let status: FlowlineSegment['status'] = 'planned';
-    if (xEnd <= TODAY_PERIOD) status = 'completed';
-    else if (xStart <= TODAY_PERIOD && xEnd > TODAY_PERIOD) status = 'in_progress';
-    return { zone_index: zoneIdx, x_start: xStart, x_end: xEnd, y: zoneIdx, status };
+    if (isDelayed && xStart <= TODAY_PERIOD) {
+      status = 'delayed';
+    } else if (xEnd <= TODAY_PERIOD) {
+      status = 'completed';
+    } else if (xStart <= TODAY_PERIOD && xEnd > TODAY_PERIOD) {
+      status = 'in_progress';
+    }
+
+    let percentComplete = 0;
+    if (status === 'completed') percentComplete = 100;
+    else if (status === 'in_progress') percentComplete = Math.floor(30 + Math.random() * 50);
+    else if (status === 'delayed') percentComplete = Math.floor(10 + Math.random() * 40);
+
+    return {
+      zone_index: zoneIdx,
+      x_start: xStart,
+      x_end: xEnd,
+      y: zoneIdx,
+      status,
+      percentComplete,
+      isCriticalPath: CRITICAL_TRADES.has(trade.name),
+      plannedStart: taktPeriodToDate(xStart),
+      plannedEnd: taktPeriodToDate(xEnd),
+      actualStart: status !== 'planned' ? taktPeriodToDate(xStart + (isDelayed ? 0.5 : 0)) : undefined,
+      actualEnd: status === 'completed' ? taktPeriodToDate(xEnd + (isDelayed ? 0.5 : 0)) : undefined,
+      crew: CREW_NAMES[trade.name],
+    };
+  });
+  return { trade_name: trade.name, color: trade.color, segments };
+});
+
+// Buffer zones between consecutive trades
+export const DEMO_BUFFERS: BufferZone[] = DEMO_TRADES.slice(0, -1).map((trade, tradeIdx) => {
+  const nextTrade = DEMO_TRADES[tradeIdx + 1];
+  const tradeOffset = tradeIdx * (1 + BUFFER);
+  const nextTradeOffset = (tradeIdx + 1) * (1 + BUFFER);
+
+  const segments = DEMO_ZONES.map((_, zoneIdx) => {
+    const bufferStart = tradeOffset + zoneIdx * TAKT_TIME + TAKT_TIME;
+    const bufferEnd = nextTradeOffset + zoneIdx * TAKT_TIME;
+    const isNearToday = Math.abs(bufferStart - TODAY_PERIOD) <= 2;
+    const hasDelay = DELAYED_SEGMENTS[trade.name]?.has(zoneIdx) || DELAYED_SEGMENTS[nextTrade.name]?.has(zoneIdx);
+
+    let health: 'healthy' | 'warning' | 'critical' = 'healthy';
+    if (hasDelay) health = 'critical';
+    else if (isNearToday) health = 'warning';
+
+    return {
+      zone_index: zoneIdx,
+      y: zoneIdx,
+      x_start: bufferStart,
+      x_end: bufferEnd,
+      health,
+    };
+  });
+
+  return {
+    tradeBeforeName: trade.name,
+    tradeAfterName: nextTrade.name,
+    colorBefore: trade.color,
+    colorAfter: nextTrade.color,
+    segments,
+  };
+});
+
+// Simulation comparison data (slightly shifted)
+export const DEMO_SIMULATION_FLOWLINE: FlowlineWagon[] = DEMO_TRADES.map((trade, tradeIdx) => {
+  const tradeOffset = tradeIdx * (1 + BUFFER);
+  const segments: FlowlineSegment[] = DEMO_ZONES.map((_, zoneIdx) => {
+    const jitter = (Math.random() - 0.3) * 0.6;
+    const xStart = tradeOffset + zoneIdx * TAKT_TIME + jitter;
+    const xEnd = xStart + TAKT_TIME;
+    return {
+      zone_index: zoneIdx,
+      x_start: xStart,
+      x_end: xEnd,
+      y: zoneIdx,
+      status: 'planned' as const,
+      percentComplete: 0,
+      isCriticalPath: false,
+      plannedStart: taktPeriodToDate(xStart),
+      plannedEnd: taktPeriodToDate(xEnd),
+      crew: CREW_NAMES[trade.name],
+    };
   });
   return { trade_name: trade.name, color: trade.color, segments };
 });
 
 export const DEMO_TODAY_X = TODAY_PERIOD;
 export const DEMO_TOTAL_PERIODS = TOTAL_PERIODS;
+
+// Flowline stats
+export const DEMO_FLOWLINE_STATS = {
+  totalDuration: TOTAL_PERIODS,
+  stackingConflicts: 1,
+  bufferHealthy: 4,
+  bufferWarning: 1,
+  bufferCritical: 1,
+  overallProgress: 42,
+  ppc: 93,
+  criticalPathLength: DEMO_ZONES.length * 2,
+};
 
 // ── KPIs ───────────────────────────────────────────────
 export const DEMO_KPIS = {
