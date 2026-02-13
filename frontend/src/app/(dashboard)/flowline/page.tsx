@@ -172,7 +172,7 @@ export default function FlowlinePage() {
         className={fullscreenClasses}
         style={{ background: isFullscreen ? 'var(--color-bg)' : undefined }}
       >
-        <div className={`${isFullscreen ? 'flex-1 overflow-auto' : ''} p-6 space-y-4`}>
+        <div className={`${isFullscreen ? 'flex-1 overflow-auto' : ''} p-3 sm:p-6 space-y-3 sm:space-y-4`}>
 
           {/* ── Connection indicator + View modes + Actions bar ── */}
           <div
@@ -458,7 +458,7 @@ export default function FlowlinePage() {
           </AnimatePresence>
 
           {/* ── Stats Bar ─────────────────────────────────────── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-2 sm:gap-3">
             {[
               { label: 'Duration', value: `${stats.totalDuration}T`, icon: Clock, color: 'var(--color-accent)' },
               { label: 'Trades', value: `${filteredWagons.length}/${DEMO_FLOWLINE.length}`, icon: Layers, color: 'var(--color-purple)' },
@@ -495,16 +495,16 @@ export default function FlowlinePage() {
           </div>
 
           {/* ── Main Chart Area ───────────────────────────────── */}
-          <div className="flex gap-4">
+          <div className="flex flex-col lg:flex-row gap-4">
             {/* Chart */}
             <div
               ref={chartContainerRef}
-              className="flex-1 rounded-xl border p-5"
+              className="flex-1 min-w-0 rounded-xl border p-3 sm:p-5"
               style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
             >
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                 <div>
-                  <h2 className="text-base font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                  <h2 className="text-sm sm:text-base font-bold" style={{ fontFamily: 'var(--font-display)' }}>
                     Hotel Sapphire — Location-Time Chart
                   </h2>
                   <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
@@ -666,15 +666,15 @@ export default function FlowlinePage() {
             <AnimatePresence>
               {selectedSegment && (
                 <motion.div
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 280, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   transition={{ duration: 0.25, ease: 'easeInOut' }}
-                  className="flex-shrink-0 overflow-hidden"
+                  className="w-full lg:w-[280px] flex-shrink-0 overflow-hidden"
                 >
                   <div
                     className="rounded-xl border p-4 h-full"
-                    style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)', width: 280 }}
+                    style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
                   >
                     {/* Header */}
                     <div className="flex items-center justify-between mb-4">
