@@ -174,8 +174,16 @@ function renderMessageContent(content: string) {
     // Inline code
     const processInlineCode = (nodes: React.ReactNode[]): React.ReactNode[] => {
       return nodes.map((node, idx) => {
-        if (typeof node !== 'string' && !(node as React.ReactElement)?.props?.children) return node;
-        const text = typeof node === 'string' ? node : String((node as React.ReactElement)?.props?.children || '');
+        let text: string;
+        if (typeof node === 'string') {
+          text = node;
+        } else if (node && typeof node === 'object' && 'props' in node) {
+          const children = (node as { props: { children?: React.ReactNode } }).props.children;
+          if (!children) return node;
+          text = String(children);
+        } else {
+          return node;
+        }
         if (!text.includes('`')) return node;
         const codeParts: React.ReactNode[] = [];
         const codeRegex = /`([^`]+)`/g;

@@ -402,14 +402,14 @@ const FlowlineChart = forwardRef<FlowlineChartHandle, FlowlineChartProps>(
             // Progress arc (ring showing percent complete)
             if (showProgress && seg.percentComplete > 0 && seg.percentComplete < 100) {
               const outerR = 9;
-              const arc = d3.arc<unknown>()
+              const arcGen = d3.arc()
                 .innerRadius(6.5)
                 .outerRadius(outerR)
                 .startAngle(0)
                 .endAngle((seg.percentComplete / 100) * Math.PI * 2);
 
               chartArea.append('path')
-                .attr('d', arc() as string)
+                .attr('d', arcGen({ innerRadius: 6.5, outerRadius: outerR, startAngle: 0, endAngle: (seg.percentComplete / 100) * Math.PI * 2 }) as string)
                 .attr('transform', `translate(${cx},${cy})`)
                 .attr('fill', wagon.color)
                 .attr('opacity', dotOpacity * 0.5);
