@@ -20,7 +20,7 @@ services:
     build: ./services/api-gateway
     ports: ["3000:3000"]
     env_file: .env
-    depends_on: [auth-service, project-service, takt-engine]
+    depends_on: [auth-service, project-service, takt-engine, flowline-service]
 
   auth-service:
     build: ./services/auth-service
@@ -37,6 +37,11 @@ services:
   takt-engine:
     build: ./services/takt-engine
     ports: ["8001:8001"]
+    env_file: .env
+
+  flowline-service:
+    build: ./services/flowline-service
+    ports: ["3003:3003"]
     env_file: .env
 
 volumes:
