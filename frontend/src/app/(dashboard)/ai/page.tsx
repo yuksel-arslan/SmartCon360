@@ -171,7 +171,7 @@ function renderMessageContent(content: string) {
       parts.push(<span key={`t-${i}-end`}>{formatted.slice(lastIndex)}</span>);
     }
 
-    // Inline code
+    // Inline code — wrap every fragment in keyed spans to avoid React reconciliation issues
     const processInlineCode = (nodes: React.ReactNode[]): React.ReactNode[] => {
       return nodes.map((node, idx) => {
         let text: string;
@@ -189,22 +189,27 @@ function renderMessageContent(content: string) {
         const codeRegex = /`([^`]+)`/g;
         let cLastIdx = 0;
         let cMatch;
+        let partIdx = 0;
         while ((cMatch = codeRegex.exec(text)) !== null) {
-          if (cMatch.index > cLastIdx) codeParts.push(text.slice(cLastIdx, cMatch.index));
+          if (cMatch.index > cLastIdx) {
+            codeParts.push(<span key={`ict-${idx}-${partIdx++}`}>{text.slice(cLastIdx, cMatch.index)}</span>);
+          }
           codeParts.push(
-            <code key={`ic-${idx}-${cMatch.index}`} className="px-1.5 py-0.5 rounded text-[10px]"
+            <code key={`ic-${idx}-${partIdx++}`} className="px-1.5 py-0.5 rounded text-[10px]"
               style={{ background: 'var(--color-bg)', fontFamily: 'var(--font-mono)', color: 'var(--color-cyan)' }}>
               {cMatch[1]}
             </code>
           );
           cLastIdx = cMatch.index + cMatch[0].length;
         }
-        if (cLastIdx < text.length) codeParts.push(text.slice(cLastIdx));
+        if (cLastIdx < text.length) {
+          codeParts.push(<span key={`ict-${idx}-${partIdx}`}>{text.slice(cLastIdx)}</span>);
+        }
         return codeParts.length > 0 ? <span key={`icc-${idx}`}>{codeParts}</span> : node;
       });
     };
 
-    const finalParts = processInlineCode(parts.length > 0 ? parts : [formatted]);
+    const finalParts = processInlineCode(parts.length > 0 ? parts : [<span key={`raw-${i}`}>{formatted}</span>]);
 
     // Numbered lists
     if (/^\d+\.\s/.test(line)) {
@@ -488,13 +493,14 @@ export default function AIConciergePage() {
               backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(59,130,246,0.03) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(139,92,246,0.03) 0%, transparent 50%)',
             }}
           >
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
               {messages.map((msg) => (
                 <motion.div
                   key={msg.id}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, ease: 'easeOut' }}
+                  layout="position"
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {msg.role === 'assistant' ? (
