@@ -1,0 +1,187 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ══════════════════════════════════════
+// AUTH MODELS
+// ══════════════════════════════════════
+
+model User {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email           String    @unique @db.VarChar(255)
+  passwordHash    String?   @map("password_hash") @db.VarChar(255)
+  firstName       String    @map("first_name") @db.VarChar(100)
+  lastName        String    @map("last_name") @db.VarChar(100)
+  avatarUrl       String?   @map("avatar_url")
+  phone           String?   @db.VarChar(20)
+  company         String?   @db.VarChar(255)
+  jobTitle        String?   @map("job_title") @db.VarChar(100)
+  locale          String    @default("en") @db.VarChar(10)
+  timezone        String    @default("UTC") @db.VarChar(50)
+  authProvider    String    @default("local") @map("auth_provider") @db.VarChar(20)
+  authProviderId  String?   @map("auth_provider_id") @db.VarChar(255)
+  emailVerified   Boolean   @default(false) @map("email_verified")
+  isActive        Boolean   @default(true) @map("is_active")
+  lastLoginAt     DateTime? @map("last_login_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  sessions  Session[]
+  userRoles UserRole[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  refreshToken String   @map("refresh_token") @db.VarChar(500)
+  deviceInfo   Json?    @map("device_info")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshToken])
+  @@map("sessions")
+}
+
+model Role {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique @db.VarChar(50)
+  description String?
+  permissions Json     @default("[]")
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userRoles UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  roleId    String   @map("role_id") @db.Uuid
+  projectId String?  @map("project_id") @db.Uuid
+  grantedBy String?  @map("granted_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId, projectId])
+  @@map("user_roles")
+}
+
+// ══════════════════════════════════════
+// PROJECT MODELS
+// ══════════════════════════════════════
+
+model Project {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String    @db.VarChar(255)
+  code            String    @unique @db.VarChar(50)
+  description     String?
+  projectType     String    @map("project_type") @db.VarChar(50)
+  status          String    @default("planning") @db.VarChar(30)
+  address         String?
+  city            String?   @db.VarChar(100)
+  country         String?   @db.VarChar(100)
+  plannedStart    DateTime? @map("planned_start") @db.Date
+  plannedFinish   DateTime? @map("planned_finish") @db.Date
+  actualStart     DateTime? @map("actual_start") @db.Date
+  actualFinish    DateTime? @map("actual_finish") @db.Date
+  defaultTaktTime Int       @default(5) @map("default_takt_time")
+  workingDays     Json      @default("[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"]") @map("working_days")
+  budget          Decimal?  @db.Decimal(15, 2)
+  currency        String    @default("USD") @db.VarChar(3)
+  ownerId         String    @map("owner_id") @db.Uuid
+  settings        Json      @default("{}")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  locations Location[]
+  trades    Trade[]
+  members   ProjectMember[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  role      String   @db.VarChar(50)
+  trade     String?  @db.VarChar(100)
+  status    String   @default("active") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@map("project_members")
+}
+
+model Location {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  parentId     String?  @map("parent_id") @db.Uuid
+  code         String   @db.VarChar(50)
+  name         String   @db.VarChar(255)
+  locationType String   @map("location_type") @db.VarChar(30)
+  areaSqm      Decimal? @map("area_sqm") @db.Decimal(10, 2)
+  volumeCbm    Decimal? @map("volume_cbm") @db.Decimal(10, 2)
+  sortOrder    Int      @default(0) @map("sort_order")
+  path         String?  @db.VarChar(500)
+  depth        Int      @default(0)
+  bimGuid      String?  @map("bim_guid") @db.VarChar(100)
+  metadata     Json     @default("{}")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project  Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   Location?  @relation("LocationTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children Location[] @relation("LocationTree")
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([parentId])
+  @@index([path])
+  @@map("locations")
+}
+
+model Trade {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId           String   @map("project_id") @db.Uuid
+  name                String   @db.VarChar(100)
+  code                String   @db.VarChar(20)
+  color               String   @db.VarChar(7)
+  defaultCrewSize     Int      @default(4) @map("default_crew_size")
+  productivityRate    Decimal? @map("productivity_rate") @db.Decimal(8, 4)
+  unitOfMeasure       String?  @map("unit_of_measure") @db.VarChar(20)
+  sortOrder           Int      @default(0) @map("sort_order")
+  predecessorTradeIds String[] @default([]) @map("predecessor_trade_ids") @db.Uuid
+  companyName         String?  @map("company_name") @db.VarChar(255)
+  contactName         String?  @map("contact_name") @db.VarChar(100)
+  contactEmail        String?  @map("contact_email") @db.VarChar(255)
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@map("trades")
+}
