@@ -5,6 +5,7 @@ import pino from 'pino';
 import { v4 as uuidv4 } from 'uuid';
 import { z, ZodError } from 'zod';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { DocumentStore, retrieveContext, seedProjectKnowledge } from './rag/index.js';
 
 // ── Logger ──────────────────────────────────────────────────────────────────
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
@@ -101,6 +102,20 @@ if (AI_ENABLED) {
 } else {
   logger.info('Gemini AI disabled — using keyword-based fallback');
 }
+
+// ── RAG Document Store ──────────────────────────────────────────────────────
+const documentStore = new DocumentStore(genAI);
+
+async function initRAG(): Promise<void> {
+  try {
+    await seedProjectKnowledge(documentStore);
+    logger.info({ documents: documentStore.size }, 'RAG document store initialized with project knowledge');
+  } catch (err) {
+    logger.error({ err }, 'Failed to initialize RAG document store');
+  }
+}
+// Initialize RAG asynchronously (non-blocking startup)
+initRAG();
 
 // ── Keyword-Based Intent Detection ──────────────────────────────────────────
 const INTENT_KEYWORDS: { intent: Intent; keywords: string[] }[] = [
@@ -590,15 +605,26 @@ function getTemplateResponse(
   }
 }
 
-// ── AI Response Generation ──────────────────────────────────────────────────
+// ── AI Response Generation (with RAG) ────────────────────────────────────────
 async function generateAIResponse(
   message: string,
   intent: Intent,
   serviceData: unknown,
   conversationHistory: ConversationMessage[],
-): Promise<string> {
+  projectId?: string,
+): Promise<{ answer: string; ragSources: string[] }> {
+  // Retrieve relevant context from RAG document store
+  const ragResult = await retrieveContext(documentStore, message, {
+    projectId,
+    topK: 5,
+    maxChars: 3000,
+  });
+
   if (!genAI) {
-    return getTemplateResponse(intent, message, serviceData);
+    return {
+      answer: getTemplateResponse(intent, message, serviceData),
+      ragSources: ragResult.sources,
+    };
   }
 
   try {
@@ -609,32 +635,42 @@ async function generateAIResponse(
       .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
       .join('\n');
 
+    const ragContext = ragResult.context
+      ? `\n- Retrieved knowledge (${ragResult.documentCount} documents):\n${ragResult.context}`
+      : '';
+
     const prompt = `You are TaktFlow AI Concierge, a knowledgeable construction project assistant specializing in takt planning, the Last Planner System, and lean construction.
 
 Context:
 - Detected intent: ${intent}
-- Service data: ${JSON.stringify(serviceData, null, 2)}
+- Service data: ${JSON.stringify(serviceData, null, 2)}${ragContext}
 - Recent conversation:
 ${historyContext}
 
 User message: "${message}"
 
 Instructions:
-- Provide a clear, professional response based on the service data and construction domain knowledge.
+- Provide a clear, professional response based on the service data, retrieved knowledge, and construction domain expertise.
 - Use markdown formatting for readability (bold for emphasis, lists for data).
 - If service data contains demo/mock data, present it naturally without mentioning it is demo data.
 - Keep responses concise but informative (2-4 paragraphs max).
-- Reference specific data points from the service response where applicable.
+- Reference specific data points from the service response and retrieved documents where applicable.
 - If the user asks something outside the construction/project management domain, politely redirect.
 - Do not use emojis.
 
 Respond directly to the user:`;
 
     const result = await model.generateContent(prompt);
-    return result.response.text().trim();
+    return {
+      answer: result.response.text().trim(),
+      ragSources: ragResult.sources,
+    };
   } catch (err) {
     logger.error({ err }, 'AI response generation failed, using template');
-    return getTemplateResponse(intent, message, serviceData);
+    return {
+      answer: getTemplateResponse(intent, message, serviceData),
+      ragSources: ragResult.sources,
+    };
   }
 }
 
@@ -688,21 +724,25 @@ app.post('/concierge/ask', async (req: Request, res: Response, next: NextFunctio
 
     const orchestrationResult = await orchestrateByIntent(intent, projectId);
 
-    const answer = await generateAIResponse(
+    const { answer, ragSources } = await generateAIResponse(
       body.message,
       intent,
       orchestrationResult.serviceData,
       session.messages,
+      projectId,
     );
 
     const suggestions = generateSuggestions(intent);
     const confidence = calculateConfidence(intent, AI_ENABLED, orchestrationResult.available);
 
+    // Merge service sources with RAG sources (deduplicated)
+    const allSources = [...new Set([...orchestrationResult.sources, ...ragSources])];
+
     addMessage(sessionId, 'assistant', answer, intent);
 
     const response: ConciergeResponse = {
       answer,
-      sources: orchestrationResult.sources,
+      sources: allSources,
       suggestions,
       confidence,
       intent,
@@ -762,6 +802,55 @@ app.delete('/concierge/history', (req: Request, res: Response, next: NextFunctio
   }
 });
 
+// ── POST /concierge/rag/ingest — Add documents to the RAG store ─────────────
+const ingestSchema = z.object({
+  documents: z.array(z.object({
+    id: z.string(),
+    content: z.string().min(1),
+    source: z.string(),
+    project_id: z.string().optional(),
+    category: z.enum(['plan', 'constraint', 'progress', 'resource', 'knowledge']),
+  })).min(1).max(50),
+});
+
+app.post('/concierge/rag/ingest', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const body = ingestSchema.parse(req.body);
+
+    const docs = body.documents.map((d) => ({
+      id: d.id,
+      content: d.content,
+      metadata: {
+        source: d.source,
+        projectId: d.project_id,
+        category: d.category,
+        timestamp: new Date().toISOString(),
+      },
+    }));
+
+    await documentStore.addDocuments(docs);
+
+    logger.info({ count: docs.length }, 'Documents ingested into RAG store');
+    res.status(201).json({
+      data: { ingested: docs.length, totalDocuments: documentStore.size },
+      error: null,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── GET /concierge/rag/status — RAG store status ────────────────────────────
+app.get('/concierge/rag/status', (_req: Request, res: Response) => {
+  res.json({
+    data: {
+      totalDocuments: documentStore.size,
+      embeddingMode: AI_ENABLED ? 'gemini' : 'tfidf',
+    },
+    error: null,
+  });
+});
+
 // ── Error Handler ───────────────────────────────────────────────────────────
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ZodError) {
@@ -790,6 +879,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 app.listen(PORT, () => {
   logger.info(`AI Concierge service running on port ${PORT}`);
   logger.info(`AI mode: ${AI_ENABLED ? 'Gemini 2.0 Flash' : 'keyword-based fallback'}`);
+  logger.info(`RAG: document store initialized with ${documentStore.size} documents`);
 });
 
 export default app;

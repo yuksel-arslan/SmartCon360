@@ -7,19 +7,28 @@ Natural language interface for TaktFlow AI. Users ask questions in plain languag
 - **Runtime:** Node.js 22+
 - **Framework:** Express.js 4.x
 - **Language:** TypeScript 5.x (strict)
-- **AI:** Google Generative AI (Gemini 2.5 Flash) for intent detection
+- **AI:** Google Generative AI (Gemini 2.0 Flash) for intent detection + response generation
+- **RAG:** In-memory document store with TF-IDF similarity (Layer 1) + Gemini embeddings (Layer 2)
 - **WebSocket:** Socket.io (streaming responses)
 
 ## Port: 3008
+
+## 3-Layer Intelligence
+
+| Layer | Capability | Dependency |
+|-------|-----------|------------|
+| Layer 1 | Keyword intent detection, template responses, TF-IDF RAG retrieval | None |
+| Layer 2 | Gemini AI intent detection, AI-generated responses, Gemini embedding RAG | GEMINI_API_KEY |
 
 ## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | /concierge/ask | Ask a question (text) |
-| POST | /concierge/ask/stream | Ask with streaming response |
 | GET | /concierge/history | Conversation history |
 | DELETE | /concierge/history | Clear history |
+| POST | /concierge/rag/ingest | Add documents to RAG store |
+| GET | /concierge/rag/status | RAG store status |
 
 ## Intent Detection
 
@@ -32,6 +41,26 @@ Natural language interface for TaktFlow AI. Users ask questions in plain languag
 | REPORT_GENERATE | "Generate weekly report" | reporting-service |
 | RESOURCE_QUERY | "How many workers next week?" | resource-service |
 | GENERAL_CHAT | "What is takt planning?" | Direct AI response |
+
+## RAG (Retrieval-Augmented Generation)
+
+The concierge uses a document store to maintain project context that enhances AI responses:
+
+```
+User query → Intent Detection → Service Orchestration
+                                        ↓
+                              RAG Document Retrieval
+                                        ↓
+                              Context Assembly (service data + RAG docs + conversation history)
+                                        ↓
+                              Gemini AI Response Generation (or template fallback)
+```
+
+**Document categories:** plan, constraint, progress, resource, knowledge
+
+**Seeded knowledge:** 16 project-specific documents covering takt plan details, progress metrics, constraint data, resource allocation, simulation results, and domain knowledge (takt planning, LPS, flowline concepts).
+
+**Ingestion:** External services can push documents via `POST /concierge/rag/ingest` to keep the context fresh.
 
 ## Response Format
 ```json
