@@ -1,0 +1,17 @@
+{
+  "name": "taktflow-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-Powered Takt Planning Platform",
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:gateway": "cd services/api-gateway && npm run dev",
+    "dev:auth": "cd services/auth-service && npm run dev",
+    "dev:project": "cd services/project-service && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev"
+  }
+}
