@@ -122,12 +122,21 @@ const FlowlineChart = forwardRef<FlowlineChartHandle, FlowlineChartProps>(
       const svg = d3.select(svgRef.current);
       svg.selectAll('*').remove();
 
-      const width = containerRef.current.clientWidth || 900;
+      const containerWidth = containerRef.current.clientWidth || 900;
+
+      // Responsive margins — tighter on narrow screens
+      const isNarrow = containerWidth < 640;
       const margin = mini
         ? { top: 20, right: 20, bottom: 30, left: 20 }
-        : { top: 40, right: 60, bottom: 70, left: 160 };
+        : { top: 40, right: 60, bottom: 70, left: isNarrow ? 80 : 160 };
 
-      const innerWidth = width - margin.left - margin.right;
+      // Enforce minimum chart width to prevent line stacking on mobile.
+      // When the container is too narrow the SVG overflows and
+      // the wrapper's overflow-x: auto provides horizontal scroll.
+      const minInnerWidth = mini ? 200 : Math.max(totalPeriods * 42, 600);
+      const rawInner = containerWidth - margin.left - margin.right;
+      const innerWidth = Math.max(rawInner, minInnerWidth);
+      const width = innerWidth + margin.left + margin.right;
       const innerHeight = height - margin.top - margin.bottom;
 
       svg
@@ -252,15 +261,21 @@ const FlowlineChart = forwardRef<FlowlineChartHandle, FlowlineChartProps>(
 
       if (!mini) {
         zones.forEach((zone, i) => {
+          // Truncate zone labels on narrow screens to prevent overflow
+          const maxLabelChars = isNarrow ? 10 : 30;
+          const label = zone.name.length > maxLabelChars
+            ? zone.name.slice(0, maxLabelChars - 1) + '\u2026'
+            : zone.name;
+
           g.append('text')
             .attr('x', -12)
             .attr('y', yScale(i))
             .attr('text-anchor', 'end')
             .attr('dominant-baseline', 'middle')
             .attr('fill', textColor)
-            .attr('font-size', '11px')
+            .attr('font-size', isNarrow ? '9px' : '11px')
             .attr('font-family', 'Inter, sans-serif')
-            .text(zone.name);
+            .text(label);
         });
       }
 
@@ -728,8 +743,8 @@ const FlowlineChart = forwardRef<FlowlineChartHandle, FlowlineChartProps>(
     // ── Render ──────────────────────────────────────────────────
 
     return (
-      <div ref={containerRef} className="w-full relative" style={{ minHeight: mini ? height : undefined }}>
-        <svg ref={svgRef} className="w-full" />
+      <div ref={containerRef} className="w-full relative overflow-x-auto" style={{ minHeight: mini ? height : undefined, WebkitOverflowScrolling: 'touch' }}>
+        <svg ref={svgRef} style={{ display: 'block', minWidth: mini ? undefined : 600 }} />
         {/* Tooltip portal */}
         <div
           ref={tooltipRef}
