@@ -10,7 +10,32 @@ TaktFlow AI is an AI-powered Takt Planning platform for the construction industr
 
 ## 🏗️ Architecture
 
-Microservices architecture with 15 independent services.
+Microservices architecture with 16 independent services, organized in a 3-layer intelligence model.
+
+> **See also:** [AI-FEATURES.md](./AI-FEATURES.md) for detailed AI specifications, [DRL-ARCHITECTURE.md](./DRL-ARCHITECTURE.md) for DRL engine deep-dive.
+
+### 3-Layer Intelligence Model
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 3: DRL ENGINE (Optional)                                 │
+│  Deep RL adaptive replanning, simulation, learning from history │
+│  Requires: Training infrastructure, GPU (recommended)           │
+├─────────────────────────────────────────────────────────────────┤
+│  LAYER 2: AI-ENHANCED (Gemini API)                              │
+│  Plan refinement, concierge, reports, drawing analysis          │
+│  Requires: Google Gemini API key                                │
+├─────────────────────────────────────────────────────────────────┤
+│  LAYER 1: CORE ENGINE (No AI dependency)                        │
+│  Template plans, algorithmic takt calc, stacking detection,     │
+│  flowline visualization, LPS, constraint management             │
+│  Requires: Nothing — works out of the box                       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**The system MUST work fully at Layer 1 without any AI/DRL dependency.**
+
+### Service Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -21,32 +46,48 @@ Microservices architecture with 15 independent services.
 ┌──────────────────────────▼──────────────────────────────────┐
 │                    API GATEWAY (Port 3000)                   │
 │             Express · JWT Auth · Rate Limiting               │
-└──┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬────┘
-   │   │   │   │   │   │   │   │   │   │   │   │   │   │
-   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼
- Auth Proj Takt  AI  Flow Cnst Prog Sim  Res  Ntfy Rpt  BIM Cncg Anly
- 3001 3002 8001 8002 3003 3004 3005 8003 3006 3007 8004 8005 3008 8006
+└──┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬──┬─┘
+   │   │   │   │   │   │   │   │   │   │   │   │   │   │  │
+   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼   ▼  ▼
+ Auth Proj Takt  AI  Flow Cnst Prog Sim  Res  Ntfy Rpt  BIM Cncg Anly DRL
+ 3001 3002 8001 8002 3003 3004 3005 8003 3006 3007 8004 8005 3008 8006 8007
 ```
 
 ### Service Map
 
-| # | Service | Tech | Port | Purpose |
-|---|---------|------|------|---------|
-| 1 | api-gateway | Node.js 22 / Express | 3000 | Routing, auth middleware, rate limiting |
-| 2 | auth-service | Node.js 22 / Passport | 3001 | JWT, OAuth2, RBAC |
-| 3 | project-service | Node.js 22 / Prisma | 3002 | Project CRUD, LBS, metadata |
-| 4 | takt-engine | Python 3.11 / FastAPI | 8001 | Takt plan computation |
-| 5 | ai-planner | Python 3.11 / LangChain | 8002 | AI plan generation |
-| 6 | flowline-service | Node.js 22 | 3003 | Flowline computation |
-| 7 | constraint-service | Node.js 22 / Prisma | 3004 | Constraint management |
-| 8 | progress-service | Node.js 22 / Prisma | 3005 | Progress tracking, PPC |
-| 9 | simulation-service | Python 3.11 / NumPy | 8003 | What-if scenarios |
-| 10 | resource-service | Node.js 22 / Prisma | 3006 | Labor, equipment, materials |
-| 11 | notification-service | Node.js 22 / Socket.io | 3007 | Real-time alerts |
-| 12 | reporting-service | Python 3.11 / Jinja2 | 8004 | AI report generation |
-| 13 | bim-service | Python 3.11 / ifcopenshell | 8005 | IFC/BIM integration |
-| 14 | ai-concierge | Node.js 22 / Gemini | 3008 | Natural language interface |
-| 15 | analytics-service | Python 3.11 / Pandas | 8006 | Dashboard KPIs |
+| # | Service | Tech | Port | Layer | Purpose |
+|---|---------|------|------|-------|---------|
+| 1 | api-gateway | Node.js 22 / Express | 3000 | 1 | Routing, auth middleware, rate limiting |
+| 2 | auth-service | Node.js 22 / Passport | 3001 | 1 | JWT, OAuth2, RBAC |
+| 3 | project-service | Node.js 22 / Prisma | 3002 | 1 | Project CRUD, LBS, metadata |
+| 4 | takt-engine | Python 3.11 / FastAPI | 8001 | 1 | Takt plan computation, template generation |
+| 5 | ai-planner | Python 3.11 / LangChain | 8002 | 2 | AI plan generation & refinement (Gemini) |
+| 6 | flowline-service | Node.js 22 | 3003 | 1 | Flowline computation & visualization data |
+| 7 | constraint-service | Node.js 22 / Prisma | 3004 | 1 | Constraint CRUD + algorithmic detection |
+| 8 | progress-service | Node.js 22 / Prisma | 3005 | 1 | Progress tracking, PPC calculation |
+| 9 | simulation-service | Python 3.11 / NumPy | 8003 | 1+3 | What-if scenarios (L1: param sweep, L3: DRL) |
+| 10 | resource-service | Node.js 22 / Prisma | 3006 | 1 | Labor, equipment, materials |
+| 11 | notification-service | Node.js 22 / Socket.io | 3007 | 1 | Real-time alerts |
+| 12 | reporting-service | Python 3.11 / Jinja2 | 8004 | 1+2 | Reports (L1: data export, L2: AI narrative) |
+| 13 | bim-service | Python 3.11 / ifcopenshell | 8005 | 2 | IFC/BIM integration + Gemini Vision |
+| 14 | ai-concierge | Node.js 22 / Gemini | 3008 | 2 | Natural language project interface |
+| 15 | analytics-service | Python 3.11 / Pandas | 8006 | 1+3 | Dashboard KPIs + Project DNA (L3) |
+| 16 | **drl-engine** | **Python 3.11 / PyTorch** | **8007** | **3** | **DRL adaptive replanning, WDM zone optimization** |
+
+### AI Features (cross-service)
+
+| ID | Feature | Layer | Services | Phase |
+|----|---------|-------|----------|-------|
+| AI-1 | Intelligent Plan Generator | 1+2+3 | takt-engine, ai-planner, drl-engine | 1-3 |
+| AI-2 | Drawing & BIM Analyzer | 2 | bim-service | 3 |
+| AI-3 | Proactive Warning System | 1 | takt-engine, constraint-service | 1 |
+| AI-4 | Conversational Assistant | 2 | ai-concierge | 2 |
+| AI-5 | What-If Simulation | 1+2+3 | simulation-service, drl-engine | 2-3 |
+| AI-6 | Automated Report Writer | 2 | reporting-service | 2 |
+| AI-7 | Learning Engine (Project DNA) | 3 | analytics-service, drl-engine | 4 |
+
+> **Full AI feature specifications:** [AI-FEATURES.md](./AI-FEATURES.md)
+> **DRL engine architecture:** [DRL-ARCHITECTURE.md](./DRL-ARCHITECTURE.md)
 
 ### Databases
 
@@ -61,31 +102,34 @@ Microservices architecture with 15 independent services.
 
 ```
 taktflow-ai/
-├── CLAUDE.md
+├── CLAUDE.md                    # Project spec & coding standards
+├── AI-FEATURES.md               # 7 AI features & 3-layer architecture
+├── DRL-ARCHITECTURE.md          # DRL engine deep-dive specification
+├── DATABASE-SCHEMA.md           # Database schema documentation
+├── API.md                       # API endpoint documentation
 ├── README.md
-├── ARCHITECTURE.md
-├── API.md
 ├── docker-compose.yml
 ├── docker-compose.prod.yml
 ├── .env.example
 ├── packages/
 │   └── shared/                  # Shared types, utils, constants
 ├── services/
-│   ├── api-gateway/             # Port 3000
-│   ├── auth-service/            # Port 3001
-│   ├── project-service/         # Port 3002
-│   ├── takt-engine/             # Port 8001
-│   ├── ai-planner/              # Port 8002
-│   ├── flowline-service/        # Port 3003
-│   ├── constraint-service/      # Port 3004
-│   ├── progress-service/        # Port 3005
-│   ├── simulation-service/      # Port 8003
-│   ├── resource-service/        # Port 3006
-│   ├── notification-service/    # Port 3007
-│   ├── reporting-service/       # Port 8004
-│   ├── bim-service/             # Port 8005
-│   ├── ai-concierge/            # Port 3008
-│   └── analytics-service/       # Port 8006
+│   ├── api-gateway/             # Port 3000 — Layer 1
+│   ├── auth-service/            # Port 3001 — Layer 1
+│   ├── project-service/         # Port 3002 — Layer 1
+│   ├── takt-engine/             # Port 8001 — Layer 1
+│   ├── ai-planner/              # Port 8002 — Layer 2
+│   ├── flowline-service/        # Port 3003 — Layer 1
+│   ├── constraint-service/      # Port 3004 — Layer 1
+│   ├── progress-service/        # Port 3005 — Layer 1
+│   ├── simulation-service/      # Port 8003 — Layer 1+3
+│   ├── resource-service/        # Port 3006 — Layer 1
+│   ├── notification-service/    # Port 3007 — Layer 1
+│   ├── reporting-service/       # Port 8004 — Layer 1+2
+│   ├── bim-service/             # Port 8005 — Layer 2
+│   ├── ai-concierge/            # Port 3008 — Layer 2
+│   ├── analytics-service/       # Port 8006 — Layer 1+3
+│   └── drl-engine/              # Port 8007 — Layer 3 (optional)
 └── frontend/                    # Next.js 15+ app
 ```
 
@@ -108,6 +152,14 @@ taktflow-ai/
 - NumPy / Pandas (computation)
 - Pydantic (validation)
 - pytest (testing)
+
+### DRL Engine (Layer 3 — optional)
+- PyTorch 2.x
+- Stable-Baselines3 (PPO)
+- Gymnasium (RL environment interface)
+- SimPy (Discrete Event Simulation)
+- SciPy (WDM/WoLZo optimization)
+- WandB (training metrics)
 
 ### Frontend
 - Next.js 15+ (App Router)
@@ -251,38 +303,50 @@ pytest                      # Python services
 
 ## 📊 Implementation Phases
 
-### Phase 1: Foundation (6 weeks) ← CURRENT
+> **AI Feature mapping:** See [AI-FEATURES.md](./AI-FEATURES.md) for Feature × Phase Matrix
+
+### Phase 1: Foundation — Layer 1 Core (6 weeks) ← CURRENT
 - [x] Project setup, monorepo structure
-- [ ] auth-service (JWT, register/login)
-- [ ] project-service (CRUD, LBS)
-- [ ] takt-engine (basic takt calculation)
-- [ ] flowline-service (basic flowline data)
-- [ ] Frontend shell (sidebar, routing, theme)
-- [ ] Dashboard page (static KPIs)
+- [x] auth-service (JWT, register/login)
+- [x] project-service (CRUD, LBS)
+- [x] takt-engine (basic takt calculation + template generation)
+- [x] flowline-service (basic flowline data)
+- [x] Frontend shell (sidebar, routing, theme)
+- [x] Dashboard page (static KPIs)
+- [ ] **AI-1 Core:** Template-based plan generation (no AI API needed)
+- [ ] **AI-3 Core:** Algorithmic warning system (stacking, predecessor, buffer)
+- [ ] Project creation wizard with AI-generated plan review
+- [ ] constraint-service CRUD (Layer 1 — manual constraint management)
 
-### Phase 2: AI Core (8 weeks)
-- [ ] ai-planner (generative takt plans)
-- [ ] constraint-service (CRUD + auto-detect)
-- [ ] simulation-service (what-if scenarios)
-- [ ] Interactive flowline chart
+### Phase 2: AI Enhancement — Layer 2 (8 weeks)
+- [ ] **AI-1 Enhanced:** Gemini API plan refinement from text descriptions
+- [ ] **AI-4:** ai-concierge (conversational project assistant, Gemini + RAG)
+- [ ] **AI-5 Basic:** simulation-service (parameter sweep + AI scenario suggestions)
+- [ ] **AI-6:** reporting-service (AI narrative report generation)
+- [ ] Interactive flowline chart with real-time updates
 - [ ] Takt editor with drag & drop
-
-### Phase 3: Lean Integration (6 weeks)
 - [ ] progress-service (PPC calculation)
 - [ ] LPS pages (lookahead, weekly plan)
-- [ ] resource-service
-- [ ] Field progress tracking
 
-### Phase 4: Intelligence (6 weeks)
-- [ ] ai-concierge (NLP interface)
-- [ ] analytics-service
-- [ ] reporting-service (AI reports)
-- [ ] bim-service (IFC parse)
-- [ ] Project DNA (learning engine)
+### Phase 3: DRL & BIM — Layer 3 Foundation (12 weeks)
+- [ ] **DRL Phase 2A:** DES Simulator + WDM Engine + Reward Function
+- [ ] **DRL Phase 2B:** PPO Training + Baseline Evaluation (30%+ improvement target)
+- [ ] **DRL Phase 2C:** FastAPI service + Frontend integration
+- [ ] **AI-2:** bim-service (IFC parse + Gemini Vision drawing analysis)
+- [ ] **AI-1 DRL:** DRL-optimized plan generation
+- [ ] **AI-5 DRL:** DRL-powered optimal scenario selection
+- [ ] resource-service (labor, equipment, materials)
+- [ ] Field progress tracking (mobile PWA)
+
+### Phase 4: Intelligence & Learning (6 weeks)
+- [ ] **AI-7:** Project DNA — learning engine from completed projects
+- [ ] **DRL Phase 3:** GCN integration, transfer learning, online learning
+- [ ] analytics-service (advanced KPIs, trend analysis)
+- [ ] DRL action explainability (why the agent recommends X)
 
 ### Phase 5: Enterprise (8 weeks)
 - [ ] Multi-project support
 - [ ] P6 import/export
+- [ ] Multi-Agent RL (MAPPO for large-scale projects)
 - [ ] Mobile PWA optimization
-- [ ] Advanced analytics
 - [ ] Marketplace / API platform
