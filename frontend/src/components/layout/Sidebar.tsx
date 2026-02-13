@@ -7,7 +7,7 @@ import { DEMO_PROJECTS } from '@/lib/mockData';
 import {
   LayoutDashboard, GitBranch, Grid3x3, AlertTriangle,
   ClipboardCheck, Users, FileText, Bot, Settings, PanelLeftClose,
-  Plus, ChevronDown,
+  Plus, ChevronDown, Play,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -28,6 +28,7 @@ const navItems = [
   { href: '/lps', icon: ClipboardCheck, label: 'Last Planner' },
   { href: '/resources', icon: Users, label: 'Resources' },
   { href: '/reports', icon: FileText, label: 'Reports' },
+  { href: '/simulation', icon: Play, label: 'Simulation' },
   { href: '/ai', icon: Bot, label: 'AI Concierge' },
 ];
 
