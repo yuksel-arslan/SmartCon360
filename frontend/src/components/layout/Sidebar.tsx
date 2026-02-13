@@ -3,10 +3,22 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUIStore } from '@/stores/uiStore';
+import { DEMO_PROJECTS } from '@/lib/mockData';
 import {
   LayoutDashboard, GitBranch, Grid3x3, AlertTriangle,
-  ClipboardCheck, Users, FileText, Bot, Settings, PanelLeftClose
+  ClipboardCheck, Users, FileText, Bot, Settings, PanelLeftClose,
+  Plus, ChevronDown,
 } from 'lucide-react';
+import { useState } from 'react';
+
+const PROJECT_ICONS: Record<string, string> = {
+  hotel: '🏨',
+  hospital: '🏥',
+  residential: '🏢',
+  commercial: '🏛️',
+  industrial: '🏭',
+  infrastructure: '🌉',
+};
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -22,6 +34,9 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebar } = useUIStore();
+  const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
+
+  const activeProject = DEMO_PROJECTS[0];
 
   return (
     <aside
@@ -57,15 +72,82 @@ export default function Sidebar() {
       </div>
 
       {/* Project selector */}
-      {!sidebarCollapsed && (
+      {!sidebarCollapsed ? (
         <div className="px-3 py-3">
-          <div
-            className="rounded-lg px-2.5 py-2 cursor-pointer border"
+          <button
+            onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
+            className="w-full rounded-lg px-2.5 py-2 cursor-pointer border text-left transition-colors hover:opacity-90"
             style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)' }}
           >
-            <div className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>Hotel Sapphire</div>
-            <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>12 floors · 6 zones</div>
-          </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-sm flex-shrink-0">{PROJECT_ICONS[activeProject.type] || '📋'}</span>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold truncate" style={{ color: 'var(--color-text)' }}>
+                    {activeProject.name}
+                  </div>
+                  <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                    {activeProject.floors} floors · {activeProject.zones} zones
+                  </div>
+                </div>
+              </div>
+              <ChevronDown
+                size={14}
+                style={{ color: 'var(--color-text-muted)', transform: projectDropdownOpen ? 'rotate(180deg)' : undefined, transition: 'transform 0.2s' }}
+              />
+            </div>
+          </button>
+
+          {/* Dropdown */}
+          {projectDropdownOpen && (
+            <div
+              className="mt-1 rounded-lg border overflow-hidden"
+              style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+            >
+              {DEMO_PROJECTS.map((project) => (
+                <button
+                  key={project.id}
+                  onClick={() => setProjectDropdownOpen(false)}
+                  className="w-full flex items-center gap-2 px-2.5 py-2 text-left transition-colors hover:opacity-80"
+                  style={{
+                    background: project.id === activeProject.id ? 'rgba(59,130,246,0.08)' : 'transparent',
+                  }}
+                >
+                  <span className="text-sm flex-shrink-0">{PROJECT_ICONS[project.type] || '📋'}</span>
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-semibold truncate" style={{ color: 'var(--color-text)' }}>
+                      {project.name}
+                    </div>
+                    <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                      {project.status === 'planning' ? 'Planning' : `PPC ${project.ppc}%`}
+                    </div>
+                  </div>
+                </button>
+              ))}
+
+              {/* New Project button */}
+              <Link
+                href="/projects/new"
+                onClick={() => setProjectDropdownOpen(false)}
+                className="flex items-center gap-2 px-2.5 py-2.5 border-t transition-colors hover:opacity-80"
+                style={{ borderColor: 'var(--color-border)', color: 'var(--color-accent)' }}
+              >
+                <Plus size={14} />
+                <span className="text-[11px] font-semibold">New Project</span>
+              </Link>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="px-2 py-3 flex justify-center">
+          <Link
+            href="/projects/new"
+            className="w-9 h-9 rounded-lg flex items-center justify-center border transition-colors hover:opacity-80"
+            style={{ borderColor: 'var(--color-border)', color: 'var(--color-accent)' }}
+            title="New Project"
+          >
+            <Plus size={16} />
+          </Link>
         </div>
       )}
 
