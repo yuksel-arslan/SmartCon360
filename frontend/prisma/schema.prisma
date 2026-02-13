@@ -107,9 +107,10 @@ model Project {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
 
-  locations Location[]
-  trades    Trade[]
-  members   ProjectMember[]
+  locations   Location[]
+  trades      Trade[]
+  members     ProjectMember[]
+  constraints Constraint[]
 
   @@index([ownerId])
   @@index([status])
@@ -184,4 +185,35 @@ model Trade {
   @@unique([projectId, code])
   @@index([projectId])
   @@map("trades")
+}
+
+// ══════════════════════════════════════
+// CONSTRAINT MODELS
+// ══════════════════════════════════════
+
+model Constraint {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId   String    @map("project_id") @db.Uuid
+  title       String    @db.VarChar(255)
+  description String?
+  category    String    @db.VarChar(30)
+  priority    String    @default("medium") @db.VarChar(20)
+  status      String    @default("open") @db.VarChar(20)
+  tradeCode   String?   @map("trade_code") @db.VarChar(20)
+  zoneName    String?   @map("zone_name") @db.VarChar(255)
+  assignedTo  String?   @map("assigned_to") @db.VarChar(255)
+  dueDate     DateTime? @map("due_date") @db.Date
+  resolvedAt  DateTime? @map("resolved_at")
+  resolution  String?
+  source      String    @default("manual") @db.VarChar(20)
+  metadata    Json      @default("{}")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([status])
+  @@index([category])
+  @@map("constraints")
 }

@@ -160,6 +160,14 @@ export default function ProjectWizard() {
         });
       }
 
+      // 4. Auto-generate initial takt plan (AI-1 Core)
+      await fetch(`/api/v1/projects/${project.id}/plan/generate`, {
+        method: 'POST',
+        headers,
+      }).catch(() => {
+        // Plan generation is best-effort — don't block project creation
+      });
+
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
