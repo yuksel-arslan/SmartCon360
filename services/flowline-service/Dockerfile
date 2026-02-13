@@ -1,7 +1,18 @@
+# ---- Build ----
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY tsconfig.json ./
+COPY src/ ./src/
+RUN npm run build
+
+# ---- Production ----
 FROM node:22-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
-COPY dist/ ./dist/
-EXPOSE 3003
+COPY --from=build /app/dist ./dist
+ENV PORT=3003
+EXPOSE ${PORT}
 CMD ["node", "dist/index.js"]
