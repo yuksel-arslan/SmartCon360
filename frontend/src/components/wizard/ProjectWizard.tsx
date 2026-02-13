@@ -172,9 +172,9 @@ export default function ProjectWizard() {
   const isLast = step === WIZARD_STEPS.length - 1;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Stepper */}
-      <div className="flex items-center gap-1 px-6 py-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
+      <div className="flex items-center gap-1 px-6 py-3 border-b flex-shrink-0" style={{ borderColor: 'var(--color-border)' }}>
         {WIZARD_STEPS.map((s, i) => (
           <div key={s.id} className="flex items-center gap-1">
             <button
@@ -227,7 +227,7 @@ export default function ProjectWizard() {
       )}
 
       {/* Navigation */}
-      <div className="border-t px-6 py-4" style={{ borderColor: 'var(--color-border)' }}>
+      <div className="border-t px-6 py-3 flex-shrink-0" style={{ borderColor: 'var(--color-border)' }}>
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <button
             onClick={step === 0 ? () => router.push('/dashboard') : back}
