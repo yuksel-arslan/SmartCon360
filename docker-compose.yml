@@ -20,7 +20,16 @@ services:
     build: ./services/api-gateway
     ports: ["3000:3000"]
     env_file: .env
-    depends_on: [auth-service, project-service, takt-engine, flowline-service]
+    depends_on:
+      - auth-service
+      - project-service
+      - takt-engine
+      - flowline-service
+      - ai-planner
+      - ai-concierge
+      - simulation-service
+      - reporting-service
+      - progress-service
 
   auth-service:
     build: ./services/auth-service
@@ -43,6 +52,49 @@ services:
     build: ./services/flowline-service
     ports: ["3003:3003"]
     env_file: .env
+
+  # ── Phase 2 Services ──
+
+  ai-planner:
+    build: ./services/ai-planner
+    ports: ["8002:8002"]
+    env_file: .env
+    environment:
+      PORT: 8002
+      AI_MODEL: gemini-2.0-flash
+
+  simulation-service:
+    build: ./services/simulation-service
+    ports: ["8003:8003"]
+    env_file: .env
+    environment:
+      PORT: 8003
+      MONTE_CARLO_ITERATIONS: 10000
+
+  reporting-service:
+    build: ./services/reporting-service
+    ports: ["8004:8004"]
+    env_file: .env
+    environment:
+      PORT: 8004
+
+  progress-service:
+    build: ./services/progress-service
+    ports: ["3005:3005"]
+    env_file: .env
+    depends_on: [postgres, redis]
+
+  ai-concierge:
+    build: ./services/ai-concierge
+    ports: ["3008:3008"]
+    env_file: .env
+    environment:
+      PORT: 3008
+      TAKT_ENGINE_URL: http://takt-engine:8001
+      CONSTRAINT_URL: http://constraint-service:3004
+      PROGRESS_URL: http://progress-service:3005
+      SIMULATION_URL: http://simulation-service:8003
+      REPORTING_URL: http://reporting-service:8004
 
 volumes:
   pgdata:

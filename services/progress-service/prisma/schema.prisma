@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ProgressUpdate {
+  id              String   @id @default(uuid()) @db.Uuid
+  projectId       String   @db.Uuid
+  assignmentId    String   @db.Uuid
+  zoneId          String   @db.Uuid
+  tradeId         String   @db.Uuid
+  reportedBy      String   @db.Uuid
+  percentComplete Float    @default(0)
+  previousPercent Float    @default(0)
+  status          String   @default("not_started") // not_started, in_progress, completed, delayed, blocked
+  notes           String?
+  photoUrls       String[] @default([])
+  reportedAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("progress.updates")
+  @@index([projectId])
+  @@index([assignmentId])
+  @@index([zoneId])
+  @@index([tradeId])
+}
+
+model WeeklyCommitment {
+  id               String   @id @default(uuid()) @db.Uuid
+  projectId        String   @db.Uuid
+  weekStart        DateTime @db.Date
+  weekEnd          DateTime @db.Date
+  tradeId          String   @db.Uuid
+  tradeName        String
+  zoneId           String   @db.Uuid
+  zoneName         String
+  description      String
+  committed        Boolean  @default(true)
+  completed        Boolean  @default(false)
+  varianceReason   String?
+  varianceCategory String? // material, labor, equipment, design, space, predecessor, permit, information
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("progress.weekly_commitments")
+  @@index([projectId, weekStart])
+  @@index([tradeId])
+}
+
+model PPCRecord {
+  id                String   @id @default(uuid()) @db.Uuid
+  projectId         String   @db.Uuid
+  weekStart         DateTime @db.Date
+  weekEnd           DateTime @db.Date
+  totalCommitted    Int
+  totalCompleted    Int
+  ppcPercent        Float
+  byTrade           Json     @default("[]") // [{tradeId, tradeName, committed, completed, ppc}]
+  topVarianceReasons Json    @default("[]") // [{reason, category, count}]
+  createdAt         DateTime @default(now())
+
+  @@map("progress.ppc_records")
+  @@index([projectId, weekStart])
+  @@unique([projectId, weekStart])
+}
+
+model DailyLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @db.Uuid
+  date      DateTime @db.Date
+  weather   String?
+  temperature Float?
+  crewCount Int?
+  notes     String?
+  issues    Json     @default("[]")
+  createdBy String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("progress.daily_logs")
+  @@index([projectId, date])
+  @@unique([projectId, date])
+}
