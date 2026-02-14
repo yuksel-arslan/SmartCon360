@@ -1110,7 +1110,7 @@ function PPCDashboardTab() {
   return (
     <div className="space-y-4">
       {/* Key metric cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Current PPC */}
         <Card className="p-4">
           <div className="flex justify-between items-start">
@@ -1301,7 +1301,7 @@ export default function LPSPage() {
   return (
     <>
       <TopBar title="Last Planner System" />
-      <div className="flex-1 overflow-auto p-6 space-y-5">
+      <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 space-y-5">
         {/* Tab Bar */}
         <div className="flex items-center gap-1 p-1 rounded-xl" style={{ background: 'var(--color-bg-input)' }}>
           {TAB_CONFIG.map((tab) => {

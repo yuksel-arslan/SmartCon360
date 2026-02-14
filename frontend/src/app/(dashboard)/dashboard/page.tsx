@@ -26,10 +26,10 @@ export default function DashboardPage() {
   return (
     <>
       <TopBar title="Dashboard" />
-      <div className="flex-1 overflow-auto p-6 lg:p-8 space-y-6">
+      <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
 
         {/* ── KPI Row ─────────────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <MetricCard
             label="PPC"
             value={`${DEMO_KPIS.ppc}%`}
@@ -61,7 +61,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Main Content ────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5">
 
           {/* Flowline Chart */}
           <Card className="lg:col-span-2" padding="lg">
@@ -130,7 +130,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Bottom Row ──────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
 
           {/* Recent Activity */}
           <Card padding="lg">

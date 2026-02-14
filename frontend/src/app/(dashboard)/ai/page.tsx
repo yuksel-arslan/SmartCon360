@@ -541,7 +541,7 @@ export default function AIConciergePage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="max-w-[70%]">
+                    <div className="max-w-[90%] sm:max-w-[80%] lg:max-w-[70%]">
                       <div className="flex items-end gap-2">
                         <div className="rounded-xl rounded-br-sm px-4 py-3"
                           style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))' }}>

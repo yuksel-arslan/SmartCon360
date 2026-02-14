@@ -25,11 +25,11 @@ export default function ResourcesPage() {
   return (
     <>
       <TopBar title="ResourceFlow" />
-      <div className="flex-1 overflow-auto p-6 space-y-4">
+      <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 space-y-4">
         <ModulePageHeader moduleId="resources" />
 
         {/* Summary KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: 'Total Workers', value: totalWorkers, icon: Users, color: 'var(--color-accent)' },
             { label: 'Active', value: activeWorkers, icon: TrendingUp, color: 'var(--color-success)' },
@@ -89,6 +89,7 @@ export default function ResourcesPage() {
             <span className="text-[11px] font-normal uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Crew Overview</span>
             <Link href="/resources/workmanship" className="text-[11px] font-normal" style={{ color: 'var(--color-accent)' }}>View All</Link>
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr>
@@ -130,6 +131,7 @@ export default function ResourcesPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </>

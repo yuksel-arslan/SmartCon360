@@ -32,7 +32,7 @@ export default function CostPage() {
   const [activeTab, setActiveTab] = useState<CostTab>('overview');
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-6">
       <ModulePageHeader moduleId="cost" />
 
       {/* Tab Navigation */}
@@ -176,6 +176,7 @@ function WorkItemsTab() {
         className="rounded-xl border overflow-hidden"
         style={{ borderColor: 'var(--color-border)' }}
       >
+        <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr style={{ background: 'var(--color-bg-input)' }}>
@@ -208,6 +209,7 @@ function WorkItemsTab() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
