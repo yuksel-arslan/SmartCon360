@@ -750,6 +750,65 @@ export default function FlowlinePage() {
                           On Critical Path
                         </div>
                       )}
+
+                      {/* Tasks breakdown */}
+                      {selectedSegment.segment.tasks && selectedSegment.segment.tasks.length > 0 && (
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
+                              Activities
+                            </span>
+                            <span className="text-[9px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+                              {selectedSegment.segment.tasks.filter(t => t.status === 'done').length}/{selectedSegment.segment.tasks.length}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            {selectedSegment.segment.tasks.map((task) => (
+                              <div key={task.id} className="flex items-center gap-2">
+                                <div className="flex-shrink-0">
+                                  {task.status === 'done' ? (
+                                    <CheckCircle2 size={13} style={{ color: 'var(--color-success)' }} />
+                                  ) : task.status === 'active' ? (
+                                    <Clock size={13} style={{ color: selectedSegment.tradeColor }} />
+                                  ) : (
+                                    <div className="w-[13px] h-[13px] rounded-full border" style={{ borderColor: 'var(--color-border)' }} />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div
+                                    className="text-[11px] font-medium truncate"
+                                    style={{ color: task.status === 'todo' ? 'var(--color-text-muted)' : 'var(--color-text)' }}
+                                  >
+                                    {task.name}
+                                  </div>
+                                  {task.status === 'active' && (
+                                    <div className="w-full h-1 rounded-full mt-1 overflow-hidden" style={{ background: 'var(--color-bg)' }}>
+                                      <motion.div
+                                        className="h-full rounded-full"
+                                        style={{ background: selectedSegment.tradeColor }}
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${task.progress}%` }}
+                                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                                {task.status !== 'todo' && (
+                                  <span
+                                    className="text-[9px] font-bold flex-shrink-0"
+                                    style={{
+                                      fontFamily: 'var(--font-mono)',
+                                      color: task.status === 'done' ? 'var(--color-success)' : selectedSegment.tradeColor,
+                                    }}
+                                  >
+                                    {task.progress}%
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </motion.div>
