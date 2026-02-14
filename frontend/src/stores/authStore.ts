@@ -16,6 +16,7 @@ export interface AuthUser {
 
 interface AuthState {
   token: string | null;
+  refreshToken: string | null;
   user: AuthUser | null;
   initialized: boolean;
   loading: boolean;
@@ -24,7 +25,7 @@ interface AuthState {
   initialize: () => void;
 
   /** Set auth data after login/register */
-  setAuth: (token: string, user: AuthUser) => void;
+  setAuth: (token: string, user: AuthUser, refreshToken?: string) => void;
 
   /** Clear auth state on logout */
   logout: () => void;
@@ -40,6 +41,9 @@ interface AuthState {
 
   /** Get Authorization header value */
   getAuthHeader: () => { Authorization?: string };
+
+  /** Refresh the access token using the stored refresh token */
+  refreshAccessToken: () => Promise<boolean>;
 }
 
 // ── Role → Permission Map ──────────────────────────────
@@ -76,6 +80,7 @@ export function getModulesForTier(tier: LicenseTier): string[] {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
+  refreshToken: null,
   user: null,
   initialized: false,
   loading: false,
@@ -84,32 +89,40 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (typeof window === 'undefined') return;
 
     const token = localStorage.getItem('token');
+    const refreshToken = localStorage.getItem('refreshToken');
     const userStr = localStorage.getItem('user');
 
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr) as AuthUser;
-        set({ token, user, initialized: true });
+        set({ token, refreshToken, user, initialized: true });
       } catch (_e) {
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
-        set({ token: null, user: null, initialized: true });
+        set({ token: null, refreshToken: null, user: null, initialized: true });
       }
     } else {
       set({ initialized: true });
     }
   },
 
-  setAuth: (token, user) => {
+  setAuth: (token, user, refreshToken) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
-    set({ token, user });
+    if (refreshToken) {
+      localStorage.setItem('refreshToken', refreshToken);
+      set({ token, user, refreshToken });
+    } else {
+      set({ token, user });
+    }
   },
 
   logout: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    set({ token: null, user: null });
+    set({ token: null, refreshToken: null, user: null });
   },
 
   updateUser: (updates) => {
@@ -151,5 +164,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const t = get().token;
     if (!t) return {};
     return { Authorization: `Bearer ${t}` };
+  },
+
+  refreshAccessToken: async () => {
+    const rt = get().refreshToken || localStorage.getItem('refreshToken');
+    if (!rt) return false;
+
+    try {
+      const res = await fetch('/api/v1/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: rt }),
+      });
+
+      if (!res.ok) {
+        // Refresh token is expired/invalid — force logout
+        get().logout();
+        return false;
+      }
+
+      const json = await res.json();
+      const { accessToken, refreshToken: newRefreshToken } = json.data;
+
+      // Update token in store and localStorage
+      localStorage.setItem('token', accessToken);
+      if (newRefreshToken) {
+        localStorage.setItem('refreshToken', newRefreshToken);
+      }
+      set({ token: accessToken, refreshToken: newRefreshToken || rt });
+      return true;
+    } catch {
+      return false;
+    }
   },
 }));

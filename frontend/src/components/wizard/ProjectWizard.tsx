@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { getTemplate } from '@/lib/core/project-templates';
 import { useProjectStore } from '@/stores/projectStore';
+import { useAuthStore } from '@/stores/authStore';
 
 import StepProjectType from './steps/StepProjectType';
 import StepBasicInfo from './steps/StepBasicInfo';
@@ -47,6 +48,7 @@ const STEP_COMPONENTS = [
 export default function ProjectWizard() {
   const router = useRouter();
   const { fetchProjects } = useProjectStore();
+  const { getAuthHeader, refreshAccessToken } = useAuthStore();
   const [step, setStep] = useState(0);
   const [data, setData] = useState<WizardData>(initialData);
   const [creating, setCreating] = useState(false);
@@ -103,14 +105,28 @@ export default function ProjectWizard() {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
-      const headers: HeadersInit = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const buildHeaders = (): HeadersInit => ({
+        'Content-Type': 'application/json',
+        ...getAuthHeader() as Record<string, string>,
+      });
+
+      // Helper: fetch with auto-refresh on 401
+      const authFetch = async (url: string, opts: RequestInit): Promise<Response> => {
+        const res = await fetch(url, opts);
+        if (res.status === 401) {
+          const refreshed = await refreshAccessToken();
+          if (refreshed) {
+            // Retry with new token
+            return fetch(url, { ...opts, headers: buildHeaders() });
+          }
+        }
+        return res;
+      };
 
       // 1. Create project
-      const res = await fetch('/api/v1/projects', {
+      const res = await authFetch('/api/v1/projects', {
         method: 'POST',
-        headers,
+        headers: buildHeaders(),
         body: JSON.stringify({
           name: data.name,
           code: data.code,
@@ -139,9 +155,9 @@ export default function ProjectWizard() {
       if (data.locations.length > 0) {
         const flatLocations = flattenLocations(data.locations);
         if (flatLocations.length > 0) {
-          const locRes = await fetch(`/api/v1/projects/${project.id}/locations/bulk`, {
+          const locRes = await authFetch(`/api/v1/projects/${project.id}/locations/bulk`, {
             method: 'POST',
-            headers,
+            headers: buildHeaders(),
             body: JSON.stringify({ locations: flatLocations }),
           });
           if (!locRes.ok) {
@@ -155,9 +171,9 @@ export default function ProjectWizard() {
       // 3. Create enabled trades
       const enabledTrades = data.trades.filter((t) => t.enabled);
       for (const trade of enabledTrades) {
-        const tradeRes = await fetch(`/api/v1/projects/${project.id}/trades`, {
+        const tradeRes = await authFetch(`/api/v1/projects/${project.id}/trades`, {
           method: 'POST',
-          headers,
+          headers: buildHeaders(),
           body: JSON.stringify({
             name: trade.name,
             code: trade.code,
@@ -174,9 +190,9 @@ export default function ProjectWizard() {
       }
 
       // 4. Auto-generate initial takt plan (AI-1 Core)
-      await fetch(`/api/v1/projects/${project.id}/plan/generate`, {
+      await authFetch(`/api/v1/projects/${project.id}/plan/generate`, {
         method: 'POST',
-        headers,
+        headers: buildHeaders(),
       }).catch(() => {
         // Plan generation is best-effort — don't block project creation
       });

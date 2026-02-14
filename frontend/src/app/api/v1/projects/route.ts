@@ -4,7 +4,7 @@ import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { createProjectSchema } from '@/lib/validators/project';
 import { errorResponse } from '@/lib/errors';
 
-// GET /api/v1/projects — List user's projects
+// GET /api/v1/projects — List user's projects (owned + member + all for admin)
 export async function GET(request: NextRequest) {
   try {
     const userId = requireAuth(request);
@@ -12,15 +12,32 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
+    // Check if user is admin (sees all projects)
+    const adminRole = await prisma.userRole.findFirst({
+      where: { userId, role: { name: 'admin' }, projectId: null },
+      include: { role: true },
+    });
+    const isAdmin = !!adminRole;
+
+    // Admin sees all; others see owned + member projects
+    const where = isAdmin
+      ? {}
+      : {
+          OR: [
+            { ownerId: userId },
+            { members: { some: { userId } } },
+          ],
+        };
+
     const [projects, total] = await Promise.all([
       prisma.project.findMany({
-        where: { ownerId: userId },
+        where,
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { updatedAt: 'desc' },
         include: { _count: { select: { locations: true, trades: true, members: true } } },
       }),
-      prisma.project.count({ where: { ownerId: userId } }),
+      prisma.project.count({ where }),
     ]);
 
     return NextResponse.json({ data: projects, meta: { page, limit, total }, error: null });
