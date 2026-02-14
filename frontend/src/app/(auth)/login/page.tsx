@@ -11,23 +11,23 @@ type Lang = 'en' | 'tr';
 
 const t: Record<Lang, Record<string, string>> = {
   en: {
-    heroTagline1: 'Where PMBOK Rigor Meets',
-    heroTagline2: 'Construction Intelligence',
-    heroTagline3: '— One Platform, Zero Compromise.',
+    heroTagline1: 'One Platform,',
+    heroTagline2: 'Full Construction Management',
+    heroTagline3: '— Zero Compromise.',
     heroDesc:
-      'Engineered on PMBOK 7, CMAA best practices, and Lean Construction principles — SmartCon360 fuses 13 integrated modules into a single AI-driven command center. Every knowledge area, every compliance layer, every field decision — orchestrated.',
+      'SmartCon360 is an AI-powered unified construction management platform that integrates 13 specialized modules into a single SaaS application. It covers all 10 PMBOK knowledge areas plus OHS and ESG, combining Location-Based Management System (LBMS), Takt Time Construction, Last Planner System (LPS), and Deep Reinforcement Learning with a modular, licensable architecture.',
     stat1Value: '13',
     stat1Label: 'Integrated Modules',
     stat2Value: '10+2',
     stat2Label: 'PMBOK + OHS & ESG',
     stat3Value: '3-Layer',
     stat3Label: 'AI Architecture',
-    stat4Value: '495+',
-    stat4Label: 'API Endpoints',
-    secModules: '13 Integrated Modules',
+    stat4Value: '27',
+    stat4Label: 'Microservices',
+    secModules: '13 Specialized Modules',
     secMethods: 'Methodology & Standards',
     aiTitle: '3-Layer AI Architecture',
-    aiDesc: 'From real-time field intelligence to strategic portfolio optimization — each layer amplifies decisions across the entire project lifecycle.',
+    aiDesc: 'Layer 1: Core Engine works without AI dependency. Layer 2: AI-Enhanced with Gemini API. Layer 3: Deep Reinforcement Learning for adaptive replanning and simulation.',
     copyright: `${BRAND.name} © 2026 — AI-Powered Construction Management`,
     welcomeBack: 'Welcome back',
     createAccount: 'Create account',
@@ -47,23 +47,23 @@ const t: Record<Lang, Record<string, string>> = {
     or: 'or',
   },
   tr: {
-    heroTagline1: 'PMBOK Disiplini',
-    heroTagline2: 'Yapi Zekasi',
-    heroTagline3: ' ile Bulusuyor — Tek Platform, Sifir Taviz.',
+    heroTagline1: 'Tek Platform,',
+    heroTagline2: 'Tum Insaat Yonetimi',
+    heroTagline3: '— Sifir Taviz.',
     heroDesc:
-      'PMBOK 7, CMAA en iyi uygulamalari ve Yalin Insaat ilkeleri uzerine insa edildi — SmartCon360, 13 entegre modulu tek bir YZ destekli komuta merkezinde birlestiriyor. Her bilgi alani, her uyumluluk katmani, her saha karari — orkestre edilmis.',
+      'SmartCon360, 13 uzman modulu tek bir SaaS uygulamasinda birlestiren YZ destekli butunlesik insaat yonetim platformudur. Tum 10 PMBOK bilgi alanini, ISG ve ESG\'yi kapsar; Lokasyon Bazli Yonetim Sistemi (LBMS), Takt Zamani Insaat, Son Planlayici Sistemi (LPS) ve Derin Pekistirmeli Ogrenmeyi moduler, lisanslanabilir bir mimariyle birlestirir.',
     stat1Value: '13',
     stat1Label: 'Entegre Modul',
     stat2Value: '10+2',
     stat2Label: 'PMBOK + ISG & ESG',
     stat3Value: '3 Katman',
     stat3Label: 'YZ Mimarisi',
-    stat4Value: '495+',
-    stat4Label: 'API Endpoint',
-    secModules: '13 Entegre Modul',
+    stat4Value: '27',
+    stat4Label: 'Mikroservis',
+    secModules: '13 Uzman Modul',
     secMethods: 'Metodoloji & Standartlar',
     aiTitle: '3 Katmanli YZ Mimarisi',
-    aiDesc: 'Gercek zamanli saha zekasindan stratejik portfoy optimizasyonuna — her katman, tum proje yasam dongusu boyunca kararlari guclendiriyor.',
+    aiDesc: 'Katman 1: YZ bagimsiz cekirdek motor. Katman 2: Gemini API ile YZ destekli. Katman 3: Uyarlanabilir yeniden planlama ve simulasyon icin Derin Pekistirmeli Ogrenme.',
     copyright: `${BRAND.name} © 2026 — YZ Destekli Insaat Yonetimi`,
     welcomeBack: 'Tekrar hos geldiniz',
     createAccount: 'Hesap olustur',
@@ -85,36 +85,36 @@ const t: Record<Lang, Record<string, string>> = {
 };
 
 const modules = [
-  { name: 'Project Integration Hub', desc: 'Unified dashboard, cross-module orchestration & AI insights', tag: 'PMBOK · Integration' },
-  { name: 'Scope & WBS Manager', desc: 'Work breakdown structures, scope baseline & change control', tag: 'PMBOK · Scope' },
-  { name: 'Schedule & Takt Engine', desc: 'CPM, Takt planning, 4D BIM timeline & delay analysis', tag: 'PMBOK · Schedule' },
-  { name: 'Cost & Earned Value', desc: 'Budget tracking, EVM metrics, cashflow & forecasting', tag: 'PMBOK · Cost' },
-  { name: 'Quality Assurance', desc: 'ITP/ITR management, NCR tracking & audit workflows', tag: 'PMBOK · Quality' },
-  { name: 'Resource & Workforce', desc: 'Labor allocation, equipment tracking & capacity planning', tag: 'PMBOK · Resource' },
-  { name: 'Communication Center', desc: 'RFIs, submittals, transmittals & stakeholder notifications', tag: 'PMBOK · Communication' },
-  { name: 'Risk & Issue Tracker', desc: 'Risk registers, Monte Carlo simulation & mitigation plans', tag: 'PMBOK · Risk' },
-  { name: 'Procurement & Contracts', desc: 'Vendor management, bid evaluation & contract compliance', tag: 'PMBOK · Procurement' },
-  { name: 'Stakeholder Portal', desc: 'Client dashboards, approval workflows & engagement tracking', tag: 'PMBOK · Stakeholder' },
-  { name: 'OHS Safety Module', desc: 'Incident reporting, safety inspections & compliance tracking', tag: 'OHS' },
-  { name: 'ESG & Sustainability', desc: 'Carbon tracking, environmental compliance & sustainability KPIs', tag: 'ESG' },
-  { name: 'Document & BIM Vault', desc: 'Version control, BIM model management & drawing workflows', tag: 'Core Infrastructure' },
+  { name: 'TaktFlow', desc: 'Planning & scheduling — takt time, flowline, LPS, LBS hierarchy, constraint management', tag: 'Schedule · Scope' },
+  { name: 'CostPilot', desc: 'Cost & EVM management — budgets, CPI/SPI, S-curve, forecasting', tag: 'Cost Management' },
+  { name: 'CrewFlow', desc: 'Resource management — labor crews, equipment tracking, material allocation', tag: 'Resource Mgmt' },
+  { name: 'QualityGate', desc: 'Quality control — NCR tracking, inspection checklists, FTR rate, COPQ', tag: 'Quality Mgmt' },
+  { name: 'SafeZone', desc: 'OHS / HSE — risk matrix, incident reporting, PTW, toolbox talks', tag: 'OHS / HSE' },
+  { name: 'VisionAI', desc: 'Visual progress tracking — photo analysis, defect detection via Gemini Vision', tag: 'AI · Layer 2' },
+  { name: 'SupplyChain AI', desc: 'Procurement — MRP, JIT delivery, supplier management, RFQ workflows', tag: 'Procurement' },
+  { name: 'RiskRadar', desc: 'Risk management — risk register, heat map, what-if analysis, mitigation tracking', tag: 'Risk Mgmt' },
+  { name: 'ClaimShield', desc: 'Claims & change orders — claims register, delay analysis, change order management', tag: 'Scope · Claims' },
+  { name: 'CommHub', desc: 'Communication management — RFI, transmittals, meeting minutes, escalation engine', tag: 'Communication' },
+  { name: 'StakeHub', desc: 'Stakeholder management — stakeholder register, authority matrix, engagement tracking', tag: 'Stakeholder' },
+  { name: 'GreenSite', desc: 'ESG & environmental — carbon tracking, waste management, LEED/BREEAM compliance', tag: 'ESG' },
+  { name: 'SmartCon360 Hub', desc: 'Master AI orchestrator — cross-module synthesis, Project Health Score, unified dashboard', tag: 'Integration' },
 ];
 
 const methods = [
   {
     label: 'PMBOK 7',
     title: 'Project Management Body of Knowledge',
-    desc: 'All 10 knowledge areas natively embedded — scope, schedule, cost, quality, resource, communication, risk, procurement, stakeholder & integration.',
+    desc: 'All 10 knowledge areas natively embedded — scope, schedule, cost, quality, resource, communication, risk, procurement, stakeholder & integration management.',
   },
   {
     label: 'CMAA',
     title: 'Construction Management Association of America',
-    desc: 'Owner representation, program management and CM-at-Risk best practices woven into every workflow and decision gate.',
+    desc: 'Owner representation, program management and CM-at-Risk best practices woven into every module workflow and decision gate.',
   },
   {
-    label: 'LEAN',
-    title: 'Last Planner & Pull Planning',
-    desc: 'Waste elimination, continuous flow, constraint-based planning and reliable promising integrated into scheduling & resource modules.',
+    label: 'LBMS + LPS',
+    title: 'Lean Construction Methods',
+    desc: 'Location-Based Management System, Takt Time Construction, Last Planner System — constraint-based pull planning with flowline visualization.',
   },
 ];
 
@@ -497,7 +497,7 @@ export default function LoginPage() {
                 {i.aiDesc}
               </div>
               <div className="flex gap-2 mt-2.5 flex-wrap">
-                {['L1 · Field AI', 'L2 · Project AI', 'L3 · Portfolio AI'].map((layer) => (
+                {['L1 · Core Engine', 'L2 · Gemini AI', 'L3 · DRL Engine'].map((layer) => (
                   <span
                     key={layer}
                     className="text-[10px] font-medium px-2 py-0.5 rounded"
