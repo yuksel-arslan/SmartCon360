@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { getTemplate } from '@/lib/core/project-templates';
+import { useProjectStore } from '@/stores/projectStore';
 
 import StepProjectType from './steps/StepProjectType';
 import StepBasicInfo from './steps/StepBasicInfo';
@@ -45,6 +46,7 @@ const STEP_COMPONENTS = [
 
 export default function ProjectWizard() {
   const router = useRouter();
+  const { fetchProjects } = useProjectStore();
   const [step, setStep] = useState(0);
   const [data, setData] = useState<WizardData>(initialData);
   const [creating, setCreating] = useState(false);
@@ -179,7 +181,9 @@ export default function ProjectWizard() {
         // Plan generation is best-effort — don't block project creation
       });
 
-      router.push('/dashboard');
+      // Refresh the project list so the new project appears in sidebar
+      await fetchProjects();
+      router.push('/projects');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
