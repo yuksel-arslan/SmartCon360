@@ -100,10 +100,10 @@ export default function Sidebar() {
           <Image
             src={sidebarLogo}
             alt={BRAND.name}
-            width={160}
-            height={40}
+            width={320}
+            height={80}
             priority
-            style={{ height: 36, width: 'auto' }}
+            style={{ height: 72, width: 'auto' }}
           />
         )}
       </div>
