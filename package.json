@@ -1,8 +1,8 @@
 {
-  "name": "taktflow-ai",
-  "version": "1.0.0",
+  "name": "smartcon360",
+  "version": "2.0.0",
   "private": true,
-  "description": "AI-Powered Takt Planning Platform",
+  "description": "SmartCon360 — AI-Powered Unified Construction Management Platform",
   "workspaces": [
     "packages/*",
     "services/*",
@@ -12,6 +12,16 @@
     "dev:gateway": "cd services/api-gateway && npm run dev",
     "dev:auth": "cd services/auth-service && npm run dev",
     "dev:project": "cd services/project-service && npm run dev",
+    "dev:quality": "cd services/quality-service && npm run dev",
+    "dev:safety": "cd services/safety-service && npm run dev",
+    "dev:cost": "cd services/cost-service && npm run dev",
+    "dev:claims": "cd services/claims-service && npm run dev",
+    "dev:supply": "cd services/supply-chain-service && npm run dev",
+    "dev:risk": "cd services/risk-service && npm run dev",
+    "dev:comm": "cd services/comm-service && npm run dev",
+    "dev:stakeholder": "cd services/stakeholder-service && npm run dev",
+    "dev:sustainability": "cd services/sustainability-service && npm run dev",
+    "dev:hub": "cd services/hub-service && npm run dev",
     "dev:frontend": "cd frontend && npm run dev"
   }
 }
