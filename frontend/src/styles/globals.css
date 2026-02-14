@@ -18,11 +18,19 @@
   --color-text-muted: #52525B;
   --color-border: #1A1A1E;
   --color-border-subtle: #141417;
-  --color-accent: #3B82F6;
-  --color-accent-hover: #2563EB;
-  --color-accent-muted: #3B82F620;
-  --color-purple: #8B5CF6;
-  --color-purple-muted: #8B5CF620;
+
+  /* Corporate: Orange #E8731A → #F59E3F */
+  --color-accent: #E8731A;
+  --color-accent-hover: #D4651A;
+  --color-accent-muted: #E8731A18;
+  --color-accent-light: #F59E3F;
+  --color-secondary: #3A3A3C;
+  --color-secondary-light: #555557;
+
+  /* Alias: --color-purple maps to accent-light for cross-page compat */
+  --color-purple: #F59E3F;
+  --color-purple-muted: #F59E3F18;
+
   --color-success: #22C55E;
   --color-success-muted: #22C55E18;
   --color-warning: #EAB308;
@@ -45,11 +53,16 @@
   --color-text-muted: #A1A1AA;
   --color-border: #E4E4E7;
   --color-border-subtle: #F4F4F5;
-  --color-accent: #2563EB;
-  --color-accent-hover: #1D4ED8;
-  --color-accent-muted: #2563EB15;
-  --color-purple: #7C3AED;
-  --color-purple-muted: #7C3AED15;
+
+  --color-accent: #D4651A;
+  --color-accent-hover: #B8561A;
+  --color-accent-muted: #D4651A12;
+  --color-accent-light: #E8731A;
+  --color-secondary: #3A3A3C;
+  --color-secondary-light: #6B6B6E;
+  --color-purple: #E8731A;
+  --color-purple-muted: #E8731A12;
+
   --color-success: #16A34A;
   --color-success-muted: #16A34A12;
   --color-warning: #CA8A04;

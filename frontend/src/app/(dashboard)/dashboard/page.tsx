@@ -56,7 +56,7 @@ export default function DashboardPage() {
             value={`${DEMO_KPIS.aiScore}`}
             sub="Project health index"
             icon={Zap}
-            color="var(--color-purple)"
+            color="var(--color-accent-light)"
           />
         </div>
 
@@ -86,7 +86,7 @@ export default function DashboardPage() {
             <div className="p-5 border-b flex items-center gap-3" style={{ borderColor: 'var(--color-border)' }}>
               <div
                 className="w-8 h-8 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))' }}
+                style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-light))' }}
               >
                 <Zap size={14} className="text-white" />
               </div>

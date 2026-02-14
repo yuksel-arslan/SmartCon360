@@ -64,7 +64,7 @@ export default function TopBar({ title }: { title: string }) {
         {/* Avatar */}
         <div
           className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-semibold text-white"
-          style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))' }}
+          style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-light))' }}
         >
           YA
         </div>

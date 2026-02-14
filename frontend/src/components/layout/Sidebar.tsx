@@ -8,16 +8,18 @@ import {
   LayoutDashboard, GitBranch, Grid3x3, AlertTriangle,
   ClipboardCheck, Users, FileText, Bot, Settings, PanelLeftClose,
   Plus, ChevronDown, Play,
+  Building2, Hospital, Building, Landmark, Factory, Construction, FolderKanban,
 } from 'lucide-react';
 import { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 
-const PROJECT_ICONS: Record<string, string> = {
-  hotel: '🏨',
-  hospital: '🏥',
-  residential: '🏢',
-  commercial: '🏛️',
-  industrial: '🏭',
-  infrastructure: '🌉',
+const PROJECT_ICONS: Record<string, LucideIcon> = {
+  hotel: Building2,
+  hospital: Hospital,
+  residential: Building,
+  commercial: Landmark,
+  industrial: Factory,
+  infrastructure: Construction,
 };
 
 const navItems = [
@@ -38,6 +40,7 @@ export default function Sidebar() {
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
 
   const activeProject = DEMO_PROJECTS[0];
+  const DefaultProjectIcon = FolderKanban;
 
   return (
     <aside
@@ -48,7 +51,7 @@ export default function Sidebar() {
         borderColor: 'var(--color-border)',
       }}
     >
-      {/* Logo — bigger */}
+      {/* Logo */}
       <div
         className="flex items-center border-b"
         style={{
@@ -76,7 +79,14 @@ export default function Sidebar() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="text-sm flex-shrink-0">{PROJECT_ICONS[activeProject.type] || '📋'}</span>
+                {(() => {
+                  const Icon = PROJECT_ICONS[activeProject.type] || DefaultProjectIcon;
+                  return (
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--color-accent-muted)' }}>
+                      <Icon size={14} style={{ color: 'var(--color-accent)' }} strokeWidth={1.5} />
+                    </div>
+                  );
+                })()}
                 <div className="min-w-0">
                   <div className="text-[12px] font-semibold truncate" style={{ color: 'var(--color-text)' }}>
                     {activeProject.name}
@@ -103,32 +113,37 @@ export default function Sidebar() {
               className="mt-1.5 rounded-xl border overflow-hidden"
               style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
             >
-              {DEMO_PROJECTS.map((project) => (
-                <button
-                  key={project.id}
-                  onClick={() => setProjectDropdownOpen(false)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors"
-                  style={{
-                    background: project.id === activeProject.id ? 'var(--color-accent-muted)' : 'transparent',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (project.id !== activeProject.id) e.currentTarget.style.background = 'var(--color-bg-hover)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = project.id === activeProject.id ? 'var(--color-accent-muted)' : 'transparent';
-                  }}
-                >
-                  <span className="text-sm flex-shrink-0">{PROJECT_ICONS[project.type] || '📋'}</span>
-                  <div className="min-w-0">
-                    <div className="text-[11px] font-semibold truncate" style={{ color: 'var(--color-text)' }}>
-                      {project.name}
+              {DEMO_PROJECTS.map((project) => {
+                const Icon = PROJECT_ICONS[project.type] || DefaultProjectIcon;
+                return (
+                  <button
+                    key={project.id}
+                    onClick={() => setProjectDropdownOpen(false)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors"
+                    style={{
+                      background: project.id === activeProject.id ? 'var(--color-accent-muted)' : 'transparent',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (project.id !== activeProject.id) e.currentTarget.style.background = 'var(--color-bg-hover)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = project.id === activeProject.id ? 'var(--color-accent-muted)' : 'transparent';
+                    }}
+                  >
+                    <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'var(--color-bg-input)' }}>
+                      <Icon size={12} style={{ color: 'var(--color-text-muted)' }} strokeWidth={1.5} />
                     </div>
-                    <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-                      {project.status === 'planning' ? 'Planning' : `PPC ${project.ppc}%`}
+                    <div className="min-w-0">
+                      <div className="text-[11px] font-semibold truncate" style={{ color: 'var(--color-text)' }}>
+                        {project.name}
+                      </div>
+                      <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                        {project.status === 'planning' ? 'Planning' : `PPC ${project.ppc}%`}
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
 
               <Link
                 href="/projects/new"

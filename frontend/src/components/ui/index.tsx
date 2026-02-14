@@ -9,7 +9,7 @@ import { LucideIcon, ArrowUpRight } from 'lucide-react';
  * Centralized UI primitives. All pages import from here
  * to ensure consistent styling across the application.
  *
- * Corporate palette: Blue #3B82F6 → Purple #8B5CF6
+ * Corporate palette: Orange #E8731A → Amber #F59E3F
  * Font: Inter (all weights)
  * ───────────────────────────────────────────────────────── */
 
