@@ -27,7 +27,21 @@ export async function POST() {
           company: DEMO_USER.company,
         },
       });
+
+      // Assign admin role to demo user
+      const adminRole = await prisma.role.findUnique({ where: { name: 'admin' } });
+      if (adminRole) {
+        await prisma.userRole.create({
+          data: { userId: user.id, roleId: adminRole.id },
+        });
+      }
     }
+
+    // Get user roles
+    const userRoles = await prisma.userRole.findMany({
+      where: { userId: user.id },
+      include: { role: true },
+    });
 
     const accessToken = signAccessToken(user.id, user.email);
 
@@ -39,6 +53,7 @@ export async function POST() {
           firstName: user.firstName,
           lastName: user.lastName,
           company: user.company,
+          roles: userRoles.map((ur) => ({ role: ur.role.name, projectId: ur.projectId })),
         },
         accessToken,
       },
@@ -58,6 +73,7 @@ export async function POST() {
           firstName: DEMO_USER.firstName,
           lastName: DEMO_USER.lastName,
           company: DEMO_USER.company,
+          roles: [{ role: 'admin', projectId: null }],
         },
         accessToken,
       },
