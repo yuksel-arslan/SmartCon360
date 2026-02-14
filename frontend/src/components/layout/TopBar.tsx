@@ -1,10 +1,38 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useUIStore } from '@/stores/uiStore';
-import { Search, Bell, Sun, Moon } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
+import { Search, Bell, Sun, Moon, LogOut, User, ChevronDown } from 'lucide-react';
 
 export default function TopBar({ title }: { title: string }) {
+  const router = useRouter();
   const { theme, toggleTheme } = useUIStore();
+  const { user, logout } = useAuthStore();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const initials = user
+    ? `${(user.firstName || '')[0] || ''}${(user.lastName || '')[0] || ''}`.toUpperCase()
+    : '?';
+
+  const handleLogout = async () => {
+    setMenuOpen(false);
+    logout();
+    router.push('/login');
+  };
 
   return (
     <header
@@ -61,12 +89,83 @@ export default function TopBar({ title }: { title: string }) {
           )}
         </button>
 
-        {/* Avatar */}
-        <div
-          className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-semibold text-white"
-          style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-light))' }}
-        >
-          YA
+        {/* User menu */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-xl transition-colors"
+            style={{ background: menuOpen ? 'var(--color-bg-hover)' : 'transparent' }}
+            onMouseEnter={(e) => { if (!menuOpen) e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
+            onMouseLeave={(e) => { if (!menuOpen) e.currentTarget.style.background = 'transparent'; }}
+          >
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-semibold text-white"
+              style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-light))' }}
+            >
+              {initials}
+            </div>
+            {user && (
+              <>
+                <div className="hidden md:block text-left">
+                  <div className="text-[11px] font-semibold" style={{ color: 'var(--color-text)' }}>
+                    {user.firstName} {user.lastName}
+                  </div>
+                  <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                    {user.email}
+                  </div>
+                </div>
+                <ChevronDown size={12} style={{ color: 'var(--color-text-muted)' }} />
+              </>
+            )}
+          </button>
+
+          {/* Dropdown */}
+          {menuOpen && (
+            <div
+              className="absolute right-0 top-12 w-56 rounded-xl border overflow-hidden z-50 shadow-lg"
+              style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+            >
+              {user && (
+                <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
+                  <div className="text-[12px] font-semibold" style={{ color: 'var(--color-text)' }}>
+                    {user.firstName} {user.lastName}
+                  </div>
+                  <div className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                    {user.email}
+                  </div>
+                  {user.company && (
+                    <div className="text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                      {user.company}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="py-1">
+                <button
+                  onClick={() => { setMenuOpen(false); router.push('/settings'); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-[12px] font-medium transition-colors text-left"
+                  style={{ color: 'var(--color-text-secondary)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <User size={14} strokeWidth={1.5} />
+                  Profile & Settings
+                </button>
+
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-[12px] font-medium transition-colors text-left"
+                  style={{ color: 'var(--color-danger)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <LogOut size={14} strokeWidth={1.5} />
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

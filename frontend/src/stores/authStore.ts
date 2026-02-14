@@ -1,0 +1,155 @@
+import { create } from 'zustand';
+
+// ── Types ──────────────────────────────────────────────
+
+export type LicenseTier = 'starter' | 'professional' | 'enterprise' | 'ultimate';
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  company?: string;
+  avatarUrl?: string;
+  roles: { role: string; projectId?: string | null }[];
+}
+
+interface AuthState {
+  token: string | null;
+  user: AuthUser | null;
+  initialized: boolean;
+  loading: boolean;
+
+  /** Initialize from localStorage on app mount */
+  initialize: () => void;
+
+  /** Set auth data after login/register */
+  setAuth: (token: string, user: AuthUser) => void;
+
+  /** Clear auth state on logout */
+  logout: () => void;
+
+  /** Update user profile in state */
+  updateUser: (updates: Partial<AuthUser>) => void;
+
+  /** Check if user has a specific role (global or project-scoped) */
+  hasRole: (role: string, projectId?: string) => boolean;
+
+  /** Check if user has any of the given permissions based on role */
+  hasPermission: (permission: string, projectId?: string) => boolean;
+
+  /** Get Authorization header value */
+  getAuthHeader: () => { Authorization?: string };
+}
+
+// ── Role → Permission Map ──────────────────────────────
+
+const ROLE_PERMISSIONS: Record<string, string[]> = {
+  admin: ['*'],
+  project_manager: ['project:*', 'takt:*', 'constraint:*', 'progress:*', 'report:*', 'resource:*', 'quality:*', 'safety:*', 'cost:*', 'risk:*', 'supply:*', 'claims:*', 'comm:*', 'stakeholder:*', 'sustainability:*'],
+  superintendent: ['project:read', 'takt:read', 'constraint:*', 'progress:*', 'resource:read', 'quality:write', 'safety:write'],
+  foreman: ['project:read', 'takt:read', 'constraint:read', 'progress:write', 'quality:read', 'safety:read'],
+  viewer: ['project:read', 'takt:read', 'constraint:read', 'progress:read', 'report:read'],
+};
+
+// ── Licensing Tier → Modules ──────────────────────────
+
+export const TIER_MODULES: Record<LicenseTier, string[]> = {
+  starter: ['taktflow', 'dashboard', 'flowline', 'takt-editor', 'constraints', 'lps', 'communication', 'ai', 'reports', 'simulation', 'settings'],
+  professional: ['quality', 'safety', 'cost', 'vision'],
+  enterprise: ['resources', 'workmanship', 'material', 'equipment', 'scaffoldings', 'supply', 'risk', 'claims'],
+  ultimate: ['stakeholders', 'sustainability'],
+};
+
+/** Get all modules accessible for a given tier (cumulative) */
+export function getModulesForTier(tier: LicenseTier): string[] {
+  const tiers: LicenseTier[] = ['starter', 'professional', 'enterprise', 'ultimate'];
+  const tierIndex = tiers.indexOf(tier);
+  const modules: string[] = [];
+  for (let i = 0; i <= tierIndex; i++) {
+    modules.push(...TIER_MODULES[tiers[i]]);
+  }
+  return modules;
+}
+
+// ── Store ──────────────────────────────────────────────
+
+export const useAuthStore = create<AuthState>((set, get) => ({
+  token: null,
+  user: null,
+  initialized: false,
+  loading: false,
+
+  initialize: () => {
+    if (typeof window === 'undefined') return;
+
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr) as AuthUser;
+        set({ token, user, initialized: true });
+      } catch (_e) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        set({ token: null, user: null, initialized: true });
+      }
+    } else {
+      set({ initialized: true });
+    }
+  },
+
+  setAuth: (token, user) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    set({ token, user });
+  },
+
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    set({ token: null, user: null });
+  },
+
+  updateUser: (updates) => {
+    const current = get().user;
+    if (!current) return;
+    const updated = { ...current, ...updates };
+    localStorage.setItem('user', JSON.stringify(updated));
+    set({ user: updated });
+  },
+
+  hasRole: (role, projectId) => {
+    const user = get().user;
+    if (!user?.roles) return false;
+    return user.roles.some(
+      (r) => r.role === role && (projectId ? r.projectId === projectId : true)
+    );
+  },
+
+  hasPermission: (permission, projectId) => {
+    const user = get().user;
+    if (!user?.roles) return false;
+
+    for (const userRole of user.roles) {
+      if (projectId && userRole.projectId && userRole.projectId !== projectId) continue;
+
+      const perms = ROLE_PERMISSIONS[userRole.role] || [];
+      if (perms.includes('*')) return true;
+      if (perms.includes(permission)) return true;
+
+      // Wildcard match: "project:*" matches "project:read"
+      const moduleName = permission.split(':')[0];
+      if (perms.includes(`${moduleName}:*`)) return true;
+    }
+
+    return false;
+  },
+
+  getAuthHeader: () => {
+    const t = get().token;
+    if (!t) return {};
+    return { Authorization: `Bearer ${t}` };
+  },
+}));
