@@ -40,7 +40,7 @@ export default function LoginPage() {
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/taktflow-logo.svg" alt="TaktFlow AI" style={{ height: 40, width: 'auto' }} />
+        <img src="/smartcon360-logo-dark.svg" alt="SmartCon360" style={{ height: 40, width: 'auto' }} />
 
         <div className="max-w-md">
           <h1
@@ -74,7 +74,7 @@ export default function LoginPage() {
         </div>
 
         <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-          TaktFlow AI &copy; 2026 — All rights reserved
+          SmartCon360 &copy; 2026 — All rights reserved
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/taktflow-logo.svg" alt="TaktFlow AI" style={{ height: 36, width: 'auto' }} />
+            <img src="/smartcon360-logo-light.svg" alt="SmartCon360" style={{ height: 36, width: 'auto' }} />
           </div>
 
           <h2

@@ -535,9 +535,9 @@ export const BRAND = {
   name: 'SmartCon360',
   tagline: 'One Platform, Full Construction Management',
   logo: '/icons/modules/smartcon360.svg',
-  logoLight: '/taktflow-logo.svg',
-  logoDark: '/taktflow-logo-dark.svg',
-  icon: '/taktflow-icon.svg',
+  logoLight: '/smartcon360-logo-light.svg',
+  logoDark: '/smartcon360-logo-dark.svg',
+  icon: '/icons/smartcon360-icon.svg',
   accentColor: '#E8731A',
   accentGradient: 'linear-gradient(135deg, #E8731A, #F59E3F)',
 } as const;
