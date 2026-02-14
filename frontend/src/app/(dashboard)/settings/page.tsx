@@ -20,7 +20,7 @@ export default function SettingsPage() {
                   className="flex-1 p-4 rounded-xl border-2 flex flex-col items-center gap-2 cursor-pointer"
                   style={{
                     borderColor: theme === m ? 'var(--color-accent)' : 'var(--color-border)',
-                    background: theme === m ? 'rgba(59,130,246,0.08)' : 'var(--color-bg-input)',
+                    background: theme === m ? 'rgba(232,115,26,0.08)' : 'var(--color-bg-input)',
                   }}
                 >
                   {m === 'dark' ? <Moon size={24} /> : <Sun size={24} />}

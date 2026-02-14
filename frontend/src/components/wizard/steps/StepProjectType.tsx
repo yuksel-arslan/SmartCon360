@@ -27,7 +27,7 @@ export default function StepProjectType({ data, onChange }: StepProps) {
               onClick={() => onChange({ projectType: t.type })}
               className="text-left rounded-xl border p-4 transition-all hover:scale-[1.02]"
               style={{
-                background: selected ? 'rgba(59,130,246,0.1)' : 'var(--color-bg-card)',
+                background: selected ? 'rgba(232,115,26,0.1)' : 'var(--color-bg-card)',
                 borderColor: selected ? 'var(--color-accent)' : 'var(--color-border)',
                 borderWidth: selected ? 2 : 1,
               }}

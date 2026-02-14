@@ -38,7 +38,7 @@ export default function StepReview({ data }: StepProps) {
               <div className="flex items-center gap-2 mt-1">
                 <span
                   className="text-[10px] font-bold px-2 py-0.5 rounded"
-                  style={{ background: 'rgba(59,130,246,0.15)', color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}
+                  style={{ background: 'rgba(232,115,26,0.15)', color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}
                 >
                   {data.code || '—'}
                 </span>
