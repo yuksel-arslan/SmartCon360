@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, ArrowRight, Globe } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Globe, Check, Layers } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { BRAND } from '@/lib/modules';
 
@@ -11,16 +11,24 @@ type Lang = 'en' | 'tr';
 
 const t: Record<Lang, Record<string, string>> = {
   en: {
-    headline: 'One Platform, Full Construction Management',
-    description:
-      'SmartCon360 unifies 13 integrated modules covering all 10 PMBOK knowledge areas plus OHS and ESG — powered by a 3-layer AI architecture. Replace 13 separate tools with one intelligent platform.',
+    heroTagline1: 'Where PMBOK Rigor Meets',
+    heroTagline2: 'Construction Intelligence',
+    heroTagline3: '— One Platform, Zero Compromise.',
+    heroDesc:
+      'Engineered on PMBOK 7, CMAA best practices, and Lean Construction principles — SmartCon360 fuses 13 integrated modules into a single AI-driven command center. Every knowledge area, every compliance layer, every field decision — orchestrated.',
     stat1Value: '13',
     stat1Label: 'Integrated Modules',
     stat2Value: '10+2',
     stat2Label: 'PMBOK + OHS & ESG',
     stat3Value: '3-Layer',
     stat3Label: 'AI Architecture',
-    copyright: `${BRAND.name} © 2026 — All rights reserved`,
+    stat4Value: '495+',
+    stat4Label: 'API Endpoints',
+    secModules: '13 Integrated Modules',
+    secMethods: 'Methodology & Standards',
+    aiTitle: '3-Layer AI Architecture',
+    aiDesc: 'From real-time field intelligence to strategic portfolio optimization — each layer amplifies decisions across the entire project lifecycle.',
+    copyright: `${BRAND.name} © 2026 — AI-Powered Construction Management`,
     welcomeBack: 'Welcome back',
     createAccount: 'Create account',
     signInSubtitle: 'Sign in to your SmartCon360 account',
@@ -39,34 +47,76 @@ const t: Record<Lang, Record<string, string>> = {
     or: 'or',
   },
   tr: {
-    headline: 'Tek Platform, Tüm İnşaat Yönetimi',
-    description:
-      'SmartCon360, tüm 10 PMBOK bilgi alanı ile İSG ve ESG\'yi kapsayan 13 entegre modülü 3 katmanlı yapay zeka mimarisiyle birleştirir. 13 ayrı aracı tek bir akıllı platformla değiştirin.',
+    heroTagline1: 'PMBOK Disiplini',
+    heroTagline2: 'Yapi Zekasi',
+    heroTagline3: ' ile Bulusuyor — Tek Platform, Sifir Taviz.',
+    heroDesc:
+      'PMBOK 7, CMAA en iyi uygulamalari ve Yalin Insaat ilkeleri uzerine insa edildi — SmartCon360, 13 entegre modulu tek bir YZ destekli komuta merkezinde birlestiriyor. Her bilgi alani, her uyumluluk katmani, her saha karari — orkestre edilmis.',
     stat1Value: '13',
-    stat1Label: 'Entegre Modül',
+    stat1Label: 'Entegre Modul',
     stat2Value: '10+2',
-    stat2Label: 'PMBOK + İSG & ESG',
+    stat2Label: 'PMBOK + ISG & ESG',
     stat3Value: '3 Katman',
     stat3Label: 'YZ Mimarisi',
-    copyright: `${BRAND.name} © 2026 — Tüm hakları saklıdır`,
-    welcomeBack: 'Tekrar hoş geldiniz',
-    createAccount: 'Hesap oluştur',
-    signInSubtitle: 'SmartCon360 hesabınıza giriş yapın',
-    signUpSubtitle: 'Ücretsiz denemenize bugün başlayın',
+    stat4Value: '495+',
+    stat4Label: 'API Endpoint',
+    secModules: '13 Entegre Modul',
+    secMethods: 'Metodoloji & Standartlar',
+    aiTitle: '3 Katmanli YZ Mimarisi',
+    aiDesc: 'Gercek zamanli saha zekasindan stratejik portfoy optimizasyonuna — her katman, tum proje yasam dongusu boyunca kararlari guclendiriyor.',
+    copyright: `${BRAND.name} © 2026 — YZ Destekli Insaat Yonetimi`,
+    welcomeBack: 'Tekrar hos geldiniz',
+    createAccount: 'Hesap olustur',
+    signInSubtitle: 'SmartCon360 hesabiniza giris yapin',
+    signUpSubtitle: 'Ucretsiz denemenize bugun baslayin',
     firstName: 'Ad',
     lastName: 'Soyad',
     email: 'E-posta',
-    password: 'Şifre',
-    passwordHint: 'En az 8 karakter, bir büyük harf, bir rakam',
-    signIn: 'Giriş Yap',
-    createAccountBtn: 'Hesap Oluştur',
-    noAccount: 'Hesabınız yok mu? Kayıt olun',
-    hasAccount: 'Zaten hesabınız var mı? Giriş yapın',
-    tryDemo: 'Demo Hesabı Dene',
+    password: 'Sifre',
+    passwordHint: 'En az 8 karakter, bir buyuk harf, bir rakam',
+    signIn: 'Giris Yap',
+    createAccountBtn: 'Hesap Olustur',
+    noAccount: 'Hesabiniz yok mu? Kayit olun',
+    hasAccount: 'Zaten hesabiniz var mi? Giris yapin',
+    tryDemo: 'Demo Hesabi Dene',
     googleContinue: 'Google ile devam et',
     or: 'veya',
   },
 };
+
+const modules = [
+  { name: 'Project Integration Hub', desc: 'Unified dashboard, cross-module orchestration & AI insights', tag: 'PMBOK · Integration' },
+  { name: 'Scope & WBS Manager', desc: 'Work breakdown structures, scope baseline & change control', tag: 'PMBOK · Scope' },
+  { name: 'Schedule & Takt Engine', desc: 'CPM, Takt planning, 4D BIM timeline & delay analysis', tag: 'PMBOK · Schedule' },
+  { name: 'Cost & Earned Value', desc: 'Budget tracking, EVM metrics, cashflow & forecasting', tag: 'PMBOK · Cost' },
+  { name: 'Quality Assurance', desc: 'ITP/ITR management, NCR tracking & audit workflows', tag: 'PMBOK · Quality' },
+  { name: 'Resource & Workforce', desc: 'Labor allocation, equipment tracking & capacity planning', tag: 'PMBOK · Resource' },
+  { name: 'Communication Center', desc: 'RFIs, submittals, transmittals & stakeholder notifications', tag: 'PMBOK · Communication' },
+  { name: 'Risk & Issue Tracker', desc: 'Risk registers, Monte Carlo simulation & mitigation plans', tag: 'PMBOK · Risk' },
+  { name: 'Procurement & Contracts', desc: 'Vendor management, bid evaluation & contract compliance', tag: 'PMBOK · Procurement' },
+  { name: 'Stakeholder Portal', desc: 'Client dashboards, approval workflows & engagement tracking', tag: 'PMBOK · Stakeholder' },
+  { name: 'OHS Safety Module', desc: 'Incident reporting, safety inspections & compliance tracking', tag: 'OHS' },
+  { name: 'ESG & Sustainability', desc: 'Carbon tracking, environmental compliance & sustainability KPIs', tag: 'ESG' },
+  { name: 'Document & BIM Vault', desc: 'Version control, BIM model management & drawing workflows', tag: 'Core Infrastructure' },
+];
+
+const methods = [
+  {
+    label: 'PMBOK 7',
+    title: 'Project Management Body of Knowledge',
+    desc: 'All 10 knowledge areas natively embedded — scope, schedule, cost, quality, resource, communication, risk, procurement, stakeholder & integration.',
+  },
+  {
+    label: 'CMAA',
+    title: 'Construction Management Association of America',
+    desc: 'Owner representation, program management and CM-at-Risk best practices woven into every workflow and decision gate.',
+  },
+  {
+    label: 'LEAN',
+    title: 'Last Planner & Pull Planning',
+    desc: 'Waste elimination, continuous flow, constraint-based planning and reliable promising integrated into scheduling & resource modules.',
+  },
+];
 
 declare global {
   interface Window {
@@ -234,52 +284,245 @@ export default function LoginPage() {
       className="min-h-screen flex"
       style={{ backgroundColor: 'var(--color-bg)' }}
     >
-      {/* Left — Branding */}
+      {/* Left — Branding & Content */}
       <div
-        className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12"
+        className="hidden lg:flex lg:w-1/2 flex-col overflow-y-auto"
         style={{
-          background: 'linear-gradient(135deg, #0B0F1A 0%, #1a1f3a 50%, #0B0F1A 100%)',
+          background: 'linear-gradient(170deg, #0c1017 0%, #0f1520 35%, #111824 100%)',
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={BRAND.logoDark}
-          alt={BRAND.name}
-          className="self-start"
-          style={{ height: 80, width: 'auto' }}
-        />
+        {/* Ambient orbs */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+          <div
+            className="absolute rounded-full"
+            style={{
+              top: '-15%', left: '-5%', width: 500, height: 500,
+              background: 'rgba(245, 158, 11, 0.05)',
+              filter: 'blur(100px)',
+            }}
+          />
+          <div
+            className="absolute rounded-full"
+            style={{
+              bottom: '-20%', right: '25%', width: 600, height: 600,
+              background: 'rgba(20, 184, 166, 0.03)',
+              filter: 'blur(100px)',
+            }}
+          />
+        </div>
 
-        <div className="max-w-md">
-          <h1
-            className="text-4xl font-extrabold text-white leading-tight mb-4"
-            style={{ fontFamily: 'var(--font-display)' }}
+        <div className="relative p-10 pb-16" style={{ zIndex: 1 }}>
+          {/* Brand */}
+          <div className="flex items-center gap-3.5 mb-14">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={BRAND.logoDark}
+              alt={BRAND.name}
+              className="self-start"
+              style={{ height: 56, width: 'auto' }}
+            />
+          </div>
+
+          {/* Hero */}
+          <div className="mb-12">
+            <h1
+              className="leading-none mb-6"
+              style={{
+                fontFamily: "'Instrument Serif', 'Georgia', serif",
+                fontSize: 'clamp(36px, 4vw, 56px)',
+                letterSpacing: '-1.5px',
+                fontWeight: 400,
+                color: '#f1f3f7',
+              }}
+            >
+              {i.heroTagline1}<br />
+              <em style={{ fontStyle: 'italic', color: '#f59e0b' }}>{i.heroTagline2}</em><br />
+              {i.heroTagline3}
+            </h1>
+            <p
+              className="text-sm leading-relaxed max-w-xl"
+              style={{ color: '#8895a7', fontWeight: 400 }}
+            >
+              {i.heroDesc}
+            </p>
+          </div>
+
+          {/* Stats */}
+          <div
+            className="grid grid-cols-4 rounded-xl overflow-hidden mb-12"
+            style={{
+              border: '1px solid rgba(255,255,255,0.06)',
+              boxShadow: '0 4px 32px rgba(0,0,0,0.4)',
+            }}
           >
-            {i.headline}
-          </h1>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-            {i.description}
-          </p>
-
-          <div className="grid grid-cols-3 gap-4 mt-8">
             {[
               { value: i.stat1Value, label: i.stat1Label },
               { value: i.stat2Value, label: i.stat2Label },
               { value: i.stat3Value, label: i.stat3Label },
+              { value: i.stat4Value, label: i.stat4Label },
             ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-2xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-accent)' }}>
+              <div
+                key={stat.label}
+                className="text-center py-5 px-3 transition-colors"
+                style={{ background: '#151c2a' }}
+              >
+                <div
+                  className="text-2xl font-bold"
+                  style={{ fontFamily: 'var(--font-mono)', color: '#f59e0b', letterSpacing: '-0.5px' }}
+                >
                   {stat.value}
                 </div>
-                <div className="text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                <div className="text-[11px] mt-1" style={{ color: '#556178' }}>
                   {stat.label}
                 </div>
               </div>
             ))}
           </div>
-        </div>
 
-        <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-          {i.copyright}
+          {/* Modules Section */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-6 h-0.5 rounded-sm" style={{ background: '#f59e0b' }} />
+            <span
+              className="text-[11px] font-bold uppercase"
+              style={{ letterSpacing: '1.8px', color: '#556178' }}
+            >
+              {i.secModules}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-1.5 mb-12">
+            {modules.map((m) => (
+              <div
+                key={m.name}
+                className="flex items-start gap-3 px-3 py-2.5 rounded-lg transition-all"
+                style={{ border: '1px solid transparent' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#151c2a';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }}
+              >
+                <div
+                  className="w-5 h-5 min-w-5 rounded-md flex items-center justify-center mt-0.5"
+                  style={{ background: 'rgba(245,158,11,0.1)' }}
+                >
+                  <Check size={11} style={{ color: '#fbbf24' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-bold" style={{ color: '#f1f3f7', letterSpacing: '-0.2px' }}>
+                    {m.name}
+                  </div>
+                  <div className="text-[11px] leading-relaxed" style={{ color: '#556178' }}>
+                    {m.desc}
+                  </div>
+                  <span
+                    className="inline-block text-[9px] font-semibold mt-1 px-1.5 py-0.5 rounded"
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      background: 'rgba(245,158,11,0.1)',
+                      color: '#d97706',
+                      letterSpacing: '0.3px',
+                    }}
+                  >
+                    {m.tag}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Methodologies Section */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-6 h-0.5 rounded-sm" style={{ background: '#14b8a6' }} />
+            <span
+              className="text-[11px] font-bold uppercase"
+              style={{ letterSpacing: '1.8px', color: '#556178' }}
+            >
+              {i.secMethods}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mb-12">
+            {methods.map((m) => (
+              <div
+                key={m.label}
+                className="p-5 rounded-xl transition-all"
+                style={{
+                  border: '1px solid rgba(20,184,166,0.2)',
+                  background: 'rgba(20,184,166,0.04)',
+                }}
+              >
+                <div
+                  className="text-[10px] font-semibold uppercase mb-2"
+                  style={{ fontFamily: 'var(--font-mono)', color: '#14b8a6', letterSpacing: '1.2px' }}
+                >
+                  {m.label}
+                </div>
+                <div className="text-[14px] font-bold mb-1.5" style={{ color: '#f1f3f7', letterSpacing: '-0.2px' }}>
+                  {m.title}
+                </div>
+                <div className="text-[12px] leading-relaxed" style={{ color: '#8895a7' }}>
+                  {m.desc}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* AI Architecture Bar */}
+          <div
+            className="flex items-center gap-5 p-5 rounded-xl"
+            style={{
+              background: '#151c2a',
+              border: '1px solid rgba(245,158,11,0.25)',
+              boxShadow: '0 0 80px rgba(245,158,11,0.06)',
+            }}
+          >
+            <div
+              className="w-11 h-11 min-w-11 rounded-xl flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+                boxShadow: '0 4px 20px rgba(245,158,11,0.2)',
+              }}
+            >
+              <Layers size={20} style={{ color: '#fff' }} />
+            </div>
+            <div className="flex-1">
+              <div className="text-[13px] font-bold mb-1" style={{ color: '#f1f3f7' }}>
+                {i.aiTitle}
+              </div>
+              <div className="text-[12px] leading-relaxed" style={{ color: '#8895a7' }}>
+                {i.aiDesc}
+              </div>
+              <div className="flex gap-2 mt-2.5 flex-wrap">
+                {['L1 · Field AI', 'L2 · Project AI', 'L3 · Portfolio AI'].map((layer) => (
+                  <span
+                    key={layer}
+                    className="text-[10px] font-medium px-2 py-0.5 rounded"
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      background: 'rgba(245,158,11,0.1)',
+                      color: '#f59e0b',
+                      border: '1px solid rgba(245,158,11,0.25)',
+                      letterSpacing: '0.3px',
+                    }}
+                  >
+                    {layer}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div
+            className="mt-12 pt-5 text-[11px]"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: '#556178' }}
+          >
+            {i.copyright}
+          </div>
         </div>
       </div>
 
@@ -348,7 +591,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setError(lang === 'tr'
-                  ? 'Google ile giriş henüz yapılandırılmadı. Lütfen e-posta ile giriş yapın.'
+                  ? 'Google ile giris henuz yapilandirilmadi. Lutfen e-posta ile giris yapin.'
                   : 'Google Sign-In is not configured yet. Please use email login.'
                 )}
                 className="w-full py-2.5 rounded-lg border text-sm font-medium flex items-center justify-center gap-3 transition-colors hover:opacity-80"
