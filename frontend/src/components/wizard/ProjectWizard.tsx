@@ -127,7 +127,8 @@ export default function ProjectWizard() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || `Failed to create project (${res.status})`);
+        const message = typeof err.error === 'object' ? err.error.message : err.error;
+        throw new Error(message || `Failed to create project (${res.status})`);
       }
 
       const { data: project } = await res.json();
@@ -136,18 +137,23 @@ export default function ProjectWizard() {
       if (data.locations.length > 0) {
         const flatLocations = flattenLocations(data.locations);
         if (flatLocations.length > 0) {
-          await fetch(`/api/v1/projects/${project.id}/locations/bulk`, {
+          const locRes = await fetch(`/api/v1/projects/${project.id}/locations/bulk`, {
             method: 'POST',
             headers,
             body: JSON.stringify({ locations: flatLocations }),
           });
+          if (!locRes.ok) {
+            const locErr = await locRes.json().catch(() => ({}));
+            const msg = typeof locErr.error === 'object' ? locErr.error.message : locErr.error;
+            throw new Error(msg || `Failed to create locations (${locRes.status})`);
+          }
         }
       }
 
       // 3. Create enabled trades
       const enabledTrades = data.trades.filter((t) => t.enabled);
       for (const trade of enabledTrades) {
-        await fetch(`/api/v1/projects/${project.id}/trades`, {
+        const tradeRes = await fetch(`/api/v1/projects/${project.id}/trades`, {
           method: 'POST',
           headers,
           body: JSON.stringify({
@@ -158,6 +164,11 @@ export default function ProjectWizard() {
             predecessorTradeIds: [],
           }),
         });
+        if (!tradeRes.ok) {
+          const tradeErr = await tradeRes.json().catch(() => ({}));
+          const msg = typeof tradeErr.error === 'object' ? tradeErr.error.message : tradeErr.error;
+          throw new Error(msg || `Failed to create trade "${trade.name}" (${tradeRes.status})`);
+        }
       }
 
       // 4. Auto-generate initial takt plan (AI-1 Core)

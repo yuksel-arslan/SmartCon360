@@ -16,13 +16,30 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     for (const loc of locations) {
       const input = createLocationSchema.parse(loc);
+
+      // Resolve parentName to parentId if parentId is not provided
+      let resolvedParentId = input.parentId || null;
+      if (!resolvedParentId && input.parentName) {
+        const parentFromCreated = created.find((c) => c.name === input.parentName);
+        if (parentFromCreated) {
+          resolvedParentId = parentFromCreated.id as string;
+        } else {
+          const parentFromDb = await prisma.location.findFirst({
+            where: { projectId, name: input.parentName },
+          });
+          if (parentFromDb) {
+            resolvedParentId = parentFromDb.id;
+          }
+        }
+      }
+
       let parentPath: string | null = null;
       let depth = 0;
 
-      if (input.parentId) {
+      if (resolvedParentId) {
         const parent =
-          (created.find((c) => c.id === input.parentId) as Record<string, unknown> | undefined) ||
-          (await prisma.location.findUnique({ where: { id: input.parentId } }));
+          (created.find((c) => c.id === resolvedParentId) as Record<string, unknown> | undefined) ||
+          (await prisma.location.findUnique({ where: { id: resolvedParentId } }));
         if (parent) {
           parentPath = parent.path as string;
           depth = (parent.depth as number) + 1;
@@ -30,8 +47,8 @@ export async function POST(request: NextRequest, { params }: Params) {
       }
 
       const count =
-        created.filter((c) => c.parentId === input.parentId).length +
-        (await prisma.location.count({ where: { projectId, parentId: input.parentId || null } }));
+        created.filter((c) => c.parentId === resolvedParentId).length +
+        (await prisma.location.count({ where: { projectId, parentId: resolvedParentId } }));
 
       const cp = input.locationType.charAt(0).toUpperCase();
       const code = parentPath
@@ -42,7 +59,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       const location = await prisma.location.create({
         data: {
           projectId,
-          parentId: input.parentId,
+          parentId: resolvedParentId,
           name: input.name,
           locationType: input.locationType,
           code,
