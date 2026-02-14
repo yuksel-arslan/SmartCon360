@@ -215,7 +215,7 @@ function renderMessageContent(content: string) {
     if (/^\d+\.\s/.test(line)) {
       elements.push(
         <div key={`li-${i}`} className="flex gap-2 pl-1 py-0.5">
-          <span className="text-[11px] font-bold flex-shrink-0" style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>
+          <span className="text-[11px] font-medium flex-shrink-0" style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>
             {line.match(/^(\d+\.)/)?.[1]}
           </span>
           <span className="text-[12px] leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>{finalParts.length > 1 ? finalParts.slice(1) : finalParts}</span>
@@ -467,7 +467,7 @@ export default function AIConciergePage() {
                 <Bot size={14} className="text-white" />
               </div>
               <div>
-                <div className="text-xs font-bold" style={{ color: 'var(--color-text)' }}>TaktFlow AI</div>
+                <div className="text-xs font-medium" style={{ color: 'var(--color-text)' }}>TaktFlow AI</div>
                 <div className="flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--color-success)' }} />
                   <span className="text-[10px]" style={{ color: 'var(--color-success)' }}>Online -- Layer 2 (Gemini Enhanced)</span>
@@ -649,7 +649,7 @@ export default function AIConciergePage() {
                 <div className="rounded-xl border p-4" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
                   <div className="flex items-center gap-2 mb-3">
                     <Info size={13} style={{ color: 'var(--color-accent)' }} />
-                    <h3 className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Current Context</h3>
+                    <h3 className="text-[11px] font-medium uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Current Context</h3>
                   </div>
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between">
@@ -663,19 +663,19 @@ export default function AIConciergePage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>Progress</span>
-                      <span className="text-[11px] font-bold" style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>45%</span>
+                      <span className="text-[11px] font-medium" style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>45%</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>PPC</span>
-                      <span className="text-[11px] font-bold" style={{ color: 'var(--color-success)', fontFamily: 'var(--font-mono)' }}>93%</span>
+                      <span className="text-[11px] font-medium" style={{ color: 'var(--color-success)', fontFamily: 'var(--font-mono)' }}>93%</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>Takt Period</span>
-                      <span className="text-[11px] font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}>T5 / T11</span>
+                      <span className="text-[11px] font-medium" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}>T5 / T11</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>AI Score</span>
-                      <span className="text-[11px] font-bold" style={{ color: 'var(--color-purple)', fontFamily: 'var(--font-mono)' }}>87</span>
+                      <span className="text-[11px] font-medium" style={{ color: 'var(--color-purple)', fontFamily: 'var(--font-mono)' }}>87</span>
                     </div>
                   </div>
                 </div>
@@ -684,7 +684,7 @@ export default function AIConciergePage() {
                 <div className="rounded-xl border p-4" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
                   <div className="flex items-center gap-2 mb-3">
                     <Zap size={13} style={{ color: 'var(--color-purple)' }} />
-                    <h3 className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Quick Actions</h3>
+                    <h3 className="text-[11px] font-medium uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Quick Actions</h3>
                   </div>
                   <div className="space-y-1.5">
                     {QUICK_ACTIONS.map((action) => (
@@ -707,7 +707,7 @@ export default function AIConciergePage() {
                 <div className="rounded-xl border p-4" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
                   <div className="flex items-center gap-2 mb-3">
                     <Database size={13} style={{ color: 'var(--color-cyan)' }} />
-                    <h3 className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Sources Queried</h3>
+                    <h3 className="text-[11px] font-medium uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Sources Queried</h3>
                   </div>
                   {(() => {
                     const lastAI = [...messages].reverse().find((m) => m.role === 'assistant' && m.sources);
@@ -732,7 +732,7 @@ export default function AIConciergePage() {
                 <div className="rounded-xl border p-4" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
                   <div className="flex items-center gap-2 mb-3">
                     <Brain size={13} style={{ color: 'var(--color-warning)' }} />
-                    <h3 className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Capabilities</h3>
+                    <h3 className="text-[11px] font-medium uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Capabilities</h3>
                   </div>
                   <div className="space-y-2">
                     {[

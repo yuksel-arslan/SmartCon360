@@ -143,7 +143,7 @@ export default function ConstraintsPage() {
             { label: 'CRR', value: `${stats.crr}%`, color: 'var(--color-success)' },
           ].map((stat) => (
             <div key={stat.label} className="rounded-xl border p-4 text-center" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
-              <div className="text-2xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: stat.color }}>{stat.value}</div>
+              <div className="text-2xl font-medium" style={{ fontFamily: 'var(--font-display)', color: stat.color }}>{stat.value}</div>
               <div className="text-[10px] font-semibold uppercase tracking-wide mt-1" style={{ color: 'var(--color-text-muted)' }}>{stat.label}</div>
             </div>
           ))}
@@ -198,9 +198,9 @@ export default function ConstraintsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{c.title}</h4>
-                        <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded" style={{ background: `${priorityColors[c.priority]}15`, color: priorityColors[c.priority] }}>{c.priority}</span>
+                        <span className="text-[9px] uppercase font-medium px-1.5 py-0.5 rounded" style={{ background: `${priorityColors[c.priority]}15`, color: priorityColors[c.priority] }}>{c.priority}</span>
                         {c.source === 'auto-detected' && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,63,0.1)', color: 'var(--color-purple)' }}>AI Detected</span>
+                          <span className="text-[9px] font-medium px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,63,0.1)', color: 'var(--color-purple)' }}>AI Detected</span>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
@@ -228,7 +228,7 @@ export default function ConstraintsPage() {
         <div className="rounded-xl border p-4" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Constraint Removal Rate (CRR)</span>
-            <span className="text-[12px] font-bold" style={{ color: 'var(--color-success)', fontFamily: 'var(--font-mono)' }}>{stats.crr}%</span>
+            <span className="text-[12px] font-medium" style={{ color: 'var(--color-success)', fontFamily: 'var(--font-mono)' }}>{stats.crr}%</span>
           </div>
           <div className="h-2 rounded-full w-full" style={{ background: 'var(--color-bg-input)' }}>
             <div className="h-2 rounded-full transition-all duration-500" style={{ width: `${stats.crr}%`, background: stats.crr >= 80 ? 'var(--color-success)' : stats.crr >= 50 ? 'var(--color-warning)' : 'var(--color-danger)' }} />

@@ -35,7 +35,7 @@ export default function StepTaktConfig({ data, onChange }: StepProps) {
   return (
     <div>
       <h2
-        className="text-xl font-extrabold mb-1"
+        className="text-xl font-medium mb-1"
         style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
       >
         Takt Configuration
@@ -51,7 +51,7 @@ export default function StepTaktConfig({ data, onChange }: StepProps) {
             <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
               Takt Time
             </label>
-            <span className="text-lg font-extrabold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-accent)' }}>
+            <span className="text-lg font-medium" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-accent)' }}>
               {data.defaultTaktTime} {data.defaultTaktTime === 1 ? 'day' : 'days'}
             </span>
           </div>
@@ -80,7 +80,7 @@ export default function StepTaktConfig({ data, onChange }: StepProps) {
             <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
               Buffer Between Trades
             </label>
-            <span className="text-lg font-extrabold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-purple)' }}>
+            <span className="text-lg font-medium" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-purple)' }}>
               {data.bufferSize} {data.bufferSize === 1 ? 'takt' : 'takts'}
             </span>
           </div>
@@ -110,7 +110,7 @@ export default function StepTaktConfig({ data, onChange }: StepProps) {
                 <button
                   key={day.key}
                   onClick={() => toggleDay(day.key)}
-                  className="w-10 h-10 rounded-lg text-[11px] font-bold transition-all"
+                  className="w-10 h-10 rounded-lg text-[11px] font-medium transition-all"
                   style={{
                     background: active ? 'var(--color-accent)' : 'var(--color-bg-input)',
                     color: active ? '#fff' : 'var(--color-text-muted)',
@@ -131,7 +131,7 @@ export default function StepTaktConfig({ data, onChange }: StepProps) {
         >
           <div className="flex items-center gap-2 mb-3">
             <Info size={14} style={{ color: 'var(--color-accent)' }} />
-            <span className="text-[12px] font-bold" style={{ color: 'var(--color-text)' }}>
+            <span className="text-[12px] font-medium" style={{ color: 'var(--color-text)' }}>
               Duration Estimate
             </span>
           </div>
@@ -143,7 +143,7 @@ export default function StepTaktConfig({ data, onChange }: StepProps) {
               { label: 'Calendar Days', value: `~${calendarDays}`, color: 'var(--color-warning)' },
             ].map((s) => (
               <div key={s.label} className="text-center">
-                <div className="text-xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: s.color }}>
+                <div className="text-xl font-medium" style={{ fontFamily: 'var(--font-display)', color: s.color }}>
                   {s.value}
                 </div>
                 <div className="text-[10px] uppercase font-semibold" style={{ color: 'var(--color-text-muted)' }}>

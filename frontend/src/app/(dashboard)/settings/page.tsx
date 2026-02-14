@@ -11,7 +11,7 @@ export default function SettingsPage() {
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-md">
           <div className="rounded-xl border p-5" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
-            <h3 className="text-base font-bold mb-4" style={{ fontFamily: 'var(--font-display)' }}>Appearance</h3>
+            <h3 className="text-base font-medium mb-4" style={{ fontFamily: 'var(--font-display)' }}>Appearance</h3>
             <div className="flex gap-3">
               {(['dark', 'light'] as const).map((m) => (
                 <button

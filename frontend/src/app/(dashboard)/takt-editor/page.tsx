@@ -797,7 +797,7 @@ export default function TaktEditorPage() {
               <div key={stat.label} className="flex items-center gap-1.5">
                 <stat.icon size={12} style={{ color: stat.color }} />
                 <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>{stat.label}</span>
-                <span className="text-[11px] font-bold" style={{ color: stat.color, fontFamily: 'var(--font-mono)' }}>
+                <span className="text-[11px] font-medium" style={{ color: stat.color, fontFamily: 'var(--font-mono)' }}>
                   {stat.value}
                 </span>
               </div>
@@ -906,7 +906,7 @@ export default function TaktEditorPage() {
                                         onBlur={commitInlineEdit}
                                         onKeyDown={handleInlineKeyDown}
                                         autoFocus
-                                        className="w-8 text-center text-[10px] font-bold rounded border outline-none"
+                                        className="w-8 text-center text-[10px] font-medium rounded border outline-none"
                                         style={{
                                           background: 'var(--color-bg-input)',
                                           borderColor: 'var(--color-accent)',
@@ -917,7 +917,7 @@ export default function TaktEditorPage() {
                                     ) : (
                                       <button
                                         onClick={() => startInlineEdit(trade.id, 'taktTime', trade.taktTime)}
-                                        className="text-[10px] font-bold px-1.5 py-0.5 rounded transition-all hover:opacity-70"
+                                        className="text-[10px] font-medium px-1.5 py-0.5 rounded transition-all hover:opacity-70"
                                         style={{
                                           background: 'rgba(232,115,26,0.1)',
                                           color: 'var(--color-accent)',
@@ -940,7 +940,7 @@ export default function TaktEditorPage() {
                                         onBlur={commitInlineEdit}
                                         onKeyDown={handleInlineKeyDown}
                                         autoFocus
-                                        className="w-8 text-center text-[10px] font-bold rounded border outline-none"
+                                        className="w-8 text-center text-[10px] font-medium rounded border outline-none"
                                         style={{
                                           background: 'var(--color-bg-input)',
                                           borderColor: 'var(--color-warning)',
@@ -951,7 +951,7 @@ export default function TaktEditorPage() {
                                     ) : (
                                       <button
                                         onClick={() => startInlineEdit(trade.id, 'buffer', trade.bufferAfter)}
-                                        className="text-[10px] font-bold px-1.5 py-0.5 rounded transition-all hover:opacity-70"
+                                        className="text-[10px] font-medium px-1.5 py-0.5 rounded transition-all hover:opacity-70"
                                         style={{
                                           background: trade.bufferAfter === 0 ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)',
                                           color: trade.bufferAfter === 0 ? 'var(--color-danger)' : 'var(--color-warning)',
@@ -974,7 +974,7 @@ export default function TaktEditorPage() {
                                         onBlur={commitInlineEdit}
                                         onKeyDown={handleInlineKeyDown}
                                         autoFocus
-                                        className="w-8 text-center text-[10px] font-bold rounded border outline-none"
+                                        className="w-8 text-center text-[10px] font-medium rounded border outline-none"
                                         style={{
                                           background: 'var(--color-bg-input)',
                                           borderColor: 'var(--color-success)',
@@ -985,7 +985,7 @@ export default function TaktEditorPage() {
                                     ) : (
                                       <button
                                         onClick={() => startInlineEdit(trade.id, 'crewSize', trade.crewSize)}
-                                        className="text-[10px] font-bold px-1.5 py-0.5 rounded transition-all hover:opacity-70"
+                                        className="text-[10px] font-medium px-1.5 py-0.5 rounded transition-all hover:opacity-70"
                                         style={{
                                           background: 'rgba(16,185,129,0.1)',
                                           color: 'var(--color-success)',
@@ -1046,7 +1046,7 @@ export default function TaktEditorPage() {
                                       </div>
                                       {/* Period */}
                                       <div
-                                        className="text-[10px] font-bold"
+                                        className="text-[10px] font-medium"
                                         style={{ color: statusCfg.text, fontFamily: 'var(--font-mono)' }}
                                       >
                                         T{cell.periodNumber}
@@ -1080,7 +1080,7 @@ export default function TaktEditorPage() {
                                                 border: '1px solid var(--color-border)',
                                               }}
                                             >
-                                              <div className="text-[10px] font-bold" style={{ color: 'var(--color-text)' }}>
+                                              <div className="text-[10px] font-medium" style={{ color: 'var(--color-text)' }}>
                                                 {trade.name} - {zone.name.split(' — ')[0]}
                                               </div>
                                               <div className="text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
@@ -1116,7 +1116,7 @@ export default function TaktEditorPage() {
             >
               <div className="flex items-center gap-2 mb-2">
                 <ShieldAlert size={14} style={{ color: 'var(--color-warning)' }} />
-                <span className="text-[11px] font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-display)' }}>
+                <span className="text-[11px] font-medium" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-display)' }}>
                   Warnings ({warnings.length})
                 </span>
               </div>
@@ -1177,7 +1177,7 @@ export default function TaktEditorPage() {
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-sm" style={{ background: selectedCellData.trade.color }} />
-                    <span className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
+                    <span className="text-sm font-medium" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
                       Cell Details
                     </span>
                   </div>
@@ -1223,7 +1223,7 @@ export default function TaktEditorPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>Period</span>
-                      <span className="text-[12px] font-bold" style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>
+                      <span className="text-[12px] font-medium" style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>
                         T{selectedCellData.cell.periodNumber}
                       </span>
                     </div>
@@ -1275,7 +1275,7 @@ export default function TaktEditorPage() {
                       <span className="inline-flex items-center gap-1"><Users size={10} /> Crew Size</span>
                     </label>
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}>
+                      <span className="text-lg font-medium" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}>
                         {selectedCellData.cell.crewSize}
                       </span>
                       <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>workers</span>
@@ -1297,7 +1297,7 @@ export default function TaktEditorPage() {
                           {selectedCellData.predecessor.name}
                         </span>
                         <ChevronRight size={10} style={{ color: 'var(--color-text-muted)' }} />
-                        <span className="text-[10px] font-bold" style={{ color: 'var(--color-accent)' }}>Predecessor</span>
+                        <span className="text-[10px] font-medium" style={{ color: 'var(--color-accent)' }}>Predecessor</span>
                       </div>
                     )}
                     <div
@@ -1305,7 +1305,7 @@ export default function TaktEditorPage() {
                       style={{ background: `${selectedCellData.trade.color}15`, border: `1px solid ${selectedCellData.trade.color}40` }}
                     >
                       <div className="w-2.5 h-2.5 rounded-sm" style={{ background: selectedCellData.trade.color }} />
-                      <span className="text-[10px] font-bold" style={{ color: 'var(--color-text)' }}>
+                      <span className="text-[10px] font-medium" style={{ color: 'var(--color-text)' }}>
                         {selectedCellData.trade.name}
                       </span>
                       <span className="text-[9px] ml-auto" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
@@ -1322,7 +1322,7 @@ export default function TaktEditorPage() {
                           {selectedCellData.successor.name}
                         </span>
                         <ChevronRight size={10} style={{ color: 'var(--color-text-muted)' }} />
-                        <span className="text-[10px] font-bold" style={{ color: 'var(--color-success)' }}>Successor</span>
+                        <span className="text-[10px] font-medium" style={{ color: 'var(--color-success)' }}>Successor</span>
                       </div>
                     )}
                   </div>
@@ -1372,7 +1372,7 @@ export default function TaktEditorPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <h3
-                className="text-lg font-bold mb-4"
+                className="text-lg font-medium mb-4"
                 style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
               >
                 Add Trade to Wagon Train
@@ -1463,7 +1463,7 @@ export default function TaktEditorPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <h3
-                className="text-lg font-bold mb-4"
+                className="text-lg font-medium mb-4"
                 style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
               >
                 Add Zone

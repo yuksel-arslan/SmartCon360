@@ -117,7 +117,7 @@ export default function StepLBS({ data }: StepProps) {
   return (
     <div>
       <h2
-        className="text-xl font-extrabold mb-1"
+        className="text-xl font-medium mb-1"
         style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
       >
         Location Breakdown Structure
@@ -138,7 +138,7 @@ export default function StepLBS({ data }: StepProps) {
             className="rounded-lg px-3 py-2 border"
             style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
           >
-            <div className="text-lg font-extrabold" style={{ fontFamily: 'var(--font-display)', color: s.color }}>
+            <div className="text-lg font-medium" style={{ fontFamily: 'var(--font-display)', color: s.color }}>
               {s.value}
             </div>
             <div className="text-[10px] uppercase font-semibold" style={{ color: 'var(--color-text-muted)' }}>

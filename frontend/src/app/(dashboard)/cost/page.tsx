@@ -86,7 +86,7 @@ function OverviewTab() {
             <div className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
               {kpi.label}
             </div>
-            <div className="text-2xl font-bold mt-1" style={{ color: 'var(--color-text)' }}>
+            <div className="text-2xl font-medium mt-1" style={{ color: 'var(--color-text)' }}>
               {kpi.value}
             </div>
           </div>
