@@ -1,7 +1,10 @@
 {
-  "name": "@taktflow/frontend",
+  "name": "@smartcon360/frontend",
   "version": "1.0.0",
   "private": true,
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
+  },
   "scripts": {
     "dev": "next dev --port 3100",
     "build": "prisma generate && next build",
