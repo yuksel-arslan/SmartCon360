@@ -25,7 +25,8 @@ const PROJECT_ICONS: Record<string, LucideIcon> = {
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { sidebarCollapsed, toggleSidebar } = useUIStore();
+  const { sidebarCollapsed, toggleSidebar, theme } = useUIStore();
+  const sidebarLogo = theme === 'dark' ? BRAND.logoDark : BRAND.logoLight;
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
@@ -56,22 +57,17 @@ export default function Sidebar() {
       >
         {sidebarCollapsed ? (
           <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
-            <Image src={BRAND.logo} alt={BRAND.name} width={32} height={32} priority />
+            <Image src={BRAND.icon} alt={BRAND.name} width={32} height={32} priority />
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
-              <Image src={BRAND.logo} alt={BRAND.name} width={32} height={32} priority />
-            </div>
-            <div>
-              <div className="text-[13px] font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>
-                {BRAND.name}
-              </div>
-              <div className="text-[9px] font-medium tracking-wider uppercase" style={{ color: 'var(--color-text-muted)' }}>
-                Construction Platform
-              </div>
-            </div>
-          </div>
+          <Image
+            src={sidebarLogo}
+            alt={BRAND.name}
+            width={160}
+            height={40}
+            priority
+            style={{ height: 36, width: 'auto' }}
+          />
         )}
       </div>
 
