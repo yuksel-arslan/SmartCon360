@@ -1,6 +1,16 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
+
+/** Platform admin — full access, all modules free */
+const PLATFORM_ADMIN = {
+  email: 'contact@yukselarslan.com',
+  password: 'SmartCon360!',
+  firstName: 'Yuksel',
+  lastName: 'Arslan',
+  company: 'SmartCon360',
+};
 
 const DEFAULT_ROLES = [
   {
@@ -62,6 +72,33 @@ async function main() {
       create: role,
     });
     console.log(`  ✓ ${role.name}`);
+  }
+
+  // ── Platform Admin User ──
+  console.log('Seeding platform admin...');
+  const adminRole = await prisma.role.findUnique({ where: { name: 'admin' } });
+
+  const existingAdmin = await prisma.user.findUnique({ where: { email: PLATFORM_ADMIN.email } });
+  if (!existingAdmin) {
+    const passwordHash = await bcrypt.hash(PLATFORM_ADMIN.password, 12);
+    const admin = await prisma.user.create({
+      data: {
+        email: PLATFORM_ADMIN.email,
+        passwordHash,
+        firstName: PLATFORM_ADMIN.firstName,
+        lastName: PLATFORM_ADMIN.lastName,
+        company: PLATFORM_ADMIN.company,
+        emailVerified: true,
+      },
+    });
+    if (adminRole) {
+      await prisma.userRole.create({
+        data: { userId: admin.id, roleId: adminRole.id },
+      });
+    }
+    console.log(`  ✓ ${PLATFORM_ADMIN.email} (admin)`);
+  } else {
+    console.log(`  ○ ${PLATFORM_ADMIN.email} (already exists)`);
   }
 
   console.log('Seed complete.');

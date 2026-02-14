@@ -341,12 +341,17 @@ export default function LoginPage() {
 
           {/* Google Sign-In */}
           <div className="mb-4">
+            {/* Real Google button renders here when SDK is loaded */}
             <div id="google-signin-btn" className="flex justify-center" />
+            {/* Fallback button when Google SDK is not loaded (no client ID) */}
             {!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
               <button
                 type="button"
-                disabled
-                className="w-full py-2.5 rounded-lg border text-sm font-medium flex items-center justify-center gap-3 opacity-50 cursor-not-allowed"
+                onClick={() => setError(lang === 'tr'
+                  ? 'Google ile giriş henüz yapılandırılmadı. Lütfen e-posta ile giriş yapın.'
+                  : 'Google Sign-In is not configured yet. Please use email login.'
+                )}
+                className="w-full py-2.5 rounded-lg border text-sm font-medium flex items-center justify-center gap-3 transition-colors hover:opacity-80"
                 style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'var(--color-bg-card)' }}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
