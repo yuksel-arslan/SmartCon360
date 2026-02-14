@@ -183,7 +183,7 @@ export default function FlowlinePage() {
             <div className="flex items-center gap-3">
               {/* WebSocket indicator */}
               <motion.div
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-semibold"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-normal"
                 style={{
                   background: isConnected ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
                   color: isConnected ? 'var(--color-success)' : 'var(--color-danger)',
@@ -215,7 +215,7 @@ export default function FlowlinePage() {
                     <button
                       key={mode.id}
                       onClick={() => setViewMode(mode.id)}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all"
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-normal transition-all"
                       style={{
                         background: active ? 'var(--color-bg-card)' : 'transparent',
                         color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
@@ -235,7 +235,7 @@ export default function FlowlinePage() {
               {/* Comparison toggle */}
               <button
                 onClick={toggleComparisonMode}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold border transition-all"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-normal border transition-all"
                 style={{
                   borderColor: comparisonMode ? 'var(--color-purple)' : 'var(--color-border)',
                   background: comparisonMode ? 'rgba(245,158,63,0.1)' : 'transparent',
@@ -249,7 +249,7 @@ export default function FlowlinePage() {
               {/* Filter panel toggle */}
               <button
                 onClick={() => setFilterPanelOpen(!filterPanelOpen)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold border transition-all"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-normal border transition-all"
                 style={{
                   borderColor: filterPanelOpen ? 'var(--color-accent)' : 'var(--color-border)',
                   background: filterPanelOpen ? 'rgba(232,115,26,0.1)' : 'transparent',
@@ -338,7 +338,7 @@ export default function FlowlinePage() {
                   <div>
                     <div className="flex items-center gap-1.5 mb-2">
                       <BarChart3 size={12} style={{ color: 'var(--color-text-muted)' }} />
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
+                      <span className="text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
                         Trades
                       </span>
                       <button
@@ -350,7 +350,7 @@ export default function FlowlinePage() {
                             setAllTrades(allNames);
                           }
                         }}
-                        className="ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded"
+                        className="ml-auto text-[9px] font-normal px-1.5 py-0.5 rounded"
                         style={{ color: 'var(--color-accent)' }}
                       >
                         {visibleTrades.size === DEMO_FLOWLINE.length ? 'Deselect All' : 'Select All'}
@@ -363,7 +363,7 @@ export default function FlowlinePage() {
                           <button
                             key={w.trade_name}
                             onClick={() => toggleTrade(w.trade_name)}
-                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold border transition-all"
+                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-normal border transition-all"
                             style={{
                               borderColor: active ? w.color : 'var(--color-border)',
                               background: active ? `${w.color}15` : 'transparent',
@@ -383,7 +383,7 @@ export default function FlowlinePage() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {/* Status filter */}
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--color-text-muted)' }}>
+                      <label className="text-[10px] font-medium uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--color-text-muted)' }}>
                         Status
                       </label>
                       <select
@@ -404,7 +404,7 @@ export default function FlowlinePage() {
 
                     {/* Zone filter */}
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--color-text-muted)' }}>
+                      <label className="text-[10px] font-medium uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--color-text-muted)' }}>
                         Zone
                       </label>
                       <select
@@ -426,7 +426,7 @@ export default function FlowlinePage() {
 
                     {/* Overlay toggles */}
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--color-text-muted)' }}>
+                      <label className="text-[10px] font-medium uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--color-text-muted)' }}>
                         Overlays
                       </label>
                       <div className="flex flex-wrap gap-1.5">
@@ -438,7 +438,7 @@ export default function FlowlinePage() {
                           <button
                             key={item.label}
                             onClick={item.toggle}
-                            className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold border transition-all"
+                            className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-normal border transition-all"
                             style={{
                               borderColor: item.active ? 'var(--color-accent)' : 'var(--color-border)',
                               background: item.active ? 'rgba(232,115,26,0.1)' : 'transparent',
@@ -483,10 +483,10 @@ export default function FlowlinePage() {
                   <stat.icon size={14} style={{ color: stat.color }} />
                 </div>
                 <div>
-                  <div className="text-sm font-extrabold leading-none" style={{ fontFamily: 'var(--font-display)', color: stat.color }}>
+                  <div className="text-sm font-medium leading-none" style={{ fontFamily: 'var(--font-display)', color: stat.color }}>
                     {stat.value}
                   </div>
-                  <div className="text-[9px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                  <div className="text-[9px] font-normal uppercase tracking-wider mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                     {stat.label}
                   </div>
                 </div>
@@ -504,7 +504,7 @@ export default function FlowlinePage() {
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                 <div>
-                  <h2 className="text-sm sm:text-base font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                  <h2 className="text-sm sm:text-base font-medium" style={{ fontFamily: 'var(--font-display)' }}>
                     Hotel Sapphire — Location-Time Chart
                   </h2>
                   <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
@@ -516,7 +516,7 @@ export default function FlowlinePage() {
                 <div className="flex items-center gap-2">
                   {comparisonMode && (
                     <span
-                      className="text-[10px] px-2 py-0.5 rounded-md font-semibold flex items-center gap-1"
+                      className="text-[10px] px-2 py-0.5 rounded-md font-normal flex items-center gap-1"
                       style={{ background: 'rgba(245,158,63,0.12)', color: 'var(--color-purple)' }}
                     >
                       <GitCompareArrows size={10} />
@@ -524,7 +524,7 @@ export default function FlowlinePage() {
                     </span>
                   )}
                   <span
-                    className="text-[10px] px-2 py-0.5 rounded-md font-semibold"
+                    className="text-[10px] px-2 py-0.5 rounded-md font-normal"
                     style={{ background: 'rgba(232,115,26,0.12)', color: 'var(--color-accent)' }}
                   >
                     {filteredWagons.length} of {DEMO_FLOWLINE.length} trades visible
@@ -558,7 +558,7 @@ export default function FlowlinePage() {
                     <thead>
                       <tr>
                         <th
-                          className="sticky left-0 z-10 px-3 py-2 text-left font-bold"
+                          className="sticky left-0 z-10 px-3 py-2 text-left font-medium"
                           style={{ background: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
                         >
                           Trade
@@ -566,7 +566,7 @@ export default function FlowlinePage() {
                         {DEMO_ZONES.map((z) => (
                           <th
                             key={z.id}
-                            className="px-2 py-2 text-center font-semibold"
+                            className="px-2 py-2 text-center font-normal"
                             style={{ color: 'var(--color-text-muted)' }}
                           >
                             {z.name.split(' — ')[0]}
@@ -578,7 +578,7 @@ export default function FlowlinePage() {
                       {filteredWagons.map((wagon) => (
                         <tr key={wagon.trade_name}>
                           <td
-                            className="sticky left-0 z-10 px-3 py-2 font-semibold whitespace-nowrap"
+                            className="sticky left-0 z-10 px-3 py-2 font-normal whitespace-nowrap"
                             style={{ background: 'var(--color-bg-card)', color: wagon.color }}
                           >
                             <div className="flex items-center gap-2">
@@ -603,7 +603,7 @@ export default function FlowlinePage() {
                                 className="px-2 py-2 text-center border"
                                 style={{ background: statusBg, borderColor: 'var(--color-border)', color: statusColor }}
                               >
-                                <div className="font-bold">{seg.percentComplete}%</div>
+                                <div className="font-medium">{seg.percentComplete}%</div>
                                 <div className="text-[9px] opacity-60">T{seg.x_start}-T{seg.x_end}</div>
                               </td>
                             );
@@ -620,7 +620,7 @@ export default function FlowlinePage() {
                 <div className="space-y-2" style={{ maxHeight: chartHeight, overflowY: 'auto' }}>
                   {filteredWagons.map((wagon) => (
                     <div key={wagon.trade_name} className="flex items-center gap-3">
-                      <div className="w-24 flex-shrink-0 text-[11px] font-semibold truncate" style={{ color: wagon.color }}>
+                      <div className="w-24 flex-shrink-0 text-[11px] font-normal truncate" style={{ color: wagon.color }}>
                         {wagon.trade_name}
                       </div>
                       <div className="flex-1 flex gap-0.5 h-6 rounded overflow-hidden" style={{ background: 'var(--color-bg)' }}>
@@ -693,7 +693,7 @@ export default function FlowlinePage() {
                           <div className="w-3 h-3 rounded-full" style={{ background: selectedSegment.tradeColor }} />
                         </div>
                         <div>
-                          <h3 className="text-[13px] font-bold" style={{ color: 'var(--color-text)' }}>
+                          <h3 className="text-[13px] font-medium" style={{ color: 'var(--color-text)' }}>
                             {selectedSegment.tradeName}
                           </h3>
                           <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
@@ -718,10 +718,10 @@ export default function FlowlinePage() {
                         <StatusBadge status={selectedSegment.segment.status} />
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
+                            <span className="text-[9px] font-medium uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
                               Progress
                             </span>
-                            <span className="text-xs font-bold" style={{ fontFamily: 'var(--font-mono)', color: selectedSegment.tradeColor }}>
+                            <span className="text-xs font-medium" style={{ fontFamily: 'var(--font-mono)', color: selectedSegment.tradeColor }}>
                               {selectedSegment.segment.percentComplete}%
                             </span>
                           </div>
@@ -740,7 +740,7 @@ export default function FlowlinePage() {
                       {/* Critical path indicator */}
                       {selectedSegment.segment.isCriticalPath && (
                         <div
-                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold"
+                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[10px] font-normal"
                           style={{ background: 'rgba(245,158,11,0.1)', color: 'var(--color-warning)' }}
                         >
                           <Zap size={12} />
@@ -750,7 +750,7 @@ export default function FlowlinePage() {
 
                       {/* ── Schedule Section ── */}
                       <div>
-                        <div className="text-[9px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                        <div className="text-[9px] font-medium uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
                           <Clock size={10} />
                           Schedule
                         </div>
@@ -777,12 +777,12 @@ export default function FlowlinePage() {
                       {selectedSegment.segment.tasks && selectedSegment.segment.tasks.length > 0 && (
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                            <span className="text-[9px] font-medium uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
                               <Activity size={10} />
                               Activities
                             </span>
                             <span
-                              className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                              className="text-[10px] font-medium px-1.5 py-0.5 rounded"
                               style={{
                                 fontFamily: 'var(--font-mono)',
                                 background: selectedSegment.segment.tasks.every(t => t.status === 'done')
@@ -823,7 +823,7 @@ export default function FlowlinePage() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div
-                                    className="text-[11px] font-semibold"
+                                    className="text-[11px] font-normal"
                                     style={{
                                       color: task.status === 'todo' ? 'var(--color-text-muted)' : 'var(--color-text)',
                                       textDecoration: task.status === 'done' ? 'line-through' : undefined,
@@ -844,7 +844,7 @@ export default function FlowlinePage() {
                                         />
                                       </div>
                                       <span
-                                        className="text-[9px] font-bold"
+                                        className="text-[9px] font-medium"
                                         style={{ fontFamily: 'var(--font-mono)', color: selectedSegment.tradeColor }}
                                       >
                                         {task.progress}%
@@ -854,7 +854,7 @@ export default function FlowlinePage() {
                                 </div>
                                 {task.status === 'done' && (
                                   <span
-                                    className="text-[9px] font-bold flex-shrink-0"
+                                    className="text-[9px] font-medium flex-shrink-0"
                                     style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-success)' }}
                                   >
                                     100%
@@ -883,9 +883,9 @@ export default function FlowlinePage() {
 function DetailRow({ label, value, mono }: { label: string; value: string | number; mono?: boolean }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[10px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>{label}</span>
+      <span className="text-[10px] font-normal" style={{ color: 'var(--color-text-muted)' }}>{label}</span>
       <span
-        className="text-[11px] font-semibold"
+        className="text-[11px] font-normal"
         style={{ color: 'var(--color-text)', fontFamily: mono ? 'var(--font-mono)' : 'var(--font-body)' }}
       >
         {value}
@@ -905,7 +905,7 @@ function StatusBadge({ status }: { status: string }) {
 
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium"
       style={{ background: c.bg, color: c.color }}
     >
       <span className="w-1.5 h-1.5 rounded-full" style={{ background: c.color }} />

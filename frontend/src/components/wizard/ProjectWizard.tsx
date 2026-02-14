@@ -196,7 +196,7 @@ export default function ProjectWizard() {
               }}
             >
               <div
-                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium"
                 style={{
                   background: i === step ? 'var(--color-accent)' : i < step ? 'var(--color-success)' : 'var(--color-bg-input)',
                   color: i <= step ? '#fff' : 'var(--color-text-muted)',
@@ -250,7 +250,7 @@ export default function ProjectWizard() {
             <button
               onClick={createProject}
               disabled={creating}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
               style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))' }}
             >
               {creating ? (
@@ -269,7 +269,7 @@ export default function ProjectWizard() {
             <button
               onClick={next}
               disabled={!canAdvance()}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
               style={{ background: canAdvance() ? 'var(--color-accent)' : 'var(--color-bg-input)' }}
             >
               Next

@@ -440,7 +440,7 @@ export default function SimulationPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1
-              className="text-lg font-extrabold"
+              className="text-lg font-medium"
               style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
             >
               What-If Simulation
@@ -475,7 +475,7 @@ export default function SimulationPage() {
               <div className="flex items-center gap-2 mb-3">
                 <Layers size={15} style={{ color: 'var(--color-accent)' }} />
                 <h3
-                  className="text-sm font-bold"
+                  className="text-sm font-medium"
                   style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
                 >
                   Base Plan
@@ -498,7 +498,7 @@ export default function SimulationPage() {
                       style={{ background: `color-mix(in srgb, ${item.color} 12%, transparent)` }}
                     >
                       <span
-                        className="text-xs font-extrabold"
+                        className="text-xs font-medium"
                         style={{ fontFamily: 'var(--font-mono)', color: item.color }}
                       >
                         {item.value}
@@ -533,7 +533,7 @@ export default function SimulationPage() {
                 <div className="flex items-center gap-2">
                   <Shuffle size={15} style={{ color: 'var(--color-purple)' }} />
                   <h3
-                    className="text-sm font-bold"
+                    className="text-sm font-medium"
                     style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
                   >
                     Scenario Configuration
@@ -584,7 +584,7 @@ export default function SimulationPage() {
                           {change.type === 'change_takt_time' && (
                             <div>
                               <label
-                                className="text-[9px] font-bold uppercase tracking-wider block mb-1"
+                                className="text-[9px] font-medium uppercase tracking-wider block mb-1"
                                 style={{ color: 'var(--color-text-muted)' }}
                               >
                                 New Takt Time: {change.parameters.new_takt_time} days
@@ -615,7 +615,7 @@ export default function SimulationPage() {
                           {change.type === 'add_buffer' && (
                             <div>
                               <label
-                                className="text-[9px] font-bold uppercase tracking-wider block mb-1"
+                                className="text-[9px] font-medium uppercase tracking-wider block mb-1"
                                 style={{ color: 'var(--color-text-muted)' }}
                               >
                                 Buffer Periods
@@ -643,7 +643,7 @@ export default function SimulationPage() {
                             <>
                               <div>
                                 <label
-                                  className="text-[9px] font-bold uppercase tracking-wider block mb-1"
+                                  className="text-[9px] font-medium uppercase tracking-wider block mb-1"
                                   style={{ color: 'var(--color-text-muted)' }}
                                 >
                                   Trade
@@ -669,7 +669,7 @@ export default function SimulationPage() {
                               </div>
                               <div>
                                 <label
-                                  className="text-[9px] font-bold uppercase tracking-wider block mb-1"
+                                  className="text-[9px] font-medium uppercase tracking-wider block mb-1"
                                   style={{ color: 'var(--color-text-muted)' }}
                                 >
                                   Additional Crew
@@ -698,7 +698,7 @@ export default function SimulationPage() {
                             <>
                               <div>
                                 <label
-                                  className="text-[9px] font-bold uppercase tracking-wider block mb-1"
+                                  className="text-[9px] font-medium uppercase tracking-wider block mb-1"
                                   style={{ color: 'var(--color-text-muted)' }}
                                 >
                                   Trade
@@ -724,7 +724,7 @@ export default function SimulationPage() {
                               </div>
                               <div>
                                 <label
-                                  className="text-[9px] font-bold uppercase tracking-wider block mb-1"
+                                  className="text-[9px] font-medium uppercase tracking-wider block mb-1"
                                   style={{ color: 'var(--color-text-muted)' }}
                                 >
                                   New Position
@@ -754,7 +754,7 @@ export default function SimulationPage() {
                           {change.type === 'remove_trade' && (
                             <div>
                               <label
-                                className="text-[9px] font-bold uppercase tracking-wider block mb-1"
+                                className="text-[9px] font-medium uppercase tracking-wider block mb-1"
                                 style={{ color: 'var(--color-text-muted)' }}
                               >
                                 Trade to Remove
@@ -784,7 +784,7 @@ export default function SimulationPage() {
                             <>
                               <div>
                                 <label
-                                  className="text-[9px] font-bold uppercase tracking-wider block mb-1"
+                                  className="text-[9px] font-medium uppercase tracking-wider block mb-1"
                                   style={{ color: 'var(--color-text-muted)' }}
                                 >
                                   Zone
@@ -810,7 +810,7 @@ export default function SimulationPage() {
                               </div>
                               <div>
                                 <label
-                                  className="text-[9px] font-bold uppercase tracking-wider block mb-1"
+                                  className="text-[9px] font-medium uppercase tracking-wider block mb-1"
                                   style={{ color: 'var(--color-text-muted)' }}
                                 >
                                   Delay (days)
@@ -910,7 +910,7 @@ export default function SimulationPage() {
               <div className="flex items-center gap-2 mb-3">
                 <Dices size={15} style={{ color: 'var(--color-cyan)' }} />
                 <h3
-                  className="text-sm font-bold"
+                  className="text-sm font-medium"
                   style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
                 >
                   Monte Carlo Settings
@@ -919,7 +919,7 @@ export default function SimulationPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label
-                    className="text-[9px] font-bold uppercase tracking-wider block mb-1"
+                    className="text-[9px] font-medium uppercase tracking-wider block mb-1"
                     style={{ color: 'var(--color-text-muted)' }}
                   >
                     Iterations
@@ -942,7 +942,7 @@ export default function SimulationPage() {
                 </div>
                 <div>
                   <label
-                    className="text-[9px] font-bold uppercase tracking-wider block mb-1"
+                    className="text-[9px] font-medium uppercase tracking-wider block mb-1"
                     style={{ color: 'var(--color-text-muted)' }}
                   >
                     Variance %
@@ -1103,7 +1103,7 @@ export default function SimulationPage() {
                         >
                           <div className="flex items-center justify-between mb-1.5">
                             <span
-                              className="text-[9px] font-bold uppercase tracking-wider"
+                              className="text-[9px] font-medium uppercase tracking-wider"
                               style={{ color: 'var(--color-text-muted)' }}
                             >
                               {kpi.label}
@@ -1116,7 +1116,7 @@ export default function SimulationPage() {
                             </div>
                           </div>
                           <div
-                            className="text-lg font-extrabold"
+                            className="text-lg font-medium"
                             style={{
                               fontFamily: kpi.mono ? 'var(--font-mono)' : 'var(--font-display)',
                               color: kpi.color,
@@ -1141,7 +1141,7 @@ export default function SimulationPage() {
                           </span>
                         </div>
                         <span
-                          className="text-sm font-extrabold"
+                          className="text-sm font-medium"
                           style={{
                             fontFamily: 'var(--font-mono)',
                             color:
@@ -1192,7 +1192,7 @@ export default function SimulationPage() {
                       >
                         <div className="flex items-center gap-2 mb-3">
                           <AlertTriangle size={14} style={{ color: 'var(--color-danger)' }} />
-                          <span className="text-[11px] font-bold" style={{ color: 'var(--color-danger)' }}>
+                          <span className="text-[11px] font-medium" style={{ color: 'var(--color-danger)' }}>
                             Trade Stacking Conflicts ({whatIfResult.trade_stacking_conflicts.length})
                           </span>
                         </div>
@@ -1225,7 +1225,7 @@ export default function SimulationPage() {
                       >
                         <div className="flex items-center gap-2 mb-3">
                           <Info size={14} style={{ color: 'var(--color-warning)' }} />
-                          <span className="text-[11px] font-bold" style={{ color: 'var(--color-warning)' }}>
+                          <span className="text-[11px] font-medium" style={{ color: 'var(--color-warning)' }}>
                             Warnings ({whatIfResult.warnings.length})
                           </span>
                         </div>
@@ -1334,7 +1334,7 @@ export default function SimulationPage() {
                         >
                           <div className="flex items-center justify-between mb-1">
                             <span
-                              className="text-[9px] font-bold uppercase tracking-wider"
+                              className="text-[9px] font-medium uppercase tracking-wider"
                               style={{ color: 'var(--color-text-muted)' }}
                             >
                               {kpi.label}
@@ -1342,7 +1342,7 @@ export default function SimulationPage() {
                             <kpi.icon size={12} style={{ color: kpi.color }} />
                           </div>
                           <div
-                            className="text-base font-extrabold"
+                            className="text-base font-medium"
                             style={{ fontFamily: 'var(--font-mono)', color: kpi.color }}
                           >
                             {kpi.value}
@@ -1384,7 +1384,7 @@ export default function SimulationPage() {
                           style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
                         >
                           <div
-                            className="text-xl font-extrabold"
+                            className="text-xl font-medium"
                             style={{ fontFamily: 'var(--font-display)', color: stat.color }}
                           >
                             {stat.value}
@@ -1408,7 +1408,7 @@ export default function SimulationPage() {
                         <div className="flex items-center gap-2">
                           <BarChart3 size={15} style={{ color: 'var(--color-cyan)' }} />
                           <h3
-                            className="text-sm font-bold"
+                            className="text-sm font-medium"
                             style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
                           >
                             Duration Distribution
@@ -1585,7 +1585,7 @@ export default function SimulationPage() {
                       <div className="flex items-center gap-2 mb-3">
                         <Zap size={14} style={{ color: 'var(--color-warning)' }} />
                         <h3
-                          className="text-[12px] font-bold"
+                          className="text-[12px] font-medium"
                           style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
                         >
                           Critical Trades (Highest Variance)
@@ -1608,7 +1608,7 @@ export default function SimulationPage() {
                                   {item.trade}
                                 </span>
                                 <span
-                                  className="text-[10px] font-bold"
+                                  className="text-[10px] font-medium"
                                   style={{
                                     fontFamily: 'var(--font-mono)',
                                     color:
@@ -1690,7 +1690,7 @@ export default function SimulationPage() {
             <div className="flex items-center gap-2">
               <History size={16} style={{ color: 'var(--color-text-muted)' }} />
               <h3
-                className="text-sm font-bold"
+                className="text-sm font-medium"
                 style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
               >
                 Scenario History
@@ -1735,7 +1735,7 @@ export default function SimulationPage() {
                     >
                       <td className="py-3 px-3">
                         <span
-                          className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md"
+                          className="text-[10px] font-medium uppercase px-2 py-0.5 rounded-md"
                           style={{
                             background:
                               item.type === 'what-if'
@@ -1766,7 +1766,7 @@ export default function SimulationPage() {
                       <td className="py-3 px-3">
                         {item.delta_days !== null ? (
                           <span
-                            className="text-[11px] font-bold"
+                            className="text-[11px] font-medium"
                             style={{
                               fontFamily: 'var(--font-mono)',
                               color:
@@ -1787,7 +1787,7 @@ export default function SimulationPage() {
                       <td className="py-3 px-3">
                         {item.risk_change !== null ? (
                           <span
-                            className="text-[11px] font-bold"
+                            className="text-[11px] font-medium"
                             style={{
                               fontFamily: 'var(--font-mono)',
                               color:
@@ -1808,7 +1808,7 @@ export default function SimulationPage() {
                       <td className="py-3 px-3">
                         {item.on_time_prob !== null ? (
                           <span
-                            className="text-[11px] font-bold"
+                            className="text-[11px] font-medium"
                             style={{
                               fontFamily: 'var(--font-mono)',
                               color:

@@ -46,7 +46,7 @@ export default function StepTrades({ data, onChange }: StepProps) {
   return (
     <div>
       <h2
-        className="text-xl font-extrabold mb-1"
+        className="text-xl font-medium mb-1"
         style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
       >
         Trade Sequence
@@ -88,7 +88,7 @@ export default function StepTrades({ data, onChange }: StepProps) {
           <div key={category}>
             {/* Category header */}
             <div
-              className="sticky top-0 z-10 px-4 py-2 text-[10px] uppercase font-bold tracking-wider border-b"
+              className="sticky top-0 z-10 px-4 py-2 text-[10px] uppercase font-medium tracking-wider border-b"
               style={{
                 background: 'var(--color-bg-secondary)',
                 borderColor: 'var(--color-border)',

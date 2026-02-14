@@ -9,7 +9,7 @@ export default function StepProjectType({ data, onChange }: StepProps) {
   return (
     <div>
       <h2
-        className="text-xl font-extrabold mb-1"
+        className="text-xl font-medium mb-1"
         style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
       >
         What are you building?
@@ -34,7 +34,7 @@ export default function StepProjectType({ data, onChange }: StepProps) {
             >
               <div className="text-2xl mb-2">{t.icon}</div>
               <div
-                className="text-sm font-bold mb-0.5"
+                className="text-sm font-medium mb-0.5"
                 style={{ color: selected ? 'var(--color-accent)' : 'var(--color-text)' }}
               >
                 {t.label}

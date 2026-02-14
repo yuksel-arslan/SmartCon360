@@ -250,7 +250,7 @@ function SectionTitle({ children, icon: Icon }: { children: React.ReactNode; ico
   return (
     <div className="flex items-center gap-2 mb-3">
       {Icon && <Icon size={16} style={{ color: 'var(--color-accent)' }} />}
-      <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)' }}>{children}</h3>
+      <h3 className="text-sm font-medium" style={{ fontFamily: 'var(--font-display)' }}>{children}</h3>
     </div>
   );
 }
@@ -408,7 +408,7 @@ function LookaheadTab() {
                 className="p-2 rounded-t-lg text-center"
                 style={{ background: i === 0 ? 'rgba(232,115,26,0.08)' : 'transparent' }}
               >
-                <div className="text-[10px] font-bold" style={{ color: i === 0 ? 'var(--color-accent)' : 'var(--color-text)' }}>
+                <div className="text-[10px] font-medium" style={{ color: i === 0 ? 'var(--color-accent)' : 'var(--color-text)' }}>
                   Week {weekOffset * 6 + i + 1}
                 </div>
                 <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>{w.label}</div>
@@ -524,7 +524,7 @@ function LookaheadTab() {
               style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
+                <h3 className="text-sm font-medium" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
                   Add Lookahead Task
                 </h3>
                 <button onClick={() => setShowAddModal(null)} className="p-1 rounded-md hover:opacity-70" aria-label="Close">
@@ -691,7 +691,7 @@ function WeeklyWorkPlanTab() {
               >
                 <ChevronLeft size={14} style={{ color: 'var(--color-text-secondary)' }} />
               </button>
-              <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
+              <h3 className="text-sm font-medium" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
                 {currentWeek.weekLabel} — Weekly Work Plan
               </h3>
               <button
@@ -703,7 +703,7 @@ function WeeklyWorkPlanTab() {
                 <ChevronRight size={14} style={{ color: 'var(--color-text-secondary)' }} />
               </button>
               {selectedWeekIdx === 11 && (
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-md" style={{ background: 'rgba(232,115,26,0.1)', color: 'var(--color-accent)' }}>
+                <span className="text-[9px] font-medium px-2 py-0.5 rounded-md" style={{ background: 'rgba(232,115,26,0.1)', color: 'var(--color-accent)' }}>
                   Current
                 </span>
               )}
@@ -811,7 +811,7 @@ function WeeklyWorkPlanTab() {
           { label: 'PPC', value: `${ppc}%`, color: ppc >= 85 ? 'var(--color-success)' : ppc >= 70 ? 'var(--color-warning)' : 'var(--color-danger)' },
         ].map((stat) => (
           <Card key={stat.label} className="p-3 text-center">
-            <div className="text-2xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: stat.color }}>
+            <div className="text-2xl font-medium" style={{ fontFamily: 'var(--font-display)', color: stat.color }}>
               {stat.value}
             </div>
             <div className="text-[9px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
@@ -1078,7 +1078,7 @@ function VarianceParetoChart({ data }: { data: typeof VARIANCE_DATA }) {
                 className="h-full rounded-md transition-all duration-500 flex items-center justify-end pr-1.5"
                 style={{ width: `${barWidth}%`, background: color, minWidth: '24px' }}
               >
-                <span className="text-[8px] font-bold text-white">{d.pct}%</span>
+                <span className="text-[8px] font-medium text-white">{d.pct}%</span>
               </div>
             </div>
             <span className="text-[9px] font-mono w-6 text-right flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>
@@ -1116,7 +1116,7 @@ function PPCDashboardTab() {
           <div className="flex justify-between items-start">
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Current PPC</div>
-              <div className="text-4xl font-extrabold mt-1" style={{
+              <div className="text-4xl font-medium mt-1" style={{
                 fontFamily: 'var(--font-display)',
                 color: currentPPC >= 85 ? 'var(--color-success)' : currentPPC >= 70 ? 'var(--color-warning)' : 'var(--color-danger)',
               }}>
@@ -1144,7 +1144,7 @@ function PPCDashboardTab() {
           <div className="flex justify-between items-start">
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Avg PPC (4 Weeks)</div>
-              <div className="text-4xl font-extrabold mt-1" style={{
+              <div className="text-4xl font-medium mt-1" style={{
                 fontFamily: 'var(--font-display)',
                 color: avgPPC4Weeks >= 85 ? 'var(--color-success)' : 'var(--color-warning)',
               }}>
@@ -1166,10 +1166,10 @@ function PPCDashboardTab() {
           <div className="flex justify-between items-start">
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Best Trade</div>
-              <div className="text-lg font-extrabold mt-1" style={{ fontFamily: 'var(--font-display)', color: bestTrade.color }}>
+              <div className="text-lg font-medium mt-1" style={{ fontFamily: 'var(--font-display)', color: bestTrade.color }}>
                 {bestTrade.trade}
               </div>
-              <div className="text-[11px] font-bold mt-0.5" style={{ color: 'var(--color-success)', fontFamily: 'var(--font-mono)' }}>
+              <div className="text-[11px] font-medium mt-0.5" style={{ color: 'var(--color-success)', fontFamily: 'var(--font-mono)' }}>
                 {bestTrade.ppc}% PPC
               </div>
             </div>
@@ -1184,10 +1184,10 @@ function PPCDashboardTab() {
           <div className="flex justify-between items-start">
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Top Variance</div>
-              <div className="text-lg font-extrabold mt-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-danger)' }}>
+              <div className="text-lg font-medium mt-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-danger)' }}>
                 {topVariance.category}
               </div>
-              <div className="text-[11px] font-bold mt-0.5" style={{ color: 'var(--color-danger)', fontFamily: 'var(--font-mono)' }}>
+              <div className="text-[11px] font-medium mt-0.5" style={{ color: 'var(--color-danger)', fontFamily: 'var(--font-mono)' }}>
                 {topVariance.pct}% of failures
               </div>
             </div>
@@ -1272,7 +1272,7 @@ function PPCDashboardTab() {
                     <td className="py-2 font-semibold" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}>{w.weekLabel}</td>
                     <td className="py-2 text-right" style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>{w.committed}</td>
                     <td className="py-2 text-right" style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>{w.completed}</td>
-                    <td className="py-2 text-right font-bold" style={{ color: ppcColor, fontFamily: 'var(--font-mono)' }}>{w.ppc}%</td>
+                    <td className="py-2 text-right font-medium" style={{ color: ppcColor, fontFamily: 'var(--font-mono)' }}>{w.ppc}%</td>
                     <td className="py-2 text-right">
                       <span
                         className="inline-flex items-center gap-0.5 text-[10px] font-semibold"

@@ -496,7 +496,7 @@ export default function ReportsPage() {
                   <div className="w-2.5 h-2.5 rounded-full" style={{ background: template.color }} />
                 )}
               </div>
-              <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-display)' }}>{template.title}</h3>
+              <h3 className="text-sm font-medium mb-1" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-display)' }}>{template.title}</h3>
               <p className="text-[11px] leading-relaxed mb-2" style={{ color: 'var(--color-text-secondary)' }}>{template.description}</p>
               <div className="flex items-center gap-1">
                 <Clock size={10} style={{ color: 'var(--color-text-muted)' }} />
@@ -512,7 +512,7 @@ export default function ReportsPage() {
           <div className="lg:col-span-2 rounded-xl border p-5" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
             <div className="flex items-center gap-2 mb-4">
               <Zap size={16} style={{ color: 'var(--color-purple)' }} />
-              <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)' }}>Generate Report</h3>
+              <h3 className="text-sm font-medium" style={{ fontFamily: 'var(--font-display)' }}>Generate Report</h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
@@ -602,7 +602,7 @@ export default function ReportsPage() {
                   <span className="text-[11px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
                     Generating {REPORT_TEMPLATES.find(t => t.type === selectedType)?.title}...
                   </span>
-                  <span className="text-[11px] font-bold" style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>
+                  <span className="text-[11px] font-medium" style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>
                     {Math.round(generateProgress)}%
                   </span>
                 </div>
@@ -642,7 +642,7 @@ export default function ReportsPage() {
           <div className="rounded-xl border p-5" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
             <div className="flex items-center gap-2 mb-4">
               <CalendarClock size={16} style={{ color: 'var(--color-warning)' }} />
-              <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)' }}>Auto-Generation Schedule</h3>
+              <h3 className="text-sm font-medium" style={{ fontFamily: 'var(--font-display)' }}>Auto-Generation Schedule</h3>
             </div>
             <div className="space-y-3">
               {schedules.map((schedule) => (
@@ -688,7 +688,7 @@ export default function ReportsPage() {
           <div className="flex items-center justify-between p-5 pb-0">
             <div className="flex items-center gap-2">
               <FileText size={16} style={{ color: 'var(--color-text-muted)' }} />
-              <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)' }}>Report History</h3>
+              <h3 className="text-sm font-medium" style={{ fontFamily: 'var(--font-display)' }}>Report History</h3>
             </div>
             <span className="text-[11px] font-medium px-2 py-0.5 rounded" style={{ background: 'var(--color-bg-input)', color: 'var(--color-text-muted)' }}>
               {reports.length} reports
@@ -819,7 +819,7 @@ export default function ReportsPage() {
                     <FileText size={15} style={{ color: typeColors[previewReport.type] }} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>{previewReport.title}</h3>
+                    <h3 className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{previewReport.title}</h3>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[10px]" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>{previewReport.date}</span>
                       <StatusBadge status={previewReport.status} />

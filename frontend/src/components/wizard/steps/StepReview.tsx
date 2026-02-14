@@ -14,7 +14,7 @@ export default function StepReview({ data }: StepProps) {
   return (
     <div>
       <h2
-        className="text-xl font-extrabold mb-1"
+        className="text-xl font-medium mb-1"
         style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
       >
         Review & Create
@@ -32,12 +32,12 @@ export default function StepReview({ data }: StepProps) {
           <div className="flex items-start gap-4">
             <div className="text-3xl">{template?.icon || '📋'}</div>
             <div className="flex-1">
-              <div className="text-lg font-extrabold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
+              <div className="text-lg font-medium" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
                 {data.name || 'Untitled Project'}
               </div>
               <div className="flex items-center gap-2 mt-1">
                 <span
-                  className="text-[10px] font-bold px-2 py-0.5 rounded"
+                  className="text-[10px] font-medium px-2 py-0.5 rounded"
                   style={{ background: 'rgba(232,115,26,0.15)', color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}
                 >
                   {data.code || '—'}
@@ -86,7 +86,7 @@ export default function StepReview({ data }: StepProps) {
         >
           <div className="flex items-center gap-2 mb-3">
             <Clock size={14} style={{ color: 'var(--color-accent)' }} />
-            <span className="text-[12px] font-bold" style={{ color: 'var(--color-text)' }}>Takt Plan Summary</span>
+            <span className="text-[12px] font-medium" style={{ color: 'var(--color-text)' }}>Takt Plan Summary</span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -99,7 +99,7 @@ export default function StepReview({ data }: StepProps) {
                 <div className="text-[10px] uppercase font-semibold" style={{ color: 'var(--color-text-muted)' }}>
                   {s.label}
                 </div>
-                <div className="text-sm font-bold mt-0.5" style={{ color: s.color }}>
+                <div className="text-sm font-medium mt-0.5" style={{ color: s.color }}>
                   {s.value}
                 </div>
               </div>
@@ -114,7 +114,7 @@ export default function StepReview({ data }: StepProps) {
         >
           <div className="flex items-center gap-2 mb-3">
             <Users size={14} style={{ color: 'var(--color-purple)' }} />
-            <span className="text-[12px] font-bold" style={{ color: 'var(--color-text)' }}>
+            <span className="text-[12px] font-medium" style={{ color: 'var(--color-text)' }}>
               Trade Sequence ({enabledTrades.length} trades)
             </span>
           </div>
@@ -146,7 +146,7 @@ export default function StepReview({ data }: StepProps) {
           >
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb size={14} style={{ color: 'var(--color-warning)' }} />
-              <span className="text-[12px] font-bold" style={{ color: 'var(--color-warning)' }}>
+              <span className="text-[12px] font-medium" style={{ color: 'var(--color-warning)' }}>
                 Expert Tips
               </span>
             </div>
