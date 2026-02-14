@@ -5,9 +5,9 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useUIStore } from '@/stores/uiStore';
 import { DEMO_PROJECTS } from '@/lib/mockData';
-import { NAV_GROUPS, MODULE_REGISTRY, BRAND } from '@/lib/modules';
+import { NAV_GROUPS, MODULE_REGISTRY, BRAND, type NavGroupItem } from '@/lib/modules';
 import {
-  Settings, PanelLeftClose, Plus, ChevronDown,
+  Settings, PanelLeftClose, Plus, ChevronDown, ChevronRight,
   Building2, Hospital, Building, Landmark, Factory, Construction, FolderKanban,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -35,6 +35,43 @@ export default function Sidebar() {
 
   const toggleGroup = (label: string) => {
     setCollapsedGroups((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
+
+  /** Render a single nav link (plain module or indented child) */
+  const renderNavLink = (moduleId: string, path: string, collapsed: boolean, indented = false) => {
+    const mod = MODULE_REGISTRY[moduleId as keyof typeof MODULE_REGISTRY];
+    if (!mod) return null;
+    const isActive = path === mod.href;
+    return (
+      <Link
+        key={mod.id}
+        href={mod.href}
+        title={collapsed ? mod.label : undefined}
+        className="flex items-center gap-3 rounded-lg py-1.5 text-[12px] font-medium transition-all duration-150"
+        style={{
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          paddingLeft: collapsed ? 12 : indented ? 32 : 12,
+          paddingRight: 12,
+          background: isActive ? 'var(--color-accent-muted)' : 'transparent',
+          color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)',
+        }}
+        onMouseEnter={(e) => {
+          if (!isActive) {
+            e.currentTarget.style.background = 'var(--color-bg-hover)';
+            e.currentTarget.style.color = 'var(--color-text-secondary)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isActive) {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = 'var(--color-text-muted)';
+          }
+        }}
+      >
+        <mod.icon size={indented ? 14 : 16} strokeWidth={isActive ? 2 : 1.5} />
+        {!collapsed && mod.label}
+      </Link>
+    );
   };
 
   return (
@@ -201,38 +238,64 @@ export default function Sidebar() {
                 </button>
               )}
 
-              {/* Group items — resolved from MODULE_REGISTRY */}
-              {(!isGroupCollapsed || sidebarCollapsed) && group.modules.map((moduleId) => {
-                const mod = MODULE_REGISTRY[moduleId];
-                if (!mod) return null;
-                const isActive = pathname === mod.href;
+              {/* Group items — supports plain modules and parent+children */}
+              {(!isGroupCollapsed || sidebarCollapsed) && group.items.map((item) => {
+                if (typeof item === 'string') {
+                  return renderNavLink(item, pathname, sidebarCollapsed);
+                }
+                // Parent with children
+                const parentMod = MODULE_REGISTRY[item.parent];
+                if (!parentMod) return null;
+                const isSubCollapsed = collapsedGroups[`sub:${item.parent}`];
+                const hasActiveChild = item.children.some((cid) => pathname === MODULE_REGISTRY[cid]?.href);
+
                 return (
-                  <Link
-                    key={mod.id}
-                    href={mod.href}
-                    title={sidebarCollapsed ? mod.label : undefined}
-                    className="flex items-center gap-3 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all duration-150"
-                    style={{
-                      justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                      background: isActive ? 'var(--color-accent-muted)' : 'transparent',
-                      color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = 'var(--color-bg-hover)';
-                        e.currentTarget.style.color = 'var(--color-text-secondary)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.color = 'var(--color-text-muted)';
-                      }
-                    }}
-                  >
-                    <mod.icon size={16} strokeWidth={isActive ? 2 : 1.5} />
-                    {!sidebarCollapsed && mod.label}
-                  </Link>
+                  <div key={item.parent}>
+                    {/* Parent toggle */}
+                    {!sidebarCollapsed ? (
+                      <button
+                        onClick={() => toggleGroup(`sub:${item.parent}`)}
+                        className="w-full flex items-center gap-3 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all duration-150 cursor-pointer"
+                        style={{
+                          color: hasActiveChild ? 'var(--color-accent)' : 'var(--color-text-muted)',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!hasActiveChild) e.currentTarget.style.color = 'var(--color-text-secondary)';
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!hasActiveChild) e.currentTarget.style.color = 'var(--color-text-muted)';
+                        }}
+                      >
+                        <parentMod.icon size={16} strokeWidth={hasActiveChild ? 2 : 1.5} />
+                        <span className="flex-1 text-left">{parentMod.label}</span>
+                        <ChevronRight
+                          size={12}
+                          style={{
+                            transform: isSubCollapsed ? undefined : 'rotate(90deg)',
+                            transition: 'transform 0.2s',
+                            opacity: 0.5,
+                          }}
+                        />
+                      </button>
+                    ) : (
+                      <Link
+                        href={parentMod.href}
+                        title={parentMod.label}
+                        className="flex items-center justify-center rounded-lg px-3 py-1.5 transition-all duration-150"
+                        style={{
+                          color: hasActiveChild ? 'var(--color-accent)' : 'var(--color-text-muted)',
+                          background: hasActiveChild ? 'var(--color-accent-muted)' : 'transparent',
+                        }}
+                      >
+                        <parentMod.icon size={16} strokeWidth={hasActiveChild ? 2 : 1.5} />
+                      </Link>
+                    )}
+
+                    {/* Children (indented) */}
+                    {!isSubCollapsed && !sidebarCollapsed && item.children.map((childId) =>
+                      renderNavLink(childId, pathname, sidebarCollapsed, true)
+                    )}
+                  </div>
                 );
               })}
             </div>

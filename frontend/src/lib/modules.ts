@@ -12,14 +12,15 @@ import {
   ClipboardCheck, Users, FileText, Bot, Settings,
   ShieldCheck, HardHat, DollarSign, Truck, Radar, Scale,
   Camera, MessageSquare, UserCheck, Leaf, Activity, Play,
+  Hammer, Package, Wrench, Layers,
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────
 
 export type ModuleId =
-  | 'dashboard' | 'flowline' | 'takt-editor' | 'constraints' | 'lps'
+  | 'taktflow' | 'dashboard' | 'flowline' | 'takt-editor' | 'constraints' | 'lps'
   | 'quality' | 'safety' | 'vision'
-  | 'cost' | 'resources'
+  | 'cost' | 'resources' | 'workmanship' | 'material' | 'equipment' | 'scaffoldings'
   | 'supply' | 'risk' | 'claims'
   | 'communication' | 'stakeholders'
   | 'sustainability'
@@ -58,16 +59,33 @@ export interface ModuleDef {
   kpis: { label: string; value: string }[];
 }
 
+/** A nav group item: either a plain module ID or a parent with children */
+export type NavGroupItem = ModuleId | { parent: ModuleId; children: ModuleId[] };
+
 export interface ModuleGroup {
   id: ModuleGroupId;
   label: string;
-  modules: ModuleId[];
+  items: NavGroupItem[];
 }
 
 // ── Module Definitions ───────────────────────────────────
 
 export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
-  // ── Planning ─────────────────────────────
+  // ── TaktFlow (parent) ──────────────────────
+  taktflow: {
+    id: 'taktflow',
+    href: '/dashboard',
+    label: 'TaktFlow',
+    brandName: 'TaktFlow',
+    description: 'Adaptive takt planning and scheduling',
+    icon: Activity,
+    svgIcon: '/icons/modules/taktflow.svg',
+    color: 'var(--color-accent)',
+    features: ['Takt Planning', 'Flowline', 'LPS', 'Constraint Management'],
+    kpis: [],
+  },
+
+  // ── TaktFlow sub-pages ─────────────────────
   dashboard: {
     id: 'dashboard',
     href: '/dashboard',
@@ -203,18 +221,81 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
   resources: {
     id: 'resources',
     href: '/resources',
-    label: 'CrewFlow',
-    brandName: 'CrewFlow',
-    description: 'Resource management — crews, equipment, materials',
+    label: 'ResourceFlow',
+    brandName: 'ResourceFlow',
+    description: 'Unified resource management — workmanship, materials, equipment, scaffoldings',
     icon: Users,
     svgIcon: '/icons/modules/crewflow.svg',
     color: '#3B82F6',
-    features: ['Crew Planning', 'Equipment Tracking', 'Material Management', 'Utilization Reports'],
+    features: ['Workmanship', 'Material Management', 'Equipment Tracking', 'Scaffoldings'],
+    kpis: [],
+  },
+  workmanship: {
+    id: 'workmanship',
+    href: '/resources/workmanship',
+    label: 'Workmanship',
+    brandName: 'ResourceFlow',
+    description: 'Crew planning, labor tracking, trade allocation and utilization',
+    icon: Hammer,
+    svgIcon: '/icons/modules/crewflow.svg',
+    color: '#3B82F6',
+    features: ['Crew Planning', 'Trade Allocation', 'Labor Tracking', 'Utilization Reports', 'Shift Management', 'Skill Matrix'],
     kpis: [
       { label: 'Active Crews', value: '24' },
       { label: 'Utilization', value: '87%' },
-      { label: 'Equipment', value: '42' },
       { label: 'Headcount', value: '186' },
+      { label: 'Trades Active', value: '7' },
+    ],
+  },
+  material: {
+    id: 'material',
+    href: '/resources/material',
+    label: 'Material',
+    brandName: 'ResourceFlow',
+    description: 'Material inventory, tracking, consumption and waste management',
+    icon: Package,
+    svgIcon: '/icons/modules/crewflow.svg',
+    color: '#3B82F6',
+    features: ['Inventory Tracking', 'Consumption Analysis', 'Waste Monitoring', 'Delivery Scheduling', 'Stock Alerts', 'Material Testing'],
+    kpis: [
+      { label: 'Material Orders', value: '34' },
+      { label: 'In Stock Items', value: '128' },
+      { label: 'Waste Rate', value: '4.2%' },
+      { label: 'Pending Deliveries', value: '12' },
+    ],
+  },
+  equipment: {
+    id: 'equipment',
+    href: '/resources/equipment',
+    label: 'Equipment',
+    brandName: 'ResourceFlow',
+    description: 'Equipment fleet management, maintenance scheduling and utilization',
+    icon: Wrench,
+    svgIcon: '/icons/modules/crewflow.svg',
+    color: '#3B82F6',
+    features: ['Fleet Management', 'Maintenance Schedule', 'Utilization Tracking', 'Fuel Monitoring', 'Operator Assignment', 'Inspection Log'],
+    kpis: [
+      { label: 'Total Equipment', value: '42' },
+      { label: 'Utilization', value: '78%' },
+      { label: 'Under Maintenance', value: '3' },
+      { label: 'Fuel Cost (MTD)', value: '$18.5K' },
+    ],
+  },
+  scaffoldings: {
+    id: 'scaffoldings',
+    href: '/resources/scaffoldings',
+    label: 'Scaffoldings',
+    brandName: 'ResourceFlow',
+    description: 'Scaffolding inventory, erection/dismantling tracking and inspection',
+    icon: Layers,
+    svgIcon: '/icons/modules/crewflow.svg',
+    color: '#3B82F6',
+    features: ['Scaffold Register', 'Erection Tracking', 'Inspection Schedule', 'Load Calculation', 'Permit Management', 'Dismantling Log'],
+    kpis: [
+      { label: 'Active Scaffolds', value: '18' },
+      { label: 'Inspections Due', value: '5' },
+      { label: 'Total Area (m²)', value: '3,420' },
+      { label: 'Avg Utilization', value: '82%' },
     ],
   },
 
@@ -382,38 +463,43 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
 export const NAV_GROUPS: ModuleGroup[] = [
   {
     id: 'planning',
-    label: 'Planning',
-    modules: ['dashboard', 'flowline', 'takt-editor', 'constraints', 'lps'],
-  },
-  {
-    id: 'quality-safety',
-    label: 'Quality & Safety',
-    modules: ['quality', 'safety', 'vision'],
+    label: 'Scheduling',
+    items: [
+      { parent: 'taktflow', children: ['dashboard', 'flowline', 'takt-editor', 'constraints', 'lps'] },
+    ],
   },
   {
     id: 'cost-resources',
     label: 'Cost & Resources',
-    modules: ['cost', 'resources'],
+    items: [
+      'cost',
+      { parent: 'resources', children: ['workmanship', 'material', 'equipment', 'scaffoldings'] },
+    ],
+  },
+  {
+    id: 'quality-safety',
+    label: 'Quality & Safety',
+    items: ['quality', 'safety', 'vision'],
   },
   {
     id: 'supply-risk',
     label: 'Supply & Risk',
-    modules: ['supply', 'risk', 'claims'],
+    items: ['supply', 'risk', 'claims'],
   },
   {
     id: 'communication',
     label: 'Communication',
-    modules: ['communication', 'stakeholders'],
+    items: ['communication', 'stakeholders'],
   },
   {
     id: 'sustainability',
     label: 'Sustainability',
-    modules: ['sustainability'],
+    items: ['sustainability'],
   },
   {
     id: 'ai-analytics',
     label: 'AI & Analytics',
-    modules: ['ai', 'reports', 'simulation'],
+    items: ['ai', 'reports', 'simulation'],
   },
 ];
 
@@ -429,11 +515,19 @@ export function getModuleByPath(path: string): ModuleDef | undefined {
   return Object.values(MODULE_REGISTRY).find((m) => m.href === path);
 }
 
-/** Get all modules in a navigation group */
+/** Get all module IDs in a navigation group (flattened) */
 export function getGroupModules(groupId: ModuleGroupId): ModuleDef[] {
   const group = NAV_GROUPS.find((g) => g.id === groupId);
   if (!group) return [];
-  return group.modules.map((id) => MODULE_REGISTRY[id]);
+  const ids: ModuleId[] = [];
+  for (const item of group.items) {
+    if (typeof item === 'string') {
+      ids.push(item);
+    } else {
+      ids.push(item.parent, ...item.children);
+    }
+  }
+  return ids.map((id) => MODULE_REGISTRY[id]);
 }
 
 /** SmartCon360 brand assets */
