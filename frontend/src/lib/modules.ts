@@ -17,7 +17,7 @@ import {
 // ── Types ────────────────────────────────────────────────
 
 export type ModuleId =
-  | 'dashboard' | 'flowline' | 'takt-editor' | 'constraints' | 'lps'
+  | 'taktflow' | 'dashboard' | 'flowline' | 'takt-editor' | 'constraints' | 'lps'
   | 'quality' | 'safety' | 'vision'
   | 'cost' | 'resources'
   | 'supply' | 'risk' | 'claims'
@@ -58,16 +58,33 @@ export interface ModuleDef {
   kpis: { label: string; value: string }[];
 }
 
+/** A nav group item: either a plain module ID or a parent with children */
+export type NavGroupItem = ModuleId | { parent: ModuleId; children: ModuleId[] };
+
 export interface ModuleGroup {
   id: ModuleGroupId;
   label: string;
-  modules: ModuleId[];
+  items: NavGroupItem[];
 }
 
 // ── Module Definitions ───────────────────────────────────
 
 export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
-  // ── Planning ─────────────────────────────
+  // ── TaktFlow (parent) ──────────────────────
+  taktflow: {
+    id: 'taktflow',
+    href: '/dashboard',
+    label: 'TaktFlow',
+    brandName: 'TaktFlow',
+    description: 'Adaptive takt planning and scheduling',
+    icon: Activity,
+    svgIcon: '/icons/modules/taktflow.svg',
+    color: 'var(--color-accent)',
+    features: ['Takt Planning', 'Flowline', 'LPS', 'Constraint Management'],
+    kpis: [],
+  },
+
+  // ── TaktFlow sub-pages ─────────────────────
   dashboard: {
     id: 'dashboard',
     href: '/dashboard',
@@ -382,38 +399,37 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
 export const NAV_GROUPS: ModuleGroup[] = [
   {
     id: 'planning',
-    label: 'TaktFlow',
-    modules: ['dashboard', 'flowline', 'takt-editor', 'constraints', 'lps'],
+    label: 'Planning',
+    items: [
+      { parent: 'taktflow', children: ['dashboard', 'flowline', 'takt-editor', 'constraints', 'lps'] },
+      'cost',
+      'resources',
+    ],
   },
   {
     id: 'quality-safety',
     label: 'Quality & Safety',
-    modules: ['quality', 'safety', 'vision'],
-  },
-  {
-    id: 'cost-resources',
-    label: 'Cost & Resources',
-    modules: ['cost', 'resources'],
+    items: ['quality', 'safety', 'vision'],
   },
   {
     id: 'supply-risk',
     label: 'Supply & Risk',
-    modules: ['supply', 'risk', 'claims'],
+    items: ['supply', 'risk', 'claims'],
   },
   {
     id: 'communication',
     label: 'Communication',
-    modules: ['communication', 'stakeholders'],
+    items: ['communication', 'stakeholders'],
   },
   {
     id: 'sustainability',
     label: 'Sustainability',
-    modules: ['sustainability'],
+    items: ['sustainability'],
   },
   {
     id: 'ai-analytics',
     label: 'AI & Analytics',
-    modules: ['ai', 'reports', 'simulation'],
+    items: ['ai', 'reports', 'simulation'],
   },
 ];
 
@@ -429,11 +445,19 @@ export function getModuleByPath(path: string): ModuleDef | undefined {
   return Object.values(MODULE_REGISTRY).find((m) => m.href === path);
 }
 
-/** Get all modules in a navigation group */
+/** Get all module IDs in a navigation group (flattened) */
 export function getGroupModules(groupId: ModuleGroupId): ModuleDef[] {
   const group = NAV_GROUPS.find((g) => g.id === groupId);
   if (!group) return [];
-  return group.modules.map((id) => MODULE_REGISTRY[id]);
+  const ids: ModuleId[] = [];
+  for (const item of group.items) {
+    if (typeof item === 'string') {
+      ids.push(item);
+    } else {
+      ids.push(item.parent, ...item.children);
+    }
+  }
+  return ids.map((id) => MODULE_REGISTRY[id]);
 }
 
 /** SmartCon360 brand assets */
