@@ -80,6 +80,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/v1/auth', authLimiter, proxy(SERVICES.auth, { '^/api/v1/auth': '/auth' }));
 
 // ── Protected Routes ──
+app.use('/api/v1/admin', defaultLimiter, authMiddleware, proxy(SERVICES.auth, { '^/api/v1': '' }));
 app.use('/api/v1/projects', defaultLimiter, authMiddleware, proxy(SERVICES.project, { '^/api/v1': '' }));
 app.use('/api/v1/takt', defaultLimiter, authMiddleware, proxy(SERVICES.takt, { '^/api/v1': '' }));
 app.use('/api/v1/flowline', defaultLimiter, authMiddleware, proxy(SERVICES.flowline, { '^/api/v1': '' }));
