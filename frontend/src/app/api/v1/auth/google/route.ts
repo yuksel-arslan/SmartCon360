@@ -70,11 +70,13 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Assign default viewer role
-      const viewerRole = await prisma.role.findUnique({ where: { name: 'viewer' } });
-      if (viewerRole) {
+      // Assign role: admin for platform admins, viewer for others
+      const PLATFORM_ADMINS = ['contact@yukselarslan.com'];
+      const roleName = PLATFORM_ADMINS.includes(email.toLowerCase()) ? 'admin' : 'viewer';
+      const defaultRole = await prisma.role.findUnique({ where: { name: roleName } });
+      if (defaultRole) {
         await prisma.userRole.create({
-          data: { userId: user.id, roleId: viewerRole.id },
+          data: { userId: user.id, roleId: defaultRole.id },
         });
       }
     }

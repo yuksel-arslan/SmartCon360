@@ -12,6 +12,9 @@ import type { RegisterInput, LoginInput, UpdateProfileInput } from '@/lib/valida
 
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || '12');
 
+/** Platform admin emails — auto-assigned admin role on register */
+const PLATFORM_ADMINS = ['contact@yukselarslan.com'];
+
 export async function register(input: RegisterInput) {
   const existing = await prisma.user.findUnique({ where: { email: input.email } });
   if (existing) {
@@ -30,11 +33,13 @@ export async function register(input: RegisterInput) {
     },
   });
 
-  // Assign default role
-  const viewerRole = await prisma.role.findUnique({ where: { name: 'viewer' } });
-  if (viewerRole) {
+  // Assign role: admin for platform admins, viewer for others
+  const isAdmin = PLATFORM_ADMINS.includes(input.email.toLowerCase());
+  const roleName = isAdmin ? 'admin' : 'viewer';
+  const role = await prisma.role.findUnique({ where: { name: roleName } });
+  if (role) {
     await prisma.userRole.create({
-      data: { userId: user.id, roleId: viewerRole.id },
+      data: { userId: user.id, roleId: role.id },
     });
   }
 
