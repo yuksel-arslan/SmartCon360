@@ -52,7 +52,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/taktflow-icon.svg",
+      "src": "/icons/smartcon360-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml"
     }

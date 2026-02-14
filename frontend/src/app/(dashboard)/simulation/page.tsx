@@ -434,7 +434,7 @@ export default function SimulationPage() {
   return (
     <>
       <TopBar title="Simulation" />
-      <div className="flex-1 overflow-auto p-6 space-y-5">
+      <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 space-y-5">
 
         {/* ── Header ───────────────────────────────────────── */}
         <div className="flex items-center justify-between">

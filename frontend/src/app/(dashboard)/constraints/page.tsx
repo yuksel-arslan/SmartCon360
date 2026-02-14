@@ -132,9 +132,9 @@ export default function ConstraintsPage() {
   return (
     <>
       <TopBar title="Constraints" />
-      <div className="flex-1 overflow-auto p-6 space-y-4">
+      <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 space-y-4">
         {/* Stats row */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {[
             { label: 'Total', value: stats.total, color: 'var(--color-text)' },
             { label: 'Open', value: stats.open, color: 'var(--color-danger)' },

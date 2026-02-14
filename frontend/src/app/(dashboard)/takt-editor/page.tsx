@@ -806,7 +806,7 @@ export default function TaktEditorPage() {
 
           {/* ── Takt Grid ───────────────────────────────────── */}
           <div className="flex-1 overflow-auto">
-            <div className="p-4">
+            <div className="p-3 sm:p-4 md:p-6 lg:p-8">
               <div
                 className="rounded-xl border overflow-hidden"
                 style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}

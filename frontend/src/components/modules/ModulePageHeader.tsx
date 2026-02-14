@@ -23,10 +23,10 @@ export default function ModulePageHeader({ moduleId, description, children }: Mo
   if (!mod) return null;
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: 'var(--color-accent-muted)' }}
         >
           <Image
@@ -38,7 +38,7 @@ export default function ModulePageHeader({ moduleId, description, children }: Mo
           />
         </div>
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
+          <h1 className="text-lg sm:text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
             {mod.brandName}
           </h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>

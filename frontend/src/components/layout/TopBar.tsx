@@ -4,11 +4,11 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUIStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
-import { Search, Bell, Sun, Moon, LogOut, User, ChevronDown } from 'lucide-react';
+import { Search, Bell, Sun, Moon, LogOut, User, ChevronDown, Menu } from 'lucide-react';
 
 export default function TopBar({ title }: { title: string }) {
   const router = useRouter();
-  const { theme, toggleTheme } = useUIStore();
+  const { theme, toggleTheme, setMobileSidebar } = useUIStore();
   const { user, logout } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -36,20 +36,31 @@ export default function TopBar({ title }: { title: string }) {
 
   return (
     <header
-      className="h-14 border-b flex items-center justify-between px-6 lg:px-8 flex-shrink-0"
+      className="h-14 border-b flex items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8 flex-shrink-0 gap-2"
       style={{ backgroundColor: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}
     >
-      <h1
-        className="text-[15px] font-semibold tracking-[-0.01em]"
-        style={{ color: 'var(--color-text)' }}
-      >
-        {title}
-      </h1>
+      {/* Left: hamburger (mobile) + title */}
+      <div className="flex items-center gap-2 min-w-0">
+        <button
+          onClick={() => setMobileSidebar(true)}
+          className="md:hidden w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
+          style={{ background: 'var(--color-bg-input)' }}
+        >
+          <Menu size={18} style={{ color: 'var(--color-text-muted)' }} strokeWidth={1.5} />
+        </button>
+        <h1
+          className="text-[14px] sm:text-[15px] font-semibold tracking-[-0.01em] truncate"
+          style={{ color: 'var(--color-text)' }}
+        >
+          {title}
+        </h1>
+      </div>
 
-      <div className="flex items-center gap-2">
-        {/* Search */}
+      {/* Right: actions */}
+      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+        {/* Search — hidden on mobile */}
         <div
-          className="flex items-center gap-2 px-3 py-2 rounded-xl w-52"
+          className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl w-40 md:w-52"
           style={{ background: 'var(--color-bg-input)' }}
         >
           <Search size={13} style={{ color: 'var(--color-text-muted)' }} strokeWidth={1.5} />
@@ -62,14 +73,14 @@ export default function TopBar({ title }: { title: string }) {
 
         {/* Notifications */}
         <button
-          className="w-9 h-9 rounded-xl flex items-center justify-center relative transition-colors"
+          className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center relative transition-colors flex-shrink-0"
           style={{ background: 'var(--color-bg-input)' }}
           onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-bg-input)'; }}
         >
           <Bell size={15} style={{ color: 'var(--color-text-muted)' }} strokeWidth={1.5} />
           <div
-            className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full"
+            className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-1.5 h-1.5 rounded-full"
             style={{ background: 'var(--color-danger)' }}
           />
         </button>
@@ -77,7 +88,7 @@ export default function TopBar({ title }: { title: string }) {
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+          className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-colors flex-shrink-0"
           style={{ background: 'var(--color-bg-input)' }}
           onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-bg-input)'; }}
@@ -90,23 +101,23 @@ export default function TopBar({ title }: { title: string }) {
         </button>
 
         {/* User menu */}
-        <div className="relative" ref={menuRef}>
+        <div className="relative flex-shrink-0" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center gap-2 px-2 py-1.5 rounded-xl transition-colors"
+            className="flex items-center gap-1.5 sm:gap-2 px-1.5 sm:px-2 py-1.5 rounded-xl transition-colors"
             style={{ background: menuOpen ? 'var(--color-bg-hover)' : 'transparent' }}
             onMouseEnter={(e) => { if (!menuOpen) e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
             onMouseLeave={(e) => { if (!menuOpen) e.currentTarget.style.background = 'transparent'; }}
           >
             <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-semibold text-white"
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-semibold text-white flex-shrink-0"
               style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-light))' }}
             >
               {initials}
             </div>
             {user && (
               <>
-                <div className="hidden md:block text-left">
+                <div className="hidden lg:block text-left">
                   <div className="text-[11px] font-semibold" style={{ color: 'var(--color-text)' }}>
                     {user.firstName} {user.lastName}
                   </div>
@@ -114,7 +125,7 @@ export default function TopBar({ title }: { title: string }) {
                     {user.email}
                   </div>
                 </div>
-                <ChevronDown size={12} style={{ color: 'var(--color-text-muted)' }} />
+                <ChevronDown size={12} className="hidden sm:block" style={{ color: 'var(--color-text-muted)' }} />
               </>
             )}
           </button>
@@ -122,19 +133,19 @@ export default function TopBar({ title }: { title: string }) {
           {/* Dropdown */}
           {menuOpen && (
             <div
-              className="absolute right-0 top-12 w-56 rounded-xl border overflow-hidden z-50 shadow-lg"
+              className="absolute right-0 top-12 w-[calc(100vw-24px)] sm:w-56 max-w-[14rem] rounded-xl border overflow-hidden z-50 shadow-lg"
               style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
             >
               {user && (
                 <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
-                  <div className="text-[12px] font-semibold" style={{ color: 'var(--color-text)' }}>
+                  <div className="text-[12px] font-semibold truncate" style={{ color: 'var(--color-text)' }}>
                     {user.firstName} {user.lastName}
                   </div>
-                  <div className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                  <div className="text-[11px] truncate" style={{ color: 'var(--color-text-muted)' }}>
                     {user.email}
                   </div>
                   {user.company && (
-                    <div className="text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                    <div className="text-[10px] mt-1 truncate" style={{ color: 'var(--color-text-muted)' }}>
                       {user.company}
                     </div>
                   )}

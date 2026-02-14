@@ -22,7 +22,7 @@ export default function ModuleComingSoon({ moduleId, message }: ModuleComingSoon
 
   return (
     <div
-      className="rounded-xl border p-12 flex flex-col items-center justify-center text-center"
+      className="rounded-xl border p-4 sm:p-8 md:p-12 flex flex-col items-center justify-center text-center"
       style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
     >
       <div

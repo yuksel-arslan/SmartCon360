@@ -172,7 +172,7 @@ export default function FlowlinePage() {
         className={fullscreenClasses}
         style={{ background: isFullscreen ? 'var(--color-bg)' : undefined }}
       >
-        <div className={`${isFullscreen ? 'flex-1 overflow-auto' : ''} p-3 sm:p-6 space-y-3 sm:space-y-4`}>
+        <div className={`${isFullscreen ? 'flex-1 overflow-auto' : ''} p-3 sm:p-4 md:p-6 lg:p-8 space-y-3 sm:space-y-4`}>
 
           {/* ── Connection indicator + View modes + Actions bar ── */}
           <div

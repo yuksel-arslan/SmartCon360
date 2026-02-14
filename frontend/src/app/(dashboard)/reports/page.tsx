@@ -471,7 +471,7 @@ export default function ReportsPage() {
   return (
     <>
       <TopBar title="Reports" />
-      <div className="flex-1 overflow-auto p-6 space-y-5">
+      <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 space-y-5">
 
         {/* ── Report Templates ───────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
