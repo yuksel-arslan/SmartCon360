@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+  <defs>
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8731A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F59E3F;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <g transform="translate(105, 200)">
+
+    <path d="M0,-40 Q32,-22 22,12 Q12,34 0,38 Q-12,34 -22,12 Q-32,-22 0,-40 Z" fill="url(#orangeGrad)" opacity="0.15"/>
+    <path d="M0,-40 Q32,-22 22,12 Q12,34 0,38" fill="none" stroke="url(#orangeGrad)" stroke-width="2.5"/>
+    <path d="M0,-40 Q-32,-22 -22,12 Q-12,34 0,38" fill="none" stroke="url(#orangeGrad)" stroke-width="2.5"/>
+    <line x1="0" y1="-32" x2="0" y2="34" stroke="url(#orangeGrad)" stroke-width="2" opacity="0.4"/>
+    <line x1="0" y1="-14" x2="14" y2="-4" stroke="url(#orangeGrad)" stroke-width="1.5" opacity="0.35"/>
+    <line x1="0" y1="0" x2="-14" y2="10" stroke="url(#orangeGrad)" stroke-width="1.5" opacity="0.35"/>
+    <line x1="0" y1="14" x2="12" y2="22" stroke="url(#orangeGrad)" stroke-width="1.5" opacity="0.35"/>
+
+  </g>
+  <g transform="translate(220, 172)">
+    <text x="0" y="30" font-family="'Liberation Sans','Segoe UI',Arial,sans-serif" font-size="72" font-weight="300" fill="#3A3A3C" letter-spacing="-1">Green</text><text x="199" y="30" font-family="'Liberation Sans','Segoe UI',Arial,sans-serif" font-size="72" font-weight="700" fill="url(#orangeGrad)" letter-spacing="-1">Site</text>
+  </g>
+  <text x="220" y="240" font-family="'Roboto','Segoe UI',Arial,sans-serif" font-size="17" font-weight="700" fill="#6B7B8D" textLength="326" lengthAdjust="spacing">ENVIRONMENTAL AND ESG</text>
+  <rect x="220" y="256" width="100" height="3" rx="1.5" fill="url(#orangeGrad)"/>
+</svg>
