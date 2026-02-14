@@ -19,6 +19,13 @@ export const DEMO_TRADES = [
   { name: 'Finishes', color: '#F97316' },
 ];
 
+export interface SegmentTask {
+  id: string;
+  name: string;
+  status: 'done' | 'active' | 'todo';
+  progress: number; // 0-100
+}
+
 export interface FlowlineSegment {
   zone_index: number;
   x_start: number;
@@ -32,6 +39,7 @@ export interface FlowlineSegment {
   actualStart?: string;
   actualEnd?: string;
   crew?: string;
+  tasks: SegmentTask[];
 }
 
 export interface FlowlineWagon {
@@ -87,6 +95,49 @@ const CREW_NAMES: Record<string, string> = {
   'Finishes': 'Golf Finish (8)',
 };
 
+// Tasks per trade — realistic construction activities
+const TRADE_TASKS: Record<string, string[]> = {
+  'Structure': ['Formwork setup', 'Rebar placement', 'Concrete pour', 'Curing & strip'],
+  'MEP Rough': ['Duct rough-in', 'Pipe rough-in', 'Electrical conduit', 'Fire sprinkler'],
+  'Drywall': ['Metal framing', 'Board hanging', 'Taping & mud', 'Sanding'],
+  'MEP Finish': ['Fixture install', 'Panel termination', 'Pipe trim-out', 'Testing & balance'],
+  'Flooring': ['Substrate prep', 'Underlayment', 'Floor install', 'Transition strips'],
+  'Paint': ['Surface prep', 'Primer coat', 'Finish coat', 'Touch-up & punch'],
+  'Finishes': ['Door & hardware', 'Millwork install', 'Accessories', 'Final clean'],
+};
+
+function generateTasks(tradeName: string, segStatus: FlowlineSegment['status'], segPercent: number): SegmentTask[] {
+  const taskNames = TRADE_TASKS[tradeName] ?? ['Task A', 'Task B', 'Task C'];
+  return taskNames.map((name, i) => {
+    const id = `${tradeName.toLowerCase().replace(/\s+/g, '-')}-${i}`;
+    let status: SegmentTask['status'] = 'todo';
+    let progress = 0;
+
+    if (segStatus === 'completed') {
+      status = 'done';
+      progress = 100;
+    } else if (segStatus === 'planned') {
+      status = 'todo';
+      progress = 0;
+    } else {
+      // in_progress or delayed — distribute progress across tasks
+      const taskThreshold = (i / taskNames.length) * 100;
+      const taskEnd = ((i + 1) / taskNames.length) * 100;
+      if (segPercent >= taskEnd) {
+        status = 'done';
+        progress = 100;
+      } else if (segPercent > taskThreshold) {
+        status = 'active';
+        progress = Math.round(((segPercent - taskThreshold) / (taskEnd - taskThreshold)) * 100);
+      } else {
+        status = 'todo';
+        progress = 0;
+      }
+    }
+    return { id, name, status, progress };
+  });
+}
+
 export const DEMO_FLOWLINE: FlowlineWagon[] = DEMO_TRADES.map((trade, tradeIdx) => {
   const tradeOffset = tradeIdx * (1 + BUFFER);
   const segments: FlowlineSegment[] = DEMO_ZONES.map((_, zoneIdx) => {
@@ -108,7 +159,7 @@ export const DEMO_FLOWLINE: FlowlineWagon[] = DEMO_TRADES.map((trade, tradeIdx) 
     else if (status === 'in_progress') percentComplete = Math.floor(30 + Math.random() * 50);
     else if (status === 'delayed') percentComplete = Math.floor(10 + Math.random() * 40);
 
-    return {
+    const seg: FlowlineSegment = {
       zone_index: zoneIdx,
       x_start: xStart,
       x_end: xEnd,
@@ -121,7 +172,10 @@ export const DEMO_FLOWLINE: FlowlineWagon[] = DEMO_TRADES.map((trade, tradeIdx) 
       actualStart: status !== 'planned' ? taktPeriodToDate(xStart + (isDelayed ? 0.5 : 0)) : undefined,
       actualEnd: status === 'completed' ? taktPeriodToDate(xEnd + (isDelayed ? 0.5 : 0)) : undefined,
       crew: CREW_NAMES[trade.name],
+      tasks: [],
     };
+    seg.tasks = generateTasks(trade.name, seg.status, seg.percentComplete);
+    return seg;
   });
   return { trade_name: trade.name, color: trade.color, segments };
 });
@@ -178,6 +232,7 @@ export const DEMO_SIMULATION_FLOWLINE: FlowlineWagon[] = DEMO_TRADES.map((trade,
       plannedStart: taktPeriodToDate(xStart),
       plannedEnd: taktPeriodToDate(xEnd),
       crew: CREW_NAMES[trade.name],
+      tasks: [],
     };
   });
   return { trade_name: trade.name, color: trade.color, segments };

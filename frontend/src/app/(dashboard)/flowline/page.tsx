@@ -662,83 +662,80 @@ export default function FlowlinePage() {
               )}
             </div>
 
-            {/* ── Selection Details Panel ─────────────────────── */}
+            {/* ── Segment Details Panel ──────────────────────── */}
             <AnimatePresence>
               {selectedSegment && (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25, ease: 'easeInOut' }}
-                  className="w-full lg:w-[280px] flex-shrink-0 overflow-hidden"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  className="w-full lg:w-[320px] flex-shrink-0"
                 >
                   <div
-                    className="rounded-xl border p-4 h-full"
-                    style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+                    className="rounded-xl border overflow-y-auto"
+                    style={{
+                      background: 'var(--color-bg-card)',
+                      borderColor: 'var(--color-border)',
+                      maxHeight: isFullscreen ? 'calc(100vh - 300px)' : chartHeight + 40,
+                    }}
                   >
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ background: selectedSegment.tradeColor }} />
-                        <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-                          {selectedSegment.tradeName}
-                        </h3>
+                    {/* ── Header ── */}
+                    <div
+                      className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b"
+                      style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center"
+                          style={{ background: `${selectedSegment.tradeColor}18` }}
+                        >
+                          <div className="w-3 h-3 rounded-full" style={{ background: selectedSegment.tradeColor }} />
+                        </div>
+                        <div>
+                          <h3 className="text-[13px] font-bold" style={{ color: 'var(--color-text)' }}>
+                            {selectedSegment.tradeName}
+                          </h3>
+                          <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                            {selectedSegment.zoneName}
+                          </div>
+                        </div>
                       </div>
                       <button
                         onClick={() => setSelectedSegment(null)}
-                        className="w-5 h-5 rounded flex items-center justify-center"
-                        style={{ color: 'var(--color-text-muted)' }}
+                        className="w-6 h-6 rounded-md flex items-center justify-center transition-colors"
+                        style={{ color: 'var(--color-text-muted)', background: 'var(--color-bg)' }}
                       >
                         <X size={12} />
                       </button>
                     </div>
 
-                    {/* Details */}
-                    <div className="space-y-3">
-                      <DetailRow label="Zone" value={selectedSegment.zoneName} />
-                      <DetailRow label="Period" value={`T${selectedSegment.segment.x_start} — T${selectedSegment.segment.x_end}`} />
-                      <DetailRow label="Planned Start" value={selectedSegment.segment.plannedStart} mono />
-                      <DetailRow label="Planned End" value={selectedSegment.segment.plannedEnd} mono />
-                      {selectedSegment.segment.actualStart && (
-                        <DetailRow label="Actual Start" value={selectedSegment.segment.actualStart} mono />
-                      )}
-                      {selectedSegment.segment.actualEnd && (
-                        <DetailRow label="Actual End" value={selectedSegment.segment.actualEnd} mono />
-                      )}
+                    {/* ── Content ── */}
+                    <div className="p-4 space-y-4">
 
-                      {/* Status badge */}
-                      <div>
-                        <div className="text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                          Status
-                        </div>
+                      {/* Status + Progress row */}
+                      <div className="flex items-center gap-3">
                         <StatusBadge status={selectedSegment.segment.status} />
-                      </div>
-
-                      {/* Progress bar */}
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
-                            Progress
-                          </span>
-                          <span className="text-xs font-bold" style={{ fontFamily: 'var(--font-mono)', color: selectedSegment.tradeColor }}>
-                            {selectedSegment.segment.percentComplete}%
-                          </span>
-                        </div>
-                        <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'var(--color-bg)' }}>
-                          <motion.div
-                            className="h-full rounded-full"
-                            style={{ background: selectedSegment.tradeColor }}
-                            initial={{ width: 0 }}
-                            animate={{ width: `${selectedSegment.segment.percentComplete}%` }}
-                            transition={{ duration: 0.6, ease: 'easeOut' }}
-                          />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
+                              Progress
+                            </span>
+                            <span className="text-xs font-bold" style={{ fontFamily: 'var(--font-mono)', color: selectedSegment.tradeColor }}>
+                              {selectedSegment.segment.percentComplete}%
+                            </span>
+                          </div>
+                          <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'var(--color-bg)' }}>
+                            <motion.div
+                              className="h-full rounded-full"
+                              style={{ background: selectedSegment.tradeColor }}
+                              initial={{ width: 0 }}
+                              animate={{ width: `${selectedSegment.segment.percentComplete}%` }}
+                              transition={{ duration: 0.6, ease: 'easeOut' }}
+                            />
+                          </div>
                         </div>
                       </div>
-
-                      {/* Crew */}
-                      {selectedSegment.segment.crew && (
-                        <DetailRow label="Crew" value={selectedSegment.segment.crew} />
-                      )}
 
                       {/* Critical path indicator */}
                       {selectedSegment.segment.isCriticalPath && (
@@ -750,6 +747,125 @@ export default function FlowlinePage() {
                           On Critical Path
                         </div>
                       )}
+
+                      {/* ── Schedule Section ── */}
+                      <div>
+                        <div className="text-[9px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                          <Clock size={10} />
+                          Schedule
+                        </div>
+                        <div
+                          className="rounded-lg border p-3 space-y-2"
+                          style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg)' }}
+                        >
+                          <DetailRow label="Period" value={`T${selectedSegment.segment.x_start} — T${selectedSegment.segment.x_end}`} mono />
+                          <DetailRow label="Planned Start" value={selectedSegment.segment.plannedStart} mono />
+                          <DetailRow label="Planned End" value={selectedSegment.segment.plannedEnd} mono />
+                          {selectedSegment.segment.actualStart && (
+                            <DetailRow label="Actual Start" value={selectedSegment.segment.actualStart} mono />
+                          )}
+                          {selectedSegment.segment.actualEnd && (
+                            <DetailRow label="Actual End" value={selectedSegment.segment.actualEnd} mono />
+                          )}
+                          {selectedSegment.segment.crew && (
+                            <DetailRow label="Crew" value={selectedSegment.segment.crew} />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* ── Activities Section ── */}
+                      {selectedSegment.segment.tasks && selectedSegment.segment.tasks.length > 0 && (
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                              <Activity size={10} />
+                              Activities
+                            </span>
+                            <span
+                              className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                              style={{
+                                fontFamily: 'var(--font-mono)',
+                                background: selectedSegment.segment.tasks.every(t => t.status === 'done')
+                                  ? 'rgba(16,185,129,0.12)' : 'var(--color-bg)',
+                                color: selectedSegment.segment.tasks.every(t => t.status === 'done')
+                                  ? 'var(--color-success)' : 'var(--color-text-muted)',
+                              }}
+                            >
+                              {selectedSegment.segment.tasks.filter(t => t.status === 'done').length}/{selectedSegment.segment.tasks.length}
+                            </span>
+                          </div>
+                          <div
+                            className="rounded-lg border divide-y"
+                            style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg)' }}
+                          >
+                            {selectedSegment.segment.tasks.map((task) => (
+                              <div
+                                key={task.id}
+                                className="flex items-center gap-2.5 px-3 py-2.5"
+                                style={{ borderColor: 'var(--color-border)' }}
+                              >
+                                <div className="flex-shrink-0">
+                                  {task.status === 'done' ? (
+                                    <CheckCircle2 size={14} style={{ color: 'var(--color-success)' }} />
+                                  ) : task.status === 'active' ? (
+                                    <motion.div
+                                      animate={{ scale: [1, 1.15, 1] }}
+                                      transition={{ duration: 2, repeat: Infinity }}
+                                    >
+                                      <Clock size={14} style={{ color: selectedSegment.tradeColor }} />
+                                    </motion.div>
+                                  ) : (
+                                    <div
+                                      className="w-[14px] h-[14px] rounded-full border-2"
+                                      style={{ borderColor: 'var(--color-border)' }}
+                                    />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div
+                                    className="text-[11px] font-semibold"
+                                    style={{
+                                      color: task.status === 'todo' ? 'var(--color-text-muted)' : 'var(--color-text)',
+                                      textDecoration: task.status === 'done' ? 'line-through' : undefined,
+                                      textDecorationColor: 'var(--color-text-muted)',
+                                    }}
+                                  >
+                                    {task.name}
+                                  </div>
+                                  {task.status === 'active' && (
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--color-bg-card)' }}>
+                                        <motion.div
+                                          className="h-full rounded-full"
+                                          style={{ background: selectedSegment.tradeColor }}
+                                          initial={{ width: 0 }}
+                                          animate={{ width: `${task.progress}%` }}
+                                          transition={{ duration: 0.5, ease: 'easeOut' }}
+                                        />
+                                      </div>
+                                      <span
+                                        className="text-[9px] font-bold"
+                                        style={{ fontFamily: 'var(--font-mono)', color: selectedSegment.tradeColor }}
+                                      >
+                                        {task.progress}%
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                                {task.status === 'done' && (
+                                  <span
+                                    className="text-[9px] font-bold flex-shrink-0"
+                                    style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-success)' }}
+                                  >
+                                    100%
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                     </div>
                   </div>
                 </motion.div>
