@@ -13,8 +13,15 @@ const PRODUCTION_DOMAIN = 'app.smartcon360.com';
 
 export function middleware(request: NextRequest) {
   const host = request.headers.get('host') || '';
+  const pathname = request.nextUrl.pathname;
 
-  // Redirect *.vercel.app → production domain
+  // Never redirect API routes — redirects break POST requests
+  // (browsers convert POST→GET on 301/302 and strip Authorization headers)
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.next();
+  }
+
+  // Redirect *.vercel.app → production domain (page routes only)
   // Skip if already on the production domain or localhost (dev)
   if (
     host.endsWith('.vercel.app') &&

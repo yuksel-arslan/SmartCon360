@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { signAccessToken } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
+import { v4 as uuidv4 } from 'uuid';
 
 // POST /api/v1/auth/google — Authenticate with Google OAuth token
 export async function POST(request: NextRequest) {
@@ -89,6 +90,14 @@ export async function POST(request: NextRequest) {
 
     const accessToken = signAccessToken(user.id, user.email);
 
+    // Create refresh token + session (same as login)
+    const refreshToken = uuidv4();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+    await prisma.session.create({
+      data: { userId: user.id, refreshToken, expiresAt },
+    });
+
     return NextResponse.json({
       data: {
         user: {
@@ -101,6 +110,7 @@ export async function POST(request: NextRequest) {
           roles: userRoles.map((ur) => ({ role: ur.role.name, projectId: ur.projectId })),
         },
         accessToken,
+        refreshToken,
       },
       error: null,
     });

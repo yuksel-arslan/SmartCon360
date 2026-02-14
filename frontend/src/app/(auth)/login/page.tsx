@@ -110,7 +110,7 @@ export default function LoginPage() {
     if (token) router.replace('/dashboard');
   }, [token, router]);
 
-  const storeAuth = useCallback((data: { user: Record<string, unknown>; accessToken: string }) => {
+  const storeAuth = useCallback((data: { user: Record<string, unknown>; accessToken: string; refreshToken?: string }) => {
     setAuth(data.accessToken, {
       id: data.user.id as string,
       email: data.user.email as string,
@@ -119,7 +119,7 @@ export default function LoginPage() {
       company: data.user.company as string | undefined,
       avatarUrl: data.user.avatarUrl as string | undefined,
       roles: (data.user.roles as { role: string; projectId?: string | null }[]) || [],
-    });
+    }, data.refreshToken);
   }, [setAuth]);
 
   // Google Sign-In callback
