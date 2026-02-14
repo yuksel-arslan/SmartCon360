@@ -2,8 +2,71 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Globe } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { BRAND } from '@/lib/modules';
+
+// ── i18n ───────────────────────────────────────────────
+type Lang = 'en' | 'tr';
+
+const t: Record<Lang, Record<string, string>> = {
+  en: {
+    headline: 'One Platform, Full Construction Management',
+    description:
+      'SmartCon360 unifies 13 integrated modules covering all 10 PMBOK knowledge areas plus OHS and ESG — powered by a 3-layer AI architecture. Replace 13 separate tools with one intelligent platform.',
+    stat1Value: '13',
+    stat1Label: 'Integrated Modules',
+    stat2Value: '10+2',
+    stat2Label: 'PMBOK + OHS & ESG',
+    stat3Value: '3-Layer',
+    stat3Label: 'AI Architecture',
+    copyright: `${BRAND.name} © 2026 — All rights reserved`,
+    welcomeBack: 'Welcome back',
+    createAccount: 'Create account',
+    signInSubtitle: 'Sign in to your SmartCon360 account',
+    signUpSubtitle: 'Start your free trial today',
+    firstName: 'First Name',
+    lastName: 'Last Name',
+    email: 'Email',
+    password: 'Password',
+    passwordHint: 'Min 8 characters, one uppercase letter, one number',
+    signIn: 'Sign In',
+    createAccountBtn: 'Create Account',
+    noAccount: "Don't have an account? Sign up",
+    hasAccount: 'Already have an account? Sign in',
+    tryDemo: 'Try Demo Account',
+    googleContinue: 'Continue with Google',
+    or: 'or',
+  },
+  tr: {
+    headline: 'Tek Platform, Tüm İnşaat Yönetimi',
+    description:
+      'SmartCon360, tüm 10 PMBOK bilgi alanı ile İSG ve ESG\'yi kapsayan 13 entegre modülü 3 katmanlı yapay zeka mimarisiyle birleştirir. 13 ayrı aracı tek bir akıllı platformla değiştirin.',
+    stat1Value: '13',
+    stat1Label: 'Entegre Modül',
+    stat2Value: '10+2',
+    stat2Label: 'PMBOK + İSG & ESG',
+    stat3Value: '3 Katman',
+    stat3Label: 'YZ Mimarisi',
+    copyright: `${BRAND.name} © 2026 — Tüm hakları saklıdır`,
+    welcomeBack: 'Tekrar hoş geldiniz',
+    createAccount: 'Hesap oluştur',
+    signInSubtitle: 'SmartCon360 hesabınıza giriş yapın',
+    signUpSubtitle: 'Ücretsiz denemenize bugün başlayın',
+    firstName: 'Ad',
+    lastName: 'Soyad',
+    email: 'E-posta',
+    password: 'Şifre',
+    passwordHint: 'En az 8 karakter, bir büyük harf, bir rakam',
+    signIn: 'Giriş Yap',
+    createAccountBtn: 'Hesap Oluştur',
+    noAccount: 'Hesabınız yok mu? Kayıt olun',
+    hasAccount: 'Zaten hesabınız var mı? Giriş yapın',
+    tryDemo: 'Demo Hesabı Dene',
+    googleContinue: 'Google ile devam et',
+    or: 'veya',
+  },
+};
 
 declare global {
   interface Window {
@@ -21,11 +84,25 @@ declare global {
 export default function LoginPage() {
   const router = useRouter();
   const { token, initialize, setAuth } = useAuthStore();
+  const [lang, setLang] = useState<Lang>('en');
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ email: '', password: '', firstName: '', lastName: '' });
+
+  // Load saved language preference
+  useEffect(() => {
+    const saved = localStorage.getItem('lang') as Lang | null;
+    if (saved && (saved === 'en' || saved === 'tr')) setLang(saved);
+  }, []);
+
+  const switchLang = (newLang: Lang) => {
+    setLang(newLang);
+    localStorage.setItem('lang', newLang);
+  };
+
+  const i = t[lang];
 
   // Initialize auth and redirect if already logged in
   useEffect(() => { initialize(); }, [initialize]);
@@ -165,26 +242,29 @@ export default function LoginPage() {
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/smartcon360-logo-dark.svg" alt="SmartCon360" style={{ height: 80, width: 'auto' }} />
+        <img
+          src={BRAND.logoDark}
+          alt={BRAND.name}
+          className="self-start"
+          style={{ height: 80, width: 'auto' }}
+        />
 
         <div className="max-w-md">
           <h1
             className="text-4xl font-extrabold text-white leading-tight mb-4"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            AI-Powered Construction Planning
+            {i.headline}
           </h1>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-            Combine Takt Time, Location-Based Management, and Last Planner System with
-            artificial intelligence. Automate plan generation, predict delays, and deliver
-            projects faster.
+            {i.description}
           </p>
 
           <div className="grid grid-cols-3 gap-4 mt-8">
             {[
-              { value: '40%', label: 'Faster Delivery' },
-              { value: '93%', label: 'PPC Average' },
-              { value: '60%', label: 'Less Rework' },
+              { value: i.stat1Value, label: i.stat1Label },
+              { value: i.stat2Value, label: i.stat2Label },
+              { value: i.stat3Value, label: i.stat3Label },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-2xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-accent)' }}>
@@ -199,27 +279,58 @@ export default function LoginPage() {
         </div>
 
         <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-          SmartCon360 &copy; 2026 — All rights reserved
+          {i.copyright}
         </div>
       </div>
 
       {/* Right — Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex flex-col p-8">
+        {/* Language toggle — top right */}
+        <div className="flex justify-end mb-4">
+          <div
+            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium"
+            style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
+          >
+            <Globe size={14} style={{ color: 'var(--color-text-muted)' }} />
+            <button
+              onClick={() => switchLang('en')}
+              className="px-1.5 py-0.5 rounded transition-colors"
+              style={{
+                color: lang === 'en' ? '#fff' : 'var(--color-text-muted)',
+                background: lang === 'en' ? BRAND.accentColor : 'transparent',
+              }}
+            >
+              EN
+            </button>
+            <button
+              onClick={() => switchLang('tr')}
+              className="px-1.5 py-0.5 rounded transition-colors"
+              style={{
+                color: lang === 'tr' ? '#fff' : 'var(--color-text-muted)',
+                background: lang === 'tr' ? BRAND.accentColor : 'transparent',
+              }}
+            >
+              TR
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 flex items-center justify-center">
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/smartcon360-logo-light.svg" alt="SmartCon360" style={{ height: 56, width: 'auto' }} />
+            <img src={BRAND.logoLight} alt={BRAND.name} style={{ height: 56, width: 'auto' }} />
           </div>
 
           <h2
             className="text-2xl font-extrabold mb-1"
             style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
           >
-            {isLogin ? 'Welcome back' : 'Create account'}
+            {isLogin ? i.welcomeBack : i.createAccount}
           </h2>
           <p className="text-sm mb-6" style={{ color: 'var(--color-text-muted)' }}>
-            {isLogin ? 'Sign in to your SmartCon360 account' : 'Start your free trial today'}
+            {isLogin ? i.signInSubtitle : i.signUpSubtitle}
           </p>
 
           {error && (
@@ -244,14 +355,14 @@ export default function LoginPage() {
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
-                Continue with Google
+                {i.googleContinue}
               </button>
             )}
           </div>
 
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 h-px" style={{ background: 'var(--color-border)' }} />
-            <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>or</span>
+            <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>{i.or}</span>
             <div className="flex-1 h-px" style={{ background: 'var(--color-border)' }} />
           </div>
 
@@ -260,7 +371,7 @@ export default function LoginPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-semibold mb-1 block" style={{ color: 'var(--color-text-secondary)' }}>
-                    First Name
+                    {i.firstName}
                   </label>
                   <input
                     type="text"
@@ -277,7 +388,7 @@ export default function LoginPage() {
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold mb-1 block" style={{ color: 'var(--color-text-secondary)' }}>
-                    Last Name
+                    {i.lastName}
                   </label>
                   <input
                     type="text"
@@ -297,7 +408,7 @@ export default function LoginPage() {
 
             <div>
               <label className="text-[11px] font-semibold mb-1 block" style={{ color: 'var(--color-text-secondary)' }}>
-                Email
+                {i.email}
               </label>
               <input
                 type="email"
@@ -315,7 +426,7 @@ export default function LoginPage() {
 
             <div>
               <label className="text-[11px] font-semibold mb-1 block" style={{ color: 'var(--color-text-secondary)' }}>
-                Password
+                {i.password}
               </label>
               <div className="relative">
                 <input
@@ -341,7 +452,7 @@ export default function LoginPage() {
               </div>
               {!isLogin && (
                 <p className="text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                  Min 8 characters, one uppercase letter, one number
+                  {i.passwordHint}
                 </p>
               )}
             </div>
@@ -359,7 +470,7 @@ export default function LoginPage() {
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  {isLogin ? 'Sign In' : 'Create Account'}
+                  {isLogin ? i.signIn : i.createAccountBtn}
                   <ArrowRight size={16} />
                 </>
               )}
@@ -372,7 +483,7 @@ export default function LoginPage() {
               className="text-xs font-medium"
               style={{ color: 'var(--color-accent)' }}
             >
-              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+              {isLogin ? i.noAccount : i.hasAccount}
             </button>
           </div>
 
@@ -388,9 +499,10 @@ export default function LoginPage() {
                 background: 'var(--color-bg-card)',
               }}
             >
-              Try Demo Account
+              {i.tryDemo}
             </button>
           </div>
+        </div>
         </div>
       </div>
     </div>
