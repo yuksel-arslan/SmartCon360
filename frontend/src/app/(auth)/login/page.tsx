@@ -39,25 +39,8 @@ export default function LoginPage() {
           background: 'linear-gradient(135deg, #0B0F1A 0%, #1a1f3a 50%, #0B0F1A 100%)',
         }}
       >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg"
-            style={{
-              background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))',
-              fontFamily: 'var(--font-display)',
-            }}
-          >
-            T
-          </div>
-          <div>
-            <div className="text-lg font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>
-              TaktFlow AI
-            </div>
-            <div className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
-              Takt Planning Platform
-            </div>
-          </div>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/taktflow-logo.svg" alt="TaktFlow AI" style={{ height: 40, width: 'auto' }} />
 
         <div className="max-w-md">
           <h1
@@ -99,19 +82,9 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg"
-              style={{
-                background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))',
-                fontFamily: 'var(--font-display)',
-              }}
-            >
-              T
-            </div>
-            <div className="text-lg font-extrabold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
-              TaktFlow AI
-            </div>
+          <div className="lg:hidden flex justify-center mb-8">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/taktflow-logo.svg" alt="TaktFlow AI" style={{ height: 36, width: 'auto' }} />
           </div>
 
           <h2

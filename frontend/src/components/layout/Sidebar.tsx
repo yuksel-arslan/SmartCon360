@@ -50,26 +50,13 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <div className="flex items-center gap-2.5 border-b px-4 py-4" style={{ borderColor: 'var(--color-border)' }}>
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0"
-          style={{
-            background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))',
-            fontFamily: 'var(--font-display)',
-            fontSize: 16,
-          }}
-        >
-          T
-        </div>
-        {!sidebarCollapsed && (
-          <div>
-            <div className="text-sm font-extrabold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
-              TaktFlow
-            </div>
-            <div className="text-[9px] font-semibold tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
-              AI Platform
-            </div>
-          </div>
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={sidebarCollapsed ? '/taktflow-icon.svg' : '/taktflow-logo.svg'}
+          alt="TaktFlow AI"
+          className="flex-shrink-0"
+          style={{ height: sidebarCollapsed ? 32 : 36, width: 'auto' }}
+        />
       </div>
 
       {/* Project selector */}
