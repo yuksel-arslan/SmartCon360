@@ -463,7 +463,7 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
 export const NAV_GROUPS: ModuleGroup[] = [
   {
     id: 'planning',
-    label: 'Scheduling',
+    label: 'Takt Flow',
     items: [
       { parent: 'taktflow', children: ['dashboard', 'flowline', 'takt-editor', 'constraints', 'lps'] },
     ],

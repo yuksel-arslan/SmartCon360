@@ -27,6 +27,7 @@ services:
       - project-service
       - takt-engine
       - flowline-service
+      - constraint-service
       - ai-planner
       - ai-concierge
       - simulation-service
@@ -95,6 +96,11 @@ services:
     ports: ["3005:3005"]
     env_file: .env
     depends_on: [postgres, redis]
+
+  constraint-service:
+    build: ./services/constraint-service
+    ports: ["3004:3004"]
+    env_file: .env
 
   ai-concierge:
     build: ./services/ai-concierge
