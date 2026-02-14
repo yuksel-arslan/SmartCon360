@@ -389,6 +389,17 @@ export default function UsersTab() {
   const [actionMenu, setActionMenu] = useState<string | null>(null);
   const limit = 10;
 
+  // Invite User state
+  const [inviting, setInviting] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteFirst, setInviteFirst] = useState('');
+  const [inviteLast, setInviteLast] = useState('');
+  const [inviteRoleId, setInviteRoleId] = useState('');
+  const [inviteCompany, setInviteCompany] = useState('');
+  const [inviteSaving, setInviteSaving] = useState(false);
+  const [inviteError, setInviteError] = useState('');
+  const [inviteResult, setInviteResult] = useState<{ email: string; tempPassword: string } | null>(null);
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
@@ -470,11 +481,56 @@ export default function UsersTab() {
     }
   };
 
+  const handleInviteUser = async () => {
+    if (!inviteEmail || !inviteFirst || !inviteLast || !inviteRoleId) return;
+    setInviteSaving(true);
+    setInviteError('');
+    try {
+      const res = await fetch('/api/v1/admin/users/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader() as Record<string, string>,
+        },
+        body: JSON.stringify({
+          email: inviteEmail,
+          firstName: inviteFirst,
+          lastName: inviteLast,
+          roleId: inviteRoleId,
+          company: inviteCompany || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setInviteError(json.error?.message || 'Failed to invite user');
+        setInviteSaving(false);
+        return;
+      }
+      setInviteResult({ email: json.data.email, tempPassword: json.data.tempPassword });
+      setInviteSaving(false);
+      fetchUsers();
+    } catch {
+      setInviteError('Network error');
+      setInviteSaving(false);
+    }
+  };
+
+  const resetInvite = () => {
+    setInviting(false);
+    setInviteEmail('');
+    setInviteFirst('');
+    setInviteLast('');
+    setInviteRoleId('');
+    setInviteCompany('');
+    setInviteError('');
+    setInviteResult(null);
+  };
+
   const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="space-y-4 max-w-4xl">
-      {/* Header + Search */}
+      {/* Header + Search + Invite */}
       <div className="flex items-center justify-between gap-4">
         <div>
           <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
@@ -484,26 +540,208 @@ export default function UsersTab() {
             {total} registered user{total !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="relative">
-          <Search
-            size={13}
-            className="absolute left-3 top-1/2 -translate-y-1/2"
-            style={{ color: 'var(--color-text-muted)' }}
-          />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Search users..."
-            className="pl-8 pr-3 py-2 text-[12px] rounded-lg border w-56"
-            style={{
-              background: 'var(--color-bg-input)',
-              borderColor: 'var(--color-border)',
-              color: 'var(--color-text)',
-            }}
-          />
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search
+              size={13}
+              className="absolute left-3 top-1/2 -translate-y-1/2"
+              style={{ color: 'var(--color-text-muted)' }}
+            />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              placeholder="Search users..."
+              className="pl-8 pr-3 py-2 text-[12px] rounded-lg border w-56"
+              style={{
+                background: 'var(--color-bg-input)',
+                borderColor: 'var(--color-border)',
+                color: 'var(--color-text)',
+              }}
+            />
+          </div>
+          {!inviting && (
+            <button
+              onClick={() => setInviting(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer"
+              style={{ background: 'var(--color-accent)', color: '#fff' }}
+            >
+              <UserPlus size={12} />
+              Invite User
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Invite User Form */}
+      {inviting && !inviteResult && (
+        <Card>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <UserPlus size={16} style={{ color: 'var(--color-accent)' }} />
+              <h4 className="text-[13px] font-semibold" style={{ color: 'var(--color-text)' }}>
+                Invite New User
+              </h4>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wider mb-1 block" style={{ color: 'var(--color-text-muted)' }}>
+                  First Name
+                </label>
+                <input
+                  value={inviteFirst}
+                  onChange={(e) => setInviteFirst(e.target.value)}
+                  placeholder="John"
+                  className="w-full px-3 py-2 text-[12px] rounded-lg border"
+                  style={{
+                    background: 'var(--color-bg-input)',
+                    borderColor: 'var(--color-border)',
+                    color: 'var(--color-text)',
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wider mb-1 block" style={{ color: 'var(--color-text-muted)' }}>
+                  Last Name
+                </label>
+                <input
+                  value={inviteLast}
+                  onChange={(e) => setInviteLast(e.target.value)}
+                  placeholder="Doe"
+                  className="w-full px-3 py-2 text-[12px] rounded-lg border"
+                  style={{
+                    background: 'var(--color-bg-input)',
+                    borderColor: 'var(--color-border)',
+                    color: 'var(--color-text)',
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wider mb-1 block" style={{ color: 'var(--color-text-muted)' }}>
+                  Email
+                </label>
+                <input
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="john@company.com"
+                  type="email"
+                  className="w-full px-3 py-2 text-[12px] rounded-lg border"
+                  style={{
+                    background: 'var(--color-bg-input)',
+                    borderColor: 'var(--color-border)',
+                    color: 'var(--color-text)',
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wider mb-1 block" style={{ color: 'var(--color-text-muted)' }}>
+                  Role
+                </label>
+                <select
+                  value={inviteRoleId}
+                  onChange={(e) => setInviteRoleId(e.target.value)}
+                  className="w-full px-3 py-2 text-[12px] rounded-lg border"
+                  style={{
+                    background: 'var(--color-bg-input)',
+                    borderColor: 'var(--color-border)',
+                    color: 'var(--color-text)',
+                  }}
+                >
+                  <option value="">Select a role...</option>
+                  {roles.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {roleLabel(r.name)}{r.isSystem ? ' (System)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-span-2">
+                <label className="text-[10px] font-semibold uppercase tracking-wider mb-1 block" style={{ color: 'var(--color-text-muted)' }}>
+                  Company (optional)
+                </label>
+                <input
+                  value={inviteCompany}
+                  onChange={(e) => setInviteCompany(e.target.value)}
+                  placeholder="Company name"
+                  className="w-full px-3 py-2 text-[12px] rounded-lg border"
+                  style={{
+                    background: 'var(--color-bg-input)',
+                    borderColor: 'var(--color-border)',
+                    color: 'var(--color-text)',
+                  }}
+                />
+              </div>
+            </div>
+            {inviteError && (
+              <p className="text-[11px] font-medium" style={{ color: 'var(--color-danger)' }}>{inviteError}</p>
+            )}
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={handleInviteUser}
+                disabled={!inviteEmail || !inviteFirst || !inviteLast || !inviteRoleId || inviteSaving}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold cursor-pointer"
+                style={{
+                  background: 'var(--color-accent)',
+                  color: '#fff',
+                  opacity: !inviteEmail || !inviteFirst || !inviteLast || !inviteRoleId || inviteSaving ? 0.4 : 1,
+                }}
+              >
+                {inviteSaving ? <Loader2 size={12} className="animate-spin" /> : <UserPlus size={12} />}
+                Create User
+              </button>
+              <button
+                onClick={resetInvite}
+                className="px-3 py-2 rounded-lg text-[11px] font-medium cursor-pointer"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Invite Success — Show Temp Password */}
+      {inviteResult && (
+        <Card>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Check size={16} style={{ color: 'var(--color-success)' }} />
+              <h4 className="text-[13px] font-semibold" style={{ color: 'var(--color-success)' }}>
+                User Created Successfully
+              </h4>
+            </div>
+            <div className="space-y-2">
+              <div className="text-[12px]" style={{ color: 'var(--color-text)' }}>
+                <strong>Email:</strong> {inviteResult.email}
+              </div>
+              <div className="text-[12px]" style={{ color: 'var(--color-text)' }}>
+                <strong>Temporary Password:</strong>{' '}
+                <code
+                  className="px-2 py-1 rounded text-[11px] select-all"
+                  style={{
+                    background: 'var(--color-bg-input)',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--color-accent)',
+                  }}
+                >
+                  {inviteResult.tempPassword}
+                </code>
+              </div>
+              <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                Share these credentials with the user. They should change their password after first login.
+              </p>
+            </div>
+            <button
+              onClick={resetInvite}
+              className="px-3 py-2 rounded-lg text-[11px] font-semibold cursor-pointer"
+              style={{ background: 'var(--color-accent)', color: '#fff' }}
+            >
+              Done
+            </button>
+          </div>
+        </Card>
+      )}
 
       {/* Users Table */}
       <Card padding="none">

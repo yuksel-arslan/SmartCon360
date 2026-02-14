@@ -47,19 +47,24 @@ export default function ProjectTeamTab() {
 
   const activeProject = projects.find((p) => p.id === activeProjectId);
 
+  const [error, setError] = useState('');
+
   const fetchMembers = useCallback(async () => {
     if (!activeProjectId) return;
     setLoading(true);
+    setError('');
     try {
-      const res = await fetch(`/api/v1/projects/${activeProjectId}`, {
+      const res = await fetch(`/api/v1/projects/${activeProjectId}/members`, {
         headers: { ...getAuthHeader() as Record<string, string> },
       });
       const json = await res.json();
-      if (json.data?.members) {
-        setMembers(json.data.members);
+      if (res.ok && json.data) {
+        setMembers(json.data);
+      } else {
+        setError(json.error?.message || 'Failed to load members');
       }
     } catch {
-      // ignore
+      setError('Network error');
     } finally {
       setLoading(false);
     }
@@ -67,10 +72,13 @@ export default function ProjectTeamTab() {
 
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
+  const [addError, setAddError] = useState('');
+
   const handleAddMember = async () => {
     if (!activeProjectId || !newEmail) return;
+    setAddError('');
     try {
-      await fetch(`/api/v1/projects/${activeProjectId}/members`, {
+      const res = await fetch(`/api/v1/projects/${activeProjectId}/members`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,26 +90,38 @@ export default function ProjectTeamTab() {
           trade: newTrade || undefined,
         }),
       });
+      const json = await res.json();
+      if (!res.ok) {
+        setAddError(json.error?.message || 'Failed to add member');
+        return;
+      }
       setAdding(false);
       setNewEmail('');
       setNewRole('viewer');
       setNewTrade('');
+      setAddError('');
       fetchMembers();
     } catch {
-      // ignore
+      setAddError('Network error');
     }
   };
 
   const handleRemoveMember = async (memberId: string) => {
     if (!activeProjectId) return;
+    setError('');
     try {
-      await fetch(`/api/v1/projects/${activeProjectId}/members/${memberId}`, {
+      const res = await fetch(`/api/v1/projects/${activeProjectId}/members/${memberId}`, {
         method: 'DELETE',
         headers: { ...getAuthHeader() as Record<string, string> },
       });
+      if (!res.ok) {
+        const json = await res.json();
+        setError(json.error?.message || 'Failed to remove member');
+        return;
+      }
       fetchMembers();
     } catch {
-      // ignore
+      setError('Network error');
     }
   };
 
@@ -209,6 +229,9 @@ export default function ProjectTeamTab() {
                 />
               </div>
             </div>
+            {addError && (
+              <p className="text-[11px] font-medium" style={{ color: 'var(--color-danger)' }}>{addError}</p>
+            )}
             <div className="flex gap-2 pt-1">
               <button
                 onClick={handleAddMember}
@@ -223,7 +246,7 @@ export default function ProjectTeamTab() {
                 Add
               </button>
               <button
-                onClick={() => setAdding(false)}
+                onClick={() => { setAdding(false); setAddError(''); }}
                 className="px-3 py-2 rounded-lg text-[11px] font-medium cursor-pointer"
                 style={{ color: 'var(--color-text-muted)' }}
               >
@@ -232,6 +255,13 @@ export default function ProjectTeamTab() {
             </div>
           </div>
         </Card>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="px-3 py-2 rounded-lg text-[11px] font-medium" style={{ background: 'var(--color-danger-muted, #fef2f2)', color: 'var(--color-danger)' }}>
+          {error}
+        </div>
       )}
 
       {/* Members list */}

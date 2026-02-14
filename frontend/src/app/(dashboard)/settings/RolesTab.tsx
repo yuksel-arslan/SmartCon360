@@ -56,6 +56,8 @@ export default function RolesTab() {
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleDesc, setNewRoleDesc] = useState('');
   const [newRolePerms, setNewRolePerms] = useState<string[]>([]);
+  const [error, setError] = useState('');
+  const [createError, setCreateError] = useState('');
 
   const fetchRoles = useCallback(async () => {
     setLoading(true);
@@ -81,8 +83,9 @@ export default function RolesTab() {
   };
 
   const saveEdit = async (roleId: string) => {
+    setError('');
     try {
-      await fetch(`/api/v1/admin/roles/${roleId}`, {
+      const res = await fetch(`/api/v1/admin/roles/${roleId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -93,17 +96,23 @@ export default function RolesTab() {
           permissions: editPermissions,
         }),
       });
+      if (!res.ok) {
+        const json = await res.json();
+        setError(json.error?.message || 'Failed to save role');
+        return;
+      }
       setEditingRole(null);
       fetchRoles();
     } catch {
-      // ignore
+      setError('Network error');
     }
   };
 
   const createRole = async () => {
     if (!newRoleName || newRolePerms.length === 0) return;
+    setCreateError('');
     try {
-      await fetch('/api/v1/admin/roles', {
+      const res = await fetch('/api/v1/admin/roles', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,26 +124,38 @@ export default function RolesTab() {
           permissions: newRolePerms,
         }),
       });
+      if (!res.ok) {
+        const json = await res.json();
+        setCreateError(json.error?.message || 'Failed to create role');
+        return;
+      }
       setCreating(false);
       setNewRoleName('');
       setNewRoleDesc('');
       setNewRolePerms([]);
+      setCreateError('');
       fetchRoles();
     } catch {
-      // ignore
+      setCreateError('Network error');
     }
   };
 
   const deleteRole = async (roleId: string) => {
     if (!confirm('Delete this role? All users with this role will lose it.')) return;
+    setError('');
     try {
-      await fetch(`/api/v1/admin/roles/${roleId}`, {
+      const res = await fetch(`/api/v1/admin/roles/${roleId}`, {
         method: 'DELETE',
         headers: { ...getAuthHeader() as Record<string, string> },
       });
+      if (!res.ok && res.status !== 204) {
+        const json = await res.json();
+        setError(json.error?.message || 'Failed to delete role');
+        return;
+      }
       fetchRoles();
     } catch {
-      // ignore
+      setError('Network error');
     }
   };
 
@@ -295,6 +316,9 @@ export default function RolesTab() {
                 onCycle={(mod) => cyclePermission(newRolePerms, setNewRolePerms, mod)}
               />
             </div>
+            {createError && (
+              <p className="text-[11px] font-medium" style={{ color: 'var(--color-danger)' }}>{createError}</p>
+            )}
             <div className="flex gap-2 pt-2">
               <button
                 onClick={createRole}
@@ -310,7 +334,7 @@ export default function RolesTab() {
                 Create
               </button>
               <button
-                onClick={() => { setCreating(false); setNewRoleName(''); setNewRoleDesc(''); setNewRolePerms([]); }}
+                onClick={() => { setCreating(false); setNewRoleName(''); setNewRoleDesc(''); setNewRolePerms([]); setCreateError(''); }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-medium cursor-pointer"
                 style={{ color: 'var(--color-text-muted)' }}
               >
@@ -320,6 +344,13 @@ export default function RolesTab() {
             </div>
           </div>
         </Card>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="px-3 py-2 rounded-lg text-[11px] font-medium" style={{ background: 'var(--color-danger-muted, #fef2f2)', color: 'var(--color-danger)' }}>
+          {error}
+        </div>
       )}
 
       {/* Role List */}
