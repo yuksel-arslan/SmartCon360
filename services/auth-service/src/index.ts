@@ -5,7 +5,9 @@ import pino from 'pino';
 import pinoHttp from 'pino-http';
 import { ZodError } from 'zod';
 import authController from './controllers/auth.controller';
+import adminController from './controllers/admin.controller';
 import { authMiddleware } from './middleware/auth.middleware';
+import { requireAdmin } from './middleware/requireAdmin';
 import { AppError } from './services/auth.service';
 
 const PORT = parseInt(process.env.PORT || '3001');
@@ -24,6 +26,9 @@ app.get('/health', (_req, res) => {
 
 // Public auth routes
 app.use('/auth', authController);
+
+// Admin routes (protected: auth + admin role)
+app.use('/admin', authMiddleware, requireAdmin, adminController);
 
 // Error handler
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
