@@ -40,7 +40,7 @@ export default function LoginPage() {
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/smartcon360-logo-dark.svg" alt="SmartCon360" style={{ height: 160, width: 'auto' }} />
+        <img src="/smartcon360-logo-dark.svg" alt="SmartCon360" style={{ height: 80, width: 'auto' }} />
 
         <div className="max-w-md">
           <h1
@@ -84,7 +84,7 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/smartcon360-logo-light.svg" alt="SmartCon360" style={{ height: 144, width: 'auto' }} />
+            <img src="/smartcon360-logo-light.svg" alt="SmartCon360" style={{ height: 56, width: 'auto' }} />
           </div>
 
           <h2
