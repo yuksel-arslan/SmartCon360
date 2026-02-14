@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 97 700 206" width="700" height="206">
   <defs>
     <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#E8731A;stop-opacity:1" />
@@ -6,36 +6,37 @@
     </linearGradient>
   </defs>
   
-  <rect width="1200" height="400" fill="#FFFFFF"/>
+  <rect width="700" height="400" fill="#FFFFFF"/>
 
   <g transform="translate(105, 200)">
+    <!-- Dashed orbit circle -->
     <circle cx="0" cy="0" r="88" fill="none" stroke="#E8731A" stroke-width="1.5" stroke-dasharray="4,6" opacity="0.3"/>
 
-    <!-- Center hexagons (back layer) -->
+    <!-- 6 connector lines - FULL length from center to outer node, drawn first (back layer) -->
+    <line x1="0" y1="0" x2="0" y2="-72" stroke="url(#orangeGrad)" stroke-width="2.5"/>
+    <line x1="0" y1="0" x2="62" y2="-36" stroke="url(#orangeGrad)" stroke-width="2.5"/>
+    <line x1="0" y1="0" x2="62" y2="36" stroke="url(#orangeGrad)" stroke-width="2.5"/>
+    <line x1="0" y1="0" x2="0" y2="72" stroke="url(#orangeGrad)" stroke-width="2.5"/>
+    <line x1="0" y1="0" x2="-62" y2="36" stroke="url(#orangeGrad)" stroke-width="2.5"/>
+    <line x1="0" y1="0" x2="-62" y2="-36" stroke="url(#orangeGrad)" stroke-width="2.5"/>
+
+    <!-- Center hexagons on top of lines -->
     <polygon points="0,-38 33,-19 33,19 0,38 -33,19 -33,-19" fill="url(#orangeGrad)"/>
     <polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="#FFFFFF"/>
     <circle cx="0" cy="0" r="6" fill="#E8731A"/>
 
-    <!-- 6 connector lines (middle layer) -->
-    <line x1="0.0" y1="-38.0" x2="0.0" y2="-61.0" stroke="url(#orangeGrad)" stroke-width="2.5"/>
-    <line x1="32.9" y1="-19.1" x2="52.5" y2="-30.5" stroke="url(#orangeGrad)" stroke-width="2.5"/>
-    <line x1="32.9" y1="19.1" x2="52.5" y2="30.5" stroke="url(#orangeGrad)" stroke-width="2.5"/>
-    <line x1="0.0" y1="38.0" x2="0.0" y2="61.0" stroke="url(#orangeGrad)" stroke-width="2.5"/>
-    <line x1="-32.9" y1="19.1" x2="-52.5" y2="30.5" stroke="url(#orangeGrad)" stroke-width="2.5"/>
-    <line x1="-32.9" y1="-19.1" x2="-52.5" y2="-30.5" stroke="url(#orangeGrad)" stroke-width="2.5"/>
-
-    <!-- 6 outer node circles (top layer) -->
-    <circle cx="0" cy="-72" r="11" fill="#FFFFFF"/><circle cx="0" cy="-72" r="6" fill="url(#orangeGrad)"/>
-    <circle cx="62" cy="-36" r="11" fill="#FFFFFF"/><circle cx="62" cy="-36" r="6" fill="url(#orangeGrad)"/>
-    <circle cx="62" cy="36" r="11" fill="#FFFFFF"/><circle cx="62" cy="36" r="6" fill="url(#orangeGrad)"/>
-    <circle cx="0" cy="72" r="11" fill="#FFFFFF"/><circle cx="0" cy="72" r="6" fill="url(#orangeGrad)"/>
-    <circle cx="-62" cy="36" r="11" fill="#FFFFFF"/><circle cx="-62" cy="36" r="6" fill="url(#orangeGrad)"/>
-    <circle cx="-62" cy="-36" r="11" fill="#FFFFFF"/><circle cx="-62" cy="-36" r="6" fill="url(#orangeGrad)"/>
+    <!-- 6 outer node circles on top -->
+    <circle cx="0" cy="-72" r="11" fill="#FFFFFF" stroke="url(#orangeGrad)" stroke-width="1.5"/><circle cx="0" cy="-72" r="5" fill="url(#orangeGrad)"/>
+    <circle cx="62" cy="-36" r="11" fill="#FFFFFF" stroke="url(#orangeGrad)" stroke-width="1.5"/><circle cx="62" cy="-36" r="5" fill="url(#orangeGrad)"/>
+    <circle cx="62" cy="36" r="11" fill="#FFFFFF" stroke="url(#orangeGrad)" stroke-width="1.5"/><circle cx="62" cy="36" r="5" fill="url(#orangeGrad)"/>
+    <circle cx="0" cy="72" r="11" fill="#FFFFFF" stroke="url(#orangeGrad)" stroke-width="1.5"/><circle cx="0" cy="72" r="5" fill="url(#orangeGrad)"/>
+    <circle cx="-62" cy="36" r="11" fill="#FFFFFF" stroke="url(#orangeGrad)" stroke-width="1.5"/><circle cx="-62" cy="36" r="5" fill="url(#orangeGrad)"/>
+    <circle cx="-62" cy="-36" r="11" fill="#FFFFFF" stroke="url(#orangeGrad)" stroke-width="1.5"/><circle cx="-62" cy="-36" r="5" fill="url(#orangeGrad)"/>
   </g>
 
-  <g transform="translate(220, 172)">
-    <text x="0" y="30" font-family="'Liberation Sans','Segoe UI',Arial,sans-serif" font-size="72" font-weight="300" fill="#3A3A3C" letter-spacing="-1">Smart</text><text x="185" y="30" font-family="'Liberation Sans','Segoe UI',Arial,sans-serif" font-size="72" font-weight="700" fill="#3A3A3C" letter-spacing="-1">Con</text><text x="325" y="30" font-family="'Liberation Sans','Segoe UI',Arial,sans-serif" font-size="72" font-weight="700" fill="url(#orangeGrad)" letter-spacing="-1">360</text>
-  </g>
-  <text x="220" y="240" font-family="'Roboto','Segoe UI',Arial,sans-serif" font-size="17" font-weight="700" fill="#6B7B8D" textLength="440" lengthAdjust="spacing">AI-POWERED CONSTRUCTION MANAGEMENT</text>
+  <text x="220" y="202" font-family="'Liberation Sans','Segoe UI',Arial,sans-serif" font-size="72" letter-spacing="-1">
+    <tspan font-weight="300" fill="#3A3A3C">Smart</tspan><tspan font-weight="700" fill="#3A3A3C">Con</tspan><tspan font-weight="700" fill="url(#orangeGrad)">360</tspan>
+  </text>
+  <text x="220" y="240" font-family="'Roboto','Segoe UI',Arial,sans-serif" font-size="17" font-weight="700" fill="#6B7B8D" letter-spacing="2">AI-POWERED CONSTRUCTION MANAGEMENT</text>
   <rect x="220" y="256" width="440" height="3" rx="1.5" fill="url(#orangeGrad)"/>
 </svg>
