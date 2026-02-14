@@ -56,7 +56,7 @@ export default function Sidebar() {
         className="flex items-center border-b"
         style={{
           borderColor: 'var(--color-border)',
-          padding: sidebarCollapsed ? '16px 12px' : '20px 20px',
+          padding: sidebarCollapsed ? '12px' : '14px 16px',
           justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
         }}
       >
@@ -65,13 +65,13 @@ export default function Sidebar() {
           src={sidebarCollapsed ? '/taktflow-icon.svg' : '/taktflow-logo.svg'}
           alt="TaktFlow AI"
           className="flex-shrink-0"
-          style={{ height: sidebarCollapsed ? 48 : 77, width: 'auto' }}
+          style={{ height: sidebarCollapsed ? 32 : 38, width: 'auto' }}
         />
       </div>
 
       {/* Project selector */}
       {!sidebarCollapsed ? (
-        <div className="px-3 py-4">
+        <div className="px-3 py-2.5">
           <button
             onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
             className="w-full rounded-xl px-3 py-2.5 cursor-pointer border text-left transition-colors"
@@ -158,7 +158,7 @@ export default function Sidebar() {
           )}
         </div>
       ) : (
-        <div className="px-2 py-4 flex justify-center">
+        <div className="px-2 py-2.5 flex justify-center">
           <Link
             href="/projects/new"
             className="w-10 h-10 rounded-xl flex items-center justify-center border transition-colors hover:opacity-80"
@@ -171,14 +171,14 @@ export default function Sidebar() {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-1 flex flex-col gap-1">
+      <nav className="flex-1 overflow-y-auto px-3 py-1 flex flex-col gap-0.5 min-h-0">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150"
               style={{
                 justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                 background: isActive ? 'var(--color-accent-muted)' : 'transparent',
