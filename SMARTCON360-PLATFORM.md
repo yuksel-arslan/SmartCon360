@@ -218,48 +218,128 @@ GET    /api/v1/safety/stats                  — LTIR, TRIR, incident trends
 **Service:** cost-service (Port 3011)
 **Status:** New — Phase 2
 
+### Cost Lifecycle
+
+```
+Cizim/BIM ─→ Metraj ─→ BOQ ─→ Birim Fiyat ─→ Kesif ─→ Butce
+(optional)   (qty)    (items)  (unit price)   (est.)   (approved)
+                                                          │
+Imalat ─→ Imalat Metraji ─→ Hakedis ─→ EVM ─→ S-Curve ─→ Forecast
+(field)   (measured qty)    (payment)   (PV/EV/AC)
+```
+
+**BIM is optional.** Quantity takeoff works at 3 levels:
+1. **Manual entry** — direct quantity input with calculation formulas
+2. **Spreadsheet import** — Excel/CSV BOQ import
+3. **BIM extraction** — automated from IFC model (Phase 3, when BIM available)
+
 ### Core Capabilities
-- **Budget management** — WBS-aligned cost breakdown
-- **EVM (Earned Value Management)** — PV, EV, AC, CPI, SPI, EAC, ETC, VAC
-- **S-Curve visualization** — planned vs actual cost over time
-- **Cost forecasting** — EAC/ETC with trend analysis
-- **COPQ aggregation** — rework costs from QualityGate
-- **Payment tracking** — progress-based invoicing
+
+**Metraj & BOQ (Quantity Surveying)**
+- **Work items (pozlar)** — define work items with code, name, unit, category
+- **Poz templates** — Bayindirlik standard items, custom items, import from Excel
+- **Quantity takeoff (metraj cetveli)** — per-location measurement with calculation formulas
+- **Dimension tracking** — length × width × height with deductions
+- **Drawing references** — link quantities to drawing/pafta numbers
+- **BIM extraction** — auto-extract quantities from IFC model (optional, Phase 3)
+
+**Unit Price Analysis (Birim Fiyat Analizi)**
+- **Resource breakdown** — labor (iscilik), material (malzeme), equipment (makine)
+- **Rayic database** — Bayindirlik rates, market rates, supplier quotes
+- **Overhead & profit** — configurable genel gider % and muteahhit kari %
+- **Bulk recalculation** — update all prices when rates change
+- **Version tracking** — historical price analyses
+
+**Cost Estimation (Kesif)**
+- **Auto-generation** — multiply metraj quantities by unit prices
+- **Estimate types** — yaklasik maliyet, ihale teklifi, revize kesif, ek kesif
+- **KDV calculation** — configurable VAT rates
+- **Version control** — compare estimate revisions
+- **Approve to budget** — one-click budget creation from approved estimate
+
+**Payment Certificates (Hakedis)**
+- **Imalat metraji** — measured quantities per work item per period
+- **Cumulative tracking** — previous + current = cumulative quantities
+- **Retention (teminat)** — configurable retention percentage
+- **Advance deduction (avans kesintisi)** — progressive deduction
+- **Price escalation (fiyat farki)** — TUIK index-based calculation
+- **KDV** — VAT on net amount
+- **PDF report generation** — formal hakedis raporu
+
+**EVM & Cost Control (existing)**
+- **EVM** — PV, EV, AC, CPI, SPI, EAC, ETC, VAC, TCPI
+- **S-Curve** — planned vs actual cost/progress visualization
 - **Cash flow projection** — monthly inflow/outflow forecast
-- **AI cost prediction** — Gemini analyzes trends for early warning (Layer 2)
+- **COPQ** — aggregation from QualityGate NCR cost impacts
+- **AI forecasting** — Gemini-powered trend prediction (Layer 2)
 
 ### Database Schema (cost schema)
 ```
-budgets              — UUID, project_id, name, total_amount, currency,
-                       status (draft/approved/active/closed), approved_by, version
-budget_items         — UUID, budget_id, wbs_code, description, trade_id,
-                       planned_amount, committed_amount, actual_amount,
-                       category (labor/material/equipment/subcontract/overhead)
-cost_records         — UUID, project_id, budget_item_id, amount, type
-                       (commitment/actual/forecast), date, description,
-                       invoice_ref, vendor, approved_by
-evm_snapshots        — UUID, project_id, snapshot_date, pv, ev, ac,
-                       cv, sv, cpi, spi, eac, etc, vac, tcpi,
-                       data_source (manual/calculated)
-payment_applications — UUID, project_id, period_start, period_end,
-                       gross_amount, retention_pct, retention_amount,
-                       net_amount, status (draft/submitted/approved/paid)
+work_items            — code, name, unit, category, subcategory, trade_id,
+                        source (bayindirlik/custom/imported), source_year
+unit_price_analyses   — work_item_id, version, labor_cost, material_cost,
+                        equipment_cost, overhead_pct, profit_pct, unit_price
+unit_price_resources  — analysis_id, resource_type (labor/material/equipment),
+                        code, name, unit, quantity, unit_rate, total
+quantity_takeoffs     — project_id, work_item_id, location_id, quantity, unit,
+                        calculation_formula, dimensions (JSONB), source,
+                        drawing_ref, bim_element_id, revision
+estimates             — project_id, name, type, total_amount, vat_pct,
+                        grand_total, status, version
+estimate_items        — estimate_id, work_item_id, location_id, quantity,
+                        unit_price, total_price
+budgets               — project_id, estimate_id, name, total_amount, status
+budget_items          — budget_id, work_item_id, wbs_code, planned_amount,
+                        committed_amount, actual_amount, category
+payment_certificates  — project_id, period_number, gross_amount,
+                        retention_pct, advance_deduction, price_escalation,
+                        vat_pct, net_amount, cumulative_amount, status
+payment_items         — certificate_id, work_item_id, location_id,
+                        contract_qty, previous_qty, current_qty,
+                        cumulative_qty, unit_price, completion_pct
+evm_snapshots         — project_id, snapshot_date, pv, ev, ac, cv, sv,
+                        cpi, spi, eac, etc, vac, tcpi
+cost_records          — project_id, budget_item_id, amount, type, date
 ```
 
 ### API Endpoints
 ```
-GET    /api/v1/cost/budgets                  — List budgets
-POST   /api/v1/cost/budgets                  — Create budget
-GET    /api/v1/cost/budgets/:id              — Budget detail with items
-PUT    /api/v1/cost/budgets/:id              — Update budget
-GET    /api/v1/cost/evm                      — Current EVM metrics
-GET    /api/v1/cost/evm/history              — EVM trend over time
-GET    /api/v1/cost/s-curve                  — S-curve data (PV/EV/AC)
-POST   /api/v1/cost/records                  — Record cost entry
-GET    /api/v1/cost/forecast                 — EAC/ETC forecast
-GET    /api/v1/cost/cashflow                 — Cash flow projection
-GET    /api/v1/cost/copq                     — COPQ from QualityGate
-GET    /api/v1/cost/stats                    — CPI, SPI, budget health
+# Work Items (Pozlar)
+GET/POST   /api/v1/cost/work-items           — List/create work items
+POST       /api/v1/cost/work-items/import    — Import from Excel/CSV
+GET        /api/v1/cost/work-items/templates — Standard poz templates
+
+# Unit Price Analysis (Birim Fiyat)
+GET/POST   /api/v1/cost/unit-prices          — List/create analyses
+POST       /api/v1/cost/unit-prices/:id/resources — Add resource breakdown
+POST       /api/v1/cost/unit-prices/recalculate   — Bulk recalculate
+
+# Quantity Takeoff (Metraj)
+GET/POST   /api/v1/cost/quantities           — List/create metraj entries
+POST       /api/v1/cost/quantities/import    — Import from Excel/CSV
+GET        /api/v1/cost/quantities/summary   — Summary by item/location
+
+# Estimates (Kesif)
+GET/POST   /api/v1/cost/estimates            — List/create estimates
+POST       /api/v1/cost/estimates/:id/generate — Auto-generate from metraj
+POST       /api/v1/cost/estimates/:id/approve  — Approve → create budget
+
+# Budgets
+GET/POST   /api/v1/cost/budgets              — List/create budgets
+GET        /api/v1/cost/budgets/:id/variance — Budget vs actual
+
+# Payment Certificates (Hakedis)
+GET/POST   /api/v1/cost/payments             — List/create hakedis
+POST       /api/v1/cost/payments/:id/items   — Add imalat metraji
+POST       /api/v1/cost/payments/:id/approve — Approve hakedis
+GET        /api/v1/cost/payments/:id/report  — Generate PDF
+
+# EVM & Analytics
+GET        /api/v1/cost/evm                  — Current EVM metrics
+GET        /api/v1/cost/s-curve              — S-curve data
+GET        /api/v1/cost/forecast             — EAC/ETC forecast
+GET        /api/v1/cost/cashflow             — Cash flow projection
+GET        /api/v1/cost/copq                 — COPQ from QualityGate
 ```
 
 ### Key Metrics
@@ -267,16 +347,18 @@ GET    /api/v1/cost/stats                    — CPI, SPI, budget health
 - SPI (Schedule Performance Index)
 - EAC (Estimate at Completion)
 - Budget variance %
-- Cash flow accuracy
+- Hakedis cumulative vs budget
+- Metraj completion % by trade
 - COPQ as % of budget
 
 ### Cross-Module Integration
-- **TaktFlow:** Schedule progress → EV calculation
+- **TaktFlow:** Schedule progress → EV calculation; LBS locations → metraj locations
 - **QualityGate:** NCR cost impact → COPQ aggregation
 - **CrewFlow:** Crew overtime/costs → labor cost actuals
-- **SupplyChain:** PO amounts → committed costs
-- **ClaimShield:** Change order values → budget adjustments
-- **Hub:** Cost health feeds Project Health Score
+- **SupplyChain:** PO amounts → committed costs; material prices → unit price updates
+- **ClaimShield:** Change order values → budget adjustments, ek kesif
+- **BIM Service:** IFC model → auto metraj extraction (Phase 3, BIM optional)
+- **Hub:** Cost health (CPI, SPI, budget variance) feeds Project Health Score
 
 ---
 
