@@ -9,22 +9,67 @@ export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({ email: '', password: '', firstName: '', lastName: '' });
+
+  const storeAuth = (data: { user: Record<string, unknown>; accessToken: string }) => {
+    localStorage.setItem('token', data.accessToken);
+    localStorage.setItem('user', JSON.stringify(data.user));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Phase 1: Mock auth — skip real API call
-    setTimeout(() => {
-      localStorage.setItem('taktflow_token', 'demo-token');
-      localStorage.setItem('taktflow_user', JSON.stringify({
-        id: 'demo-user',
-        email: form.email || 'demo@taktflow.ai',
-        firstName: form.firstName || 'Yuksel',
-        lastName: form.lastName || 'Arslan',
-      }));
+    setError('');
+
+    try {
+      const endpoint = isLogin ? '/api/v1/auth/login' : '/api/v1/auth/register';
+      const body = isLogin
+        ? { email: form.email, password: form.password }
+        : { email: form.email, password: form.password, firstName: form.firstName, lastName: form.lastName };
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        const message = typeof json.error === 'object' ? json.error.message : json.error;
+        throw new Error(message || `Authentication failed (${res.status})`);
+      }
+
+      storeAuth(json.data);
       router.push('/dashboard');
-    }, 800);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemo = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/v1/auth/demo', { method: 'POST' });
+      const json = await res.json();
+
+      if (!res.ok) {
+        const message = typeof json.error === 'object' ? json.error.message : json.error;
+        throw new Error(message || 'Demo login failed');
+      }
+
+      storeAuth(json.data);
+      router.push('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -94,8 +139,14 @@ export default function LoginPage() {
             {isLogin ? 'Welcome back' : 'Create account'}
           </h2>
           <p className="text-sm mb-6" style={{ color: 'var(--color-text-muted)' }}>
-            {isLogin ? 'Sign in to your TaktFlow account' : 'Start your free trial today'}
+            {isLogin ? 'Sign in to your SmartCon360 account' : 'Start your free trial today'}
           </p>
+
+          {error && (
+            <div className="rounded-lg px-4 py-2.5 text-[12px] font-medium mb-4" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--color-danger)' }}>
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
@@ -205,7 +256,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center">
             <button
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => { setIsLogin(!isLogin); setError(''); }}
               className="text-xs font-medium"
               style={{ color: 'var(--color-accent)' }}
             >
@@ -216,16 +267,8 @@ export default function LoginPage() {
           {/* Demo shortcut */}
           <div className="mt-8 pt-6 border-t" style={{ borderColor: 'var(--color-border)' }}>
             <button
-              onClick={() => {
-                setForm({ email: 'demo@taktflow.ai', password: 'demo', firstName: 'Yuksel', lastName: 'Arslan' });
-                setTimeout(() => {
-                  localStorage.setItem('taktflow_token', 'demo-token');
-                  localStorage.setItem('taktflow_user', JSON.stringify({
-                    id: 'demo-user', email: 'demo@taktflow.ai', firstName: 'Yuksel', lastName: 'Arslan',
-                  }));
-                  router.push('/dashboard');
-                }, 300);
-              }}
+              onClick={handleDemo}
+              disabled={loading}
               className="w-full py-2 rounded-lg border text-xs font-medium transition-colors"
               style={{
                 borderColor: 'var(--color-border)',
