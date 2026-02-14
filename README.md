@@ -8,7 +8,7 @@
 
 | Module | Brand | Purpose |
 |--------|-------|---------|
-| Planning & Scheduling | **TaktFlow** | Takt planning, flowline, LPS, constraints |
+| Takt Flow | **TaktFlow** | Takt planning, flowline, LPS, constraints |
 | Quality Control | **QualityGate** | NCR, inspections, FTR, punch lists |
 | OHS / Safety | **SafeZone** | Risk matrix, incidents, PTW, toolbox talks |
 | Cost Management | **CostPilot** | EVM, S-curve, budgets, forecasting |
