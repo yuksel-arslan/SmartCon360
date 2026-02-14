@@ -48,8 +48,8 @@ const t: Record<Lang, Record<string, string>> = {
   },
   tr: {
     heroTagline1: 'Tek Platform,',
-    heroTagline2: 'Yeni Nesil Insaat Yonetimi',
-    heroTagline3: '— Sifir Taviz.',
+    heroTagline2: 'Yeni Nesil İnşaat Yönetimi',
+    heroTagline3: '— Sıfır Taviz.',
     heroDesc:
       'SmartCon360, 13 uzman modulu tek bir SaaS uygulamasinda birlestiren YZ destekli butunlesik insaat yonetim platformudur. Tum 10 PMBOK bilgi alanini, ISG ve ESG\'yi kapsar; Lokasyon Bazli Yonetim Sistemi (LBMS), Takt Zamani Insaat, Son Planlayici Sistemi (LPS) ve Derin Pekistirmeli Ogrenmeyi moduler, lisanslanabilir bir mimariyle birlestirir.',
     stat1Value: '13',
