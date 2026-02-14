@@ -1,5 +1,3 @@
-'use client';
-
 import { create } from 'zustand';
 
 // ── Types ──────────────────────────────────────────────
@@ -41,7 +39,7 @@ interface AuthState {
   hasPermission: (permission: string, projectId?: string) => boolean;
 
   /** Get Authorization header value */
-  getAuthHeader: () => Record<string, string>;
+  getAuthHeader: () => { Authorization?: string };
 }
 
 // ── Role → Permission Map ──────────────────────────────
@@ -92,7 +90,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       try {
         const user = JSON.parse(userStr) as AuthUser;
         set({ token, user, initialized: true });
-      } catch {
+      } catch (_e) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         set({ token: null, user: null, initialized: true });
@@ -142,16 +140,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (perms.includes(permission)) return true;
 
       // Wildcard match: "project:*" matches "project:read"
-      const [module] = permission.split(':');
-      if (perms.includes(`${module}:*`)) return true;
+      const moduleName = permission.split(':')[0];
+      if (perms.includes(`${moduleName}:*`)) return true;
     }
 
     return false;
   },
 
   getAuthHeader: () => {
-    const token = get().token;
-    if (!token) return {};
-    return { Authorization: `Bearer ${token}` };
+    const t = get().token;
+    if (!t) return {};
+    return { Authorization: `Bearer ${t}` };
   },
 }));
