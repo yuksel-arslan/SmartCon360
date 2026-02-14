@@ -12,7 +12,7 @@ type Lang = 'en' | 'tr';
 const t: Record<Lang, Record<string, string>> = {
   en: {
     heroTagline1: 'One Platform,',
-    heroTagline2: 'Full Construction Management',
+    heroTagline2: 'NextGen Construction Management',
     heroTagline3: '— Zero Compromise.',
     heroDesc:
       'SmartCon360 is an AI-powered unified construction management platform that integrates 13 specialized modules into a single SaaS application. It covers all 10 PMBOK knowledge areas plus OHS and ESG, combining Location-Based Management System (LBMS), Takt Time Construction, Last Planner System (LPS), and Deep Reinforcement Learning with a modular, licensable architecture.',
@@ -48,7 +48,7 @@ const t: Record<Lang, Record<string, string>> = {
   },
   tr: {
     heroTagline1: 'Tek Platform,',
-    heroTagline2: 'Tum Insaat Yonetimi',
+    heroTagline2: 'Yeni Nesil Insaat Yonetimi',
     heroTagline3: '— Sifir Taviz.',
     heroDesc:
       'SmartCon360, 13 uzman modulu tek bir SaaS uygulamasinda birlestiren YZ destekli butunlesik insaat yonetim platformudur. Tum 10 PMBOK bilgi alanini, ISG ve ESG\'yi kapsar; Lokasyon Bazli Yonetim Sistemi (LBMS), Takt Zamani Insaat, Son Planlayici Sistemi (LPS) ve Derin Pekistirmeli Ogrenmeyi moduler, lisanslanabilir bir mimariyle birlestirir.',
