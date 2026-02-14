@@ -490,7 +490,7 @@ export default function AIConciergePage() {
             className="flex-1 overflow-auto px-4 py-4 space-y-4"
             style={{
               background: 'var(--color-bg)',
-              backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(59,130,246,0.03) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(139,92,246,0.03) 0%, transparent 50%)',
+              backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(232,115,26,0.03) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(245,158,63,0.03) 0%, transparent 50%)',
             }}
           >
             <AnimatePresence initial={false}>
@@ -519,7 +519,7 @@ export default function AIConciergePage() {
                           </span>
                           {msg.intent && (
                             <span className="text-[9px] px-1.5 py-0.5 rounded font-medium"
-                              style={{ background: 'rgba(59,130,246,0.12)', color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>
+                              style={{ background: 'rgba(232,115,26,0.12)', color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>
                               {msg.intent}
                             </span>
                           )}

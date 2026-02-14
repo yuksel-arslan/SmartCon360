@@ -200,7 +200,7 @@ export default function ConstraintsPage() {
                         <h4 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{c.title}</h4>
                         <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded" style={{ background: `${priorityColors[c.priority]}15`, color: priorityColors[c.priority] }}>{c.priority}</span>
                         {c.source === 'auto-detected' && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(139,92,246,0.1)', color: 'var(--color-purple)' }}>AI Detected</span>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,63,0.1)', color: 'var(--color-purple)' }}>AI Detected</span>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>

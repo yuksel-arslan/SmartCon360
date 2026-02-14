@@ -85,7 +85,7 @@ function generateMockReportHTML(type: ReportType, startDate: string, endDate: st
 
   const commonHeader = `
     <div style="font-family: Inter, sans-serif; max-width: 800px; margin: 0 auto; padding: 24px;">
-      <div style="border-bottom: 3px solid #3B82F6; padding-bottom: 16px; margin-bottom: 24px;">
+      <div style="border-bottom: 3px solid #E8731A; padding-bottom: 16px; margin-bottom: 24px;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
             <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: inherit;">TaktFlow AI</h1>
@@ -111,7 +111,7 @@ function generateMockReportHTML(type: ReportType, startDate: string, endDate: st
       <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Weekly Progress Report</h2>
       <p style="font-size: 13px; opacity: 0.7; margin-bottom: 24px;">Hotel Sapphire | Week of ${startDate}</p>
 
-      <div style="background: rgba(59,130,246,0.08); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+      <div style="background: rgba(232,115,26,0.08); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
         <h3 style="font-size: 14px; font-weight: 700; margin: 0 0 12px;">Executive Summary</h3>
         <p style="font-size: 13px; line-height: 1.6; margin: 0;">
           Hotel Sapphire project is <strong>45% complete</strong> and on track for the August 15th target completion date.
@@ -150,8 +150,8 @@ function generateMockReportHTML(type: ReportType, startDate: string, endDate: st
           <div style="font-size: 24px; font-weight: 800; color: #10B981;">2</div>
           <div style="font-size: 11px; opacity: 0.6;">Resolved This Week</div>
         </div>
-        <div style="background: rgba(59,130,246,0.08); border-radius: 8px; padding: 12px; text-align: center;">
-          <div style="font-size: 24px; font-weight: 800; color: #3B82F6;">78%</div>
+        <div style="background: rgba(232,115,26,0.08); border-radius: 8px; padding: 12px; text-align: center;">
+          <div style="font-size: 24px; font-weight: 800; color: #E8731A;">78%</div>
           <div style="font-size: 11px; opacity: 0.6;">CRR</div>
         </div>
       </div>
@@ -175,12 +175,12 @@ function generateMockReportHTML(type: ReportType, startDate: string, endDate: st
           <div style="font-size: 28px; font-weight: 800; color: #10B981;">45%</div>
           <div style="font-size: 11px; opacity: 0.6;">Complete</div>
         </div>
-        <div style="background: rgba(59,130,246,0.08); border-radius: 8px; padding: 16px; text-align: center;">
-          <div style="font-size: 28px; font-weight: 800; color: #3B82F6;">93%</div>
+        <div style="background: rgba(232,115,26,0.08); border-radius: 8px; padding: 16px; text-align: center;">
+          <div style="font-size: 28px; font-weight: 800; color: #E8731A;">93%</div>
           <div style="font-size: 11px; opacity: 0.6;">PPC</div>
         </div>
-        <div style="background: rgba(139,92,246,0.08); border-radius: 8px; padding: 16px; text-align: center;">
-          <div style="font-size: 28px; font-weight: 800; color: #8B5CF6;">87</div>
+        <div style="background: rgba(245,158,63,0.08); border-radius: 8px; padding: 16px; text-align: center;">
+          <div style="font-size: 28px; font-weight: 800; color: #F59E3F;">87</div>
           <div style="font-size: 11px; opacity: 0.6;">AI Score</div>
         </div>
         <div style="background: rgba(245,158,11,0.08); border-radius: 8px; padding: 16px; text-align: center;">
@@ -209,7 +209,7 @@ function generateMockReportHTML(type: ReportType, startDate: string, endDate: st
         <tbody>
           <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">MEP material delay</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #EF4444;">Critical</td><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Expedite delivery, alt supplier</td></tr>
           <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Drywall crew shortage</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #F59E0B;">High</td><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Reallocate from Structure</td></tr>
-          <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">RFI #042 pending</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #3B82F6;">Medium</td><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Follow up with architect</td></tr>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">RFI #042 pending</td><td style="text-align: center; padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); color: #E8731A;">Medium</td><td style="padding: 8px 12px; border-bottom: 1px solid rgba(128,128,128,0.1);">Follow up with architect</td></tr>
         </tbody>
       </table>
 
@@ -298,7 +298,7 @@ function generateMockReportHTML(type: ReportType, startDate: string, endDate: st
       </div>
       <div style="background: rgba(128,128,128,0.05); border-radius: 8px; padding: 12px;">
         <div style="font-size: 11px; opacity: 0.5; margin-bottom: 4px;">PPC</div>
-        <div style="font-size: 14px; font-weight: 700; color: #3B82F6;">93%</div>
+        <div style="font-size: 14px; font-weight: 700; color: #E8731A;">93%</div>
       </div>
     </div>
   ${commonFooter}`;

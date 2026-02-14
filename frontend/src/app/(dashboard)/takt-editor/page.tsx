@@ -122,7 +122,7 @@ function buildInitialZones(): Zone[] {
 
 const STATUS_CONFIG: Record<CellStatus, { bg: string; text: string; label: string; icon: typeof CheckCircle }> = {
   completed: { bg: 'rgba(16,185,129,0.15)', text: 'var(--color-success)', label: 'Completed', icon: CheckCircle },
-  in_progress: { bg: 'rgba(59,130,246,0.15)', text: 'var(--color-accent)', label: 'In Progress', icon: Clock },
+  in_progress: { bg: 'rgba(232,115,26,0.15)', text: 'var(--color-accent)', label: 'In Progress', icon: Clock },
   planned: { bg: 'var(--color-bg-input)', text: 'var(--color-text-muted)', label: 'Planned', icon: CalendarDays },
   delayed: { bg: 'rgba(239,68,68,0.15)', text: 'var(--color-danger)', label: 'Delayed', icon: AlertTriangle },
 };
@@ -860,7 +860,7 @@ export default function TaktEditorPage() {
                               animate={{
                                 opacity: draggedTradeId === trade.id ? 0.5 : 1,
                                 y: 0,
-                                backgroundColor: isDragOver ? 'rgba(59,130,246,0.08)' : 'transparent',
+                                backgroundColor: isDragOver ? 'rgba(232,115,26,0.08)' : 'transparent',
                               }}
                               exit={{ opacity: 0, y: 10 }}
                               transition={{ duration: 0.25, type: 'spring', stiffness: 500, damping: 30 }}
@@ -919,7 +919,7 @@ export default function TaktEditorPage() {
                                         onClick={() => startInlineEdit(trade.id, 'taktTime', trade.taktTime)}
                                         className="text-[10px] font-bold px-1.5 py-0.5 rounded transition-all hover:opacity-70"
                                         style={{
-                                          background: 'rgba(59,130,246,0.1)',
+                                          background: 'rgba(232,115,26,0.1)',
                                           color: 'var(--color-accent)',
                                           fontFamily: 'var(--font-mono)',
                                         }}
@@ -1129,7 +1129,7 @@ export default function TaktEditorPage() {
                   const severityBg =
                     w.severity === 'critical' ? 'rgba(239,68,68,0.08)' :
                     w.severity === 'warning' ? 'rgba(245,158,11,0.08)' :
-                    'rgba(59,130,246,0.08)';
+                    'rgba(232,115,26,0.08)';
                   const TypeIcon =
                     w.type === 'stacking' ? Layers :
                     w.type === 'buffer' ? Shield :

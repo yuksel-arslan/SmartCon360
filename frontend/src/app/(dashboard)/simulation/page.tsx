@@ -1739,7 +1739,7 @@ export default function SimulationPage() {
                           style={{
                             background:
                               item.type === 'what-if'
-                                ? 'rgba(59,130,246,0.1)'
+                                ? 'rgba(232,115,26,0.1)'
                                 : 'rgba(6,182,212,0.1)',
                             color:
                               item.type === 'what-if'

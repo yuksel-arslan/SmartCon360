@@ -219,7 +219,7 @@ function StatusChip({ status, onClick }: { status: MakeReadyStatus; onClick?: ()
 
 function CommitmentStatusChip({ status, onClick }: { status: CommitmentStatus; onClick?: () => void }) {
   const config = {
-    committed: { label: 'Committed', bg: 'rgba(59,130,246,0.12)', color: 'var(--color-accent)' },
+    committed: { label: 'Committed', bg: 'rgba(232,115,26,0.12)', color: 'var(--color-accent)' },
     completed: { label: 'Completed', bg: 'rgba(16,185,129,0.12)', color: 'var(--color-success)' },
     failed: { label: 'Failed', bg: 'rgba(239,68,68,0.12)', color: 'var(--color-danger)' },
   };
@@ -353,7 +353,7 @@ function LookaheadTab() {
           <button
             onClick={() => setWeekOffset(0)}
             className="text-[10px] font-semibold px-2 py-1 rounded-md transition-opacity hover:opacity-80"
-            style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--color-accent)' }}
+            style={{ background: 'rgba(232,115,26,0.1)', color: 'var(--color-accent)' }}
           >
             Today
           </button>
@@ -406,7 +406,7 @@ function LookaheadTab() {
               <div
                 key={i}
                 className="p-2 rounded-t-lg text-center"
-                style={{ background: i === 0 ? 'rgba(59,130,246,0.08)' : 'transparent' }}
+                style={{ background: i === 0 ? 'rgba(232,115,26,0.08)' : 'transparent' }}
               >
                 <div className="text-[10px] font-bold" style={{ color: i === 0 ? 'var(--color-accent)' : 'var(--color-text)' }}>
                   Week {weekOffset * 6 + i + 1}
@@ -443,9 +443,9 @@ function LookaheadTab() {
                       key={weekIdx}
                       className="p-1.5 min-h-[72px] rounded-lg transition-colors relative group"
                       style={{
-                        background: draggedTaskId ? 'rgba(59,130,246,0.04)' : 'transparent',
+                        background: draggedTaskId ? 'rgba(232,115,26,0.04)' : 'transparent',
                       }}
-                      onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.background = 'rgba(59,130,246,0.1)'; }}
+                      onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.background = 'rgba(232,115,26,0.1)'; }}
                       onDragLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                       onDrop={(e) => { e.preventDefault(); e.currentTarget.style.background = 'transparent'; handleDrop(weekIdx); }}
                     >
@@ -703,7 +703,7 @@ function WeeklyWorkPlanTab() {
                 <ChevronRight size={14} style={{ color: 'var(--color-text-secondary)' }} />
               </button>
               {selectedWeekIdx === 11 && (
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-md" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--color-accent)' }}>
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-md" style={{ background: 'rgba(232,115,26,0.1)', color: 'var(--color-accent)' }}>
                   Current
                 </span>
               )}
@@ -1155,7 +1155,7 @@ function PPCDashboardTab() {
                 <span className="text-[10px] font-semibold" style={{ color: 'var(--color-success)' }}>Improving trend</span>
               </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.1)' }}>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(232,115,26,0.1)' }}>
               <BarChart3 size={20} style={{ color: 'var(--color-accent)' }} />
             </div>
           </div>
@@ -1173,7 +1173,7 @@ function PPCDashboardTab() {
                 {bestTrade.ppc}% PPC
               </div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(139,92,246,0.1)' }}>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(245,158,63,0.1)' }}>
               <Award size={20} style={{ color: 'var(--color-purple)' }} />
             </div>
           </div>

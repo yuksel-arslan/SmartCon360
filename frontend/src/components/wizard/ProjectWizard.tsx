@@ -190,7 +190,7 @@ export default function ProjectWizard() {
               disabled={i > step}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
               style={{
-                background: i === step ? 'rgba(59,130,246,0.12)' : i < step ? 'rgba(16,185,129,0.1)' : 'transparent',
+                background: i === step ? 'rgba(232,115,26,0.12)' : i < step ? 'rgba(16,185,129,0.1)' : 'transparent',
                 color: i === step ? 'var(--color-accent)' : i < step ? 'var(--color-success)' : 'var(--color-text-muted)',
                 cursor: i < step ? 'pointer' : i === step ? 'default' : 'not-allowed',
               }}

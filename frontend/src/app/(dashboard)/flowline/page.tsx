@@ -238,7 +238,7 @@ export default function FlowlinePage() {
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold border transition-all"
                 style={{
                   borderColor: comparisonMode ? 'var(--color-purple)' : 'var(--color-border)',
-                  background: comparisonMode ? 'rgba(139,92,246,0.1)' : 'transparent',
+                  background: comparisonMode ? 'rgba(245,158,63,0.1)' : 'transparent',
                   color: comparisonMode ? 'var(--color-purple)' : 'var(--color-text-muted)',
                 }}
               >
@@ -252,7 +252,7 @@ export default function FlowlinePage() {
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold border transition-all"
                 style={{
                   borderColor: filterPanelOpen ? 'var(--color-accent)' : 'var(--color-border)',
-                  background: filterPanelOpen ? 'rgba(59,130,246,0.1)' : 'transparent',
+                  background: filterPanelOpen ? 'rgba(232,115,26,0.1)' : 'transparent',
                   color: filterPanelOpen ? 'var(--color-accent)' : 'var(--color-text-muted)',
                 }}
               >
@@ -441,7 +441,7 @@ export default function FlowlinePage() {
                             className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold border transition-all"
                             style={{
                               borderColor: item.active ? 'var(--color-accent)' : 'var(--color-border)',
-                              background: item.active ? 'rgba(59,130,246,0.1)' : 'transparent',
+                              background: item.active ? 'rgba(232,115,26,0.1)' : 'transparent',
                               color: item.active ? 'var(--color-accent)' : 'var(--color-text-muted)',
                             }}
                           >
@@ -517,7 +517,7 @@ export default function FlowlinePage() {
                   {comparisonMode && (
                     <span
                       className="text-[10px] px-2 py-0.5 rounded-md font-semibold flex items-center gap-1"
-                      style={{ background: 'rgba(139,92,246,0.12)', color: 'var(--color-purple)' }}
+                      style={{ background: 'rgba(245,158,63,0.12)', color: 'var(--color-purple)' }}
                     >
                       <GitCompareArrows size={10} />
                       Comparing with Simulation
@@ -525,7 +525,7 @@ export default function FlowlinePage() {
                   )}
                   <span
                     className="text-[10px] px-2 py-0.5 rounded-md font-semibold"
-                    style={{ background: 'rgba(59,130,246,0.12)', color: 'var(--color-accent)' }}
+                    style={{ background: 'rgba(232,115,26,0.12)', color: 'var(--color-accent)' }}
                   >
                     {filteredWagons.length} of {DEMO_FLOWLINE.length} trades visible
                   </span>
@@ -589,7 +589,7 @@ export default function FlowlinePage() {
                           {wagon.segments.map((seg, idx) => {
                             const statusBg =
                               seg.status === 'completed' ? 'rgba(16,185,129,0.15)'
-                                : seg.status === 'in_progress' ? 'rgba(59,130,246,0.15)'
+                                : seg.status === 'in_progress' ? 'rgba(232,115,26,0.15)'
                                   : seg.status === 'delayed' ? 'rgba(239,68,68,0.15)'
                                     : 'transparent';
                             const statusColor =
@@ -781,7 +781,7 @@ function DetailRow({ label, value, mono }: { label: string; value: string | numb
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; color: string; label: string }> = {
     completed: { bg: 'rgba(16,185,129,0.12)', color: 'var(--color-success)', label: 'Completed' },
-    in_progress: { bg: 'rgba(59,130,246,0.12)', color: 'var(--color-accent)', label: 'In Progress' },
+    in_progress: { bg: 'rgba(232,115,26,0.12)', color: 'var(--color-accent)', label: 'In Progress' },
     planned: { bg: 'rgba(100,116,139,0.12)', color: 'var(--color-text-muted)', label: 'Planned' },
     delayed: { bg: 'rgba(239,68,68,0.12)', color: 'var(--color-danger)', label: 'Delayed' },
   };
