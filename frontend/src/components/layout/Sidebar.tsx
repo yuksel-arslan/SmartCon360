@@ -216,22 +216,42 @@ export default function Sidebar() {
                     );
                   })}
 
-                  <Link
-                    href="/projects/new"
-                    onClick={() => setProjectDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-3 border-t transition-colors hover:opacity-80"
-                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-accent)' }}
-                  >
-                    <Plus size={14} />
-                    <span className="text-[11px] font-semibold">New Project</span>
-                  </Link>
+                  <div className="border-t flex" style={{ borderColor: 'var(--color-border)' }}>
+                    <Link
+                      href="/projects"
+                      onClick={() => setProjectDropdownOpen(false)}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-3 transition-colors hover:opacity-80"
+                      style={{ color: 'var(--color-text-secondary)' }}
+                    >
+                      <FolderKanban size={13} />
+                      <span className="text-[11px] font-semibold">All Projects</span>
+                    </Link>
+                    <div className="w-px" style={{ background: 'var(--color-border)' }} />
+                    <Link
+                      href="/projects/new"
+                      onClick={() => setProjectDropdownOpen(false)}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-3 transition-colors hover:opacity-80"
+                      style={{ color: 'var(--color-accent)' }}
+                    >
+                      <Plus size={13} />
+                      <span className="text-[11px] font-semibold">New Project</span>
+                    </Link>
+                  </div>
                 </div>
               )}
             </>
           )}
         </div>
       ) : (
-        <div className="px-2 py-2.5 flex justify-center">
+        <div className="px-2 py-2.5 flex flex-col items-center gap-1.5">
+          <Link
+            href="/projects"
+            className="w-10 h-10 rounded-xl flex items-center justify-center border transition-colors hover:opacity-80"
+            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
+            title="All Projects"
+          >
+            <FolderKanban size={16} />
+          </Link>
           <Link
             href="/projects/new"
             className="w-10 h-10 rounded-xl flex items-center justify-center border transition-colors hover:opacity-80"
