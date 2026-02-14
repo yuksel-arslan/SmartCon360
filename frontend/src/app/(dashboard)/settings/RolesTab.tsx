@@ -207,7 +207,7 @@ export default function RolesTab() {
     editable: boolean;
     onCycle?: (mod: string) => void;
   }) => (
-    <div className="grid grid-cols-4 gap-1.5 mt-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 mt-2">
       {PERMISSION_MODULES.map((pm) => {
         const level = getPermLevel(perms, pm.module);
         return (
@@ -271,7 +271,7 @@ export default function RolesTab() {
                 Create New Role
               </h4>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] font-semibold uppercase tracking-wider mb-1 block" style={{ color: 'var(--color-text-muted)' }}>
                   Role Name
@@ -365,10 +365,10 @@ export default function RolesTab() {
 
             return (
               <Card key={role.id}>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-0">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className="w-9 h-9 rounded-lg flex items-center justify-center"
+                      className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{ background: `${color}18` }}
                     >
                       {role.isSystem ? (
@@ -377,10 +377,10 @@ export default function RolesTab() {
                         <Shield size={16} style={{ color }} />
                       )}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span
-                          className="text-[13px] font-semibold"
+                          className="text-[13px] font-semibold truncate"
                           style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}
                         >
                           {role.name}
@@ -408,7 +408,7 @@ export default function RolesTab() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 pl-12 sm:pl-0 flex-shrink-0">
                     <div className="flex items-center gap-1 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
                       <Users size={11} />
                       {role.userCount}

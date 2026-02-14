@@ -167,7 +167,7 @@ export default function ProjectTeamTab() {
             <h4 className="text-[12px] font-semibold" style={{ color: 'var(--color-text)' }}>
               Add Team Member
             </h4>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label
                   className="text-[10px] font-semibold uppercase tracking-wider mb-1 block"
@@ -281,11 +281,11 @@ export default function ProjectTeamTab() {
             {members.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center justify-between px-4 py-3 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center justify-between px-3 sm:px-4 py-3 gap-2 sm:gap-0 transition-colors"
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
                     style={{
@@ -297,19 +297,19 @@ export default function ProjectTeamTab() {
                       ? `${member.user.firstName[0]}${member.user.lastName[0]}`
                       : member.userId.substring(0, 2).toUpperCase()}
                   </div>
-                  <div>
-                    <div className="text-[12px] font-semibold" style={{ color: 'var(--color-text)' }}>
+                  <div className="min-w-0">
+                    <div className="text-[12px] font-semibold truncate" style={{ color: 'var(--color-text)' }}>
                       {member.user
                         ? `${member.user.firstName} ${member.user.lastName}`
                         : member.userId}
                     </div>
-                    <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                    <div className="text-[10px] truncate" style={{ color: 'var(--color-text-muted)' }}>
                       {member.user?.email || ''}
                       {member.trade && ` · ${member.trade}`}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 pl-11 sm:pl-0 flex-shrink-0">
                   <Badge
                     label={member.role.replace('_', ' ')}
                     color={ROLE_COLORS[member.role] || 'var(--color-text-muted)'}
