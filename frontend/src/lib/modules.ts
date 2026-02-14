@@ -12,6 +12,7 @@ import {
   ClipboardCheck, Users, FileText, Bot, Settings,
   ShieldCheck, HardHat, DollarSign, Truck, Radar, Scale,
   Camera, MessageSquare, UserCheck, Leaf, Activity, Play,
+  Hammer, Package, Wrench, Layers,
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────
@@ -19,7 +20,7 @@ import {
 export type ModuleId =
   | 'taktflow' | 'dashboard' | 'flowline' | 'takt-editor' | 'constraints' | 'lps'
   | 'quality' | 'safety' | 'vision'
-  | 'cost' | 'resources'
+  | 'cost' | 'resources' | 'workmanship' | 'material' | 'equipment' | 'scaffoldings'
   | 'supply' | 'risk' | 'claims'
   | 'communication' | 'stakeholders'
   | 'sustainability'
@@ -220,18 +221,81 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
   resources: {
     id: 'resources',
     href: '/resources',
-    label: 'CrewFlow',
-    brandName: 'CrewFlow',
-    description: 'Resource management — crews, equipment, materials',
+    label: 'ResourceFlow',
+    brandName: 'ResourceFlow',
+    description: 'Unified resource management — workmanship, materials, equipment, scaffoldings',
     icon: Users,
     svgIcon: '/icons/modules/crewflow.svg',
     color: '#3B82F6',
-    features: ['Crew Planning', 'Equipment Tracking', 'Material Management', 'Utilization Reports'],
+    features: ['Workmanship', 'Material Management', 'Equipment Tracking', 'Scaffoldings'],
+    kpis: [],
+  },
+  workmanship: {
+    id: 'workmanship',
+    href: '/resources/workmanship',
+    label: 'Workmanship',
+    brandName: 'ResourceFlow',
+    description: 'Crew planning, labor tracking, trade allocation and utilization',
+    icon: Hammer,
+    svgIcon: '/icons/modules/crewflow.svg',
+    color: '#3B82F6',
+    features: ['Crew Planning', 'Trade Allocation', 'Labor Tracking', 'Utilization Reports', 'Shift Management', 'Skill Matrix'],
     kpis: [
       { label: 'Active Crews', value: '24' },
       { label: 'Utilization', value: '87%' },
-      { label: 'Equipment', value: '42' },
       { label: 'Headcount', value: '186' },
+      { label: 'Trades Active', value: '7' },
+    ],
+  },
+  material: {
+    id: 'material',
+    href: '/resources/material',
+    label: 'Material',
+    brandName: 'ResourceFlow',
+    description: 'Material inventory, tracking, consumption and waste management',
+    icon: Package,
+    svgIcon: '/icons/modules/crewflow.svg',
+    color: '#3B82F6',
+    features: ['Inventory Tracking', 'Consumption Analysis', 'Waste Monitoring', 'Delivery Scheduling', 'Stock Alerts', 'Material Testing'],
+    kpis: [
+      { label: 'Material Orders', value: '34' },
+      { label: 'In Stock Items', value: '128' },
+      { label: 'Waste Rate', value: '4.2%' },
+      { label: 'Pending Deliveries', value: '12' },
+    ],
+  },
+  equipment: {
+    id: 'equipment',
+    href: '/resources/equipment',
+    label: 'Equipment',
+    brandName: 'ResourceFlow',
+    description: 'Equipment fleet management, maintenance scheduling and utilization',
+    icon: Wrench,
+    svgIcon: '/icons/modules/crewflow.svg',
+    color: '#3B82F6',
+    features: ['Fleet Management', 'Maintenance Schedule', 'Utilization Tracking', 'Fuel Monitoring', 'Operator Assignment', 'Inspection Log'],
+    kpis: [
+      { label: 'Total Equipment', value: '42' },
+      { label: 'Utilization', value: '78%' },
+      { label: 'Under Maintenance', value: '3' },
+      { label: 'Fuel Cost (MTD)', value: '$18.5K' },
+    ],
+  },
+  scaffoldings: {
+    id: 'scaffoldings',
+    href: '/resources/scaffoldings',
+    label: 'Scaffoldings',
+    brandName: 'ResourceFlow',
+    description: 'Scaffolding inventory, erection/dismantling tracking and inspection',
+    icon: Layers,
+    svgIcon: '/icons/modules/crewflow.svg',
+    color: '#3B82F6',
+    features: ['Scaffold Register', 'Erection Tracking', 'Inspection Schedule', 'Load Calculation', 'Permit Management', 'Dismantling Log'],
+    kpis: [
+      { label: 'Active Scaffolds', value: '18' },
+      { label: 'Inspections Due', value: '5' },
+      { label: 'Total Area (m²)', value: '3,420' },
+      { label: 'Avg Utilization', value: '82%' },
     ],
   },
 
@@ -407,7 +471,10 @@ export const NAV_GROUPS: ModuleGroup[] = [
   {
     id: 'cost-resources',
     label: 'Cost & Resources',
-    items: ['cost', 'resources'],
+    items: [
+      'cost',
+      { parent: 'resources', children: ['workmanship', 'material', 'equipment', 'scaffoldings'] },
+    ],
   },
   {
     id: 'quality-safety',

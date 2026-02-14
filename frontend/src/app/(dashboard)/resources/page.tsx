@@ -1,8 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import TopBar from '@/components/layout/TopBar';
-import { Users, Wrench, Package, TrendingUp } from 'lucide-react';
 import { ModulePageHeader } from '@/components/modules';
+import { MODULE_REGISTRY } from '@/lib/modules';
+import { Users, TrendingUp, ArrowRight } from 'lucide-react';
 
 const crews = [
   { trade: 'Structure', workers: 24, status: 'active', utilization: 92, color: '#3B82F6' },
@@ -14,21 +16,25 @@ const crews = [
   { trade: 'Finishes', workers: 6, status: 'standby', utilization: 0, color: '#F97316' },
 ];
 
+const subModules = ['workmanship', 'material', 'equipment', 'scaffoldings'] as const;
+
 export default function ResourcesPage() {
   const totalWorkers = crews.reduce((s, c) => s + c.workers, 0);
   const activeWorkers = crews.filter(c => c.status === 'active').reduce((s, c) => s + c.workers, 0);
 
   return (
     <>
-      <TopBar title="CrewFlow" />
+      <TopBar title="ResourceFlow" />
       <div className="flex-1 overflow-auto p-6 space-y-4">
         <ModulePageHeader moduleId="resources" />
+
+        {/* Summary KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'Total Workers', value: totalWorkers, icon: Users, color: 'var(--color-accent)' },
             { label: 'Active', value: activeWorkers, icon: TrendingUp, color: 'var(--color-success)' },
-            { label: 'Equipment', value: '12', icon: Wrench, color: 'var(--color-warning)' },
-            { label: 'Material Orders', value: '8', icon: Package, color: 'var(--color-purple)' },
+            { label: 'Equipment', value: '42', icon: MODULE_REGISTRY.equipment.icon, color: 'var(--color-warning)' },
+            { label: 'Scaffolds', value: '18', icon: MODULE_REGISTRY.scaffoldings.icon, color: 'var(--color-purple)' },
           ].map((kpi) => (
             <div key={kpi.label} className="rounded-xl border p-4" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
               <div className="flex justify-between items-start">
@@ -44,8 +50,45 @@ export default function ResourcesPage() {
           ))}
         </div>
 
-        {/* Crew table */}
+        {/* Sub-module cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {subModules.map((id) => {
+            const mod = MODULE_REGISTRY[id];
+            return (
+              <Link
+                key={id}
+                href={mod.href}
+                className="rounded-xl border p-5 flex items-start gap-4 transition-colors group"
+                style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = mod.color; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+              >
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${mod.color}18` }}>
+                  <mod.icon size={20} style={{ color: mod.color }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>{mod.label}</span>
+                    <ArrowRight size={14} style={{ color: 'var(--color-text-muted)' }} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <p className="text-[11px] mt-1 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{mod.description}</p>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {mod.features.slice(0, 4).map((f) => (
+                      <span key={f} className="text-[9px] font-semibold px-2 py-0.5 rounded-md" style={{ background: `${mod.color}12`, color: mod.color }}>{f}</span>
+                    ))}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Crew overview table */}
         <div className="rounded-xl border overflow-hidden" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
+          <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-secondary)' }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>Crew Overview</span>
+            <Link href="/resources/workmanship" className="text-[11px] font-semibold" style={{ color: 'var(--color-accent)' }}>View All</Link>
+          </div>
           <table className="w-full">
             <thead>
               <tr>
