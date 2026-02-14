@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="og" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#E8731A"/>
+      <stop offset="100%" style="stop-color:#F59E3F"/>
+    </linearGradient>
+  </defs>
+  <!-- Hard hat shape -->
+  <path d="M28 68 Q28 32 60 28 Q92 32 92 68" fill="url(#og)" opacity="0.15"/>
+  <path d="M28 68 Q28 32 60 28 Q92 32 92 68" fill="none" stroke="url(#og)" stroke-width="3"/>
+  <!-- Hat brim -->
+  <rect x="18" y="65" width="84" height="10" rx="5" fill="url(#og)"/>
+  <!-- Warning triangle -->
+  <path d="M60 84 L50 100 L70 100 Z" fill="none" stroke="#3A3A3C" stroke-width="2" opacity="0.5"/>
+  <text x="60" y="98" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="700" fill="#3A3A3C" opacity="0.5">!</text>
+  <!-- Crown details -->
+  <line x1="60" y1="28" x2="60" y2="44" stroke="#E8731A" stroke-width="1.5" opacity="0.4"/>
+  <line x1="40" y1="40" x2="40" y2="55" stroke="#E8731A" stroke-width="1" opacity="0.3"/>
+  <line x1="80" y1="40" x2="80" y2="55" stroke="#E8731A" stroke-width="1" opacity="0.3"/>
+</svg>

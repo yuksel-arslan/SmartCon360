@@ -2,6 +2,7 @@
 
 import TopBar from '@/components/layout/TopBar';
 import { Users, Wrench, Package, TrendingUp } from 'lucide-react';
+import { ModulePageHeader } from '@/components/modules';
 
 const crews = [
   { trade: 'Structure', workers: 24, status: 'active', utilization: 92, color: '#3B82F6' },
@@ -19,8 +20,9 @@ export default function ResourcesPage() {
 
   return (
     <>
-      <TopBar title="Resources" />
+      <TopBar title="CrewFlow" />
       <div className="flex-1 overflow-auto p-6 space-y-4">
+        <ModulePageHeader moduleId="resources" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'Total Workers', value: totalWorkers, icon: Users, color: 'var(--color-accent)' },

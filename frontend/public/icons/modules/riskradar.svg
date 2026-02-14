@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="og" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8731A"/>
+      <stop offset="100%" style="stop-color:#F59E3F"/>
+    </linearGradient>
+  </defs>
+  <!-- Radar circles -->
+  <circle cx="60" cy="60" r="44" fill="none" stroke="#3A3A3C" stroke-width="1" opacity="0.2"/>
+  <circle cx="60" cy="60" r="32" fill="none" stroke="#3A3A3C" stroke-width="1" opacity="0.3"/>
+  <circle cx="60" cy="60" r="20" fill="none" stroke="#E8731A" stroke-width="1.5" opacity="0.3"/>
+  <circle cx="60" cy="60" r="8" fill="url(#og)" opacity="0.3"/>
+  <!-- Cross hairs -->
+  <line x1="60" y1="12" x2="60" y2="108" stroke="#3A3A3C" stroke-width="0.8" opacity="0.15"/>
+  <line x1="12" y1="60" x2="108" y2="60" stroke="#3A3A3C" stroke-width="0.8" opacity="0.15"/>
+  <!-- Radar sweep -->
+  <path d="M60 60 L60 16 A44 44 0 0 1 95 35 Z" fill="url(#og)" opacity="0.15"/>
+  <!-- Risk dots -->
+  <circle cx="75" cy="38" r="4" fill="#E8731A" opacity="0.8"/>
+  <circle cx="40" cy="72" r="3" fill="#F59E3F" opacity="0.6"/>
+  <circle cx="82" cy="68" r="3.5" fill="#E8731A" opacity="0.7"/>
+  <!-- Center dot -->
+  <circle cx="60" cy="60" r="3" fill="url(#og)"/>
+</svg>
