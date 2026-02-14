@@ -31,6 +31,7 @@ export const updateProjectSchema = z.object({
 
 export const createLocationSchema = z.object({
   parentId: z.string().uuid().optional().nullable(),
+  parentName: z.string().optional(),
   name: z.string().min(1).max(255),
   locationType: z.enum(['site', 'building', 'floor', 'zone', 'room', 'area']),
   areaSqm: z.number().optional(),
