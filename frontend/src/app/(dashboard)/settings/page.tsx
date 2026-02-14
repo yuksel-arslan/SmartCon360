@@ -31,15 +31,15 @@ export default function SettingsPage() {
       <TopBar title="Settings" />
       <div className="flex-1 overflow-auto">
         {/* Tab Navigation */}
-        <div className="border-b px-6 pt-4" style={{ borderColor: 'var(--color-border)' }}>
-          <div className="flex gap-1">
+        <div className="border-b px-3 sm:px-6 pt-3 sm:pt-4 overflow-x-auto" style={{ borderColor: 'var(--color-border)' }}>
+          <div className="flex gap-1 min-w-max">
             {visibleTabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="flex items-center gap-2 px-4 py-2.5 text-[12px] font-medium rounded-t-lg transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 text-[11px] sm:text-[12px] font-medium rounded-t-lg transition-colors cursor-pointer whitespace-nowrap"
                   style={{
                     color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)',
                     background: isActive ? 'var(--color-bg-card)' : 'transparent',
@@ -53,7 +53,8 @@ export default function SettingsPage() {
                   }}
                 >
                   <tab.icon size={14} />
-                  {tab.label}
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.id === 'appearance' ? 'Theme' : tab.id === 'roles' ? 'Roles' : tab.label}</span>
                 </button>
               );
             })}
@@ -61,7 +62,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           {activeTab === 'appearance' && (
             <div className="max-w-md">
               <div

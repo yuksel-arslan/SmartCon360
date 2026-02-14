@@ -272,7 +272,7 @@ function InlineRoleCreator({ onCreated, onCancel, getAuthHeader, refreshRoles }:
       </div>
 
       {/* Name + Description */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div>
           <label className="text-[9px] font-semibold uppercase tracking-wider mb-1 block" style={{ color: 'var(--color-text-muted)' }}>
             Name
@@ -531,7 +531,7 @@ export default function UsersTab() {
   return (
     <div className="space-y-4 max-w-4xl">
       {/* Header + Search + Invite */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
             User Management
@@ -540,8 +540,8 @@ export default function UsersTab() {
             {total} registered user{total !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="relative flex-1 sm:flex-none">
             <Search
               size={13}
               className="absolute left-3 top-1/2 -translate-y-1/2"
@@ -552,7 +552,7 @@ export default function UsersTab() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               placeholder="Search users..."
-              className="pl-8 pr-3 py-2 text-[12px] rounded-lg border w-56"
+              className="pl-8 pr-3 py-2 text-[12px] rounded-lg border w-full sm:w-56"
               style={{
                 background: 'var(--color-bg-input)',
                 borderColor: 'var(--color-border)',
@@ -563,11 +563,12 @@ export default function UsersTab() {
           {!inviting && (
             <button
               onClick={() => setInviting(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer whitespace-nowrap flex-shrink-0"
               style={{ background: 'var(--color-accent)', color: '#fff' }}
             >
               <UserPlus size={12} />
-              Invite User
+              <span className="hidden xs:inline">Invite User</span>
+              <span className="xs:hidden">Invite</span>
             </button>
           )}
         </div>
@@ -583,7 +584,7 @@ export default function UsersTab() {
                 Invite New User
               </h4>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] font-semibold uppercase tracking-wider mb-1 block" style={{ color: 'var(--color-text-muted)' }}>
                   First Name
@@ -655,7 +656,7 @@ export default function UsersTab() {
                   ))}
                 </select>
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className="text-[10px] font-semibold uppercase tracking-wider mb-1 block" style={{ color: 'var(--color-text-muted)' }}>
                   Company (optional)
                 </label>
@@ -743,7 +744,7 @@ export default function UsersTab() {
         </Card>
       )}
 
-      {/* Users Table */}
+      {/* Users List */}
       <Card padding="none">
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -752,178 +753,304 @@ export default function UsersTab() {
         ) : users.length === 0 ? (
           <EmptyState icon={Users} title="No users found" description="Try a different search term" />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                  {['User', 'Roles', 'Last Login', 'Status', ''].map((h) => (
-                    <th
-                      key={h}
-                      className="text-left text-[10px] font-semibold uppercase tracking-wider px-4 py-3"
-                      style={{ color: 'var(--color-text-muted)' }}
+          <>
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                    {['User', 'Roles', 'Last Login', 'Status', ''].map((h) => (
+                      <th
+                        key={h}
+                        className="text-left text-[10px] font-semibold uppercase tracking-wider px-4 py-3"
+                        style={{ color: 'var(--color-text-muted)' }}
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((user) => (
+                    <tr
+                      key={user.id}
+                      className="transition-colors"
+                      style={{ borderBottom: '1px solid var(--color-border)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                     >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="transition-colors"
-                    style={{ borderBottom: '1px solid var(--color-border)' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                  >
-                    {/* User info */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
-                          style={{
-                            background: 'var(--color-accent-muted)',
-                            color: 'var(--color-accent)',
-                          }}
-                        >
-                          {user.firstName[0]}{user.lastName[0]}
-                        </div>
-                        <div>
-                          <div className="text-[12px] font-semibold" style={{ color: 'var(--color-text)' }}>
-                            {user.firstName} {user.lastName}
-                          </div>
-                          <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-                            {user.email}
-                            {user.company && ` · ${user.company}`}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Roles */}
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1.5 items-center relative">
-                        {user.roles.map((r) => (
-                          <span
-                            key={r.id}
-                            className="group inline-flex items-center gap-0.5 rounded-md pr-1"
-                            style={{ background: `${roleColor(r.roleName)}12` }}
-                          >
-                            <Badge
-                              label={roleLabel(r.roleName)}
-                              color={roleColor(r.roleName)}
-                            />
-                            <button
-                              onClick={() => handleRemoveRole(user.id, r.id)}
-                              className="w-3.5 h-3.5 rounded-full flex items-center justify-center cursor-pointer opacity-40 hover:opacity-100 transition-opacity"
-                              style={{ color: roleColor(r.roleName) }}
-                              title={`Remove ${roleLabel(r.roleName)}`}
-                            >
-                              <X size={8} />
-                            </button>
-                          </span>
-                        ))}
-
-                        {/* Add role trigger */}
-                        <button
-                          onClick={() => {
-                            setDropdownUser(dropdownUser === user.id ? null : user.id);
-                            setCreatingRoleForUser(null);
-                          }}
-                          className="w-6 h-6 rounded-lg flex items-center justify-center transition-all cursor-pointer border border-dashed"
-                          style={{
-                            borderColor: dropdownUser === user.id ? 'var(--color-accent)' : 'var(--color-border)',
-                            color: dropdownUser === user.id ? 'var(--color-accent)' : 'var(--color-text-muted)',
-                            background: dropdownUser === user.id ? 'var(--color-accent-muted)' : 'transparent',
-                          }}
-                          title="Add role"
-                        >
-                          {dropdownUser === user.id ? <ChevronDown size={10} /> : <Plus size={11} />}
-                        </button>
-
-                        {/* Custom dropdown */}
-                        {dropdownUser === user.id && !creatingRoleForUser && (
-                          <RoleDropdown
-                            roles={roles}
-                            excludeRoleIds={user.roles.map((r) => r.roleId)}
-                            onSelect={(roleId) => handleAssignRole(user.id, roleId)}
-                            onCreateNew={() => {
-                              setDropdownUser(null);
-                              setCreatingRoleForUser(user.id);
+                      {/* User info */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+                            style={{
+                              background: 'var(--color-accent-muted)',
+                              color: 'var(--color-accent)',
                             }}
-                            onClose={() => setDropdownUser(null)}
+                          >
+                            {user.firstName[0]}{user.lastName[0]}
+                          </div>
+                          <div>
+                            <div className="text-[12px] font-semibold" style={{ color: 'var(--color-text)' }}>
+                              {user.firstName} {user.lastName}
+                            </div>
+                            <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                              {user.email}
+                              {user.company && ` · ${user.company}`}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Roles */}
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1.5 items-center relative">
+                          {user.roles.map((r) => (
+                            <span
+                              key={r.id}
+                              className="group inline-flex items-center gap-0.5 rounded-md pr-1"
+                              style={{ background: `${roleColor(r.roleName)}12` }}
+                            >
+                              <Badge
+                                label={roleLabel(r.roleName)}
+                                color={roleColor(r.roleName)}
+                              />
+                              <button
+                                onClick={() => handleRemoveRole(user.id, r.id)}
+                                className="w-3.5 h-3.5 rounded-full flex items-center justify-center cursor-pointer opacity-40 hover:opacity-100 transition-opacity"
+                                style={{ color: roleColor(r.roleName) }}
+                                title={`Remove ${roleLabel(r.roleName)}`}
+                              >
+                                <X size={8} />
+                              </button>
+                            </span>
+                          ))}
+
+                          {/* Add role trigger */}
+                          <button
+                            onClick={() => {
+                              setDropdownUser(dropdownUser === user.id ? null : user.id);
+                              setCreatingRoleForUser(null);
+                            }}
+                            className="w-6 h-6 rounded-lg flex items-center justify-center transition-all cursor-pointer border border-dashed"
+                            style={{
+                              borderColor: dropdownUser === user.id ? 'var(--color-accent)' : 'var(--color-border)',
+                              color: dropdownUser === user.id ? 'var(--color-accent)' : 'var(--color-text-muted)',
+                              background: dropdownUser === user.id ? 'var(--color-accent-muted)' : 'transparent',
+                            }}
+                            title="Add role"
+                          >
+                            {dropdownUser === user.id ? <ChevronDown size={10} /> : <Plus size={11} />}
+                          </button>
+
+                          {/* Custom dropdown */}
+                          {dropdownUser === user.id && !creatingRoleForUser && (
+                            <RoleDropdown
+                              roles={roles}
+                              excludeRoleIds={user.roles.map((r) => r.roleId)}
+                              onSelect={(roleId) => handleAssignRole(user.id, roleId)}
+                              onCreateNew={() => {
+                                setDropdownUser(null);
+                                setCreatingRoleForUser(user.id);
+                              }}
+                              onClose={() => setDropdownUser(null)}
+                            />
+                          )}
+                        </div>
+
+                        {/* Inline role creator */}
+                        {creatingRoleForUser === user.id && (
+                          <InlineRoleCreator
+                            getAuthHeader={() => getAuthHeader() as Record<string, string>}
+                            refreshRoles={fetchRoles}
+                            onCreated={(roleId) => {
+                              setCreatingRoleForUser(null);
+                              handleAssignRole(user.id, roleId);
+                            }}
+                            onCancel={() => setCreatingRoleForUser(null)}
                           />
                         )}
-                      </div>
+                      </td>
 
-                      {/* Inline role creator */}
-                      {creatingRoleForUser === user.id && (
-                        <InlineRoleCreator
-                          getAuthHeader={() => getAuthHeader() as Record<string, string>}
-                          refreshRoles={fetchRoles}
-                          onCreated={(roleId) => {
-                            setCreatingRoleForUser(null);
-                            handleAssignRole(user.id, roleId);
-                          }}
-                          onCancel={() => setCreatingRoleForUser(null)}
+                      {/* Last Login */}
+                      <td className="px-4 py-3">
+                        <span
+                          className="text-[11px] tabular-nums"
+                          style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
+                        >
+                          {user.lastLoginAt
+                            ? new Date(user.lastLoginAt).toLocaleDateString()
+                            : 'Never'}
+                        </span>
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-4 py-3">
+                        <Badge
+                          label={user.isActive ? 'Active' : 'Disabled'}
+                          color={user.isActive ? '#22C55E' : '#EF4444'}
                         />
-                      )}
-                    </td>
+                      </td>
 
-                    {/* Last Login */}
-                    <td className="px-4 py-3">
-                      <span
-                        className="text-[11px] tabular-nums"
-                        style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
+                      {/* Actions */}
+                      <td className="px-4 py-3 relative">
+                        <button
+                          onClick={() => setActionMenu(actionMenu === user.id ? null : user.id)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                          style={{ color: 'var(--color-text-muted)' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-bg-input)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <MoreVertical size={14} />
+                        </button>
+                        {actionMenu === user.id && (
+                          <div
+                            className="absolute right-4 top-10 z-10 rounded-lg border shadow-lg py-1 min-w-[140px]"
+                            style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+                          >
+                            <button
+                              onClick={() => handleToggleActive(user.id, user.isActive)}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium transition-colors cursor-pointer"
+                              style={{ color: user.isActive ? 'var(--color-danger)' : 'var(--color-success)' }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                            >
+                              <UserX size={12} />
+                              {user.isActive ? 'Deactivate' : 'Activate'}
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card Layout */}
+            <div className="md:hidden divide-y" style={{ borderColor: 'var(--color-border)' }}>
+              {users.map((user) => (
+                <div key={user.id} className="p-3 space-y-2.5">
+                  {/* User header row */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+                        style={{
+                          background: 'var(--color-accent-muted)',
+                          color: 'var(--color-accent)',
+                        }}
                       >
-                        {user.lastLoginAt
-                          ? new Date(user.lastLoginAt).toLocaleDateString()
-                          : 'Never'}
-                      </span>
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-4 py-3">
+                        {user.firstName[0]}{user.lastName[0]}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[12px] font-semibold truncate" style={{ color: 'var(--color-text)' }}>
+                          {user.firstName} {user.lastName}
+                        </div>
+                        <div className="text-[10px] truncate" style={{ color: 'var(--color-text-muted)' }}>
+                          {user.email}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <Badge
                         label={user.isActive ? 'Active' : 'Disabled'}
                         color={user.isActive ? '#22C55E' : '#EF4444'}
                       />
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-4 py-3 relative">
-                      <button
-                        onClick={() => setActionMenu(actionMenu === user.id ? null : user.id)}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
-                        style={{ color: 'var(--color-text-muted)' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-bg-input)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                      >
-                        <MoreVertical size={14} />
-                      </button>
-                      {actionMenu === user.id && (
-                        <div
-                          className="absolute right-4 top-10 z-10 rounded-lg border shadow-lg py-1 min-w-[140px]"
-                          style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+                      <div className="relative">
+                        <button
+                          onClick={() => setActionMenu(actionMenu === user.id ? null : user.id)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
+                          style={{ color: 'var(--color-text-muted)' }}
                         >
-                          <button
-                            onClick={() => handleToggleActive(user.id, user.isActive)}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium transition-colors cursor-pointer"
-                            style={{ color: user.isActive ? 'var(--color-danger)' : 'var(--color-success)' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                          <MoreVertical size={14} />
+                        </button>
+                        {actionMenu === user.id && (
+                          <div
+                            className="absolute right-0 top-8 z-10 rounded-lg border shadow-lg py-1 min-w-[140px]"
+                            style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
                           >
-                            <UserX size={12} />
-                            {user.isActive ? 'Deactivate' : 'Activate'}
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                            <button
+                              onClick={() => handleToggleActive(user.id, user.isActive)}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium cursor-pointer"
+                              style={{ color: user.isActive ? 'var(--color-danger)' : 'var(--color-success)' }}
+                            >
+                              <UserX size={12} />
+                              {user.isActive ? 'Deactivate' : 'Activate'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Roles row */}
+                  <div className="flex flex-wrap gap-1.5 items-center relative">
+                    {user.roles.map((r) => (
+                      <span
+                        key={r.id}
+                        className="inline-flex items-center gap-0.5 rounded-md pr-1"
+                        style={{ background: `${roleColor(r.roleName)}12` }}
+                      >
+                        <Badge label={roleLabel(r.roleName)} color={roleColor(r.roleName)} />
+                        <button
+                          onClick={() => handleRemoveRole(user.id, r.id)}
+                          className="w-3.5 h-3.5 rounded-full flex items-center justify-center cursor-pointer opacity-60"
+                          style={{ color: roleColor(r.roleName) }}
+                        >
+                          <X size={8} />
+                        </button>
+                      </span>
+                    ))}
+                    <button
+                      onClick={() => {
+                        setDropdownUser(dropdownUser === user.id ? null : user.id);
+                        setCreatingRoleForUser(null);
+                      }}
+                      className="w-6 h-6 rounded-lg flex items-center justify-center cursor-pointer border border-dashed"
+                      style={{
+                        borderColor: dropdownUser === user.id ? 'var(--color-accent)' : 'var(--color-border)',
+                        color: dropdownUser === user.id ? 'var(--color-accent)' : 'var(--color-text-muted)',
+                      }}
+                    >
+                      <Plus size={11} />
+                    </button>
+                    {dropdownUser === user.id && !creatingRoleForUser && (
+                      <RoleDropdown
+                        roles={roles}
+                        excludeRoleIds={user.roles.map((r) => r.roleId)}
+                        onSelect={(roleId) => handleAssignRole(user.id, roleId)}
+                        onCreateNew={() => {
+                          setDropdownUser(null);
+                          setCreatingRoleForUser(user.id);
+                        }}
+                        onClose={() => setDropdownUser(null)}
+                      />
+                    )}
+                  </div>
+
+                  {creatingRoleForUser === user.id && (
+                    <InlineRoleCreator
+                      getAuthHeader={() => getAuthHeader() as Record<string, string>}
+                      refreshRoles={fetchRoles}
+                      onCreated={(roleId) => {
+                        setCreatingRoleForUser(null);
+                        handleAssignRole(user.id, roleId);
+                      }}
+                      onCancel={() => setCreatingRoleForUser(null)}
+                    />
+                  )}
+
+                  {/* Meta row */}
+                  <div className="flex items-center gap-3 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                    <span>Login: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}</span>
+                    {user.company && <span>· {user.company}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </Card>
 
