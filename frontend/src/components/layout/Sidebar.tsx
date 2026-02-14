@@ -65,7 +65,7 @@ export default function Sidebar() {
           src={sidebarCollapsed ? '/taktflow-icon.svg' : '/taktflow-logo.svg'}
           alt="TaktFlow AI"
           className="flex-shrink-0"
-          style={{ height: sidebarCollapsed ? 36 : 44, width: 'auto' }}
+          style={{ height: sidebarCollapsed ? 48 : 77, width: 'auto' }}
         />
       </div>
 
