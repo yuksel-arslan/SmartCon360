@@ -1,12 +1,12 @@
 {
-  "name": "TaktFlow AI",
-  "short_name": "TaktFlow",
-  "description": "AI-Powered Takt Planning for Construction",
+  "name": "SmartCon360",
+  "short_name": "SmartCon360",
+  "description": "AI-Powered Unified Construction Management Platform",
   "start_url": "/dashboard",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0B0F1A",
-  "theme_color": "#3B82F6",
+  "theme_color": "#E8731A",
   "categories": ["business", "productivity"],
   "icons": [
     {
@@ -63,19 +63,31 @@
       "name": "Dashboard",
       "short_name": "Dashboard",
       "url": "/dashboard",
-      "description": "Project overview"
+      "description": "Project Health Score & unified dashboard"
     },
     {
       "name": "Flowline",
       "short_name": "Flowline",
       "url": "/flowline",
-      "description": "Flowline chart"
+      "description": "TaktFlow flowline chart"
     },
     {
       "name": "AI Concierge",
       "short_name": "AI",
       "url": "/ai",
       "description": "Ask the AI assistant"
+    },
+    {
+      "name": "Quality",
+      "short_name": "Quality",
+      "url": "/quality",
+      "description": "QualityGate inspections & NCR"
+    },
+    {
+      "name": "Safety",
+      "short_name": "Safety",
+      "url": "/safety",
+      "description": "SafeZone OHS management"
     }
   ]
 }

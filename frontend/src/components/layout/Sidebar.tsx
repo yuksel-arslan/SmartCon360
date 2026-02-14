@@ -9,6 +9,8 @@ import {
   ClipboardCheck, Users, FileText, Bot, Settings, PanelLeftClose,
   Plus, ChevronDown, Play,
   Building2, Hospital, Building, Landmark, Factory, Construction, FolderKanban,
+  ShieldCheck, HardHat, DollarSign, Truck, Radar, Scale,
+  Camera, MessageSquare, UserCheck, Leaf, Activity,
 } from 'lucide-react';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
@@ -22,31 +24,92 @@ const PROJECT_ICONS: Record<string, LucideIcon> = {
   infrastructure: Construction,
 };
 
-const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/flowline', icon: GitBranch, label: 'Flowline' },
-  { href: '/takt-editor', icon: Grid3x3, label: 'Takt Editor' },
-  { href: '/constraints', icon: AlertTriangle, label: 'Constraints' },
-  { href: '/lps', icon: ClipboardCheck, label: 'Last Planner' },
-  { href: '/resources', icon: Users, label: 'Resources' },
-  { href: '/reports', icon: FileText, label: 'Reports' },
-  { href: '/simulation', icon: Play, label: 'Simulation' },
-  { href: '/ai', icon: Bot, label: 'AI Concierge' },
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+interface NavItem {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+}
+
+const navGroups: NavGroup[] = [
+  {
+    label: 'Planning',
+    items: [
+      { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { href: '/flowline', icon: GitBranch, label: 'Flowline' },
+      { href: '/takt-editor', icon: Grid3x3, label: 'Takt Editor' },
+      { href: '/constraints', icon: AlertTriangle, label: 'Constraints' },
+      { href: '/lps', icon: ClipboardCheck, label: 'Last Planner' },
+    ],
+  },
+  {
+    label: 'Quality & Safety',
+    items: [
+      { href: '/quality', icon: ShieldCheck, label: 'QualityGate' },
+      { href: '/safety', icon: HardHat, label: 'SafeZone' },
+      { href: '/vision', icon: Camera, label: 'VisionAI' },
+    ],
+  },
+  {
+    label: 'Cost & Resources',
+    items: [
+      { href: '/cost', icon: DollarSign, label: 'CostPilot' },
+      { href: '/resources', icon: Users, label: 'CrewFlow' },
+    ],
+  },
+  {
+    label: 'Supply & Risk',
+    items: [
+      { href: '/supply', icon: Truck, label: 'SupplyChain' },
+      { href: '/risk', icon: Radar, label: 'RiskRadar' },
+      { href: '/claims', icon: Scale, label: 'ClaimShield' },
+    ],
+  },
+  {
+    label: 'Communication',
+    items: [
+      { href: '/communication', icon: MessageSquare, label: 'CommHub' },
+      { href: '/stakeholders', icon: UserCheck, label: 'StakeHub' },
+    ],
+  },
+  {
+    label: 'Sustainability',
+    items: [
+      { href: '/sustainability', icon: Leaf, label: 'GreenSite' },
+    ],
+  },
+  {
+    label: 'AI & Analytics',
+    items: [
+      { href: '/ai', icon: Bot, label: 'AI Concierge' },
+      { href: '/reports', icon: FileText, label: 'Reports' },
+      { href: '/simulation', icon: Play, label: 'Simulation' },
+    ],
+  },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebar } = useUIStore();
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
   const activeProject = DEMO_PROJECTS[0];
   const DefaultProjectIcon = FolderKanban;
+
+  const toggleGroup = (label: string) => {
+    setCollapsedGroups((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
 
   return (
     <aside
       className="flex flex-col border-r transition-all duration-200 flex-shrink-0"
       style={{
-        width: sidebarCollapsed ? 64 : 240,
+        width: sidebarCollapsed ? 64 : 250,
         backgroundColor: 'var(--color-bg-sidebar)',
         borderColor: 'var(--color-border)',
       }}
@@ -60,13 +123,31 @@ export default function Sidebar() {
           justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={sidebarCollapsed ? '/taktflow-icon.svg' : '/taktflow-logo.svg'}
-          alt="TaktFlow AI"
-          className="flex-shrink-0"
-          style={{ height: sidebarCollapsed ? 32 : 38, width: 'auto' }}
-        />
+        {sidebarCollapsed ? (
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[14px]"
+            style={{ background: 'var(--color-accent)', color: '#fff' }}
+          >
+            S
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[14px]"
+              style={{ background: 'var(--color-accent)', color: '#fff' }}
+            >
+              S
+            </div>
+            <div>
+              <div className="text-[13px] font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>
+                SmartCon360
+              </div>
+              <div className="text-[9px] font-medium tracking-wider uppercase" style={{ color: 'var(--color-text-muted)' }}>
+                Construction Platform
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Project selector */}
@@ -172,34 +253,66 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-1 flex flex-col gap-0.5 min-h-0">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
+        {navGroups.map((group) => {
+          const isGroupCollapsed = collapsedGroups[group.label];
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150"
-              style={{
-                justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                background: isActive ? 'var(--color-accent-muted)' : 'transparent',
-                color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)',
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.background = 'var(--color-bg-hover)';
-                  e.currentTarget.style.color = 'var(--color-text-secondary)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = 'var(--color-text-muted)';
-                }
-              }}
-            >
-              <item.icon size={18} strokeWidth={isActive ? 2 : 1.5} />
-              {!sidebarCollapsed && item.label}
-            </Link>
+            <div key={group.label} className="mb-1">
+              {/* Group label */}
+              {!sidebarCollapsed && (
+                <button
+                  onClick={() => toggleGroup(group.label)}
+                  className="w-full flex items-center justify-between px-2 py-1.5 cursor-pointer"
+                >
+                  <span
+                    className="text-[10px] font-semibold uppercase tracking-wider"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    {group.label}
+                  </span>
+                  <ChevronDown
+                    size={10}
+                    style={{
+                      color: 'var(--color-text-muted)',
+                      transform: isGroupCollapsed ? 'rotate(-90deg)' : undefined,
+                      transition: 'transform 0.2s',
+                    }}
+                  />
+                </button>
+              )}
+
+              {/* Group items */}
+              {(!isGroupCollapsed || sidebarCollapsed) && group.items.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={sidebarCollapsed ? item.label : undefined}
+                    className="flex items-center gap-3 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all duration-150"
+                    style={{
+                      justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+                      background: isActive ? 'var(--color-accent-muted)' : 'transparent',
+                      color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = 'var(--color-bg-hover)';
+                        e.currentTarget.style.color = 'var(--color-text-secondary)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = 'var(--color-text-muted)';
+                      }
+                    }}
+                  >
+                    <item.icon size={16} strokeWidth={isActive ? 2 : 1.5} />
+                    {!sidebarCollapsed && item.label}
+                  </Link>
+                );
+              })}
+            </div>
           );
         })}
       </nav>

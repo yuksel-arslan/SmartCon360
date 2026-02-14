@@ -2,9 +2,9 @@ import '@/styles/globals.css';
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
-  title: 'TaktFlow AI — Takt Planning Platform',
-  description: 'AI-Powered Takt Planning for Construction. Combines LBMS, Takt Time Construction, and Last Planner System with artificial intelligence.',
-  keywords: ['takt planning', 'construction', 'lean construction', 'flowline', 'LPS', 'PPC', 'AI'],
+  title: 'SmartCon360 — Construction Management Platform',
+  description: 'AI-Powered Unified Construction Management Platform. 13 integrated modules covering all PMBOK areas plus OHS and ESG.',
+  keywords: ['construction management', 'takt planning', 'lean construction', 'EVM', 'quality', 'safety', 'risk', 'AI', 'PMBOK', 'SmartCon360'],
   authors: [{ name: 'Yuksel Arslan' }],
   manifest: '/manifest.json',
   icons: {
@@ -20,13 +20,13 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'TaktFlow AI',
+    title: 'SmartCon360',
   },
   openGraph: {
     type: 'website',
-    title: 'TaktFlow AI — Takt Planning Platform',
-    description: 'AI-Powered Takt Planning for Construction',
-    siteName: 'TaktFlow AI',
+    title: 'SmartCon360 — Construction Management Platform',
+    description: 'AI-Powered Unified Construction Management. 13 modules, one platform.',
+    siteName: 'SmartCon360',
   },
 };
 
