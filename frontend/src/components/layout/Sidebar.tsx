@@ -43,45 +43,56 @@ export default function Sidebar() {
     <aside
       className="flex flex-col border-r transition-all duration-200 flex-shrink-0"
       style={{
-        width: sidebarCollapsed ? 64 : 220,
+        width: sidebarCollapsed ? 64 : 240,
         backgroundColor: 'var(--color-bg-sidebar)',
         borderColor: 'var(--color-border)',
       }}
     >
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 border-b px-4 py-4" style={{ borderColor: 'var(--color-border)' }}>
+      {/* Logo — bigger */}
+      <div
+        className="flex items-center border-b"
+        style={{
+          borderColor: 'var(--color-border)',
+          padding: sidebarCollapsed ? '16px 12px' : '20px 20px',
+          justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+        }}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={sidebarCollapsed ? '/taktflow-icon.svg' : '/taktflow-logo.svg'}
           alt="TaktFlow AI"
           className="flex-shrink-0"
-          style={{ height: sidebarCollapsed ? 32 : 36, width: 'auto' }}
+          style={{ height: sidebarCollapsed ? 36 : 44, width: 'auto' }}
         />
       </div>
 
       {/* Project selector */}
       {!sidebarCollapsed ? (
-        <div className="px-3 py-3">
+        <div className="px-3 py-4">
           <button
             onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
-            className="w-full rounded-lg px-2.5 py-2 cursor-pointer border text-left transition-colors hover:opacity-90"
+            className="w-full rounded-xl px-3 py-2.5 cursor-pointer border text-left transition-colors"
             style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)' }}
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0">
                 <span className="text-sm flex-shrink-0">{PROJECT_ICONS[activeProject.type] || '📋'}</span>
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold truncate" style={{ color: 'var(--color-text)' }}>
+                  <div className="text-[12px] font-semibold truncate" style={{ color: 'var(--color-text)' }}>
                     {activeProject.name}
                   </div>
-                  <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                  <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
                     {activeProject.floors} floors · {activeProject.zones} zones
                   </div>
                 </div>
               </div>
               <ChevronDown
                 size={14}
-                style={{ color: 'var(--color-text-muted)', transform: projectDropdownOpen ? 'rotate(180deg)' : undefined, transition: 'transform 0.2s' }}
+                style={{
+                  color: 'var(--color-text-muted)',
+                  transform: projectDropdownOpen ? 'rotate(180deg)' : undefined,
+                  transition: 'transform 0.2s',
+                }}
               />
             </div>
           </button>
@@ -89,16 +100,22 @@ export default function Sidebar() {
           {/* Dropdown */}
           {projectDropdownOpen && (
             <div
-              className="mt-1 rounded-lg border overflow-hidden"
+              className="mt-1.5 rounded-xl border overflow-hidden"
               style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
             >
               {DEMO_PROJECTS.map((project) => (
                 <button
                   key={project.id}
                   onClick={() => setProjectDropdownOpen(false)}
-                  className="w-full flex items-center gap-2 px-2.5 py-2 text-left transition-colors hover:opacity-80"
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors"
                   style={{
-                    background: project.id === activeProject.id ? 'rgba(59,130,246,0.08)' : 'transparent',
+                    background: project.id === activeProject.id ? 'var(--color-accent-muted)' : 'transparent',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (project.id !== activeProject.id) e.currentTarget.style.background = 'var(--color-bg-hover)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = project.id === activeProject.id ? 'var(--color-accent-muted)' : 'transparent';
                   }}
                 >
                   <span className="text-sm flex-shrink-0">{PROJECT_ICONS[project.type] || '📋'}</span>
@@ -106,18 +123,17 @@ export default function Sidebar() {
                     <div className="text-[11px] font-semibold truncate" style={{ color: 'var(--color-text)' }}>
                       {project.name}
                     </div>
-                    <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                    <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
                       {project.status === 'planning' ? 'Planning' : `PPC ${project.ppc}%`}
                     </div>
                   </div>
                 </button>
               ))}
 
-              {/* New Project button */}
               <Link
                 href="/projects/new"
                 onClick={() => setProjectDropdownOpen(false)}
-                className="flex items-center gap-2 px-2.5 py-2.5 border-t transition-colors hover:opacity-80"
+                className="flex items-center gap-2.5 px-3 py-3 border-t transition-colors hover:opacity-80"
                 style={{ borderColor: 'var(--color-border)', color: 'var(--color-accent)' }}
               >
                 <Plus size={14} />
@@ -127,10 +143,10 @@ export default function Sidebar() {
           )}
         </div>
       ) : (
-        <div className="px-2 py-3 flex justify-center">
+        <div className="px-2 py-4 flex justify-center">
           <Link
             href="/projects/new"
-            className="w-9 h-9 rounded-lg flex items-center justify-center border transition-colors hover:opacity-80"
+            className="w-10 h-10 rounded-xl flex items-center justify-center border transition-colors hover:opacity-80"
             style={{ borderColor: 'var(--color-border)', color: 'var(--color-accent)' }}
             title="New Project"
           >
@@ -140,21 +156,33 @@ export default function Sidebar() {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 px-2 py-1 flex flex-col gap-0.5">
+      <nav className="flex-1 px-3 py-1 flex flex-col gap-1">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-colors"
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150"
               style={{
                 justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                background: isActive ? 'rgba(59,130,246,0.12)' : 'transparent',
-                color: isActive ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+                background: isActive ? 'var(--color-accent-muted)' : 'transparent',
+                color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)',
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'var(--color-bg-hover)';
+                  e.currentTarget.style.color = 'var(--color-text-secondary)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = 'var(--color-text-muted)';
+                }
               }}
             >
-              <item.icon size={18} />
+              <item.icon size={18} strokeWidth={isActive ? 2 : 1.5} />
               {!sidebarCollapsed && item.label}
             </Link>
           );
@@ -162,21 +190,31 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom */}
-      <div className="px-2 py-3 border-t flex flex-col gap-0.5" style={{ borderColor: 'var(--color-border)' }}>
+      <div className="px-3 py-3 border-t flex flex-col gap-1" style={{ borderColor: 'var(--color-border)' }}>
         <button
           onClick={toggleSidebar}
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs w-full"
-          style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start', color: 'var(--color-text-muted)' }}
+          className="flex items-center gap-3 rounded-xl px-3 py-2 text-[12px] font-medium w-full transition-colors"
+          style={{
+            justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+            color: 'var(--color-text-muted)',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-muted)'; }}
         >
-          <PanelLeftClose size={18} />
+          <PanelLeftClose size={18} strokeWidth={1.5} />
           {!sidebarCollapsed && 'Collapse'}
         </button>
         <Link
           href="/settings"
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs"
-          style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start', color: 'var(--color-text-muted)' }}
+          className="flex items-center gap-3 rounded-xl px-3 py-2 text-[12px] font-medium transition-colors"
+          style={{
+            justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+            color: 'var(--color-text-muted)',
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text-secondary)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)'; }}
         >
-          <Settings size={18} />
+          <Settings size={18} strokeWidth={1.5} />
           {!sidebarCollapsed && 'Settings'}
         </Link>
       </div>
