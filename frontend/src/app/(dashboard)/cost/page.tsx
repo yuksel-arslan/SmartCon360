@@ -2,6 +2,7 @@
 
 import { DollarSign, Calculator, FileSpreadsheet, Receipt, TrendingUp, BarChart3, Package, ClipboardList } from 'lucide-react';
 import { useState } from 'react';
+import { ModulePageHeader } from '@/components/modules';
 
 type CostTab = 'overview' | 'work-items' | 'unit-prices' | 'metraj' | 'estimates' | 'budgets' | 'hakedis' | 'evm';
 
@@ -32,17 +33,7 @@ export default function CostPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-            CostPilot
-          </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
-            Metraj, birim fiyat analizi, kesif, hakedis ve maliyet kontrolu
-          </p>
-        </div>
-      </div>
+      <ModulePageHeader moduleId="cost" />
 
       {/* Tab Navigation */}
       <div

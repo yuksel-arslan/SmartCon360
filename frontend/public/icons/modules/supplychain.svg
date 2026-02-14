@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="og" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#E8731A"/>
+      <stop offset="100%" style="stop-color:#F59E3F"/>
+    </linearGradient>
+  </defs>
+  <!-- Chain links representing supply chain -->
+  <!-- Link 1 -->
+  <rect x="10" y="42" width="28" height="16" rx="8" fill="none" stroke="#3A3A3C" stroke-width="2.5" opacity="0.6"/>
+  <!-- Link 2 -->
+  <rect x="30" y="42" width="28" height="16" rx="8" fill="none" stroke="url(#og)" stroke-width="2.5"/>
+  <!-- Link 3 -->
+  <rect x="50" y="42" width="28" height="16" rx="8" fill="none" stroke="#3A3A3C" stroke-width="2.5" opacity="0.6"/>
+  <!-- Link 4 -->
+  <rect x="70" y="42" width="28" height="16" rx="8" fill="none" stroke="url(#og)" stroke-width="2.5"/>
+  <!-- Delivery arrow -->
+  <path d="M24 72 L96 72" stroke="#E8731A" stroke-width="2" opacity="0.4"/>
+  <path d="M88 66 L98 72 L88 78" fill="#E8731A" opacity="0.4"/>
+  <!-- Package boxes -->
+  <rect x="20" y="82" width="14" height="14" rx="2" fill="url(#og)" opacity="0.2"/>
+  <rect x="53" y="82" width="14" height="14" rx="2" fill="url(#og)" opacity="0.35"/>
+  <rect x="86" y="82" width="14" height="14" rx="2" fill="url(#og)" opacity="0.5"/>
+  <!-- Top label line -->
+  <line x1="24" y1="30" x2="96" y2="30" stroke="#3A3A3C" stroke-width="1" opacity="0.2" stroke-dasharray="3,3"/>
+</svg>

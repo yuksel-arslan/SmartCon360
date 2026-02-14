@@ -1,16 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useUIStore } from '@/stores/uiStore';
 import { DEMO_PROJECTS } from '@/lib/mockData';
+import { NAV_GROUPS, MODULE_REGISTRY, BRAND } from '@/lib/modules';
 import {
-  LayoutDashboard, GitBranch, Grid3x3, AlertTriangle,
-  ClipboardCheck, Users, FileText, Bot, Settings, PanelLeftClose,
-  Plus, ChevronDown, Play,
+  Settings, PanelLeftClose, Plus, ChevronDown,
   Building2, Hospital, Building, Landmark, Factory, Construction, FolderKanban,
-  ShieldCheck, HardHat, DollarSign, Truck, Radar, Scale,
-  Camera, MessageSquare, UserCheck, Leaf, Activity,
 } from 'lucide-react';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
@@ -24,73 +22,6 @@ const PROJECT_ICONS: Record<string, LucideIcon> = {
   infrastructure: Construction,
 };
 
-interface NavGroup {
-  label: string;
-  items: NavItem[];
-}
-
-interface NavItem {
-  href: string;
-  icon: LucideIcon;
-  label: string;
-}
-
-const navGroups: NavGroup[] = [
-  {
-    label: 'Planning',
-    items: [
-      { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-      { href: '/flowline', icon: GitBranch, label: 'Flowline' },
-      { href: '/takt-editor', icon: Grid3x3, label: 'Takt Editor' },
-      { href: '/constraints', icon: AlertTriangle, label: 'Constraints' },
-      { href: '/lps', icon: ClipboardCheck, label: 'Last Planner' },
-    ],
-  },
-  {
-    label: 'Quality & Safety',
-    items: [
-      { href: '/quality', icon: ShieldCheck, label: 'QualityGate' },
-      { href: '/safety', icon: HardHat, label: 'SafeZone' },
-      { href: '/vision', icon: Camera, label: 'VisionAI' },
-    ],
-  },
-  {
-    label: 'Cost & Resources',
-    items: [
-      { href: '/cost', icon: DollarSign, label: 'CostPilot' },
-      { href: '/resources', icon: Users, label: 'CrewFlow' },
-    ],
-  },
-  {
-    label: 'Supply & Risk',
-    items: [
-      { href: '/supply', icon: Truck, label: 'SupplyChain' },
-      { href: '/risk', icon: Radar, label: 'RiskRadar' },
-      { href: '/claims', icon: Scale, label: 'ClaimShield' },
-    ],
-  },
-  {
-    label: 'Communication',
-    items: [
-      { href: '/communication', icon: MessageSquare, label: 'CommHub' },
-      { href: '/stakeholders', icon: UserCheck, label: 'StakeHub' },
-    ],
-  },
-  {
-    label: 'Sustainability',
-    items: [
-      { href: '/sustainability', icon: Leaf, label: 'GreenSite' },
-    ],
-  },
-  {
-    label: 'AI & Analytics',
-    items: [
-      { href: '/ai', icon: Bot, label: 'AI Concierge' },
-      { href: '/reports', icon: FileText, label: 'Reports' },
-      { href: '/simulation', icon: Play, label: 'Simulation' },
-    ],
-  },
-];
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -124,23 +55,17 @@ export default function Sidebar() {
         }}
       >
         {sidebarCollapsed ? (
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[14px]"
-            style={{ background: 'var(--color-accent)', color: '#fff' }}
-          >
-            S
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+            <Image src={BRAND.logo} alt={BRAND.name} width={32} height={32} priority />
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[14px]"
-              style={{ background: 'var(--color-accent)', color: '#fff' }}
-            >
-              S
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+              <Image src={BRAND.logo} alt={BRAND.name} width={32} height={32} priority />
             </div>
             <div>
               <div className="text-[13px] font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>
-                SmartCon360
+                {BRAND.name}
               </div>
               <div className="text-[9px] font-medium tracking-wider uppercase" style={{ color: 'var(--color-text-muted)' }}>
                 Construction Platform
@@ -251,12 +176,12 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Navigation */}
+      {/* Navigation — driven by NAV_GROUPS + MODULE_REGISTRY */}
       <nav className="flex-1 overflow-y-auto px-3 py-1 flex flex-col gap-0.5 min-h-0">
-        {navGroups.map((group) => {
+        {NAV_GROUPS.map((group) => {
           const isGroupCollapsed = collapsedGroups[group.label];
           return (
-            <div key={group.label} className="mb-1">
+            <div key={group.id} className="mb-1">
               {/* Group label */}
               {!sidebarCollapsed && (
                 <button
@@ -280,14 +205,16 @@ export default function Sidebar() {
                 </button>
               )}
 
-              {/* Group items */}
-              {(!isGroupCollapsed || sidebarCollapsed) && group.items.map((item) => {
-                const isActive = pathname === item.href;
+              {/* Group items — resolved from MODULE_REGISTRY */}
+              {(!isGroupCollapsed || sidebarCollapsed) && group.modules.map((moduleId) => {
+                const mod = MODULE_REGISTRY[moduleId];
+                if (!mod) return null;
+                const isActive = pathname === mod.href;
                 return (
                   <Link
-                    key={item.href}
-                    href={item.href}
-                    title={sidebarCollapsed ? item.label : undefined}
+                    key={mod.id}
+                    href={mod.href}
+                    title={sidebarCollapsed ? mod.label : undefined}
                     className="flex items-center gap-3 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all duration-150"
                     style={{
                       justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
@@ -307,8 +234,8 @@ export default function Sidebar() {
                       }
                     }}
                   >
-                    <item.icon size={16} strokeWidth={isActive ? 2 : 1.5} />
-                    {!sidebarCollapsed && item.label}
+                    <mod.icon size={16} strokeWidth={isActive ? 2 : 1.5} />
+                    {!sidebarCollapsed && mod.label}
                   </Link>
                 );
               })}

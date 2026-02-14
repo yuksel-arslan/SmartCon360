@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="og" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8731A"/>
+      <stop offset="100%" style="stop-color:#F59E3F"/>
+    </linearGradient>
+  </defs>
+  <!-- Shield shape -->
+  <path d="M60 12 L100 30 L100 62 Q100 90 60 108 Q20 90 20 62 L20 30 Z" fill="none" stroke="url(#og)" stroke-width="3" opacity="0.3"/>
+  <path d="M60 22 L90 36 L90 60 Q90 82 60 96 Q30 82 30 60 L30 36 Z" fill="url(#og)" opacity="0.12"/>
+  <!-- Checkmark -->
+  <path d="M44 60 L54 72 L78 46" fill="none" stroke="#E8731A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Quality dots -->
+  <circle cx="38" cy="30" r="3" fill="#3A3A3C" opacity="0.4"/>
+  <circle cx="82" cy="30" r="3" fill="#3A3A3C" opacity="0.4"/>
+</svg>

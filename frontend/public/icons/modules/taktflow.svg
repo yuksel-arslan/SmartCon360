@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="og" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#E8731A"/>
+      <stop offset="100%" style="stop-color:#F59E3F"/>
+    </linearGradient>
+  </defs>
+  <!-- Takt train staircase -->
+  <rect x="14" y="16" width="24" height="14" rx="3" fill="#3A3A3C"/>
+  <rect x="42" y="16" width="24" height="14" rx="3" fill="#3A3A3C" opacity="0.4"/>
+  <rect x="14" y="35" width="24" height="14" rx="3" fill="url(#og)" opacity="0.3"/>
+  <rect x="42" y="35" width="24" height="14" rx="3" fill="url(#og)"/>
+  <rect x="70" y="35" width="24" height="14" rx="3" fill="url(#og)" opacity="0.4"/>
+  <rect x="42" y="54" width="24" height="14" rx="3" fill="#3A3A3C" opacity="0.3"/>
+  <rect x="70" y="54" width="24" height="14" rx="3" fill="#3A3A3C"/>
+  <rect x="98" y="54" width="24" height="14" rx="3" fill="#3A3A3C" opacity="0.4"/>
+  <rect x="42" y="73" width="24" height="14" rx="3" fill="url(#og)" opacity="0.15"/>
+  <rect x="70" y="73" width="24" height="14" rx="3" fill="url(#og)" opacity="0.3"/>
+  <rect x="98" y="73" width="24" height="14" rx="3" fill="url(#og)"/>
+  <rect x="70" y="92" width="24" height="14" rx="3" fill="#3A3A3C" opacity="0.3"/>
+  <rect x="98" y="92" width="24" height="14" rx="3" fill="#3A3A3C"/>
+  <!-- Flow line -->
+  <line x1="26" y1="12" x2="110" y2="110" stroke="#E8731A" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.5"/>
+</svg>
