@@ -15,7 +15,7 @@ const t: Record<Lang, Record<string, string>> = {
     heroTagline2: 'NextGen Construction Management',
     heroTagline3: '— Zero Compromise.',
     heroDesc:
-      'SmartCon360 brings scheduling, cost control, quality, safety, procurement, risk, claims, communication, stakeholder management, and ESG together in one AI-powered platform. 13 specialized modules cover all 10 PMBOK knowledge areas plus OHS and environmental management, delivering end-to-end project visibility with a 3-layer intelligence architecture.',
+      'SmartCon360 brings scheduling, cost control, quality, safety, procurement, risk, claims, communication, stakeholder management, and ESG together in one AI-powered platform. Built on Lean Construction principles — LBMS, Takt Time, and Last Planner System — 13 specialized modules cover all 10 PMBOK knowledge areas plus OHS and environmental management with a 3-layer intelligence architecture.',
     stat1Value: '13',
     stat1Label: 'Integrated Modules',
     stat2Value: '10+2',
@@ -51,7 +51,7 @@ const t: Record<Lang, Record<string, string>> = {
     heroTagline2: 'Yeni Nesil İnşaat Yönetimi',
     heroTagline3: '— Sıfır Taviz.',
     heroDesc:
-      'SmartCon360; planlama, maliyet kontrolu, kalite, guvenlik, tedarik, risk, talep, iletisim, paydas yonetimi ve ESG\'yi tek bir YZ destekli platformda birlestirir. 13 uzman modul, tum 10 PMBOK bilgi alanini, ISG ve cevre yonetimini kapsayarak 3 katmanli zeka mimarisiyle uctan uca proje gorunurlugu saglar.',
+      'SmartCon360; planlama, maliyet kontrolu, kalite, guvenlik, tedarik, risk, talep, iletisim, paydas yonetimi ve ESG\'yi tek bir YZ destekli platformda birlestirir. Yalin Insaat prensipleri — LBMS, Takt Zamani ve Son Planlayici Sistemi — uzerine insa edilen 13 uzman modul, tum 10 PMBOK bilgi alanini, ISG ve cevre yonetimini 3 katmanli zeka mimarisiyle kapsar.',
     stat1Value: '13',
     stat1Label: 'Entegre Modul',
     stat2Value: '10+2',
@@ -134,32 +134,31 @@ declare global {
 export default function LoginPage() {
   const router = useRouter();
   const { token, initialize, setAuth } = useAuthStore();
-  const [lang, setLang] = useState<Lang>('en');
+  const [lang, setLang] = useState<Lang>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('lang');
+      if (saved === 'en' || saved === 'tr') return saved;
+    }
+    return 'en';
+  });
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ email: '', password: '', firstName: '', lastName: '' });
-  const [isDark, setIsDark] = useState(true);
-
-  // Load saved language + theme preference
-  useEffect(() => {
-    const saved = localStorage.getItem('lang') as Lang | null;
-    if (saved && (saved === 'en' || saved === 'tr')) setLang(saved);
-
-    // Detect theme from saved preference or system
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-      setIsDark(false);
-      document.documentElement.classList.add('light');
-    } else if (savedTheme === 'dark') {
-      setIsDark(true);
-      document.documentElement.classList.remove('light');
-    } else {
-      const systemLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-      setIsDark(!systemLight);
-      document.documentElement.classList.toggle('light', systemLight);
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('theme');
+      if (saved === 'light') return false;
+      if (saved === 'dark') return true;
+      return !window.matchMedia('(prefers-color-scheme: light)').matches;
     }
+    return true;
+  });
+
+  // Sync theme class on mount
+  useEffect(() => {
+    document.documentElement.classList.toggle('light', !isDark);
   }, []);
 
   const toggleTheme = () => {
