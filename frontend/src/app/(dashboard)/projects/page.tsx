@@ -33,7 +33,7 @@ const PROJECT_TYPE_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
-  planning: { bg: 'rgba(139,92,246,0.12)', color: 'var(--color-purple)', label: 'Planning' },
+  planning: { bg: 'rgba(245,158,11,0.12)', color: 'var(--color-warning)', label: 'Setup Required' },
   active: { bg: 'rgba(16,185,129,0.12)', color: 'var(--color-success)', label: 'Active' },
   on_hold: { bg: 'rgba(245,158,11,0.12)', color: 'var(--color-warning)', label: 'On Hold' },
   completed: { bg: 'rgba(107,114,128,0.12)', color: 'var(--color-text-muted)', label: 'Completed' },
@@ -60,7 +60,15 @@ export default function ProjectsPage() {
   }, [token, initialized, fetchProjects]);
 
   const handleOpenProject = (projectId: string) => {
+    const project = projects.find((p) => p.id === projectId);
     setActiveProject(projectId);
+
+    // If setup not finalized, redirect to setup page instead of dashboard
+    if (project && project.status !== 'active') {
+      router.push(`/projects/${projectId}/setup`);
+      return;
+    }
+
     router.push('/dashboard');
   };
 
