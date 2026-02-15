@@ -201,6 +201,7 @@ export default function LoginPage() {
     const client = getGoogleOAuth2()!.initCodeClient({
       client_id: clientId,
       scope: 'openid email profile https://www.googleapis.com/auth/drive.file',
+      access_type: 'offline',
       ux_mode: 'popup',
       callback: async (response: { code?: string; error?: string }) => {
         if (response.error || !response.code) {

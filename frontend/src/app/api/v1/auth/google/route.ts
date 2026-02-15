@@ -34,25 +34,48 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, 'postmessage');
+      // Debug: log credential info (safe — only lengths and prefixes)
+      console.log('[Google OAuth] Config check:', {
+        clientIdLength: CLIENT_ID.length,
+        clientIdPrefix: CLIENT_ID.substring(0, 20) + '...',
+        clientSecretLength: CLIENT_SECRET.length,
+        clientSecretPrefix: CLIENT_SECRET.substring(0, 8) + '...',
+        codeLength: code.length,
+      });
 
+      // Use direct HTTP request to Google token endpoint for better error visibility
       let tokens: { id_token?: string | null; refresh_token?: string | null; access_token?: string | null };
       try {
-        const result = await oauth2Client.getToken(code);
-        tokens = result.tokens;
-      } catch (tokenErr: unknown) {
-        const msg = tokenErr instanceof Error ? tokenErr.message : 'Token exchange failed';
-        console.error('[Google OAuth] Token exchange error:', msg);
-        // Specific guidance for common errors
-        if (msg.includes('invalid_client')) {
+        const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            code,
+            client_id: CLIENT_ID,
+            client_secret: CLIENT_SECRET,
+            redirect_uri: 'postmessage',
+            grant_type: 'authorization_code',
+          }),
+        });
+
+        const tokenData = await tokenRes.json();
+
+        if (!tokenRes.ok) {
+          console.error('[Google OAuth] Token exchange failed:', JSON.stringify(tokenData));
+          const errDesc = tokenData.error_description || tokenData.error || 'Token exchange failed';
           return NextResponse.json(
-            { data: null, error: { code: 'INVALID_CLIENT', message: 'Google OAuth client configuration error. Check GOOGLE_CLIENT_SECRET in environment variables.' } },
-            { status: 500 },
+            { data: null, error: { code: tokenData.error || 'TOKEN_EXCHANGE_FAILED', message: errDesc } },
+            { status: tokenRes.status >= 500 ? 500 : 400 },
           );
         }
+
+        tokens = tokenData;
+      } catch (tokenErr: unknown) {
+        const msg = tokenErr instanceof Error ? tokenErr.message : 'Token exchange network error';
+        console.error('[Google OAuth] Token exchange exception:', msg);
         return NextResponse.json(
           { data: null, error: { code: 'TOKEN_EXCHANGE_FAILED', message: msg } },
-          { status: 400 },
+          { status: 500 },
         );
       }
 
