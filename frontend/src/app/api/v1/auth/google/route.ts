@@ -1,37 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { google } from 'googleapis';
 import { prisma } from '@/lib/prisma';
 import { signAccessToken } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
 
-// POST /api/v1/auth/google — Authenticate with Google OAuth token
+const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+
+// POST /api/v1/auth/google — Authenticate with Google OAuth2 authorization code
+// The code flow gives us: id_token (user info) + refresh_token (Drive access)
 export async function POST(request: NextRequest) {
   try {
-    const { credential } = await request.json();
+    const body = await request.json();
 
-    if (!credential) {
+    // Support both new code flow and legacy credential (ID token) flow
+    const { code, credential } = body;
+
+    let email: string;
+    let googleId: string;
+    let firstName: string;
+    let lastName: string;
+    let avatarUrl: string | undefined;
+    let googleRefreshToken: string | null = null;
+
+    if (code) {
+      // ── New OAuth2 Authorization Code flow ──
+      // Exchanges code for access_token + refresh_token + id_token
+      if (!CLIENT_ID || !CLIENT_SECRET) {
+        return NextResponse.json(
+          { data: null, error: { code: 'NOT_CONFIGURED', message: 'Google OAuth is not configured on the server (missing GOOGLE_CLIENT_SECRET)' } },
+          { status: 500 },
+        );
+      }
+
+      const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, 'postmessage');
+      const { tokens } = await oauth2Client.getToken(code);
+
+      // Extract user info from id_token
+      if (!tokens.id_token) {
+        return NextResponse.json(
+          { data: null, error: { code: 'NO_ID_TOKEN', message: 'Could not obtain identity from Google' } },
+          { status: 400 },
+        );
+      }
+
+      const idPayload = JSON.parse(
+        Buffer.from(tokens.id_token.split('.')[1], 'base64url').toString('utf-8'),
+      );
+
+      email = idPayload.email;
+      googleId = idPayload.sub;
+      firstName = idPayload.given_name || '';
+      lastName = idPayload.family_name || '';
+      avatarUrl = idPayload.picture;
+      googleRefreshToken = tokens.refresh_token || null;
+
+    } else if (credential) {
+      // ── Legacy ID token flow (backwards compatibility) ──
+      const parts = credential.split('.');
+      if (parts.length !== 3) {
+        return NextResponse.json(
+          { data: null, error: { code: 'INVALID_TOKEN', message: 'Invalid Google token format' } },
+          { status: 400 },
+        );
+      }
+
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf-8'));
+      email = payload.email;
+      googleId = payload.sub;
+      firstName = payload.given_name || '';
+      lastName = payload.family_name || '';
+      avatarUrl = payload.picture;
+
+    } else {
       return NextResponse.json(
-        { data: null, error: { code: 'MISSING_CREDENTIAL', message: 'Google credential is required' } },
-        { status: 400 }
+        { data: null, error: { code: 'MISSING_CREDENTIAL', message: 'Google authorization code or credential is required' } },
+        { status: 400 },
       );
     }
-
-    // Decode Google JWT (ID token) — extract user info from payload
-    const parts = credential.split('.');
-    if (parts.length !== 3) {
-      return NextResponse.json(
-        { data: null, error: { code: 'INVALID_TOKEN', message: 'Invalid Google token format' } },
-        { status: 400 }
-      );
-    }
-
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf-8'));
-    const { sub: googleId, email, given_name: firstName, family_name: lastName, picture: avatarUrl } = payload;
 
     if (!email) {
       return NextResponse.json(
         { data: null, error: { code: 'NO_EMAIL', message: 'Google account must have an email' } },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -39,35 +91,39 @@ export async function POST(request: NextRequest) {
     let user = await prisma.user.findUnique({ where: { email } });
 
     if (user) {
-      // Update Google provider info if not already set
+      // Update Google provider info + refresh token
+      const updateData: Record<string, unknown> = {
+        lastLoginAt: new Date(),
+        avatarUrl: avatarUrl || user.avatarUrl,
+      };
+
       if (user.authProvider !== 'google') {
-        user = await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            authProvider: 'google',
-            authProviderId: googleId,
-            avatarUrl: avatarUrl || user.avatarUrl,
-            emailVerified: true,
-            lastLoginAt: new Date(),
-          },
-        });
-      } else {
-        user = await prisma.user.update({
-          where: { id: user.id },
-          data: { lastLoginAt: new Date(), avatarUrl: avatarUrl || user.avatarUrl },
-        });
+        updateData.authProvider = 'google';
+        updateData.authProviderId = googleId;
+        updateData.emailVerified = true;
       }
+
+      // Always update refresh token if we got a new one
+      if (googleRefreshToken) {
+        updateData.googleRefreshToken = googleRefreshToken;
+      }
+
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: updateData,
+      });
     } else {
       // Create new user from Google
       user = await prisma.user.create({
         data: {
           email,
-          firstName: firstName || '',
-          lastName: lastName || '',
+          firstName,
+          lastName,
           avatarUrl,
           authProvider: 'google',
           authProviderId: googleId,
           emailVerified: true,
+          ...(googleRefreshToken && { googleRefreshToken }),
         },
       });
 
@@ -90,7 +146,7 @@ export async function POST(request: NextRequest) {
 
     const accessToken = signAccessToken(user.id, user.email);
 
-    // Create refresh token + session (same as login)
+    // Create refresh token + session
     const refreshToken = uuidv4();
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
@@ -111,6 +167,7 @@ export async function POST(request: NextRequest) {
         },
         accessToken,
         refreshToken,
+        driveConnected: !!user.googleRefreshToken,
       },
       error: null,
     });
