@@ -8,6 +8,7 @@ import { catalogService } from '../services/catalog.service';
 import { prisma } from '../utils/prisma';
 import type { CatalogItemInput } from '../services/catalog.service';
 import { autoDetectAndParse } from '../utils/international-parsers';
+import { uniclassApiService } from '../services/uniclass-api.service';
 
 const router = Router();
 
@@ -260,6 +261,86 @@ router.get('/:id/divisions', async (req, res, next) => {
       .map(d => ({ code: d.divisionCode, name: d.divisionName || '' }));
 
     res.json({ data: filtered });
+  } catch (e) { next(e); }
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// UNICLASS API INTEGRATION (Live UK Construction Classification)
+// ──────────────────────────────────────────────────────────────────────────────
+
+// ── Check Uniclass API health ──
+router.get('/uniclass/health', async (req, res, next) => {
+  try {
+    const health = await uniclassApiService.healthCheck();
+    res.json({ data: health });
+  } catch (e) { next(e); }
+});
+
+// ── Search Uniclass classifications ──
+router.get('/uniclass/search', async (req, res, next) => {
+  try {
+    const { q, table } = req.query;
+    if (!q || typeof q !== 'string') {
+      return res.status(400).json({ error: 'Query parameter "q" is required' });
+    }
+
+    const results = await uniclassApiService.search(q, table as string);
+    res.json({ data: results });
+  } catch (e) { next(e); }
+});
+
+// ── Get Uniclass table ──
+router.get('/uniclass/tables/:table', async (req, res, next) => {
+  try {
+    const { table } = req.params;
+    const validTables = ['Ac', 'Co', 'En', 'Pr', 'SL', 'EF', 'Ss', 'FI', 'Zz'];
+
+    if (!validTables.includes(table)) {
+      return res.status(400).json({
+        error: `Invalid table code. Valid codes: ${validTables.join(', ')}`,
+        tables: {
+          Ac: 'Activities',
+          Co: 'Complexes',
+          En: 'Entities',
+          Pr: 'Products',
+          SL: 'Spaces/Locations',
+          EF: 'Elements/Functions',
+          Ss: 'Systems',
+          FI: 'Form of Information',
+          Zz: 'CAD'
+        }
+      });
+    }
+
+    const data = await uniclassApiService.getTable(table as any);
+    res.json({ data });
+  } catch (e) { next(e); }
+});
+
+// ── Get Uniclass classification by code ──
+router.get('/uniclass/:code', async (req, res, next) => {
+  try {
+    const { code } = req.params;
+    const data = await uniclassApiService.getClassification(code);
+    res.json({ data });
+  } catch (e) { next(e); }
+});
+
+// ── Get children of Uniclass classification ──
+router.get('/uniclass/:code/children', async (req, res, next) => {
+  try {
+    const { code } = req.params;
+    const data = await uniclassApiService.getChildren(code);
+    res.json({ data });
+  } catch (e) { next(e); }
+});
+
+// ── Get ancestors (breadcrumb) of Uniclass classification ──
+router.get('/uniclass/:code/ancestors', async (req, res, next) => {
+  try {
+    const { code } = req.params;
+    const data = await uniclassApiService.getAncestors(code);
+    res.json({ data });
   } catch (e) { next(e); }
 });
 

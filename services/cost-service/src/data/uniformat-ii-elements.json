@@ -1,0 +1,239 @@
+{
+  "version": "UNIFORMAT II (ASTM E1557)",
+  "standard": "UNIFORMAT II",
+  "description": "Elemental Classification for Building Specifications, Cost Estimating, and Cost Analysis",
+  "level1_elements": [
+    {
+      "code": "A",
+      "title": "Substructure",
+      "description": "All work below the first floor construction or below grade, whichever is higher",
+      "level2": [
+        {"code": "A10", "title": "Foundations", "description": "Standard spread footings, pile caps, and grade beams"},
+        {"code": "A20", "title": "Basement Construction", "description": "Basement excavation, basement walls, and basement floors"}
+      ]
+    },
+    {
+      "code": "B",
+      "title": "Shell",
+      "description": "Superstructure, exterior closure, and roofing",
+      "level2": [
+        {"code": "B10", "title": "Superstructure", "description": "Floor and roof construction above the first floor"},
+        {"code": "B20", "title": "Exterior Enclosure", "description": "Exterior walls, exterior windows, and exterior doors"},
+        {"code": "B30", "title": "Roofing", "description": "Roof coverings and openings"}
+      ]
+    },
+    {
+      "code": "C",
+      "title": "Interiors",
+      "description": "Interior construction, interior finishes, and stair construction",
+      "level2": [
+        {"code": "C10", "title": "Interior Construction", "description": "Partitions and interior doors"},
+        {"code": "C20", "title": "Stairs", "description": "Stair construction"},
+        {"code": "C30", "title": "Interior Finishes", "description": "Wall finishes, floor finishes, and ceiling finishes"}
+      ]
+    },
+    {
+      "code": "D",
+      "title": "Services",
+      "description": "Conveying systems, plumbing, HVAC, fire protection, and electrical systems",
+      "level2": [
+        {"code": "D10", "title": "Conveying", "description": "Elevators, escalators, moving walks, lifts, material handling systems"},
+        {"code": "D20", "title": "Plumbing", "description": "Plumbing fixtures, domestic water distribution, sanitary waste, and rain water drainage"},
+        {"code": "D30", "title": "HVAC", "description": "Energy supply, heat generating systems, cooling systems, distribution systems, terminal and package units, controls and instrumentation"},
+        {"code": "D40", "title": "Fire Protection", "description": "Sprinklers, standpipes, fire protection specialties"},
+        {"code": "D50", "title": "Electrical", "description": "Electrical service and distribution, lighting and branch wiring, communications and security, other electrical systems"}
+      ]
+    },
+    {
+      "code": "E",
+      "title": "Equipment and Furnishings",
+      "description": "Equipment and furnishings unique to building types",
+      "level2": [
+        {"code": "E10", "title": "Equipment", "description": "Commercial equipment, institutional equipment, vehicular equipment, other equipment"},
+        {"code": "E20", "title": "Furnishings", "description": "Fixed furnishings, movable furnishings"}
+      ]
+    },
+    {
+      "code": "F",
+      "title": "Special Construction and Demolition",
+      "description": "Special construction systems and building demolition",
+      "level2": [
+        {"code": "F10", "title": "Special Construction", "description": "Special structures, integrated construction, special facilities, special controls and instrumentation"},
+        {"code": "F20", "title": "Selective Building Demolition", "description": "Building elements demolition, hazardous components abatement"}
+      ]
+    },
+    {
+      "code": "G",
+      "title": "Building Sitework",
+      "description": "Site preparation, improvement, mechanical utilities, and electrical utilities",
+      "level2": [
+        {"code": "G10", "title": "Site Preparation", "description": "Site clearing, earthwork, site dewatering, shoring and underpinning"},
+        {"code": "G20", "title": "Site Improvements", "description": "Roadways, parking lots, pedestrian paving, site development, landscaping"},
+        {"code": "G30", "title": "Site Mechanical Utilities", "description": "Water supply, sanitary sewer, storm sewer, heating distribution systems, cooling distribution systems, fuel distribution systems"},
+        {"code": "G40", "title": "Site Electrical Utilities", "description": "Electrical distribution, site lighting, site communications and security"},
+        {"code": "G90", "title": "Other Site Construction", "description": "Other site systems and equipment"}
+      ]
+    },
+    {
+      "code": "Z",
+      "title": "General",
+      "description": "General conditions, overhead, and markup",
+      "level2": [
+        {"code": "Z10", "title": "General Requirements", "description": "Project management, field engineering, temporary facilities"},
+        {"code": "Z20", "title": "Bidding Requirements", "description": "Procurement, bidding procedures, contracting requirements"}
+      ]
+    }
+  ],
+  "common_level3_examples": [
+    {
+      "code": "A1010",
+      "title": "Standard Foundations",
+      "parent": "A10",
+      "description": "Spread footings, column pads, continuous footings"
+    },
+    {
+      "code": "A1020",
+      "title": "Special Foundations",
+      "parent": "A10",
+      "description": "Piles, caissons, mat foundations"
+    },
+    {
+      "code": "A1030",
+      "title": "Slab on Grade",
+      "parent": "A10",
+      "description": "Concrete slabs on grade"
+    },
+    {
+      "code": "B1010",
+      "title": "Floor Construction",
+      "parent": "B10",
+      "description": "Floor structural systems including joists, beams, and slabs"
+    },
+    {
+      "code": "B1020",
+      "title": "Roof Construction",
+      "parent": "B10",
+      "description": "Roof structural systems including joists, beams, and decks"
+    },
+    {
+      "code": "B2010",
+      "title": "Exterior Walls",
+      "parent": "B20",
+      "description": "Curtain walls, load-bearing walls, non-load-bearing walls"
+    },
+    {
+      "code": "B2020",
+      "title": "Exterior Windows",
+      "parent": "B20",
+      "description": "Fixed windows, operable windows, storefronts"
+    },
+    {
+      "code": "B2030",
+      "title": "Exterior Doors",
+      "parent": "B20",
+      "description": "Personnel doors, vehicular doors, revolving doors"
+    },
+    {
+      "code": "B3010",
+      "title": "Roof Coverings",
+      "parent": "B30",
+      "description": "Membrane roofing, shingles, roof tiles"
+    },
+    {
+      "code": "C1010",
+      "title": "Partitions",
+      "parent": "C10",
+      "description": "Fixed partitions, demountable partitions"
+    },
+    {
+      "code": "C1020",
+      "title": "Interior Doors",
+      "parent": "C10",
+      "description": "Standard doors, special doors, door hardware"
+    },
+    {
+      "code": "C3010",
+      "title": "Wall Finishes",
+      "parent": "C30",
+      "description": "Paint, wall coverings, tile, paneling"
+    },
+    {
+      "code": "C3020",
+      "title": "Floor Finishes",
+      "parent": "C30",
+      "description": "Carpet, resilient flooring, stone flooring, special flooring"
+    },
+    {
+      "code": "C3030",
+      "title": "Ceiling Finishes",
+      "parent": "C30",
+      "description": "Acoustical ceilings, gypsum board ceilings, special ceilings"
+    },
+    {
+      "code": "D2010",
+      "title": "Plumbing Fixtures",
+      "parent": "D20",
+      "description": "Water closets, urinals, lavatories, sinks, showers"
+    },
+    {
+      "code": "D2020",
+      "title": "Domestic Water Distribution",
+      "parent": "D20",
+      "description": "Domestic water supply piping and equipment"
+    },
+    {
+      "code": "D3010",
+      "title": "Energy Supply",
+      "parent": "D30",
+      "description": "Oil supply, gas supply, steam supply"
+    },
+    {
+      "code": "D3020",
+      "title": "Heat Generating Systems",
+      "parent": "D30",
+      "description": "Boilers, furnaces, fuel-fired heaters"
+    },
+    {
+      "code": "D3030",
+      "title": "Cooling Generating Systems",
+      "parent": "D30",
+      "description": "Chillers, cooling towers, direct expansion systems"
+    },
+    {
+      "code": "D3040",
+      "title": "Distribution Systems",
+      "parent": "D30",
+      "description": "Ducts, piping, pumps, fans"
+    },
+    {
+      "code": "D3050",
+      "title": "Terminal and Package Units",
+      "parent": "D30",
+      "description": "Air handling units, fan coil units, package units"
+    },
+    {
+      "code": "D4010",
+      "title": "Sprinklers",
+      "parent": "D40",
+      "description": "Wet pipe, dry pipe, pre-action, deluge systems"
+    },
+    {
+      "code": "D5010",
+      "title": "Electrical Service/Distribution",
+      "parent": "D50",
+      "description": "Service entrance, switchgear, transformers, panelboards"
+    },
+    {
+      "code": "D5020",
+      "title": "Lighting and Branch Wiring",
+      "parent": "D50",
+      "description": "Fixtures, lamps, branch wiring, lighting controls"
+    },
+    {
+      "code": "D5030",
+      "title": "Communications and Security",
+      "parent": "D50",
+      "description": "Telecommunications, data systems, fire alarm, security systems"
+    }
+  ]
+}

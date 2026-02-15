@@ -1,0 +1,181 @@
+{
+  "version": "MasterFormat 2020",
+  "standard": "CSI MasterFormat",
+  "divisions": [
+    {
+      "code": "00",
+      "title": "Procurement and Contracting Requirements",
+      "description": "Introductory Information, Bidding Requirements, Contracting Requirements"
+    },
+    {
+      "code": "01",
+      "title": "General Requirements",
+      "description": "Summary, Price and Payment Procedures, Administrative Requirements, Quality Requirements, Temporary Facilities and Controls, Product Requirements, Execution and Closeout Requirements"
+    },
+    {
+      "code": "02",
+      "title": "Existing Conditions",
+      "description": "Existing Conditions Assessment, Demolition and Structure Moving, Site Remediation"
+    },
+    {
+      "code": "03",
+      "title": "Concrete",
+      "description": "Concrete Forming and Accessories, Concrete Reinforcing, Cast-in-Place Concrete, Precast Concrete, Cementitious Decks and Toppings, Grouts, Mass Concrete"
+    },
+    {
+      "code": "04",
+      "title": "Masonry",
+      "description": "Mortar and Masonry Grout, Unit Masonry, Stone Assemblies, Masonry Restoration and Cleaning, Refractories"
+    },
+    {
+      "code": "05",
+      "title": "Metals",
+      "description": "Structural Metal Framing, Metal Joists, Metal Decking, Cold-Formed Metal Framing, Metal Fabrications, Decorative Metal, Expansion Control"
+    },
+    {
+      "code": "06",
+      "title": "Wood, Plastics, and Composites",
+      "description": "Rough Carpentry, Finish Carpentry, Architectural Woodwork, Structural Plastics, Plastic Fabrications, Composite Fabrications"
+    },
+    {
+      "code": "07",
+      "title": "Thermal and Moisture Protection",
+      "description": "Dampproofing and Waterproofing, Thermal Protection, Weather Barriers, Roofing, Sheet Metal Flashing and Trim, Wall Panels, Siding, Joint Protection, Fire and Smoke Protection"
+    },
+    {
+      "code": "08",
+      "title": "Openings",
+      "description": "Doors and Frames, Entrances and Storefronts, Windows, Skylights, Hardware, Glazing, Louvers and Vents, Gates, Access Panels"
+    },
+    {
+      "code": "09",
+      "title": "Finishes",
+      "description": "Plaster and Gypsum Board, Tiling, Ceilings, Flooring, Wall Finishes, Exterior Finishes, Painting and Coating, Acoustic Treatment"
+    },
+    {
+      "code": "10",
+      "title": "Specialties",
+      "description": "Visual Display Units, Compartments and Cubicles, Louvers and Vents, Grilles and Screens, Service Walls, Wall and Corner Guards, Access Flooring, Specialty Modules, Pest Control, Fireplaces and Stoves, Flagpoles, Identifying Devices, Pedestrian Control Devices, Lockers, Fire Protection Specialties, Manufactured Exterior Specialties"
+    },
+    {
+      "code": "11",
+      "title": "Equipment",
+      "description": "Maintenance Equipment, Security and Vault Equipment, Teller and Service Equipment, Ecclesiastical Equipment, Library Equipment, Theater and Stage Equipment, Instrumental Equipment, Mercantile Equipment, Detention Equipment, Residential Equipment, Fluid Waste Treatment and Disposal Equipment, Water Supply and Treatment Equipment, Audiovisual Equipment, Vehicular Equipment, Parking Control Equipment, Loading Dock Equipment, Solid Waste Handling Equipment, Facility Maintenance and Operation Equipment"
+    },
+    {
+      "code": "12",
+      "title": "Furnishings",
+      "description": "Art, Manufactured Casework, Window Treatment, Fabrics, Furniture, Rugs and Mats, Multiple Seating, Interior Plants and Planters"
+    },
+    {
+      "code": "13",
+      "title": "Special Construction",
+      "description": "Special Facility Components, Integrated Construction, Special Purpose Rooms, Special Structures, Integrated Assemblies, Measurement and Control Instrumentation, Building Automation and Control"
+    },
+    {
+      "code": "14",
+      "title": "Conveying Equipment",
+      "description": "Dumbwaiters, Elevators, Escalators and Moving Walks, Lifts, Material Handling, Hoists and Cranes, Turntables, Scaffolding, Transportation"
+    },
+    {
+      "code": "21",
+      "title": "Fire Suppression",
+      "description": "Fire Suppression Systems, Fire Suppression Wells, Fire-Suppression Water Storage, Vehicle Fire Suppression"
+    },
+    {
+      "code": "22",
+      "title": "Plumbing",
+      "description": "Plumbing Piping, Plumbing Equipment, Plumbing Fixtures, Plumbing Specialties, Water Piping Systems, Sanitary Waste and Vent Systems, Natural-Gas Systems, Process Gas Piping, Fuel-Oil Systems, Drainage Piping Systems"
+    },
+    {
+      "code": "23",
+      "title": "Heating, Ventilating, and Air Conditioning (HVAC)",
+      "description": "Facility Fuel Services, HVAC Piping and Pumps, HVAC Air Distribution, HVAC Equipment, Central Heating Equipment, Central Cooling Equipment, Decentralized HVAC Equipment, HVAC Instrumentation and Controls"
+    },
+    {
+      "code": "25",
+      "title": "Integrated Automation",
+      "description": "Integrated Automation Facility Services, Integrated Automation Instrumentation and Terminal Devices, Integrated Automation Control Sequences, Integrated Automation Software and Hardware, Integrated Automation Network Equipment, Integrated Automation Control and Monitoring Network, Integrated Automation Systems and Databases"
+    },
+    {
+      "code": "26",
+      "title": "Electrical",
+      "description": "Facility Electrical Services, Electrical Power Generation, Facility Power Transmission, Facility Power Distribution, Lighting, Communications, Electronic Safety and Security, Electrical Instrumentation and Controls for Electrical Systems"
+    },
+    {
+      "code": "27",
+      "title": "Communications",
+      "description": "Structured Cabling, Data Communications, Voice Communications, Audio-Video Communications, Distributed Communications and Monitoring Systems, Wireless Communications, Communications Monitoring and Control"
+    },
+    {
+      "code": "28",
+      "title": "Electronic Safety and Security",
+      "description": "Access Control, Intrusion Detection, Video Surveillance, Detection and Alarm, Electronic and Biometric Access Control Systems, Radiation Detection, Electronic Safety and Security Systems Integration, Fire and Smoke Detection and Alarm"
+    },
+    {
+      "code": "31",
+      "title": "Earthwork",
+      "description": "Earth Moving, Soil Treatment, Earthwork Methods, Tunneling and Mining, Piles and Caissons, Excavation Support and Protection, Groundwater and Aquifer Wells, Dewatering and Groundwater Control"
+    },
+    {
+      "code": "32",
+      "title": "Exterior Improvements",
+      "description": "Paving, Curbs and Gutters, Walks, Roads and Parking Appurtenances, Landscaping, Planting, Irrigation, Exterior Enclosures, Retaining Walls, Site Improvements"
+    },
+    {
+      "code": "33",
+      "title": "Utilities",
+      "description": "Water Utilities, Sanitary Sewerage Utilities, Storm Drainage Utilities, Electric Utilities, Communications Utilities, Fuel Distribution Utilities"
+    },
+    {
+      "code": "34",
+      "title": "Transportation",
+      "description": "Guideways, Traction Power, Transportation Signaling and Control Equipment"
+    },
+    {
+      "code": "35",
+      "title": "Waterway and Marine Construction",
+      "description": "Waterway and Marine Construction and Equipment, Coastal Construction, Waterway Construction and Equipment, Dredging"
+    },
+    {
+      "code": "40",
+      "title": "Process Integration",
+      "description": "Process Piping, Process Piping Systems, Process Pumps, Process Valves and Appurtenances, Vibration and Seismic Controls, Noise and Vibration Control for Plumbing Piping and Equipment, Manufactured Process Components"
+    },
+    {
+      "code": "41",
+      "title": "Material Processing and Handling Equipment",
+      "description": "Bulk Material Processing Equipment, Piece Material Handling Equipment, Manufacturing Equipment"
+    },
+    {
+      "code": "42",
+      "title": "Process Heating, Cooling, and Drying Equipment",
+      "description": "Process Heating Equipment, Process Cooling Equipment, Process Drying Equipment"
+    },
+    {
+      "code": "43",
+      "title": "Process Gas and Liquid Handling, Purification, and Storage Equipment",
+      "description": "Gas Handling Equipment, Liquid Handling Equipment, Gas and Liquid Purification Equipment, Gas and Liquid Storage"
+    },
+    {
+      "code": "44",
+      "title": "Pollution and Waste Control Equipment",
+      "description": "Air Pollution Control, Water Treatment Equipment, Solid Waste Control"
+    },
+    {
+      "code": "45",
+      "title": "Industry-Specific Manufacturing Equipment",
+      "description": "Equipment for Various Industries, Food and Beverage Equipment"
+    },
+    {
+      "code": "46",
+      "title": "Water and Wastewater Equipment",
+      "description": "Water and Wastewater Treatment Equipment"
+    },
+    {
+      "code": "48",
+      "title": "Electrical Power Generation",
+      "description": "Electrical Power Generation Equipment"
+    }
+  ]
+}
