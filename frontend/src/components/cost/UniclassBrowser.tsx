@@ -2,7 +2,7 @@
 
 import {
   ChevronRight, ChevronDown, Loader2, Database, RefreshCw, Search, Globe,
-  ArrowRight, Layers, FolderTree, Info,
+  ArrowRight, Layers, FolderTree, Info, Sparkles, CheckCircle2,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useCostStore } from '@/stores/costStore';
@@ -30,7 +30,7 @@ export function UniclassBrowser({ onSelect }: UniclassBrowserProps) {
     fetchUniclassTableRoots, fetchUniclassChildren, fetchUniclassCacheStats, syncUniclassTable,
     searchUniclass, uniclassResults, uniclassLoading,
     // Mapping
-    classificationMappings, lookupMapping,
+    classificationMappings, lookupMapping, seedMappings, classificationMappingsGrouped,
   } = useCostStore();
 
   const [activeTable, setActiveTable] = useState('Ss');
@@ -39,6 +39,8 @@ export function UniclassBrowser({ onSelect }: UniclassBrowserProps) {
   const [syncing, setSyncing] = useState(false);
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [showMappings, setShowMappings] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedResult, setSeedResult] = useState<{ created: number; skipped: number } | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load table roots
@@ -84,6 +86,14 @@ export function UniclassBrowser({ onSelect }: UniclassBrowserProps) {
     setSyncing(false);
   };
 
+  const handleSeedMappings = async () => {
+    setSeeding(true);
+    setSeedResult(null);
+    const result = await seedMappings();
+    setSeedResult(result);
+    setSeeding(false);
+  };
+
   const handleNodeSelect = async (code: string, title: string) => {
     setSelectedCode(code);
     onSelect?.(code, title);
@@ -114,6 +124,21 @@ export function UniclassBrowser({ onSelect }: UniclassBrowserProps) {
             <Database size={12} />
             <span>{uniclassCacheStats?.totalCached || 0} cached</span>
           </div>
+          <button
+            onClick={handleSeedMappings}
+            disabled={seeding}
+            className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors disabled:opacity-50"
+            style={{ background: 'rgba(168,85,247,0.1)', color: 'rgb(168,85,247)' }}
+            title="Seed cross-standard mappings (Uniclass, MasterFormat, UNIFORMAT)"
+          >
+            {seedResult ? (
+              <><CheckCircle2 size={10} /> {seedResult.created} seeded</>
+            ) : seeding ? (
+              <><Loader2 size={10} className="animate-spin" /> Seeding...</>
+            ) : (
+              <><Sparkles size={10} /> Seed Mappings</>
+            )}
+          </button>
           <button
             onClick={handleSync}
             disabled={syncing}

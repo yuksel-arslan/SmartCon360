@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ModulePageHeader } from '@/components/modules';
+import { UniclassBrowser } from '@/components/cost/UniclassBrowser';
 import { useCostStore } from '@/stores/costStore';
 import { useProjectStore } from '@/stores/projectStore';
 import type {
@@ -261,8 +262,6 @@ function LibraryTab() {
     catalogs, catalogItems, catalogItemsMeta,
     fetchCatalogs, createCatalog, deleteCatalog, uploadCatalogFile,
     searchCatalogItems, copyToProject, fetchWorkItems,
-    // New actions
-    searchUniclass, uniclassResults, uniclassLoading,
     fetchCatalogDivisions, fetchCatalogCategories,
     catalogDivisions, catalogCategories,
   } = useCostStore();
@@ -293,11 +292,6 @@ function LibraryTab() {
   type SourceGroup = 'all' | 'turkish' | 'international' | 'custom';
   const [sourceGroup, setSourceGroup] = useState<SourceGroup>('all');
 
-  // Uniclass live search
-  const [uniclassQuery, setUniclassQuery] = useState('');
-  const [uniclassTable, setUniclassTable] = useState('');
-  const uniclassTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   useEffect(() => {
     fetchCatalogs();
   }, [fetchCatalogs]);
@@ -327,17 +321,6 @@ function LibraryTab() {
       });
     }
   }, [selectedCatalog, searchQuery, catFilter, divFilter, page, searchCatalogItems]);
-
-  // Debounced Uniclass search
-  const handleUniclassSearch = useCallback((query: string) => {
-    setUniclassQuery(query);
-    if (uniclassTimerRef.current) clearTimeout(uniclassTimerRef.current);
-    if (query.length >= 2) {
-      uniclassTimerRef.current = setTimeout(() => {
-        searchUniclass(query, uniclassTable || undefined);
-      }, 400);
-    }
-  }, [searchUniclass, uniclassTable]);
 
   const handleCreate = async () => {
     if (!fName.trim() || !fYear) return;
@@ -494,65 +477,9 @@ function LibraryTab() {
         </Card>
       )}
 
-      {/* Uniclass Live Search Widget */}
+      {/* Uniclass Browser + Cross-Standard Mapping */}
       <Card>
-        <div className="flex items-center gap-2 mb-3">
-          <Globe size={14} style={{ color: 'rgb(236,72,153)' }} />
-          <h4 className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>Uniclass Live Search</h4>
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'rgba(236,72,153,0.1)', color: 'rgb(236,72,153)' }}>
-            UK NBS API
-          </span>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex-1 min-w-[250px] relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-muted)' }} />
-            <Input
-              placeholder="Search Uniclass classifications (e.g. concrete, steel, HVAC...)"
-              value={uniclassQuery}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleUniclassSearch(e.target.value)}
-              className="w-full !pl-9"
-            />
-          </div>
-          <Select value={uniclassTable} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setUniclassTable(e.target.value); if (uniclassQuery.length >= 2) searchUniclass(uniclassQuery, e.target.value || undefined); }}>
-            <option value="">All Tables</option>
-            <option value="Ac">Activities</option>
-            <option value="Co">Complexes</option>
-            <option value="En">Entities</option>
-            <option value="Pr">Products</option>
-            <option value="SL">Spaces/Locations</option>
-            <option value="EF">Elements/Functions</option>
-            <option value="Ss">Systems</option>
-          </Select>
-          {uniclassLoading && <Loader2 size={14} className="animate-spin" style={{ color: 'rgb(236,72,153)' }} />}
-        </div>
-        {/* Results */}
-        {uniclassResults.length > 0 && (
-          <div className="mt-3 max-h-[200px] overflow-y-auto rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
-            <table className="w-full text-xs">
-              <thead>
-                <tr style={{ background: 'var(--color-bg-input)' }}>
-                  <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--color-text-muted)' }}>Code</th>
-                  <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--color-text-muted)' }}>Title</th>
-                  <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--color-text-muted)' }}>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {uniclassResults.map((item, i) => (
-                  <tr key={`${item.code}-${i}`} className="border-t hover:opacity-80" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-card)' }}>
-                    <td className="px-3 py-2 font-mono font-medium whitespace-nowrap" style={{ color: 'rgb(236,72,153)' }}>{item.code}</td>
-                    <td className="px-3 py-2 font-medium" style={{ color: 'var(--color-text)' }}>{item.title}</td>
-                    <td className="px-3 py-2 text-[10px] max-w-[300px] truncate" style={{ color: 'var(--color-text-muted)' }}>{item.description || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {uniclassQuery.length >= 2 && !uniclassLoading && uniclassResults.length === 0 && (
-          <p className="text-[10px] mt-2" style={{ color: 'var(--color-text-muted)' }}>
-            No results found. Note: Uniclass API requires API credentials (UNICLASS_CLIENT_ID, UNICLASS_CLIENT_SECRET) to be configured.
-          </p>
-        )}
+        <UniclassBrowser />
       </Card>
 
       {/* Source Group Tabs */}
