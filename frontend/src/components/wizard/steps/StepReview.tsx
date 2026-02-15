@@ -1,15 +1,13 @@
 'use client';
 
 import {
-  Building2, Calendar, MapPin, Users, Clock, ArrowRight, Lightbulb,
+  Building2, Calendar, MapPin, ArrowRight, Lightbulb,
 } from 'lucide-react';
 import { getTemplate } from '@/lib/core/project-templates';
 import type { StepProps } from '../types';
 
 export default function StepReview({ data }: StepProps) {
   const template = getTemplate(data.projectType);
-  const enabledTrades = data.trades.filter((t) => t.enabled);
-  const zoneCount = countZones(data.locations);
 
   return (
     <div>
@@ -20,7 +18,7 @@ export default function StepReview({ data }: StepProps) {
         Review & Create
       </h2>
       <p className="text-[13px] mb-6" style={{ color: 'var(--color-text-muted)' }}>
-        Review your project setup before creating. You can always edit these settings later.
+        Review your project info. After creation you&apos;ll configure drawings, BOQ, LBS, trades, and takt settings in the Setup Wizard.
       </p>
 
       <div className="space-y-4">
@@ -79,63 +77,35 @@ export default function StepReview({ data }: StepProps) {
           ))}
         </div>
 
-        {/* Takt summary */}
+        {/* Next steps info */}
         <div
           className="rounded-xl border p-4"
-          style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+          style={{ background: 'rgba(232,115,26,0.06)', borderColor: 'rgba(232,115,26,0.2)' }}
         >
           <div className="flex items-center gap-2 mb-3">
-            <Clock size={14} style={{ color: 'var(--color-accent)' }} />
-            <span className="text-[12px] font-medium" style={{ color: 'var(--color-text)' }}>Takt Plan Summary</span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: 'Takt Time', value: `${data.defaultTaktTime} days`, color: 'var(--color-accent)' },
-              { label: 'Buffer', value: `${data.bufferSize} takt(s)`, color: 'var(--color-purple)' },
-              { label: 'Zones', value: `${zoneCount}`, color: 'var(--color-success)' },
-              { label: 'Working Days', value: data.workingDays.map((d) => d.charAt(0).toUpperCase() + d.slice(1, 3)).join(', '), color: 'var(--color-warning)' },
-            ].map((s) => (
-              <div key={s.label}>
-                <div className="text-[10px] uppercase font-semibold" style={{ color: 'var(--color-text-muted)' }}>
-                  {s.label}
-                </div>
-                <div className="text-sm font-medium mt-0.5" style={{ color: s.color }}>
-                  {s.value}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Trade sequence */}
-        <div
-          className="rounded-xl border p-4"
-          style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Users size={14} style={{ color: 'var(--color-purple)' }} />
-            <span className="text-[12px] font-medium" style={{ color: 'var(--color-text)' }}>
-              Trade Sequence ({enabledTrades.length} trades)
+            <ArrowRight size={14} style={{ color: 'var(--color-accent)' }} />
+            <span className="text-[12px] font-medium" style={{ color: 'var(--color-accent)' }}>
+              After Creation: Project Setup Wizard
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {enabledTrades.map((trade, i) => (
-              <div key={trade.code} className="flex items-center gap-1.5">
-                <div
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-lg"
-                  style={{ background: `${trade.color}18` }}
-                >
-                  <div className="w-2 h-2 rounded-full" style={{ background: trade.color }} />
-                  <span className="text-[11px] font-medium" style={{ color: 'var(--color-text)' }}>
-                    {trade.name}
-                  </span>
-                </div>
-                {i < enabledTrades.length - 1 && (
-                  <ArrowRight size={12} style={{ color: 'var(--color-text-muted)' }} />
-                )}
-              </div>
-            ))}
-          </div>
+          <ul className="space-y-1.5 text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
+            <li className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--color-accent)' }} />
+              Upload project drawings (PDF, DWG, DXF, RVT, IFC)
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--color-accent)' }} />
+              Import Bill of Quantities (BOQ) from Excel/CSV
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--color-accent)' }} />
+              Set up Location Breakdown Structure (LBS) with zones
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--color-accent)' }} />
+              Configure WBS, CBS, discipline trades, and takt plan
+            </li>
+          </ul>
         </div>
 
         {/* Tips */}
@@ -163,19 +133,4 @@ export default function StepReview({ data }: StepProps) {
       </div>
     </div>
   );
-}
-
-function countZones(locations: StepProps['data']['locations']): number {
-  let count = 0;
-  function walk(items: typeof locations) {
-    for (const loc of items) {
-      const mult = loc.repeat && loc.repeat > 1 ? loc.repeat : 1;
-      if (loc.type === 'zone') count += mult;
-      if (loc.children) {
-        for (let i = 0; i < mult; i++) walk(loc.children);
-      }
-    }
-  }
-  walk(locations);
-  return count;
 }

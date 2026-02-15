@@ -11,16 +11,22 @@ export async function GET(request: NextRequest, { params }: Params) {
     requireAuth(request);
     const { id: projectId } = await params;
 
-    const [setup, project, drawingCount, wbsCount, cbsCount] = await Promise.all([
+    const [setup, project, drawingCount, wbsCount, cbsCount, locationCount, zoneCount, tradeCount] = await Promise.all([
       prisma.projectSetup.findUnique({ where: { projectId } }),
       prisma.project.findUnique({
         where: { id: projectId },
-        select: { projectType: true, currency: true, name: true },
+        select: { projectType: true, currency: true, name: true, defaultTaktTime: true, settings: true },
       }),
       prisma.drawing.count({ where: { projectId } }),
       prisma.wbsNode.count({ where: { projectId, isActive: true } }),
       prisma.cbsNode.count({ where: { projectId, isActive: true } }),
+      prisma.location.count({ where: { projectId, isActive: true } }),
+      prisma.location.count({ where: { projectId, isActive: true, locationType: 'zone' } }),
+      prisma.trade.count({ where: { projectId } }),
     ]);
+
+    const settings = (project?.settings as Record<string, unknown>) || {};
+    const taktConfig = (settings.taktConfig as Record<string, unknown>) || {};
 
     const state = setup || {
       currentStep: 'classification',
@@ -43,6 +49,15 @@ export async function GET(request: NextRequest, { params }: Params) {
         drawingCount,
         wbsNodeCount: wbsCount,
         cbsNodeCount: cbsCount,
+        wbsGenerated: wbsCount > 0,
+        cbsGenerated: cbsCount > 0,
+        locationCount,
+        zoneCount,
+        lbsConfigured: locationCount > 0,
+        tradeCount,
+        defaultTaktTime: (taktConfig.defaultTaktTime as number) || project?.defaultTaktTime || 5,
+        bufferSize: (taktConfig.bufferSize as number) ?? 1,
+        workingDays: (taktConfig.workingDays as string[]) || ['mon', 'tue', 'wed', 'thu', 'fri'],
         projectType: project?.projectType,
         currency: project?.currency,
         projectName: project?.name,

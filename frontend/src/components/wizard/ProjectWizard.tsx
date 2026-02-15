@@ -3,18 +3,14 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
-import { getTemplate } from '@/lib/core/project-templates';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAuthStore } from '@/stores/authStore';
 
 import StepProjectType from './steps/StepProjectType';
 import StepBasicInfo from './steps/StepBasicInfo';
-import StepLBS from './steps/StepLBS';
-import StepTrades from './steps/StepTrades';
-import StepTaktConfig from './steps/StepTaktConfig';
 import StepReview from './steps/StepReview';
 
-import { WIZARD_STEPS, DEFAULT_WORKING_DAYS } from './types';
+import { WIZARD_STEPS } from './types';
 import type { WizardData } from './types';
 
 const initialData: WizardData = {
@@ -29,19 +25,11 @@ const initialData: WizardData = {
   country: '',
   budget: '',
   currency: 'USD',
-  locations: [],
-  trades: [],
-  defaultTaktTime: 5,
-  bufferSize: 1,
-  workingDays: [...DEFAULT_WORKING_DAYS],
 };
 
 const STEP_COMPONENTS = [
   StepProjectType,
   StepBasicInfo,
-  StepLBS,
-  StepTrades,
-  StepTaktConfig,
   StepReview,
 ];
 
@@ -56,22 +44,7 @@ export default function ProjectWizard() {
 
   const onChange = useCallback(
     (updates: Partial<WizardData>) => {
-      setData((prev) => {
-        const next = { ...prev, ...updates };
-
-        // When project type changes, load template data
-        if (updates.projectType && updates.projectType !== prev.projectType) {
-          const template = getTemplate(updates.projectType);
-          if (template) {
-            next.locations = template.locations;
-            next.trades = template.trades.map((t) => ({ ...t, enabled: true }));
-            next.defaultTaktTime = template.defaultTaktTime;
-            next.bufferSize = template.defaultBufferSize;
-          }
-        }
-
-        return next;
-      });
+      setData((prev) => ({ ...prev, ...updates }));
     },
     []
   );
@@ -80,10 +53,7 @@ export default function ProjectWizard() {
     switch (step) {
       case 0: return !!data.projectType;
       case 1: return !!data.name.trim() && !!data.code.trim();
-      case 2: return data.locations.length > 0;
-      case 3: return data.trades.some((t) => t.enabled);
-      case 4: return data.defaultTaktTime > 0 && data.workingDays.length > 0;
-      case 5: return true;
+      case 2: return true;
       default: return false;
     }
   };
@@ -116,14 +86,13 @@ export default function ProjectWizard() {
         if (res.status === 401) {
           const refreshed = await refreshAccessToken();
           if (refreshed) {
-            // Retry with new token
             return fetch(url, { ...opts, headers: buildHeaders() });
           }
         }
         return res;
       };
 
-      // 1. Create project
+      // Create project
       const res = await authFetch('/api/v1/projects', {
         method: 'POST',
         headers: buildHeaders(),
@@ -139,7 +108,6 @@ export default function ProjectWizard() {
           country: data.country || undefined,
           budget: data.budget ? Number(data.budget) : undefined,
           currency: data.currency,
-          defaultTaktTime: data.defaultTaktTime,
           classificationStandard: 'uniclass',
         }),
       });
@@ -152,55 +120,9 @@ export default function ProjectWizard() {
 
       const { data: project } = await res.json();
 
-      // 2. Bulk create locations from template
-      if (data.locations.length > 0) {
-        const flatLocations = flattenLocations(data.locations);
-        if (flatLocations.length > 0) {
-          const locRes = await authFetch(`/api/v1/projects/${project.id}/locations/bulk`, {
-            method: 'POST',
-            headers: buildHeaders(),
-            body: JSON.stringify({ locations: flatLocations }),
-          });
-          if (!locRes.ok) {
-            const locErr = await locRes.json().catch(() => ({}));
-            const msg = typeof locErr.error === 'object' ? locErr.error.message : locErr.error;
-            throw new Error(msg || `Failed to create locations (${locRes.status})`);
-          }
-        }
-      }
-
-      // 3. Create enabled trades
-      const enabledTrades = data.trades.filter((t) => t.enabled);
-      for (const trade of enabledTrades) {
-        const tradeRes = await authFetch(`/api/v1/projects/${project.id}/trades`, {
-          method: 'POST',
-          headers: buildHeaders(),
-          body: JSON.stringify({
-            name: trade.name,
-            code: trade.code,
-            color: trade.color,
-            defaultCrewSize: trade.defaultCrewSize,
-            predecessorTradeIds: [],
-          }),
-        });
-        if (!tradeRes.ok) {
-          const tradeErr = await tradeRes.json().catch(() => ({}));
-          const msg = typeof tradeErr.error === 'object' ? tradeErr.error.message : tradeErr.error;
-          throw new Error(msg || `Failed to create trade "${trade.name}" (${tradeRes.status})`);
-        }
-      }
-
-      // 4. Auto-generate initial takt plan (AI-1 Core)
-      await authFetch(`/api/v1/projects/${project.id}/plan/generate`, {
-        method: 'POST',
-        headers: buildHeaders(),
-      }).catch(() => {
-        // Plan generation is best-effort — don't block project creation
-      });
-
       // Refresh the project list so the new project appears in sidebar
       await fetchProjects();
-      // Redirect to Project Setup wizard for the new project
+      // Redirect to Project Setup wizard for full configuration
       router.push(`/projects/${project.id}/setup`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -313,41 +235,4 @@ export default function ProjectWizard() {
       </div>
     </div>
   );
-}
-
-/**
- * Flatten template locations into API-compatible format with parent references.
- */
-function flattenLocations(
-  templates: WizardData['locations'],
-  parentName?: string,
-): { name: string; locationType: string; parentName?: string; areaSqm?: number; sortOrder: number }[] {
-  const result: ReturnType<typeof flattenLocations> = [];
-  let sortOrder = 0;
-
-  for (const loc of templates) {
-    const repeat = loc.repeat && loc.repeat > 1 ? loc.repeat : 1;
-
-    for (let i = 0; i < repeat; i++) {
-      const name = repeat > 1 && loc.repeatLabel
-        ? loc.repeatLabel.replace('{n}', String(i + 1))
-        : repeat > 1
-          ? `${loc.name} ${i + 1}`
-          : loc.name;
-
-      result.push({
-        name,
-        locationType: loc.type,
-        parentName,
-        areaSqm: loc.areaSqm,
-        sortOrder: sortOrder++,
-      });
-
-      if (loc.children) {
-        result.push(...flattenLocations(loc.children, name));
-      }
-    }
-  }
-
-  return result;
 }

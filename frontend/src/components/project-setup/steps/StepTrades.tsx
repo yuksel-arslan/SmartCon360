@@ -5,7 +5,7 @@ import type { SetupStepProps, SubTradeTemplate } from '../types';
 import { DISCIPLINES } from '../types';
 import { Check, Loader2, Users } from 'lucide-react';
 
-export default function StepTrades({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
+export default function StepTrades({ projectId, state, onStateChange, onComplete, authHeaders }: SetupStepProps) {
   const [trades, setTrades] = useState<(SubTradeTemplate & { enabled: boolean })[]>([]);
   const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -73,8 +73,9 @@ export default function StepTrades({ projectId, state, onStateChange, authHeader
 
       const json = await res.json();
       setApplied(true);
-    } catch (err: any) {
-      setError(err.message);
+      onStateChange({ tradeCount: json.data?.created || enabledTrades.length });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to apply trades');
     } finally {
       setApplying(false);
     }
