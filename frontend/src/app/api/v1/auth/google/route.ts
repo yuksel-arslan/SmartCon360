@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { google } from 'googleapis';
 import { prisma } from '@/lib/prisma';
 import { signAccessToken } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
