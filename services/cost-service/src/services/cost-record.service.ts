@@ -8,7 +8,7 @@ export interface CreateCostRecordInput {
   budgetItemId?: string;
   amount: number;
   type: 'commitment' | 'actual' | 'forecast';
-  date: Date;
+  date: Date | string;
   description?: string;
   invoiceRef?: string;
   vendor?: string;
@@ -18,7 +18,10 @@ export interface CreateCostRecordInput {
 export class CostRecordService {
   async create(input: CreateCostRecordInput) {
     const record = await prisma.costRecord.create({
-      data: input,
+      data: {
+        ...input,
+        date: new Date(input.date),
+      },
     });
 
     // Update budget item actual amount if applicable
@@ -53,8 +56,8 @@ export class CostRecordService {
     projectId: string,
     options?: {
       type?: string;
-      startDate?: Date;
-      endDate?: Date;
+      startDate?: Date | string;
+      endDate?: Date | string;
     }
   ) {
     const where: any = { projectId };
@@ -65,8 +68,8 @@ export class CostRecordService {
 
     if (options?.startDate || options?.endDate) {
       where.date = {};
-      if (options.startDate) where.date.gte = options.startDate;
-      if (options.endDate) where.date.lte = options.endDate;
+      if (options.startDate) where.date.gte = new Date(options.startDate);
+      if (options.endDate) where.date.lte = new Date(options.endDate);
     }
 
     return await prisma.costRecord.findMany({

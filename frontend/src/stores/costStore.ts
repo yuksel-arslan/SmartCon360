@@ -192,6 +192,55 @@ export interface CostRecord {
   vendor?: string;
 }
 
+export interface PriceCatalog {
+  id: string;
+  projectId?: string;
+  name: string;
+  source: string; // bayindirlik | iller_bankasi | masterformat | uniformat | uniclass | rsmeans | custom | supplier
+  standard?: string; // masterformat | uniformat | uniclass | null
+  year: number;
+  period?: string;
+  region?: string; // US_Northeast, UK_London, TR_Istanbul, etc.
+  currency: string;
+  description?: string;
+  fileName?: string;
+  fileType?: string;
+  itemCount: number;
+  isActive: boolean;
+  createdAt: string;
+  _count?: { items: number };
+  items?: PriceCatalogItem[];
+}
+
+export interface PriceCatalogItem {
+  id: string;
+  catalogId: string;
+  code: string;
+  name: string;
+  unit: string;
+  unitPrice: string;
+  category?: string;
+  subcategory?: string;
+  // Cost breakdown
+  laborCost?: string;
+  materialCost?: string;
+  equipmentCost?: string;
+  // International classification codes
+  csiCode?: string;
+  divisionCode?: string;
+  divisionName?: string;
+  uniformatCode?: string;
+  uniclassCode?: string;
+  // RSMeans specific
+  locationFactor?: string;
+  location?: string;
+  crewCode?: string;
+  productivity?: string;
+  assemblyType?: string;
+  notes?: string;
+  catalog?: { name: string; source: string; standard?: string; year: number; region?: string };
+}
+
 // ============================================================================
 // STORE
 // ============================================================================
@@ -208,6 +257,11 @@ interface CostState {
   payments: PaymentCertificate[];
   costRecords: CostRecord[];
   evmSnapshots: EvmSnapshot[];
+
+  // Catalog
+  catalogs: PriceCatalog[];
+  catalogItems: PriceCatalogItem[];
+  catalogItemsMeta: { total: number; page: number; pages: number };
 
   // State
   loading: boolean;
@@ -256,6 +310,14 @@ interface CostState {
 
   // Actions — EVM
   createEvmSnapshot: (data: { projectId: string; snapshotDate: string; pv: number; ev: number; ac: number; bac: number }) => Promise<EvmSnapshot | null>;
+
+  // Actions — Catalog
+  fetchCatalogs: (opts?: { source?: string; year?: number; projectId?: string }) => Promise<void>;
+  createCatalog: (data: { name: string; source: string; year: number; period?: string; region?: string; description?: string; projectId?: string }) => Promise<PriceCatalog | null>;
+  deleteCatalog: (id: string) => Promise<boolean>;
+  uploadCatalogFile: (catalogId: string, file: File) => Promise<{ imported: number; errors: number; errorDetails: string[] } | null>;
+  searchCatalogItems: (opts: { catalogId?: string; search?: string; category?: string; page?: number; limit?: number }) => Promise<void>;
+  copyToProject: (catalogId: string, itemIds: string[], projectId: string) => Promise<{ created: number; skipped: number } | null>;
 }
 
 function getAuthHeaders(): HeadersInit {
@@ -294,6 +356,10 @@ export const useCostStore = create<CostState>((set, get) => ({
   payments: [],
   costRecords: [],
   evmSnapshots: [],
+
+  catalogs: [],
+  catalogItems: [],
+  catalogItemsMeta: { total: 0, page: 1, pages: 1 },
 
   loading: false,
   error: null,
@@ -402,7 +468,7 @@ export const useCostStore = create<CostState>((set, get) => ({
         s.fetchCostRecords(projectId),
       ]);
     } catch (err) {
-      set({ error: err instanceof Error ? err.message : 'Veri yüklenemedi' });
+      set({ error: err instanceof Error ? err.message : 'Failed to load data' });
     } finally {
       set({ loading: false, initialized: true });
     }
@@ -613,6 +679,107 @@ export const useCostStore = create<CostState>((set, get) => ({
       });
       set((s: CostState) => ({ evmSnapshots: [...s.evmSnapshots, created] }));
       return created;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
+    }
+  },
+
+  // ── Catalog ──
+
+  fetchCatalogs: async (opts?: { source?: string; year?: number; projectId?: string }) => {
+    try {
+      const params = new URLSearchParams();
+      if (opts?.source) params.set('source', opts.source);
+      if (opts?.year) params.set('year', String(opts.year));
+      if (opts?.projectId) params.set('projectId', opts.projectId);
+      const data = await apiFetch<PriceCatalog[]>(`/catalog?${params}`);
+      set({ catalogs: data });
+    } catch {
+      set({ catalogs: [] });
+    }
+  },
+
+  createCatalog: async (data: { name: string; source: string; year: number; period?: string; region?: string; description?: string; projectId?: string }) => {
+    try {
+      const created = await apiFetch<PriceCatalog>('/catalog', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      set((s: CostState) => ({ catalogs: [...s.catalogs, created] }));
+      return created;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
+    }
+  },
+
+  deleteCatalog: async (id: string) => {
+    try {
+      await apiFetch(`/catalog/${id}`, { method: 'DELETE' });
+      set((s: CostState) => ({ catalogs: s.catalogs.filter((c: PriceCatalog) => c.id !== id) }));
+      return true;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return false;
+    }
+  },
+
+  uploadCatalogFile: async (catalogId: string, file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${API}/catalog/${catalogId}/import`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `HTTP ${res.status}`);
+      }
+      const json = await res.json();
+      // Refresh catalogs after import
+      const store = get();
+      await store.fetchCatalogs();
+      return json.data;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
+    }
+  },
+
+  searchCatalogItems: async (opts: { catalogId?: string; search?: string; category?: string; page?: number; limit?: number }) => {
+    try {
+      const params = new URLSearchParams();
+      if (opts.catalogId) params.set('catalogId', opts.catalogId);
+      if (opts.search) params.set('search', opts.search);
+      if (opts.category) params.set('category', opts.category);
+      if (opts.page) params.set('page', String(opts.page));
+      if (opts.limit) params.set('limit', String(opts.limit));
+      const res = await fetch(`${API}/catalog/items/search?${params}`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      set({ catalogItems: json.data || [], catalogItemsMeta: json.meta || { total: 0, page: 1, pages: 1 } });
+    } catch {
+      set({ catalogItems: [], catalogItemsMeta: { total: 0, page: 1, pages: 1 } });
+    }
+  },
+
+  copyToProject: async (catalogId: string, itemIds: string[], projectId: string) => {
+    try {
+      const result = await apiFetch<{ created: number; skipped: number }>(`/catalog/${catalogId}/copy-to-project`, {
+        method: 'POST',
+        body: JSON.stringify({ itemIds, projectId }),
+      });
+      // Refresh work items after copy
+      const store = get();
+      await store.fetchWorkItems(projectId);
+      return result;
     } catch (e) {
       set({ error: (e as Error).message });
       return null;

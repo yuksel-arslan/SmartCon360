@@ -7,8 +7,8 @@ export interface CreatePaymentCertificateInput {
   projectId: string;
   budgetId?: string;
   periodNumber: number;
-  periodStart: Date;
-  periodEnd: Date;
+  periodStart: Date | string;
+  periodEnd: Date | string;
   retentionPct?: number;
   advanceDeduction?: number;
   vatPct?: number;
@@ -45,6 +45,8 @@ export class PaymentService {
     return await prisma.paymentCertificate.create({
       data: {
         ...input,
+        periodStart: new Date(input.periodStart),
+        periodEnd: new Date(input.periodEnd),
         retentionPct: input.retentionPct || 0,
         vatPct: input.vatPct || 20,
       },

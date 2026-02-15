@@ -7,7 +7,7 @@ import type { Prisma } from '@prisma/client';
 export interface CreateUnitPriceAnalysisInput {
   workItemId: string;
   version?: number;
-  analysisDate?: Date;
+  analysisDate?: Date | string;
   overheadPct?: number;
   profitPct?: number;
   source?: string;
@@ -20,7 +20,7 @@ export interface CreateUnitPriceAnalysisInput {
     quantity: number;
     unitRate: number;
     rateSource?: string;
-    rateDate?: Date;
+    rateDate?: Date | string;
   }>;
 }
 
@@ -29,7 +29,11 @@ export class UnitPriceService {
    * Create new unit price analysis with resources
    */
   async create(input: CreateUnitPriceAnalysisInput) {
-    const { resources, ...analysisData } = input;
+    const { resources, analysisDate, ...restData } = input;
+    const analysisData = {
+      ...restData,
+      ...(analysisDate ? { analysisDate: new Date(analysisDate) } : {}),
+    };
 
     // Calculate totals from resources
     let laborCost = 0;
@@ -43,8 +47,10 @@ export class UnitPriceService {
       else if (r.resourceType === 'material') materialCost += total;
       else if (r.resourceType === 'equipment') equipmentCost += total;
 
+      const { rateDate, ...restR } = r;
       return {
-        ...r,
+        ...restR,
+        ...(rateDate ? { rateDate: new Date(rateDate) } : {}),
         total,
         sortOrder: idx,
       };

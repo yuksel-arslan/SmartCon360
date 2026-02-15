@@ -10,7 +10,7 @@ export class EvmService {
    */
   async createSnapshot(
     projectId: string,
-    snapshotDate: Date,
+    snapshotDate: Date | string,
     pv: number,
     ev: number,
     ac: number,
@@ -23,7 +23,7 @@ export class EvmService {
     await prisma.evmSnapshot.create({
       data: {
         projectId,
-        snapshotDate,
+        snapshotDate: new Date(snapshotDate),
         pv: metrics.pv,
         ev: metrics.ev,
         ac: metrics.ac,
@@ -44,7 +44,7 @@ export class EvmService {
   /**
    * Calculate EVM automatically from project data
    */
-  async calculateFromProject(projectId: string, snapshotDate: Date) {
+  async calculateFromProject(projectId: string, snapshotDate: Date | string) {
     // Get budget (BAC)
     const budget = await prisma.budget.findFirst({
       where: { projectId, status: 'active' },
@@ -74,7 +74,7 @@ export class EvmService {
       where: {
         projectId,
         type: 'actual',
-        date: { lte: snapshotDate },
+        date: { lte: new Date(snapshotDate) },
       },
     });
 
@@ -116,13 +116,13 @@ export class EvmService {
   /**
    * Get EVM history (S-curve data)
    */
-  async getHistory(projectId: string, startDate?: Date, endDate?: Date) {
+  async getHistory(projectId: string, startDate?: Date | string, endDate?: Date | string) {
     const where: any = { projectId };
 
     if (startDate || endDate) {
       where.snapshotDate = {};
-      if (startDate) where.snapshotDate.gte = startDate;
-      if (endDate) where.snapshotDate.lte = endDate;
+      if (startDate) where.snapshotDate.gte = new Date(startDate);
+      if (endDate) where.snapshotDate.lte = new Date(endDate);
     }
 
     return await prisma.evmSnapshot.findMany({

@@ -4,7 +4,8 @@ import {
   DollarSign, Calculator, FileSpreadsheet, Receipt, TrendingUp, BarChart3,
   Package, ClipboardList, Loader2, AlertCircle, CheckCircle2, Clock, Send,
   FileText, ArrowUpRight, ArrowDownRight, Minus, X, Trash2, Plus, Upload,
-  Edit3, Eye, ChevronDown, Building2, Landmark, Wrench,
+  Edit3, Eye, ChevronDown, Building2, Landmark, Wrench, Library, Search,
+  Download, Check, FolderOpen,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ModulePageHeader } from '@/components/modules';
@@ -13,15 +14,17 @@ import { useProjectStore } from '@/stores/projectStore';
 import type {
   WorkItem, UnitPriceAnalysis, QuantityTakeoff, Estimate,
   Budget, BudgetItem, PaymentCertificate, EvmSnapshot, CostRecord,
+  PriceCatalog, PriceCatalogItem,
 } from '@/stores/costStore';
 
-type CostTab = 'overview' | 'work-items' | 'unit-prices' | 'takeoffs' | 'estimates' | 'budgets' | 'payments' | 'evm';
+type CostTab = 'overview' | 'library' | 'work-items' | 'unit-prices' | 'takeoffs' | 'estimates' | 'budgets' | 'payments' | 'evm';
 
 const PROJECT_ID = '00000000-0000-4000-a000-000000000001';
 const USER_ID = '00000000-0000-4000-a000-000000000099';
 
 const tabs: { id: CostTab; label: string; icon: typeof DollarSign }[] = [
   { id: 'overview', label: 'Overview', icon: BarChart3 },
+  { id: 'library', label: 'Price Library', icon: Library },
   { id: 'work-items', label: 'Work Items', icon: ClipboardList },
   { id: 'unit-prices', label: 'Unit Prices', icon: Calculator },
   { id: 'takeoffs', label: 'Quantity Takeoff', icon: FileSpreadsheet },
@@ -84,6 +87,7 @@ export default function CostPage() {
       {initialized && (
         <>
           {activeTab === 'overview' && <OverviewTab />}
+          {activeTab === 'library' && <LibraryTab />}
           {activeTab === 'work-items' && <WorkItemsTab />}
           {activeTab === 'unit-prices' && <UnitPricesTab />}
           {activeTab === 'takeoffs' && <TakeoffsTab />}
@@ -243,6 +247,406 @@ function OverviewTab() {
             </div>
           ))}
         </Card>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// PRICE LIBRARY TAB
+// ============================================================================
+
+function LibraryTab() {
+  const {
+    catalogs, catalogItems, catalogItemsMeta,
+    fetchCatalogs, createCatalog, deleteCatalog, uploadCatalogFile,
+    searchCatalogItems, copyToProject, fetchWorkItems,
+  } = useCostStore();
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<{ imported: number; errors: number; errorDetails: string[] } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Create form
+  const [fName, setFName] = useState('');
+  const [fSource, setFSource] = useState('bayindirlik');
+  const [fYear, setFYear] = useState(String(new Date().getFullYear()));
+  const [fPeriod, setFPeriod] = useState('');
+  const [fRegion, setFRegion] = useState('');
+  const [fDesc, setFDesc] = useState('');
+
+  // Browse state
+  const [selectedCatalog, setSelectedCatalog] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [copyResult, setCopyResult] = useState<{ created: number; skipped: number } | null>(null);
+  const [catFilter, setCatFilter] = useState('');
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    fetchCatalogs();
+  }, [fetchCatalogs]);
+
+  useEffect(() => {
+    if (selectedCatalog) {
+      setPage(1);
+      setSelectedItems(new Set());
+      setCopyResult(null);
+      searchCatalogItems({ catalogId: selectedCatalog, search: searchQuery, category: catFilter, page: 1, limit: 50 });
+    }
+  }, [selectedCatalog, searchCatalogItems]);
+
+  const doSearch = useCallback(() => {
+    if (selectedCatalog) {
+      searchCatalogItems({ catalogId: selectedCatalog, search: searchQuery, category: catFilter, page, limit: 50 });
+    }
+  }, [selectedCatalog, searchQuery, catFilter, page, searchCatalogItems]);
+
+  const handleCreate = async () => {
+    if (!fName.trim() || !fYear) return;
+    setSaving(true);
+    const catalog = await createCatalog({
+      name: fName.trim(),
+      source: fSource,
+      year: parseInt(fYear),
+      period: fPeriod || undefined,
+      region: fRegion || undefined,
+      description: fDesc || undefined,
+    });
+    setSaving(false);
+    if (catalog) {
+      setFName(''); setFDesc(''); setFPeriod(''); setFRegion('');
+      setShowCreateForm(false);
+      setSelectedCatalog(catalog.id);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedCatalog) return;
+    setUploading(true);
+    setUploadResult(null);
+    const result = await uploadCatalogFile(selectedCatalog, file);
+    setUploading(false);
+    if (result) {
+      setUploadResult(result);
+      // Refresh items
+      searchCatalogItems({ catalogId: selectedCatalog, page: 1, limit: 50 });
+    }
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const toggleItem = (id: string) => {
+    setSelectedItems(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectedItems.size === catalogItems.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(catalogItems.map((i: PriceCatalogItem) => i.id)));
+    }
+  };
+
+  const handleCopyToProject = async () => {
+    if (!selectedCatalog || selectedItems.size === 0) return;
+    setSaving(true);
+    const result = await copyToProject(selectedCatalog, Array.from(selectedItems), PROJECT_ID);
+    setSaving(false);
+    if (result) {
+      setCopyResult(result);
+      setSelectedItems(new Set());
+    }
+  };
+
+  const sourceLabel = (s: string) => {
+    switch (s) {
+      case 'bayindirlik': return 'Min. of Public Works';
+      case 'iller_bankasi': return 'Provincial Bank';
+      case 'masterformat': return 'MasterFormat (CSI)';
+      case 'uniformat': return 'UNIFORMAT II';
+      case 'uniclass': return 'Uniclass (UK)';
+      case 'rsmeans': return 'RSMeans';
+      case 'custom': return 'Custom';
+      case 'supplier': return 'Supplier';
+      default: return s.toUpperCase();
+    }
+  };
+
+  const sourceColor = (s: string) => {
+    switch (s) {
+      case 'bayindirlik': return 'rgb(239,68,68)';
+      case 'iller_bankasi': return 'rgb(59,130,246)';
+      case 'masterformat': return 'rgb(34,197,94)';
+      case 'uniformat': return 'rgb(168,85,247)';
+      case 'uniclass': return 'rgb(236,72,153)';
+      case 'rsmeans': return 'rgb(14,165,233)';
+      case 'custom': return 'var(--color-accent)';
+      case 'supplier': return 'rgb(245,158,11)';
+      default: return 'var(--color-text-muted)';
+    }
+  };
+
+  const activeCatalog = catalogs.find((c: PriceCatalog) => c.id === selectedCatalog);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Unit Price Library</h3>
+          <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+            Turkish standards (Bayındırlık, İller Bankası) and International standards (MasterFormat, UNIFORMAT, Uniclass, RSMeans)
+          </p>
+        </div>
+        <Btn variant={showCreateForm ? 'danger' : 'primary'} onClick={() => setShowCreateForm(!showCreateForm)}>
+          {showCreateForm ? <><X size={12} /> Cancel</> : <><Plus size={12} /> New Catalog</>}
+        </Btn>
+      </div>
+
+      {/* Create Catalog Form */}
+      {showCreateForm && (
+        <Card className="!border-[var(--color-accent)]">
+          <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Create Price Catalog</h4>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <Input placeholder="Catalog name *" value={fName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFName(e.target.value)} className="col-span-2" />
+            <Select value={fSource} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFSource(e.target.value)}>
+              <optgroup label="Turkish Standards">
+                <option value="bayindirlik">Min. of Public Works</option>
+                <option value="iller_bankasi">Provincial Bank</option>
+              </optgroup>
+              <optgroup label="International Standards">
+                <option value="masterformat">MasterFormat (CSI)</option>
+                <option value="uniformat">UNIFORMAT II</option>
+                <option value="uniclass">Uniclass (UK)</option>
+                <option value="rsmeans">RSMeans</option>
+              </optgroup>
+              <optgroup label="Custom">
+                <option value="custom">Custom</option>
+                <option value="supplier">Supplier</option>
+              </optgroup>
+            </Select>
+            <Input placeholder="Year *" value={fYear} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFYear(e.target.value)} type="number" />
+            <Input placeholder="Region (optional)" value={fRegion} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFRegion(e.target.value)} />
+            <Input placeholder="Period (e.g. H1)" value={fPeriod} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFPeriod(e.target.value)} />
+            <Btn onClick={handleCreate} disabled={saving || !fName.trim() || !fYear}>
+              {saving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Create
+            </Btn>
+          </div>
+          <Input placeholder="Description (optional)" value={fDesc} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFDesc(e.target.value)} className="mt-3 w-full" />
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Catalog List (Left Panel) */}
+        <div className="lg:col-span-1">
+          <Card className="!p-3 max-h-[700px] overflow-y-auto">
+            <h4 className="text-[10px] font-semibold mb-2 px-2" style={{ color: 'var(--color-text-muted)' }}>
+              Catalogs ({catalogs.length})
+            </h4>
+            {catalogs.length === 0 && (
+              <div className="text-center py-8">
+                <Library size={32} strokeWidth={1} className="mx-auto mb-2" style={{ color: 'var(--color-text-muted)' }} />
+                <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>No catalogs yet</p>
+              </div>
+            )}
+            {catalogs.map((cat: PriceCatalog) => (
+              <button key={cat.id} onClick={() => setSelectedCatalog(cat.id)}
+                className="w-full text-left px-3 py-2.5 rounded-lg text-xs mb-1 transition-colors group relative"
+                style={{
+                  background: selectedCatalog === cat.id ? 'var(--color-accent-muted)' : 'transparent',
+                  color: selectedCatalog === cat.id ? 'var(--color-accent)' : 'var(--color-text)',
+                }}>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium truncate">{cat.name}</span>
+                  <button onClick={(e) => { e.stopPropagation(); deleteCatalog(cat.id); }}
+                    className="opacity-0 group-hover:opacity-100 p-0.5" title="Delete">
+                    <Trash2 size={10} style={{ color: 'var(--color-danger)' }} />
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium"
+                    style={{ background: `${sourceColor(cat.source)}15`, color: sourceColor(cat.source) }}>
+                    {sourceLabel(cat.source)}
+                  </span>
+                  <span className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>{cat.year}</span>
+                </div>
+                <div className="text-[9px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                  {cat.itemCount || cat._count?.items || 0} items
+                  {cat.fileName && <> — {cat.fileName}</>}
+                </div>
+              </button>
+            ))}
+          </Card>
+        </div>
+
+        {/* Catalog Detail / Items (Right Panel) */}
+        <div className="lg:col-span-3 space-y-4">
+          {!selectedCatalog && (
+            <Card className="flex flex-col items-center justify-center py-16 text-center">
+              <FolderOpen size={48} strokeWidth={1} style={{ color: 'var(--color-accent)' }} />
+              <p className="text-sm mt-3 font-medium" style={{ color: 'var(--color-text)' }}>Select a catalog or create a new one</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                Upload Excel/CSV files with unit prices from official sources or your own price lists
+              </p>
+            </Card>
+          )}
+
+          {selectedCatalog && activeCatalog && (
+            <>
+              {/* Header + Upload */}
+              <Card>
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{activeCatalog.name}</h4>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium"
+                        style={{ background: `${sourceColor(activeCatalog.source)}15`, color: sourceColor(activeCatalog.source) }}>
+                        {sourceLabel(activeCatalog.source)} {activeCatalog.year}
+                      </span>
+                    </div>
+                    {activeCatalog.description && (
+                      <p className="text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>{activeCatalog.description}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} className="hidden" />
+                    <Btn variant="primary" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                      {uploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+                      {uploading ? 'Importing...' : 'Import Excel/CSV'}
+                    </Btn>
+                  </div>
+                </div>
+
+                {/* Upload result */}
+                {uploadResult && (
+                  <div className="mt-3 rounded-lg p-3 text-xs" style={{
+                    background: uploadResult.errors > 0 ? 'rgba(245,158,11,0.08)' : 'rgba(34,197,94,0.08)',
+                    color: uploadResult.errors > 0 ? 'rgb(245,158,11)' : 'rgb(34,197,94)',
+                  }}>
+                    <div className="flex items-center gap-2 font-medium">
+                      <CheckCircle2 size={14} />
+                      {uploadResult.imported} items imported successfully
+                      {uploadResult.errors > 0 && <span>, {uploadResult.errors} errors</span>}
+                    </div>
+                    {uploadResult.errorDetails?.length > 0 && (
+                      <ul className="mt-1 text-[10px] list-disc list-inside opacity-80">
+                        {uploadResult.errorDetails.slice(0, 5).map((err: string, i: number) => <li key={i}>{err}</li>)}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
+                {/* Expected format hint */}
+                <div className="mt-3 rounded-lg p-3 text-[10px]" style={{ background: 'var(--color-bg-input)', color: 'var(--color-text-muted)' }}>
+                  <strong>Expected Excel/CSV format:</strong> Column headers should include code (Poz No), name (Description), unit (Unit), unit price (Unit Price).
+                  Optional: category, labor cost, material cost, equipment cost. Turkish column names are auto-detected.
+                </div>
+              </Card>
+
+              {/* Search + Actions Bar */}
+              {(activeCatalog.itemCount > 0 || (activeCatalog._count?.items || 0) > 0) && (
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex-1 min-w-[200px] relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-muted)' }} />
+                    <Input
+                      placeholder="Search by code or name..."
+                      value={searchQuery}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter') doSearch(); }}
+                      className="w-full !pl-9"
+                    />
+                  </div>
+                  <Btn variant="ghost" onClick={doSearch}><Search size={12} /> Search</Btn>
+                  {selectedItems.size > 0 && (
+                    <Btn variant="primary" onClick={handleCopyToProject} disabled={saving}>
+                      {saving ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
+                      Add {selectedItems.size} to Project
+                    </Btn>
+                  )}
+                  {copyResult && (
+                    <span className="text-xs flex items-center gap-1" style={{ color: 'rgb(34,197,94)' }}>
+                      <Check size={12} /> {copyResult.created} added, {copyResult.skipped} skipped (already exists)
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Items Table */}
+              {catalogItems.length > 0 && (
+                <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--color-border)' }}>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr style={{ background: 'var(--color-bg-input)' }}>
+                          <th className="w-8 px-3 py-3">
+                            <input type="checkbox"
+                              checked={selectedItems.size === catalogItems.length && catalogItems.length > 0}
+                              onChange={toggleAll}
+                              className="rounded" />
+                          </th>
+                          {['Code', 'Name', 'Unit', 'Unit Price (₺)', 'Category', 'Labor', 'Material', 'Equipment'].map(h => (
+                            <th key={h} className="text-left px-3 py-3 font-semibold" style={{ color: 'var(--color-text-muted)' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {catalogItems.map((item: PriceCatalogItem) => (
+                          <tr key={item.id} className="border-t cursor-pointer hover:opacity-80"
+                            style={{ borderColor: 'var(--color-border)', background: selectedItems.has(item.id) ? 'var(--color-accent-muted)' : 'var(--color-bg-card)' }}
+                            onClick={() => toggleItem(item.id)}>
+                            <td className="px-3 py-2.5">
+                              <input type="checkbox" checked={selectedItems.has(item.id)} onChange={() => toggleItem(item.id)} className="rounded" />
+                            </td>
+                            <td className="px-3 py-2.5 font-mono font-medium" style={{ color: 'var(--color-accent)' }}>{item.code}</td>
+                            <td className="px-3 py-2.5 max-w-[300px] truncate" style={{ color: 'var(--color-text)' }}>{item.name}</td>
+                            <td className="px-3 py-2.5" style={{ color: 'var(--color-text-muted)' }}>{item.unit}</td>
+                            <td className="px-3 py-2.5 font-mono font-medium text-right" style={{ color: 'var(--color-text)' }}>{fmt(item.unitPrice)}</td>
+                            <td className="px-3 py-2.5 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{item.category || '—'}</td>
+                            <td className="px-3 py-2.5 font-mono text-right text-[10px]" style={{ color: 'rgb(59,130,246)' }}>{item.laborCost ? fmt(item.laborCost) : '—'}</td>
+                            <td className="px-3 py-2.5 font-mono text-right text-[10px]" style={{ color: 'rgb(34,197,94)' }}>{item.materialCost ? fmt(item.materialCost) : '—'}</td>
+                            <td className="px-3 py-2.5 font-mono text-right text-[10px]" style={{ color: 'var(--color-accent)' }}>{item.equipmentCost ? fmt(item.equipmentCost) : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Pagination */}
+                  {catalogItemsMeta.pages > 1 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-input)' }}>
+                      <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                        {catalogItemsMeta.total} items — Page {catalogItemsMeta.page} of {catalogItemsMeta.pages}
+                      </span>
+                      <div className="flex gap-1">
+                        <Btn variant="ghost" disabled={page <= 1} onClick={() => { setPage(p => p - 1); doSearch(); }}>Previous</Btn>
+                        <Btn variant="ghost" disabled={page >= catalogItemsMeta.pages} onClick={() => { setPage(p => p + 1); doSearch(); }}>Next</Btn>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Empty state when catalog has no items */}
+              {catalogItems.length === 0 && (activeCatalog.itemCount === 0 && (activeCatalog._count?.items || 0) === 0) && (
+                <Card className="flex flex-col items-center py-12 text-center">
+                  <Upload size={40} strokeWidth={1} style={{ color: 'var(--color-accent)' }} />
+                  <p className="text-sm mt-3 font-medium" style={{ color: 'var(--color-text)' }}>No items in this catalog yet</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                    Upload an Excel or CSV file to populate the catalog with unit prices
+                  </p>
+                  <Btn variant="primary" className="mt-4" onClick={() => fileInputRef.current?.click()}>
+                    <Upload size={12} /> Upload File
+                  </Btn>
+                </Card>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
