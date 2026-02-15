@@ -140,6 +140,7 @@ export class CatalogService {
     search?: string;
     category?: string;
     divisionCode?: string;
+    uniformatCode?: string;
     standard?: string;
     page?: number;
     limit?: number;
@@ -152,6 +153,7 @@ export class CatalogService {
     if (opts.catalogId) where.catalogId = opts.catalogId;
     if (opts.category) where.category = opts.category;
     if (opts.divisionCode) where.divisionCode = opts.divisionCode;
+    if (opts.uniformatCode) where.uniformatCode = { startsWith: opts.uniformatCode };
 
     if (opts.search) {
       where.OR = [

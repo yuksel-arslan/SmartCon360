@@ -263,6 +263,14 @@ interface CostState {
   catalogItems: PriceCatalogItem[];
   catalogItemsMeta: { total: number; page: number; pages: number };
 
+  // Uniclass live search
+  uniclassResults: Array<{ code: string; title: string; description?: string }>;
+  uniclassLoading: boolean;
+
+  // Division/Element filters
+  catalogDivisions: Array<{ code: string; name: string }>;
+  catalogCategories: string[];
+
   // State
   loading: boolean;
   error: string | null;
@@ -316,8 +324,15 @@ interface CostState {
   createCatalog: (data: { name: string; source: string; year: number; period?: string; region?: string; description?: string; projectId?: string }) => Promise<PriceCatalog | null>;
   deleteCatalog: (id: string) => Promise<boolean>;
   uploadCatalogFile: (catalogId: string, file: File) => Promise<{ imported: number; errors: number; errorDetails: string[] } | null>;
-  searchCatalogItems: (opts: { catalogId?: string; search?: string; category?: string; page?: number; limit?: number }) => Promise<void>;
+  searchCatalogItems: (opts: { catalogId?: string; search?: string; category?: string; divisionCode?: string; uniformatCode?: string; page?: number; limit?: number }) => Promise<void>;
   copyToProject: (catalogId: string, itemIds: string[], projectId: string) => Promise<{ created: number; skipped: number } | null>;
+
+  // Actions — Uniclass Live Search
+  searchUniclass: (query: string, table?: string) => Promise<void>;
+
+  // Actions — Division/Category Filters
+  fetchCatalogDivisions: (catalogId: string) => Promise<void>;
+  fetchCatalogCategories: (catalogId: string) => Promise<void>;
 }
 
 function getAuthHeaders(): HeadersInit {
@@ -360,6 +375,10 @@ export const useCostStore = create<CostState>((set, get) => ({
   catalogs: [],
   catalogItems: [],
   catalogItemsMeta: { total: 0, page: 1, pages: 1 },
+  uniclassResults: [],
+  uniclassLoading: false,
+  catalogDivisions: [],
+  catalogCategories: [],
 
   loading: false,
   error: null,
@@ -753,12 +772,14 @@ export const useCostStore = create<CostState>((set, get) => ({
     }
   },
 
-  searchCatalogItems: async (opts: { catalogId?: string; search?: string; category?: string; page?: number; limit?: number }) => {
+  searchCatalogItems: async (opts: { catalogId?: string; search?: string; category?: string; divisionCode?: string; uniformatCode?: string; page?: number; limit?: number }) => {
     try {
       const params = new URLSearchParams();
       if (opts.catalogId) params.set('catalogId', opts.catalogId);
       if (opts.search) params.set('search', opts.search);
       if (opts.category) params.set('category', opts.category);
+      if (opts.divisionCode) params.set('divisionCode', opts.divisionCode);
+      if (opts.uniformatCode) params.set('uniformatCode', opts.uniformatCode);
       if (opts.page) params.set('page', String(opts.page));
       if (opts.limit) params.set('limit', String(opts.limit));
       const res = await fetch(`${API}/catalog/items/search?${params}`, { headers: getAuthHeaders() });
@@ -783,6 +804,50 @@ export const useCostStore = create<CostState>((set, get) => ({
     } catch (e) {
       set({ error: (e as Error).message });
       return null;
+    }
+  },
+
+  // ── Uniclass Live Search ──
+
+  searchUniclass: async (query: string, table?: string) => {
+    if (!query.trim()) {
+      set({ uniclassResults: [] });
+      return;
+    }
+    set({ uniclassLoading: true });
+    try {
+      const params = new URLSearchParams({ q: query });
+      if (table) params.set('table', table);
+      const res = await fetch(`${API}/catalog/uniclass/search?${params}`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      set({ uniclassResults: json.data || [], uniclassLoading: false });
+    } catch {
+      set({ uniclassResults: [], uniclassLoading: false });
+    }
+  },
+
+  // ── Division/Category Filters ──
+
+  fetchCatalogDivisions: async (catalogId: string) => {
+    try {
+      const res = await fetch(`${API}/catalog/${catalogId}/divisions`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      set({ catalogDivisions: json.data || [] });
+    } catch {
+      set({ catalogDivisions: [] });
+    }
+  },
+
+  fetchCatalogCategories: async (catalogId: string) => {
+    try {
+      const res = await fetch(`${API}/catalog/${catalogId}/categories`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      set({ catalogCategories: json.data || [] });
+    } catch {
+      set({ catalogCategories: [] });
     }
   },
 }));

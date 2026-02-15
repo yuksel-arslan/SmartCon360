@@ -1,0 +1,2258 @@
+{
+  "version": "MasterFormat 2020",
+  "standard": "CSI MasterFormat",
+  "divisions": [
+    {
+      "code": "00",
+      "title": "Procurement and Contracting Requirements",
+      "description": "Introductory Information, Bidding Requirements, Contracting Requirements"
+    },
+    {
+      "code": "01",
+      "title": "General Requirements",
+      "description": "Summary, Price and Payment Procedures, Administrative Requirements, Quality Requirements, Temporary Facilities and Controls, Product Requirements, Execution and Closeout Requirements"
+    },
+    {
+      "code": "02",
+      "title": "Existing Conditions",
+      "description": "Existing Conditions Assessment, Demolition and Structure Moving, Site Remediation"
+    },
+    {
+      "code": "03",
+      "title": "Concrete",
+      "description": "Concrete Forming and Accessories, Concrete Reinforcing, Cast-in-Place Concrete, Precast Concrete, Cementitious Decks and Toppings, Grouts, Mass Concrete",
+      "subdivisions": [
+        {
+          "code": "03 10 00",
+          "title": "Concrete Forming and Accessories",
+          "description": "Formwork systems, form accessories, and concrete placing accessories",
+          "subdivisions": [
+            {
+              "code": "03 11 00",
+              "title": "Concrete Forming",
+              "description": "Structural concrete formwork including wall forms, column forms, slab forms, and beam forms"
+            },
+            {
+              "code": "03 15 00",
+              "title": "Concrete Accessories",
+              "description": "Anchors, inserts, form ties, waterstops, vapor retarders, and other embedded items"
+            }
+          ]
+        },
+        {
+          "code": "03 20 00",
+          "title": "Concrete Reinforcing",
+          "description": "Reinforcing steel, welded wire fabric, fiber reinforcing, and post-tensioning",
+          "subdivisions": [
+            {
+              "code": "03 21 00",
+              "title": "Reinforcing Steel",
+              "description": "Deformed steel reinforcing bars, bar supports, splicing, and placement"
+            },
+            {
+              "code": "03 22 00",
+              "title": "Welded Wire Reinforcing",
+              "description": "Welded wire reinforcement fabric and sheets for slabs and walls"
+            },
+            {
+              "code": "03 24 00",
+              "title": "Fibrous Reinforcing",
+              "description": "Steel fiber, synthetic fiber, glass fiber, and carbon fiber reinforcing for concrete"
+            },
+            {
+              "code": "03 25 00",
+              "title": "Post-Tensioning",
+              "description": "Bonded and unbonded post-tensioning tendons, anchors, and stressing operations"
+            }
+          ]
+        },
+        {
+          "code": "03 30 00",
+          "title": "Cast-in-Place Concrete",
+          "description": "Structural and architectural cast-in-place concrete work",
+          "subdivisions": [
+            {
+              "code": "03 31 00",
+              "title": "Structural Concrete",
+              "description": "Normal-weight and lightweight structural concrete for foundations, walls, columns, beams, and slabs"
+            },
+            {
+              "code": "03 33 00",
+              "title": "Architectural Concrete",
+              "description": "Exposed architectural concrete finishes, form liners, and specialty surface treatments"
+            },
+            {
+              "code": "03 34 00",
+              "title": "Low-Density Concrete",
+              "description": "Cellular concrete, perlite concrete, and vermiculite concrete for insulating fills"
+            },
+            {
+              "code": "03 35 00",
+              "title": "Concrete Finishing",
+              "description": "Concrete surface finishing including troweling, brooming, stamping, and polishing"
+            },
+            {
+              "code": "03 37 00",
+              "title": "Specialty Placed Concrete",
+              "description": "Shotcrete, pumped concrete, tremie concrete, and self-consolidating concrete"
+            },
+            {
+              "code": "03 39 00",
+              "title": "Concrete Curing",
+              "description": "Curing compounds, curing blankets, and moisture-retention curing methods"
+            }
+          ]
+        },
+        {
+          "code": "03 40 00",
+          "title": "Precast Concrete",
+          "description": "Factory and site-cast precast concrete structural and architectural elements",
+          "subdivisions": [
+            {
+              "code": "03 41 00",
+              "title": "Precast Structural Concrete",
+              "description": "Precast concrete beams, columns, double tees, hollow core planks, and wall panels"
+            },
+            {
+              "code": "03 45 00",
+              "title": "Precast Architectural Concrete",
+              "description": "Precast architectural panels, trim, ornamental elements, and GFRC"
+            },
+            {
+              "code": "03 47 00",
+              "title": "Site-Cast Precast Concrete",
+              "description": "Tilt-up concrete panels and site-cast precast elements"
+            },
+            {
+              "code": "03 48 00",
+              "title": "Precast Concrete Specialties",
+              "description": "Precast concrete piles, utility structures, and specialty items"
+            }
+          ]
+        },
+        {
+          "code": "03 50 00",
+          "title": "Cast Decks and Underlayment",
+          "description": "Cementitious decks, toppings, and underlayment systems",
+          "subdivisions": [
+            {
+              "code": "03 51 00",
+              "title": "Cast Roof Decks",
+              "description": "Lightweight insulating concrete and gypsum concrete roof decks"
+            },
+            {
+              "code": "03 52 00",
+              "title": "Lightweight Concrete Roof Insulation",
+              "description": "Lightweight insulating concrete over steel or concrete roof decks"
+            },
+            {
+              "code": "03 53 00",
+              "title": "Concrete Topping",
+              "description": "Bonded and unbonded concrete floor toppings and wear surfaces"
+            },
+            {
+              "code": "03 54 00",
+              "title": "Cast Underlayment",
+              "description": "Self-leveling underlayment, gypsum-based underlayment, and floor leveling compounds"
+            }
+          ]
+        },
+        {
+          "code": "03 60 00",
+          "title": "Grouting",
+          "description": "Cementitious and chemical grouting for construction applications",
+          "subdivisions": [
+            {
+              "code": "03 61 00",
+              "title": "Cementitious Grouting",
+              "description": "Non-shrink grout, flowable fill, and cementitious grout for equipment bases and anchors"
+            },
+            {
+              "code": "03 62 00",
+              "title": "Non-Shrink Grouting",
+              "description": "Non-shrink, non-metallic grout for base plates, columns, and machinery foundations"
+            },
+            {
+              "code": "03 64 00",
+              "title": "Injection Grouting",
+              "description": "Epoxy, polyurethane, and chemical injection grouting for crack repair and waterproofing"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "04",
+      "title": "Masonry",
+      "description": "Mortar and Masonry Grout, Unit Masonry, Stone Assemblies, Masonry Restoration and Cleaning, Refractories",
+      "subdivisions": [
+        {
+          "code": "04 20 00",
+          "title": "Unit Masonry",
+          "description": "Concrete, clay, and glass unit masonry assemblies",
+          "subdivisions": [
+            {
+              "code": "04 21 00",
+              "title": "Clay Unit Masonry",
+              "description": "Brick masonry including face brick, structural brick, and thin brick veneer"
+            },
+            {
+              "code": "04 22 00",
+              "title": "Concrete Unit Masonry",
+              "description": "Concrete masonry units (CMU), split-face block, ground-face block, and interlocking units"
+            },
+            {
+              "code": "04 23 00",
+              "title": "Glass Unit Masonry",
+              "description": "Glass block walls and panels for interior and exterior applications"
+            },
+            {
+              "code": "04 24 00",
+              "title": "Adobe Unit Masonry",
+              "description": "Adobe brick and rammed earth wall construction"
+            },
+            {
+              "code": "04 27 00",
+              "title": "Multiple-Wythe Unit Masonry",
+              "description": "Cavity walls, composite walls, and multi-wythe masonry assemblies with ties and insulation"
+            }
+          ]
+        },
+        {
+          "code": "04 40 00",
+          "title": "Stone Assemblies",
+          "description": "Exterior and interior stone cladding, dimension stone, and stone fabrication",
+          "subdivisions": [
+            {
+              "code": "04 41 00",
+              "title": "Dry-Placed Stone",
+              "description": "Dry-stacked fieldstone and rubble stone walls"
+            },
+            {
+              "code": "04 42 00",
+              "title": "Exterior Stone Cladding",
+              "description": "Anchored stone veneer, panelized stone systems for building exteriors"
+            },
+            {
+              "code": "04 43 00",
+              "title": "Stone Masonry",
+              "description": "Cut stone and dimension stone masonry including limestone, granite, marble, and sandstone"
+            }
+          ]
+        },
+        {
+          "code": "04 70 00",
+          "title": "Manufactured Masonry",
+          "description": "Manufactured stone, simulated masonry, and masonry specialties",
+          "subdivisions": [
+            {
+              "code": "04 71 00",
+              "title": "Manufactured Stone Masonry",
+              "description": "Manufactured/cultured stone veneer for interior and exterior applications"
+            },
+            {
+              "code": "04 72 00",
+              "title": "Cast Stone Masonry",
+              "description": "Cast stone trim, sills, copings, lintels, and ornamental elements"
+            },
+            {
+              "code": "04 73 00",
+              "title": "Masonry Fireplaces",
+              "description": "Site-built masonry fireplaces, chimneys, and flue liners"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "05",
+      "title": "Metals",
+      "description": "Structural Metal Framing, Metal Joists, Metal Decking, Cold-Formed Metal Framing, Metal Fabrications, Decorative Metal, Expansion Control",
+      "subdivisions": [
+        {
+          "code": "05 10 00",
+          "title": "Structural Metal Framing",
+          "description": "Structural steel framing, connections, and erection",
+          "subdivisions": [
+            {
+              "code": "05 12 00",
+              "title": "Structural Steel Framing",
+              "description": "Wide flange beams, columns, girders, bracing, and structural steel connections"
+            },
+            {
+              "code": "05 13 00",
+              "title": "Structural Steel for Buildings",
+              "description": "Structural steel systems specifically for building construction including moment frames"
+            },
+            {
+              "code": "05 14 00",
+              "title": "Structural Aluminum Framing",
+              "description": "Structural aluminum members and framing systems"
+            },
+            {
+              "code": "05 16 00",
+              "title": "Structural Cabling",
+              "description": "Structural cable systems, tension rods, and cable-stayed systems"
+            }
+          ]
+        },
+        {
+          "code": "05 20 00",
+          "title": "Steel Joist Framing",
+          "description": "Open-web steel joists and joist girders",
+          "subdivisions": [
+            {
+              "code": "05 21 00",
+              "title": "Steel Joist Framing",
+              "description": "K-series, LH-series, and DLH-series open web steel joists"
+            },
+            {
+              "code": "05 25 00",
+              "title": "Steel Joist Girder Framing",
+              "description": "Joist girders for primary support of steel joist framing systems"
+            }
+          ]
+        },
+        {
+          "code": "05 30 00",
+          "title": "Metal Decking",
+          "description": "Steel floor and roof decking systems",
+          "subdivisions": [
+            {
+              "code": "05 31 00",
+              "title": "Steel Decking",
+              "description": "Composite floor deck, form deck, and acoustic deck"
+            },
+            {
+              "code": "05 33 00",
+              "title": "Steel Roof Decking",
+              "description": "Wide-rib and narrow-rib steel roof deck panels"
+            },
+            {
+              "code": "05 35 00",
+              "title": "Raceway Decking Assemblies",
+              "description": "Steel deck with integral electrical raceway channels"
+            },
+            {
+              "code": "05 36 00",
+              "title": "Composite Metal Decking",
+              "description": "Composite steel floor deck designed to bond with concrete topping"
+            }
+          ]
+        },
+        {
+          "code": "05 40 00",
+          "title": "Cold-Formed Metal Framing",
+          "description": "Light-gauge steel framing for walls, floors, and roofs",
+          "subdivisions": [
+            {
+              "code": "05 41 00",
+              "title": "Structural Metal Stud Framing",
+              "description": "Load-bearing cold-formed steel stud wall framing systems"
+            },
+            {
+              "code": "05 42 00",
+              "title": "Cold-Formed Metal Joist Framing",
+              "description": "Cold-formed steel floor and ceiling joist framing"
+            },
+            {
+              "code": "05 43 00",
+              "title": "Slotted Channel Framing",
+              "description": "Slotted metal channel (Unistrut/Strut) framing and support systems"
+            },
+            {
+              "code": "05 44 00",
+              "title": "Cold-Formed Metal Trusses",
+              "description": "Light-gauge steel roof and floor truss systems"
+            }
+          ]
+        },
+        {
+          "code": "05 50 00",
+          "title": "Metal Fabrications",
+          "description": "Miscellaneous and ornamental metalwork",
+          "subdivisions": [
+            {
+              "code": "05 51 00",
+              "title": "Metal Stairs",
+              "description": "Steel stairs, landings, and stair railings including pan-type and plate treads"
+            },
+            {
+              "code": "05 52 00",
+              "title": "Metal Railings",
+              "description": "Pipe railings, tube railings, cable railings, and ornamental metal railings"
+            },
+            {
+              "code": "05 53 00",
+              "title": "Metal Gratings",
+              "description": "Bar grating, expanded metal grating, and fiberglass grating"
+            },
+            {
+              "code": "05 55 00",
+              "title": "Metal Stair Treads and Nosings",
+              "description": "Abrasive metal stair treads, nosings, and safety tread plates"
+            },
+            {
+              "code": "05 56 00",
+              "title": "Metal Castings",
+              "description": "Cast iron, cast aluminum, and cast bronze items"
+            },
+            {
+              "code": "05 58 00",
+              "title": "Formed Metal Fabrications",
+              "description": "Miscellaneous steel including lintels, shelf angles, embed plates, and loose steel items"
+            },
+            {
+              "code": "05 59 00",
+              "title": "Metal Specialties",
+              "description": "Metal ladders, bollards, posts, trench covers, and specialty fabrications"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "06",
+      "title": "Wood, Plastics, and Composites",
+      "description": "Rough Carpentry, Finish Carpentry, Architectural Woodwork, Structural Plastics, Plastic Fabrications, Composite Fabrications",
+      "subdivisions": [
+        {
+          "code": "06 10 00",
+          "title": "Rough Carpentry",
+          "description": "Wood framing, sheathing, and structural wood systems",
+          "subdivisions": [
+            {
+              "code": "06 11 00",
+              "title": "Wood Framing",
+              "description": "Dimensional lumber framing for walls, floors, roofs, and partitions"
+            },
+            {
+              "code": "06 12 00",
+              "title": "Structural Panels",
+              "description": "Plywood, OSB, and structural insulated panels (SIPs)"
+            },
+            {
+              "code": "06 13 00",
+              "title": "Heavy Timber Construction",
+              "description": "Timber framing, glulam beams, CLT, and mass timber construction"
+            },
+            {
+              "code": "06 14 00",
+              "title": "Treated Wood Foundations",
+              "description": "Pressure-treated wood foundation systems and below-grade framing"
+            },
+            {
+              "code": "06 15 00",
+              "title": "Wood Decking",
+              "description": "Structural and architectural wood deck boards and systems"
+            },
+            {
+              "code": "06 16 00",
+              "title": "Sheathing",
+              "description": "Wall, floor, and roof sheathing including plywood, OSB, and gypsum products"
+            },
+            {
+              "code": "06 17 00",
+              "title": "Shop-Fabricated Structural Wood",
+              "description": "Prefabricated wood trusses, I-joists, and engineered wood components"
+            }
+          ]
+        },
+        {
+          "code": "06 20 00",
+          "title": "Finish Carpentry",
+          "description": "Interior and exterior finish wood trim and millwork",
+          "subdivisions": [
+            {
+              "code": "06 22 00",
+              "title": "Millwork",
+              "description": "Interior wood trim, moldings, baseboards, casings, and crown molding"
+            },
+            {
+              "code": "06 25 00",
+              "title": "Prefinished Paneling",
+              "description": "Wood paneling, wainscoting, and decorative wall panels"
+            },
+            {
+              "code": "06 26 00",
+              "title": "Board Paneling",
+              "description": "Solid wood board paneling for walls and ceilings"
+            }
+          ]
+        },
+        {
+          "code": "06 40 00",
+          "title": "Architectural Woodwork",
+          "description": "Custom cabinetry, countertops, and architectural wood elements",
+          "subdivisions": [
+            {
+              "code": "06 41 00",
+              "title": "Architectural Wood Casework",
+              "description": "Custom and semi-custom wood cabinets, shelving, and built-in furniture"
+            },
+            {
+              "code": "06 42 00",
+              "title": "Wood Paneling",
+              "description": "Architectural-grade wood wall paneling and ceiling panels"
+            },
+            {
+              "code": "06 43 00",
+              "title": "Wood Stairs and Railings",
+              "description": "Custom wood staircases, handrails, balusters, and newel posts"
+            },
+            {
+              "code": "06 46 00",
+              "title": "Wood Trim",
+              "description": "Architectural-grade wood trim, standing and running trim profiles"
+            },
+            {
+              "code": "06 49 00",
+              "title": "Wood Features",
+              "description": "Custom wood features including reception desks, display cases, and specialty items"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "07",
+      "title": "Thermal and Moisture Protection",
+      "description": "Dampproofing and Waterproofing, Thermal Protection, Weather Barriers, Roofing, Sheet Metal Flashing and Trim, Wall Panels, Siding, Joint Protection, Fire and Smoke Protection",
+      "subdivisions": [
+        {
+          "code": "07 10 00",
+          "title": "Dampproofing and Waterproofing",
+          "description": "Below-grade and above-grade waterproofing and dampproofing systems",
+          "subdivisions": [
+            {
+              "code": "07 11 00",
+              "title": "Dampproofing",
+              "description": "Bituminous dampproofing, cementitious dampproofing for below-grade walls"
+            },
+            {
+              "code": "07 12 00",
+              "title": "Built-Up Bituminous Waterproofing",
+              "description": "Multi-ply bituminous membrane waterproofing systems"
+            },
+            {
+              "code": "07 13 00",
+              "title": "Sheet Waterproofing",
+              "description": "Modified bitumen, thermoplastic, and rubberized asphalt sheet waterproofing"
+            },
+            {
+              "code": "07 14 00",
+              "title": "Fluid-Applied Waterproofing",
+              "description": "Liquid-applied membrane waterproofing including polyurethane and elastomeric systems"
+            },
+            {
+              "code": "07 16 00",
+              "title": "Cementitious and Reactive Waterproofing",
+              "description": "Crystalline, cementitious, and bentonite clay waterproofing systems"
+            }
+          ]
+        },
+        {
+          "code": "07 20 00",
+          "title": "Thermal Protection",
+          "description": "Building insulation, exterior insulation systems, and thermal barriers",
+          "subdivisions": [
+            {
+              "code": "07 21 00",
+              "title": "Thermal Insulation",
+              "description": "Batt insulation, board insulation, blown-in insulation, spray foam insulation"
+            },
+            {
+              "code": "07 22 00",
+              "title": "Roof and Deck Insulation",
+              "description": "Rigid board insulation, tapered insulation systems for roofing assemblies"
+            },
+            {
+              "code": "07 24 00",
+              "title": "Exterior Insulation and Finish Systems",
+              "description": "EIFS (Dryvit, STO) including insulation board, base coat, reinforcing mesh, and finish coat"
+            },
+            {
+              "code": "07 25 00",
+              "title": "Weather Barriers",
+              "description": "Air barriers, vapor retarders, and weather-resistive barriers (WRB/house wrap)"
+            },
+            {
+              "code": "07 27 00",
+              "title": "Air Barriers",
+              "description": "Fluid-applied, sheet, and spray-applied air barrier systems"
+            }
+          ]
+        },
+        {
+          "code": "07 30 00",
+          "title": "Steep Slope Roofing",
+          "description": "Roofing materials for steep slope applications",
+          "subdivisions": [
+            {
+              "code": "07 31 00",
+              "title": "Shingles and Shakes",
+              "description": "Asphalt shingles, wood shakes, slate shingles, and synthetic shingles"
+            },
+            {
+              "code": "07 32 00",
+              "title": "Roof Tiles",
+              "description": "Clay roof tiles, concrete roof tiles, and metal roof tiles"
+            },
+            {
+              "code": "07 33 00",
+              "title": "Natural Roof Coverings",
+              "description": "Slate roofing, wood shake roofing, and thatch roofing"
+            },
+            {
+              "code": "07 34 00",
+              "title": "Building Integrated Photovoltaic Roofing",
+              "description": "Solar roof shingles and integrated PV roofing systems"
+            }
+          ]
+        },
+        {
+          "code": "07 40 00",
+          "title": "Roofing and Siding Panels",
+          "description": "Metal and composite wall and roof panel systems",
+          "subdivisions": [
+            {
+              "code": "07 41 00",
+              "title": "Roof Panels",
+              "description": "Metal roof panels including standing seam, corrugated, and insulated metal panels"
+            },
+            {
+              "code": "07 42 00",
+              "title": "Wall Panels",
+              "description": "Metal wall panels, composite wall panels, and insulated wall panel systems"
+            },
+            {
+              "code": "07 44 00",
+              "title": "Faced Panels",
+              "description": "Aluminum composite panels (ACM), fiber-cement panels, and phenolic panels"
+            },
+            {
+              "code": "07 46 00",
+              "title": "Siding",
+              "description": "Wood siding, vinyl siding, fiber cement siding, and composite siding"
+            }
+          ]
+        },
+        {
+          "code": "07 50 00",
+          "title": "Membrane Roofing",
+          "description": "Single-ply, built-up, and modified bitumen roofing membranes",
+          "subdivisions": [
+            {
+              "code": "07 51 00",
+              "title": "Built-Up Bituminous Roofing",
+              "description": "Multi-ply asphalt and coal-tar built-up roofing systems with gravel or cap sheet"
+            },
+            {
+              "code": "07 52 00",
+              "title": "Modified Bituminous Membrane Roofing",
+              "description": "SBS and APP modified bitumen membrane roofing systems"
+            },
+            {
+              "code": "07 53 00",
+              "title": "Elastomeric Membrane Roofing",
+              "description": "EPDM single-ply roofing membranes, ballasted and adhered systems"
+            },
+            {
+              "code": "07 54 00",
+              "title": "Thermoplastic Membrane Roofing",
+              "description": "TPO and PVC single-ply roofing membrane systems"
+            },
+            {
+              "code": "07 55 00",
+              "title": "Protected Membrane Roofing",
+              "description": "Inverted roof membrane assemblies (IRMA) with extruded polystyrene"
+            },
+            {
+              "code": "07 56 00",
+              "title": "Fluid-Applied Roofing",
+              "description": "Spray-applied polyurethane foam and fluid-applied roof coatings"
+            }
+          ]
+        },
+        {
+          "code": "07 60 00",
+          "title": "Flashing and Sheet Metal",
+          "description": "Sheet metal flashing, trim, gutters, and roof drainage",
+          "subdivisions": [
+            {
+              "code": "07 61 00",
+              "title": "Sheet Metal Roofing",
+              "description": "Flat-seam, batten-seam, and standing-seam sheet metal roofing"
+            },
+            {
+              "code": "07 62 00",
+              "title": "Sheet Metal Flashing and Trim",
+              "description": "Base flashing, counter flashing, cap flashing, through-wall flashing, and metal copings"
+            },
+            {
+              "code": "07 63 00",
+              "title": "Sheet Metal Roofing Specialties",
+              "description": "Roof expansion joints, roof curbs, and sheet metal specialties"
+            },
+            {
+              "code": "07 65 00",
+              "title": "Flexible Flashing",
+              "description": "Self-adhered flexible flashings, peel-and-stick membranes, and transition strips"
+            }
+          ]
+        },
+        {
+          "code": "07 70 00",
+          "title": "Roof and Wall Specialties and Accessories",
+          "description": "Roof specialties, accessories, and joint systems",
+          "subdivisions": [
+            {
+              "code": "07 71 00",
+              "title": "Roof Specialties",
+              "description": "Manufactured gutters, downspouts, gravel stops, fascias, and roof edge systems"
+            },
+            {
+              "code": "07 72 00",
+              "title": "Roof Accessories",
+              "description": "Roof hatches, smoke vents, gravity ventilators, and roof walkway systems"
+            },
+            {
+              "code": "07 76 00",
+              "title": "Roof Pavers",
+              "description": "Concrete and composite roof pavers for ballasted roofing and roof terraces"
+            },
+            {
+              "code": "07 77 00",
+              "title": "Wall Specialties",
+              "description": "Wall expansion joints, seismic joints, and wall accessories"
+            },
+            {
+              "code": "07 78 00",
+              "title": "Roof Fall Protection",
+              "description": "Permanent roof anchors, guardrails, and fall protection systems"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "08",
+      "title": "Openings",
+      "description": "Doors and Frames, Entrances and Storefronts, Windows, Skylights, Hardware, Glazing, Louvers and Vents, Gates, Access Panels",
+      "subdivisions": [
+        {
+          "code": "08 10 00",
+          "title": "Doors and Frames",
+          "description": "Metal, wood, and specialty doors and frames",
+          "subdivisions": [
+            {
+              "code": "08 11 00",
+              "title": "Metal Doors and Frames",
+              "description": "Hollow metal doors and frames, steel doors, and stainless steel frames"
+            },
+            {
+              "code": "08 12 00",
+              "title": "Metal Frames",
+              "description": "Hollow metal door frames, welded frames, and knock-down frames"
+            },
+            {
+              "code": "08 13 00",
+              "title": "Metal Doors",
+              "description": "Flush metal doors, paneled metal doors, and metal door accessories"
+            },
+            {
+              "code": "08 14 00",
+              "title": "Wood Doors",
+              "description": "Flush wood doors, stile and rail wood doors, and architectural wood doors"
+            },
+            {
+              "code": "08 15 00",
+              "title": "Plastic Doors",
+              "description": "FRP doors, HDPE doors, and other plastic door assemblies"
+            },
+            {
+              "code": "08 16 00",
+              "title": "Composite Doors",
+              "description": "Composite and specialty material door assemblies"
+            },
+            {
+              "code": "08 17 00",
+              "title": "Integrated Door Opening Assemblies",
+              "description": "Pre-assembled door, frame, and hardware combinations"
+            }
+          ]
+        },
+        {
+          "code": "08 30 00",
+          "title": "Specialty Doors and Frames",
+          "description": "Access doors, coiling doors, overhead doors, and specialty entrances",
+          "subdivisions": [
+            {
+              "code": "08 31 00",
+              "title": "Access Doors and Panels",
+              "description": "Wall and ceiling access doors and panels for mechanical/electrical access"
+            },
+            {
+              "code": "08 32 00",
+              "title": "Sliding Glass Doors",
+              "description": "Sliding patio doors, pocket sliding doors, and multi-slide door systems"
+            },
+            {
+              "code": "08 33 00",
+              "title": "Coiling Doors and Grilles",
+              "description": "Rolling steel doors, coiling counter shutters, and security grilles"
+            },
+            {
+              "code": "08 34 00",
+              "title": "Special Function Doors",
+              "description": "Fire-rated doors, acoustic doors, blast-resistant doors, and cold storage doors"
+            },
+            {
+              "code": "08 35 00",
+              "title": "Folding Doors and Grilles",
+              "description": "Accordion folding doors, bi-fold doors, and folding security grilles"
+            },
+            {
+              "code": "08 36 00",
+              "title": "Panel Doors",
+              "description": "Sectional overhead doors, hangar doors, and industrial panel doors"
+            }
+          ]
+        },
+        {
+          "code": "08 40 00",
+          "title": "Entrances, Storefronts, and Curtain Walls",
+          "description": "Aluminum-framed entrance, storefront, and curtain wall systems",
+          "subdivisions": [
+            {
+              "code": "08 41 00",
+              "title": "Entrances and Storefronts",
+              "description": "Aluminum storefront framing systems, entrance doors, and vestibule assemblies"
+            },
+            {
+              "code": "08 42 00",
+              "title": "Entrances",
+              "description": "All-glass entrances, automatic doors, revolving doors, and security entrances"
+            },
+            {
+              "code": "08 43 00",
+              "title": "Storefronts",
+              "description": "Storefront framing systems and display window assemblies"
+            },
+            {
+              "code": "08 44 00",
+              "title": "Curtain Wall and Glazed Assemblies",
+              "description": "Unitized and stick-built curtain wall systems, structural glazing, and point-fixed glass"
+            }
+          ]
+        },
+        {
+          "code": "08 50 00",
+          "title": "Windows",
+          "description": "Metal, wood, and composite window assemblies",
+          "subdivisions": [
+            {
+              "code": "08 51 00",
+              "title": "Metal Windows",
+              "description": "Aluminum windows, steel windows, and stainless steel windows"
+            },
+            {
+              "code": "08 52 00",
+              "title": "Wood Windows",
+              "description": "Wood and wood-clad window assemblies"
+            },
+            {
+              "code": "08 53 00",
+              "title": "Vinyl Windows",
+              "description": "Vinyl (PVC) window assemblies and vinyl-clad windows"
+            },
+            {
+              "code": "08 54 00",
+              "title": "Composite Windows",
+              "description": "Fiberglass, composite, and hybrid material window assemblies"
+            },
+            {
+              "code": "08 56 00",
+              "title": "Special Function Windows",
+              "description": "Security windows, blast-resistant windows, detention windows, and pass-through windows"
+            }
+          ]
+        },
+        {
+          "code": "08 70 00",
+          "title": "Hardware",
+          "description": "Door hardware, window hardware, and access control hardware",
+          "subdivisions": [
+            {
+              "code": "08 71 00",
+              "title": "Door Hardware",
+              "description": "Hinges, locksets, closers, exit devices, pulls, and stops"
+            },
+            {
+              "code": "08 74 00",
+              "title": "Access Control Hardware",
+              "description": "Electronic locksets, card readers, electromagnetic locks, and access control systems"
+            },
+            {
+              "code": "08 75 00",
+              "title": "Window Hardware",
+              "description": "Window operators, locks, lifts, and ventilation hardware"
+            },
+            {
+              "code": "08 78 00",
+              "title": "Special Function Hardware",
+              "description": "Automatic door operators, delayed egress hardware, and specialty hardware"
+            },
+            {
+              "code": "08 79 00",
+              "title": "Hardware Accessories",
+              "description": "Door viewers, kick plates, mop plates, and hardware protection"
+            }
+          ]
+        },
+        {
+          "code": "08 80 00",
+          "title": "Glazing",
+          "description": "Glass and glazing systems for doors, windows, and curtain walls",
+          "subdivisions": [
+            {
+              "code": "08 81 00",
+              "title": "Glass Glazing",
+              "description": "Float glass, tempered glass, laminated glass, and insulating glass units (IGU)"
+            },
+            {
+              "code": "08 83 00",
+              "title": "Mirrors",
+              "description": "Flat mirrors, tempered mirrors, and specialty mirror assemblies"
+            },
+            {
+              "code": "08 84 00",
+              "title": "Plastic Glazing",
+              "description": "Polycarbonate and acrylic glazing panels"
+            },
+            {
+              "code": "08 85 00",
+              "title": "Glazing Accessories",
+              "description": "Glazing sealants, setting blocks, gaskets, and glazing tapes"
+            },
+            {
+              "code": "08 87 00",
+              "title": "Glazing Surface Films",
+              "description": "Window tinting films, security films, and solar control films"
+            },
+            {
+              "code": "08 88 00",
+              "title": "Special Function Glazing",
+              "description": "Fire-rated glazing, bullet-resistant glazing, electrochromic glass, and wired glass"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "09",
+      "title": "Finishes",
+      "description": "Plaster and Gypsum Board, Tiling, Ceilings, Flooring, Wall Finishes, Exterior Finishes, Painting and Coating, Acoustic Treatment",
+      "subdivisions": [
+        {
+          "code": "09 20 00",
+          "title": "Plaster and Gypsum Board",
+          "description": "Plaster systems, stucco, and gypsum board assemblies",
+          "subdivisions": [
+            {
+              "code": "09 21 00",
+              "title": "Plaster and Gypsum Board Assemblies",
+              "description": "Metal stud framing, furring, and gypsum board partition and ceiling assemblies"
+            },
+            {
+              "code": "09 22 00",
+              "title": "Supports for Plaster and Gypsum Board",
+              "description": "Metal stud framing, furring channels, resilient channels, and hat channels"
+            },
+            {
+              "code": "09 23 00",
+              "title": "Gypsum Plastering",
+              "description": "Gypsum plaster, veneer plaster, and plaster accessories"
+            },
+            {
+              "code": "09 24 00",
+              "title": "Portland Cement Plastering",
+              "description": "Traditional stucco, one-coat stucco, and cement plaster systems"
+            },
+            {
+              "code": "09 26 00",
+              "title": "Veneer Plastering",
+              "description": "Thin-coat veneer plaster over blueboard substrate"
+            },
+            {
+              "code": "09 29 00",
+              "title": "Gypsum Board",
+              "description": "Gypsum wallboard installation, taping, finishing, and fire-rated assemblies"
+            }
+          ]
+        },
+        {
+          "code": "09 30 00",
+          "title": "Tiling",
+          "description": "Ceramic, porcelain, stone, and specialty tile installations",
+          "subdivisions": [
+            {
+              "code": "09 31 00",
+              "title": "Thin-Set Tiling",
+              "description": "Ceramic and porcelain tile installed with thin-set mortar on walls and floors"
+            },
+            {
+              "code": "09 32 00",
+              "title": "Mortar-Bed Tiling",
+              "description": "Tile installed on thick-bed mortar for leveling and slope-to-drain applications"
+            },
+            {
+              "code": "09 33 00",
+              "title": "Conductive Tiling",
+              "description": "Static-dissipative and conductive tile for clean rooms and electronic facilities"
+            },
+            {
+              "code": "09 34 00",
+              "title": "Waterproofing-Membrane Tiling",
+              "description": "Tile assemblies with integrated waterproofing membrane for wet areas"
+            },
+            {
+              "code": "09 35 00",
+              "title": "Chemical-Resistant Tiling",
+              "description": "Acid-resistant tile and epoxy grout systems for industrial applications"
+            }
+          ]
+        },
+        {
+          "code": "09 50 00",
+          "title": "Ceilings",
+          "description": "Suspended acoustical and specialty ceiling systems",
+          "subdivisions": [
+            {
+              "code": "09 51 00",
+              "title": "Acoustical Ceilings",
+              "description": "Suspended acoustical tile and lay-in panel ceiling systems with exposed grid"
+            },
+            {
+              "code": "09 53 00",
+              "title": "Acoustical Ceiling Suspension Assemblies",
+              "description": "Metal grid suspension systems for acoustical ceiling panels"
+            },
+            {
+              "code": "09 54 00",
+              "title": "Specialty Ceilings",
+              "description": "Linear metal ceilings, wood ceilings, stretch ceiling systems, and cloud ceilings"
+            },
+            {
+              "code": "09 56 00",
+              "title": "Textured Ceilings",
+              "description": "Sprayed textured and acoustical ceiling finishes"
+            },
+            {
+              "code": "09 58 00",
+              "title": "Integrated Ceiling Assemblies",
+              "description": "Ceiling systems integrating lighting, HVAC, and sprinkler components"
+            }
+          ]
+        },
+        {
+          "code": "09 60 00",
+          "title": "Flooring",
+          "description": "Floor treatment, resilient flooring, carpet, tile flooring, and specialty flooring",
+          "subdivisions": [
+            {
+              "code": "09 61 00",
+              "title": "Flooring Treatment",
+              "description": "Floor sealing, hardening, and surface preparation treatments"
+            },
+            {
+              "code": "09 62 00",
+              "title": "Specialty Flooring",
+              "description": "Resinous flooring, epoxy flooring, terrazzo, and conductive flooring"
+            },
+            {
+              "code": "09 63 00",
+              "title": "Masonry Flooring",
+              "description": "Brick flooring, stone flooring, and concrete paver flooring"
+            },
+            {
+              "code": "09 64 00",
+              "title": "Wood Flooring",
+              "description": "Hardwood strip flooring, wood parquet flooring, and engineered wood flooring"
+            },
+            {
+              "code": "09 65 00",
+              "title": "Resilient Flooring",
+              "description": "Vinyl tile (VCT/LVT), vinyl sheet, rubber flooring, linoleum, and cork flooring"
+            },
+            {
+              "code": "09 66 00",
+              "title": "Terrazzo Flooring",
+              "description": "Poured-in-place and precast terrazzo flooring systems"
+            },
+            {
+              "code": "09 68 00",
+              "title": "Carpeting",
+              "description": "Broadloom carpet, carpet tile, and carpet cushion"
+            },
+            {
+              "code": "09 69 00",
+              "title": "Access Flooring",
+              "description": "Raised access flooring systems for data centers and offices"
+            }
+          ]
+        },
+        {
+          "code": "09 70 00",
+          "title": "Wall Finishes",
+          "description": "Wall coverings, wall coatings, and specialty wall treatments",
+          "subdivisions": [
+            {
+              "code": "09 72 00",
+              "title": "Wall Coverings",
+              "description": "Vinyl wall coverings, fabric wall coverings, and specialty wall coverings"
+            },
+            {
+              "code": "09 73 00",
+              "title": "Wall Carpeting",
+              "description": "Carpet applied to wall surfaces for acoustical and decorative purposes"
+            },
+            {
+              "code": "09 74 00",
+              "title": "Flexible Wood Sheets",
+              "description": "Flexible real-wood veneer sheets for wall applications"
+            },
+            {
+              "code": "09 77 00",
+              "title": "Special Wall Surfacing",
+              "description": "Fiberglass reinforced panels (FRP), tackable wall panels, and impact-resistant wall surfaces"
+            }
+          ]
+        },
+        {
+          "code": "09 80 00",
+          "title": "Acoustic Treatment",
+          "description": "Acoustic panels, sound barriers, and noise control systems",
+          "subdivisions": [
+            {
+              "code": "09 81 00",
+              "title": "Acoustic Insulation",
+              "description": "Sound-attenuating batts, acoustic blankets, and cavity insulation for sound control"
+            },
+            {
+              "code": "09 83 00",
+              "title": "Acoustic Finishes",
+              "description": "Sprayed acoustic finishes and textured acoustic coatings"
+            },
+            {
+              "code": "09 84 00",
+              "title": "Acoustic Room Components",
+              "description": "Sound-absorbing wall panels, acoustic baffles, ceiling clouds, and diffusers"
+            }
+          ]
+        },
+        {
+          "code": "09 90 00",
+          "title": "Painting and Coating",
+          "description": "Interior and exterior painting, staining, and protective coatings",
+          "subdivisions": [
+            {
+              "code": "09 91 00",
+              "title": "Painting",
+              "description": "Interior and exterior painting including primers, intermediate coats, and finish coats"
+            },
+            {
+              "code": "09 93 00",
+              "title": "Staining and Transparent Finishing",
+              "description": "Wood staining, sealers, varnishes, and transparent protective finishes"
+            },
+            {
+              "code": "09 96 00",
+              "title": "High-Performance Coatings",
+              "description": "Epoxy coatings, urethane coatings, intumescent coatings, and industrial coatings"
+            },
+            {
+              "code": "09 97 00",
+              "title": "Special Coatings",
+              "description": "Anti-graffiti coatings, anti-microbial coatings, and specialty protective coatings"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "10",
+      "title": "Specialties",
+      "description": "Visual Display Units, Compartments and Cubicles, Louvers and Vents, Grilles and Screens, Service Walls, Wall and Corner Guards, Access Flooring, Specialty Modules, Pest Control, Fireplaces and Stoves, Flagpoles, Identifying Devices, Pedestrian Control Devices, Lockers, Fire Protection Specialties, Manufactured Exterior Specialties"
+    },
+    {
+      "code": "11",
+      "title": "Equipment",
+      "description": "Maintenance Equipment, Security and Vault Equipment, Teller and Service Equipment, Ecclesiastical Equipment, Library Equipment, Theater and Stage Equipment, Instrumental Equipment, Mercantile Equipment, Detention Equipment, Residential Equipment, Fluid Waste Treatment and Disposal Equipment, Water Supply and Treatment Equipment, Audiovisual Equipment, Vehicular Equipment, Parking Control Equipment, Loading Dock Equipment, Solid Waste Handling Equipment, Facility Maintenance and Operation Equipment"
+    },
+    {
+      "code": "12",
+      "title": "Furnishings",
+      "description": "Art, Manufactured Casework, Window Treatment, Fabrics, Furniture, Rugs and Mats, Multiple Seating, Interior Plants and Planters"
+    },
+    {
+      "code": "13",
+      "title": "Special Construction",
+      "description": "Special Facility Components, Integrated Construction, Special Purpose Rooms, Special Structures, Integrated Assemblies, Measurement and Control Instrumentation, Building Automation and Control"
+    },
+    {
+      "code": "14",
+      "title": "Conveying Equipment",
+      "description": "Dumbwaiters, Elevators, Escalators and Moving Walks, Lifts, Material Handling, Hoists and Cranes, Turntables, Scaffolding, Transportation"
+    },
+    {
+      "code": "21",
+      "title": "Fire Suppression",
+      "description": "Fire Suppression Systems, Fire Suppression Wells, Fire-Suppression Water Storage, Vehicle Fire Suppression",
+      "subdivisions": [
+        {
+          "code": "21 10 00",
+          "title": "Water-Based Fire-Suppression Systems",
+          "description": "Wet pipe, dry pipe, pre-action, and deluge sprinkler systems",
+          "subdivisions": [
+            {
+              "code": "21 11 00",
+              "title": "Facility Fire-Suppression Water-Service Piping",
+              "description": "Fire service main piping from utility connection to building interior"
+            },
+            {
+              "code": "21 12 00",
+              "title": "Fire-Suppression Standpipes",
+              "description": "Standpipe systems including Class I, II, and III with hose connections"
+            },
+            {
+              "code": "21 13 00",
+              "title": "Fire-Suppression Sprinkler Systems",
+              "description": "Wet-pipe, dry-pipe, pre-action, and deluge automatic sprinkler systems"
+            },
+            {
+              "code": "21 15 00",
+              "title": "Fire-Suppression Hydraulic Calculations",
+              "description": "Hydraulic design calculations for sprinkler and standpipe systems"
+            }
+          ]
+        },
+        {
+          "code": "21 20 00",
+          "title": "Fire-Extinguishing Systems",
+          "description": "Special hazard fire extinguishing systems",
+          "subdivisions": [
+            {
+              "code": "21 21 00",
+              "title": "Carbon-Dioxide Fire-Extinguishing Systems",
+              "description": "Total flooding and local application CO2 suppression systems"
+            },
+            {
+              "code": "21 22 00",
+              "title": "Clean-Agent Fire-Extinguishing Systems",
+              "description": "FM-200, Novec 1230, and other clean agent suppression systems for electronics"
+            },
+            {
+              "code": "21 23 00",
+              "title": "Wet-Chemical Fire-Extinguishing Systems",
+              "description": "Kitchen hood suppression and wet chemical fire extinguishing systems"
+            },
+            {
+              "code": "21 24 00",
+              "title": "Dry-Chemical Fire-Extinguishing Systems",
+              "description": "Dry chemical agent systems for industrial and special hazard applications"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "22",
+      "title": "Plumbing",
+      "description": "Plumbing Piping, Plumbing Equipment, Plumbing Fixtures, Plumbing Specialties, Water Piping Systems, Sanitary Waste and Vent Systems, Natural-Gas Systems, Process Gas Piping, Fuel-Oil Systems, Drainage Piping Systems",
+      "subdivisions": [
+        {
+          "code": "22 10 00",
+          "title": "Plumbing Piping and Pumps",
+          "description": "Facility plumbing piping, valves, and pump systems",
+          "subdivisions": [
+            {
+              "code": "22 11 00",
+              "title": "Facility Water Distribution",
+              "description": "Domestic cold and hot water piping, water heaters, and distribution systems"
+            },
+            {
+              "code": "22 12 00",
+              "title": "Facility Potable-Water Storage Tanks",
+              "description": "Potable water storage tanks, expansion tanks, and water treatment"
+            },
+            {
+              "code": "22 13 00",
+              "title": "Facility Sanitary Sewerage",
+              "description": "Sanitary waste and vent piping, cleanouts, and drain systems"
+            },
+            {
+              "code": "22 14 00",
+              "title": "Facility Storm Drainage",
+              "description": "Interior storm drainage piping, roof drains, and area drains"
+            },
+            {
+              "code": "22 15 00",
+              "title": "General Service Compressed-Air Systems",
+              "description": "Compressed air piping, compressors, and accessories for building services"
+            }
+          ]
+        },
+        {
+          "code": "22 30 00",
+          "title": "Plumbing Equipment",
+          "description": "Plumbing equipment including water heaters, pumps, and treatment",
+          "subdivisions": [
+            {
+              "code": "22 31 00",
+              "title": "Domestic Water Softeners",
+              "description": "Water softening equipment and ion-exchange systems"
+            },
+            {
+              "code": "22 33 00",
+              "title": "Electric Domestic Water Heaters",
+              "description": "Electric tank and tankless domestic water heating equipment"
+            },
+            {
+              "code": "22 34 00",
+              "title": "Fuel-Fired Domestic Water Heaters",
+              "description": "Gas-fired and oil-fired domestic water heaters and boilers"
+            },
+            {
+              "code": "22 35 00",
+              "title": "Domestic Water Heat Exchangers",
+              "description": "Indirect water heaters and heat exchangers for domestic hot water"
+            }
+          ]
+        },
+        {
+          "code": "22 40 00",
+          "title": "Plumbing Fixtures",
+          "description": "Commercial and residential plumbing fixtures and trim",
+          "subdivisions": [
+            {
+              "code": "22 41 00",
+              "title": "Residential Plumbing Fixtures",
+              "description": "Residential toilets, lavatories, bathtubs, showers, and kitchen sinks"
+            },
+            {
+              "code": "22 42 00",
+              "title": "Commercial Plumbing Fixtures",
+              "description": "Commercial toilets, urinals, lavatories, sinks, and drinking fountains"
+            },
+            {
+              "code": "22 43 00",
+              "title": "Healthcare Plumbing Fixtures",
+              "description": "Medical sinks, scrub sinks, clinical fixtures, and healthcare-specific plumbing"
+            },
+            {
+              "code": "22 45 00",
+              "title": "Emergency Plumbing Fixtures",
+              "description": "Emergency eyewash stations, drench showers, and combination units"
+            },
+            {
+              "code": "22 47 00",
+              "title": "Drinking Fountains and Water Coolers",
+              "description": "Wall-mounted and floor-mounted drinking fountains, water coolers, and bottle fillers"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "23",
+      "title": "Heating, Ventilating, and Air Conditioning (HVAC)",
+      "description": "Facility Fuel Services, HVAC Piping and Pumps, HVAC Air Distribution, HVAC Equipment, Central Heating Equipment, Central Cooling Equipment, Decentralized HVAC Equipment, HVAC Instrumentation and Controls",
+      "subdivisions": [
+        {
+          "code": "23 20 00",
+          "title": "HVAC Piping and Pumps",
+          "description": "Hydronic piping, refrigerant piping, pumps, and specialties",
+          "subdivisions": [
+            {
+              "code": "23 21 00",
+              "title": "Hydronic Piping and Pumps",
+              "description": "Chilled water, hot water, condenser water piping, and circulation pumps"
+            },
+            {
+              "code": "23 22 00",
+              "title": "Steam and Condensate Piping and Pumps",
+              "description": "Steam distribution piping, condensate return piping, steam traps, and pumps"
+            },
+            {
+              "code": "23 23 00",
+              "title": "Refrigerant Piping",
+              "description": "Copper refrigerant piping, insulation, and refrigerant specialties"
+            },
+            {
+              "code": "23 25 00",
+              "title": "HVAC Water Treatment",
+              "description": "Chemical treatment, water testing, and filtration for HVAC water systems"
+            }
+          ]
+        },
+        {
+          "code": "23 30 00",
+          "title": "HVAC Air Distribution",
+          "description": "Ductwork, air terminals, and air distribution accessories",
+          "subdivisions": [
+            {
+              "code": "23 31 00",
+              "title": "HVAC Ducts and Casings",
+              "description": "Sheet metal ductwork, fiberglass ductwork, and fabric duct systems"
+            },
+            {
+              "code": "23 33 00",
+              "title": "Air Duct Accessories",
+              "description": "Dampers, access doors, turning vanes, duct supports, and flexible connectors"
+            },
+            {
+              "code": "23 34 00",
+              "title": "HVAC Fans",
+              "description": "Centrifugal fans, axial fans, power roof ventilators, and inline fans"
+            },
+            {
+              "code": "23 36 00",
+              "title": "Air Terminal Units",
+              "description": "VAV boxes, fan-powered boxes, bypass boxes, and terminal unit controls"
+            },
+            {
+              "code": "23 37 00",
+              "title": "Air Outlets and Inlets",
+              "description": "Diffusers, registers, grilles, and louvers for supply, return, and exhaust air"
+            },
+            {
+              "code": "23 38 00",
+              "title": "Ventilation Hoods",
+              "description": "Kitchen exhaust hoods, laboratory fume hoods, and specialty ventilation hoods"
+            }
+          ]
+        },
+        {
+          "code": "23 50 00",
+          "title": "Central Heating Equipment",
+          "description": "Boilers, furnaces, and central heating plants",
+          "subdivisions": [
+            {
+              "code": "23 51 00",
+              "title": "Breechings, Chimneys, and Stacks",
+              "description": "Flue gas venting, prefabricated chimneys, and exhaust stacks"
+            },
+            {
+              "code": "23 52 00",
+              "title": "Heating Boilers",
+              "description": "Hot water and steam boilers including fire-tube, water-tube, and condensing types"
+            },
+            {
+              "code": "23 54 00",
+              "title": "Furnaces",
+              "description": "Gas-fired, oil-fired, and electric central furnaces for forced-air heating"
+            },
+            {
+              "code": "23 55 00",
+              "title": "Fuel-Fired Heaters",
+              "description": "Unit heaters, infrared heaters, duct furnaces, and radiant heaters"
+            },
+            {
+              "code": "23 56 00",
+              "title": "Solar Energy Heating Equipment",
+              "description": "Solar thermal collectors, solar water heaters, and solar heating systems"
+            },
+            {
+              "code": "23 57 00",
+              "title": "Heat Exchangers for HVAC",
+              "description": "Shell-and-tube, plate-and-frame, and air-to-air heat exchangers"
+            }
+          ]
+        },
+        {
+          "code": "23 60 00",
+          "title": "Central Cooling Equipment",
+          "description": "Chillers, cooling towers, and central cooling plants",
+          "subdivisions": [
+            {
+              "code": "23 61 00",
+              "title": "Refrigerant Compressors",
+              "description": "Reciprocating, scroll, screw, and centrifugal refrigerant compressors"
+            },
+            {
+              "code": "23 62 00",
+              "title": "Packaged Compressor and Condenser Units",
+              "description": "Air-cooled and water-cooled condensing units for split and packaged systems"
+            },
+            {
+              "code": "23 64 00",
+              "title": "Packaged Water Chillers",
+              "description": "Air-cooled and water-cooled chiller packages including centrifugal, screw, and scroll"
+            },
+            {
+              "code": "23 65 00",
+              "title": "Cooling Towers",
+              "description": "Induced draft, forced draft, and crossflow cooling tower systems"
+            }
+          ]
+        },
+        {
+          "code": "23 70 00",
+          "title": "Central HVAC Equipment",
+          "description": "Air handling units and central station equipment",
+          "subdivisions": [
+            {
+              "code": "23 72 00",
+              "title": "Air-to-Air Energy Recovery Equipment",
+              "description": "Enthalpy wheels, heat pipes, runaround coils, and energy recovery ventilators (ERV)"
+            },
+            {
+              "code": "23 73 00",
+              "title": "Indoor Central-Station Air-Handling Units",
+              "description": "Custom and semi-custom central station AHUs with coils, filters, and fans"
+            },
+            {
+              "code": "23 74 00",
+              "title": "Packaged Outdoor HVAC Equipment",
+              "description": "Rooftop units (RTUs), packaged air handlers, and makeup air units"
+            },
+            {
+              "code": "23 75 00",
+              "title": "Custom Air-Handling Units",
+              "description": "Built-up and custom-designed air handling units for specialized applications"
+            }
+          ]
+        },
+        {
+          "code": "23 80 00",
+          "title": "Decentralized HVAC Equipment",
+          "description": "Terminal units, split systems, and decentralized HVAC",
+          "subdivisions": [
+            {
+              "code": "23 81 00",
+              "title": "Decentralized Unitary HVAC Equipment",
+              "description": "Through-wall units, PTAC units, and window air conditioners"
+            },
+            {
+              "code": "23 82 00",
+              "title": "Convection Heating and Cooling Units",
+              "description": "Fan coil units, unit ventilators, cabinet heaters, and convectors"
+            },
+            {
+              "code": "23 83 00",
+              "title": "Radiant Heating Units",
+              "description": "Radiant floor heating, radiant ceiling panels, and hydronic radiant systems"
+            },
+            {
+              "code": "23 84 00",
+              "title": "Humidity Control Equipment",
+              "description": "Humidifiers, dehumidifiers, and desiccant systems"
+            },
+            {
+              "code": "23 81 26",
+              "title": "Split-System Air-Conditioners",
+              "description": "Ductless mini-split and multi-split air conditioning systems"
+            },
+            {
+              "code": "23 81 19",
+              "title": "Self-Contained Air-Conditioners",
+              "description": "Portable and self-contained air conditioning units"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "25",
+      "title": "Integrated Automation",
+      "description": "Integrated Automation Facility Services, Integrated Automation Instrumentation and Terminal Devices, Integrated Automation Control Sequences, Integrated Automation Software and Hardware, Integrated Automation Network Equipment, Integrated Automation Control and Monitoring Network, Integrated Automation Systems and Databases"
+    },
+    {
+      "code": "26",
+      "title": "Electrical",
+      "description": "Facility Electrical Services, Electrical Power Generation, Facility Power Transmission, Facility Power Distribution, Lighting, Communications, Electronic Safety and Security, Electrical Instrumentation and Controls for Electrical Systems",
+      "subdivisions": [
+        {
+          "code": "26 10 00",
+          "title": "Medium-Voltage Electrical Distribution",
+          "description": "Medium-voltage switchgear, transformers, and distribution",
+          "subdivisions": [
+            {
+              "code": "26 11 00",
+              "title": "Substations",
+              "description": "Medium-voltage substations, unit substations, and padmount transformers"
+            },
+            {
+              "code": "26 12 00",
+              "title": "Medium-Voltage Transformers",
+              "description": "Liquid-filled and dry-type medium-voltage transformers"
+            },
+            {
+              "code": "26 13 00",
+              "title": "Medium-Voltage Switchgear",
+              "description": "Metal-clad switchgear, vacuum circuit breakers, and medium-voltage motor controllers"
+            }
+          ]
+        },
+        {
+          "code": "26 20 00",
+          "title": "Low-Voltage Electrical Distribution",
+          "description": "Low-voltage switchgear, panelboards, and distribution",
+          "subdivisions": [
+            {
+              "code": "26 21 00",
+              "title": "Low-Voltage Electrical Service Entrance",
+              "description": "Service entrance switchboards, CT cabinets, and metering equipment"
+            },
+            {
+              "code": "26 22 00",
+              "title": "Low-Voltage Transformers",
+              "description": "Dry-type distribution transformers, buck-boost transformers, and K-rated transformers"
+            },
+            {
+              "code": "26 23 00",
+              "title": "Low-Voltage Switchgear",
+              "description": "Low-voltage switchgear assemblies with power circuit breakers"
+            },
+            {
+              "code": "26 24 00",
+              "title": "Switchboards and Panelboards",
+              "description": "Distribution switchboards, panelboards, and branch circuit panels"
+            },
+            {
+              "code": "26 25 00",
+              "title": "Enclosed Bus Assemblies",
+              "description": "Busway, bus duct, and trolley busway distribution systems"
+            },
+            {
+              "code": "26 27 00",
+              "title": "Low-Voltage Distribution Equipment",
+              "description": "Power distribution units (PDU), disconnect switches, and enclosed circuit breakers"
+            },
+            {
+              "code": "26 28 00",
+              "title": "Low-Voltage Circuit Protective Devices",
+              "description": "Circuit breakers, fuses, surge protective devices, and ground-fault protection"
+            },
+            {
+              "code": "26 29 00",
+              "title": "Low-Voltage Controllers",
+              "description": "Motor control centers (MCC), variable frequency drives (VFD), and motor starters"
+            }
+          ]
+        },
+        {
+          "code": "26 30 00",
+          "title": "Facility Electrical Power Generating and Storing Equipment",
+          "description": "Generators, UPS, and energy storage systems",
+          "subdivisions": [
+            {
+              "code": "26 31 00",
+              "title": "Photovoltaic Collectors",
+              "description": "Solar PV panels, mounting systems, and solar inverters"
+            },
+            {
+              "code": "26 32 00",
+              "title": "Packaged Generator Assemblies",
+              "description": "Diesel, natural gas, and bi-fuel standby generator systems"
+            },
+            {
+              "code": "26 33 00",
+              "title": "Battery Equipment",
+              "description": "Battery systems, battery racks, and battery monitoring for UPS and emergency"
+            },
+            {
+              "code": "26 35 00",
+              "title": "Power Filters and Conditioners",
+              "description": "Harmonic filters, power conditioners, and power quality equipment"
+            },
+            {
+              "code": "26 36 00",
+              "title": "Transfer Switches",
+              "description": "Automatic transfer switches (ATS) and manual transfer switches"
+            },
+            {
+              "code": "26 37 00",
+              "title": "Uninterruptible Power Supply",
+              "description": "UPS systems including online, line-interactive, and rotary types"
+            }
+          ]
+        },
+        {
+          "code": "26 50 00",
+          "title": "Lighting",
+          "description": "Interior and exterior lighting systems",
+          "subdivisions": [
+            {
+              "code": "26 51 00",
+              "title": "Interior Lighting",
+              "description": "Recessed, surface, pendant, track, and specialty interior light fixtures"
+            },
+            {
+              "code": "26 52 00",
+              "title": "Emergency and Exit Lighting",
+              "description": "Emergency lighting units, exit signs, and central battery emergency systems"
+            },
+            {
+              "code": "26 53 00",
+              "title": "Exit Signs",
+              "description": "LED exit signs, self-luminous exit signs, and combination exit/emergency units"
+            },
+            {
+              "code": "26 55 00",
+              "title": "Special Purpose Lighting",
+              "description": "Theatrical lighting, surgical lighting, and hazardous area lighting"
+            },
+            {
+              "code": "26 56 00",
+              "title": "Exterior Lighting",
+              "description": "Site lighting, parking lot lighting, facade lighting, and landscape lighting"
+            },
+            {
+              "code": "26 58 00",
+              "title": "Lighting Control Equipment",
+              "description": "Dimmers, occupancy sensors, daylight harvesting, and programmable lighting controls"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "27",
+      "title": "Communications",
+      "description": "Structured Cabling, Data Communications, Voice Communications, Audio-Video Communications, Distributed Communications and Monitoring Systems, Wireless Communications, Communications Monitoring and Control",
+      "subdivisions": [
+        {
+          "code": "27 10 00",
+          "title": "Structured Cabling",
+          "description": "Building telecommunications cabling infrastructure",
+          "subdivisions": [
+            {
+              "code": "27 11 00",
+              "title": "Communications Equipment Room Fittings",
+              "description": "Equipment racks, cable management, grounding, and MDF/IDF room buildout"
+            },
+            {
+              "code": "27 13 00",
+              "title": "Communications Backbone Cabling",
+              "description": "Fiber optic and copper backbone cabling between telecom rooms"
+            },
+            {
+              "code": "27 15 00",
+              "title": "Communications Horizontal Cabling",
+              "description": "Category 6/6A copper cabling and fiber to workstation outlets"
+            },
+            {
+              "code": "27 16 00",
+              "title": "Communications Connecting Cords, Devices, and Adapters",
+              "description": "Patch cords, patch panels, jacks, faceplates, and adapters"
+            }
+          ]
+        },
+        {
+          "code": "27 20 00",
+          "title": "Data Communications",
+          "description": "Network hardware, wireless systems, and data infrastructure",
+          "subdivisions": [
+            {
+              "code": "27 21 00",
+              "title": "Data Communications Network Equipment",
+              "description": "Ethernet switches, routers, firewalls, and network infrastructure"
+            },
+            {
+              "code": "27 22 00",
+              "title": "Data Communications Hardware",
+              "description": "Servers, network-attached storage, and data communications equipment"
+            },
+            {
+              "code": "27 24 00",
+              "title": "Unified Communications and Collaboration Equipment",
+              "description": "VoIP systems, video conferencing, and unified communications platforms"
+            },
+            {
+              "code": "27 25 00",
+              "title": "Data Communications Software",
+              "description": "Network management software, monitoring tools, and communications applications"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "28",
+      "title": "Electronic Safety and Security",
+      "description": "Access Control, Intrusion Detection, Video Surveillance, Detection and Alarm, Electronic and Biometric Access Control Systems, Radiation Detection, Electronic Safety and Security Systems Integration, Fire and Smoke Detection and Alarm"
+    },
+    {
+      "code": "31",
+      "title": "Earthwork",
+      "description": "Earth Moving, Soil Treatment, Earthwork Methods, Tunneling and Mining, Piles and Caissons, Excavation Support and Protection, Groundwater and Aquifer Wells, Dewatering and Groundwater Control",
+      "subdivisions": [
+        {
+          "code": "31 10 00",
+          "title": "Site Clearing",
+          "description": "Clearing, grubbing, and site preparation",
+          "subdivisions": [
+            {
+              "code": "31 11 00",
+              "title": "Clearing and Grubbing",
+              "description": "Tree removal, stump removal, brush clearing, and vegetation stripping"
+            },
+            {
+              "code": "31 12 00",
+              "title": "Selective Clearing",
+              "description": "Selective tree removal, tree protection, and vegetation preservation"
+            },
+            {
+              "code": "31 13 00",
+              "title": "Selective Tree and Shrub Removal and Trimming",
+              "description": "Arborist-directed tree removal, transplanting, and pruning"
+            },
+            {
+              "code": "31 14 00",
+              "title": "Earth Stripping and Stockpiling",
+              "description": "Topsoil stripping, stockpiling, and topsoil respread operations"
+            }
+          ]
+        },
+        {
+          "code": "31 20 00",
+          "title": "Earth Moving",
+          "description": "Excavation, grading, fill, and compaction",
+          "subdivisions": [
+            {
+              "code": "31 21 00",
+              "title": "Off-Gassing Mitigation",
+              "description": "Methane and radon mitigation, vapor barriers, and ventilation systems below grade"
+            },
+            {
+              "code": "31 22 00",
+              "title": "Grading",
+              "description": "Rough grading, fine grading, and site grading for proper drainage"
+            },
+            {
+              "code": "31 23 00",
+              "title": "Excavation and Fill",
+              "description": "Building excavation, trench excavation, structural fill, and backfill operations"
+            },
+            {
+              "code": "31 24 00",
+              "title": "Embankments",
+              "description": "Engineered fill embankments, mechanically stabilized earth, and slope construction"
+            },
+            {
+              "code": "31 25 00",
+              "title": "Erosion and Sedimentation Controls",
+              "description": "Silt fences, erosion blankets, sediment basins, and SWPPP compliance"
+            }
+          ]
+        },
+        {
+          "code": "31 30 00",
+          "title": "Earthwork Methods",
+          "description": "Soil stabilization, soil treatment, and ground improvement",
+          "subdivisions": [
+            {
+              "code": "31 31 00",
+              "title": "Soil Treatment",
+              "description": "Chemical stabilization, lime treatment, and cement stabilization of soils"
+            },
+            {
+              "code": "31 32 00",
+              "title": "Soil Stabilization",
+              "description": "Mechanical and chemical soil stabilization, grouting, and ground improvement"
+            },
+            {
+              "code": "31 33 00",
+              "title": "Rock Stabilization",
+              "description": "Rock bolting, shotcrete stabilization, and rock reinforcement systems"
+            },
+            {
+              "code": "31 34 00",
+              "title": "Soil Reinforcement",
+              "description": "Geogrid reinforcement, geotextile reinforcement, and soil nailing"
+            },
+            {
+              "code": "31 35 00",
+              "title": "Slope Protection",
+              "description": "Slope stabilization, gabion walls, riprap, and erosion protection"
+            },
+            {
+              "code": "31 36 00",
+              "title": "Gabions",
+              "description": "Gabion baskets, mattresses, and retaining structures"
+            },
+            {
+              "code": "31 37 00",
+              "title": "Riprap",
+              "description": "Stone riprap, concrete riprap, and erosion protection armoring"
+            }
+          ]
+        },
+        {
+          "code": "31 40 00",
+          "title": "Shoring and Underpinning",
+          "description": "Structural support for excavations and existing foundations",
+          "subdivisions": [
+            {
+              "code": "31 41 00",
+              "title": "Shoring",
+              "description": "Soldier pile and lagging, sheet piling, and braced excavation shoring"
+            },
+            {
+              "code": "31 43 00",
+              "title": "Concrete Raising",
+              "description": "Mudjacking, polyurethane foam injection, and slab leveling"
+            },
+            {
+              "code": "31 45 00",
+              "title": "Vibratory Sheet Piling",
+              "description": "Installation and removal of temporary and permanent sheet piling"
+            },
+            {
+              "code": "31 46 00",
+              "title": "Underpinning",
+              "description": "Foundation underpinning including micropiles, pit underpinning, and jet grouting"
+            }
+          ]
+        },
+        {
+          "code": "31 50 00",
+          "title": "Excavation Support and Protection",
+          "description": "Excavation support, dewatering, and protection systems",
+          "subdivisions": [
+            {
+              "code": "31 52 00",
+              "title": "Cofferdams",
+              "description": "Temporary watertight enclosures for below-water construction"
+            },
+            {
+              "code": "31 53 00",
+              "title": "Cribbing and Walers",
+              "description": "Timber cribbing, walers, and bracing for excavation support"
+            },
+            {
+              "code": "31 54 00",
+              "title": "Ground Freezing",
+              "description": "Artificial ground freezing for temporary excavation support and water control"
+            },
+            {
+              "code": "31 56 00",
+              "title": "Slurry Walls",
+              "description": "Soil-bentonite, cement-bentonite, and structural diaphragm walls"
+            }
+          ]
+        },
+        {
+          "code": "31 60 00",
+          "title": "Special Foundations and Load-Bearing Elements",
+          "description": "Deep foundation systems and load-bearing elements",
+          "subdivisions": [
+            {
+              "code": "31 62 00",
+              "title": "Driven Piles",
+              "description": "Steel H-piles, pipe piles, precast concrete piles, and timber piles"
+            },
+            {
+              "code": "31 63 00",
+              "title": "Bored Piles",
+              "description": "Drilled shafts (caissons), auger-cast piles, and micropiles"
+            },
+            {
+              "code": "31 64 00",
+              "title": "Caissons",
+              "description": "Open caissons, pneumatic caissons, and drilled caisson foundations"
+            },
+            {
+              "code": "31 66 00",
+              "title": "Special Foundations",
+              "description": "Mat foundations, pressure-injected footings, and specialty foundation systems"
+            },
+            {
+              "code": "31 68 00",
+              "title": "Foundation Anchors",
+              "description": "Helical anchors, grouted anchors, and ground anchor systems"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "32",
+      "title": "Exterior Improvements",
+      "description": "Paving, Curbs and Gutters, Walks, Roads and Parking Appurtenances, Landscaping, Planting, Irrigation, Exterior Enclosures, Retaining Walls, Site Improvements",
+      "subdivisions": [
+        {
+          "code": "32 10 00",
+          "title": "Bases, Ballasts, and Paving",
+          "description": "Aggregate bases, asphalt paving, concrete paving, and unit paving",
+          "subdivisions": [
+            {
+              "code": "32 11 00",
+              "title": "Base Courses",
+              "description": "Aggregate base courses, stabilized base courses, and subbase preparation"
+            },
+            {
+              "code": "32 12 00",
+              "title": "Flexible Paving",
+              "description": "Asphalt paving including hot-mix asphalt, cold-mix asphalt, and asphalt overlays"
+            },
+            {
+              "code": "32 13 00",
+              "title": "Rigid Paving",
+              "description": "Portland cement concrete paving for roads, parking, and industrial yards"
+            },
+            {
+              "code": "32 14 00",
+              "title": "Unit Paving",
+              "description": "Brick pavers, concrete pavers, stone pavers, and permeable unit paving"
+            },
+            {
+              "code": "32 15 00",
+              "title": "Aggregate Surfacing",
+              "description": "Gravel surfacing, crushed stone surfacing, and stabilized aggregate paving"
+            },
+            {
+              "code": "32 16 00",
+              "title": "Curbs and Gutters",
+              "description": "Concrete curbs, asphalt curbs, stone curbs, and integral curb-gutter combinations"
+            },
+            {
+              "code": "32 17 00",
+              "title": "Paving Specialties",
+              "description": "Parking bumpers, pavement markings, raised traffic islands, and speed bumps"
+            },
+            {
+              "code": "32 18 00",
+              "title": "Athletic and Recreational Surfacing",
+              "description": "Sport court surfacing, running tracks, synthetic turf, and playground surfacing"
+            }
+          ]
+        },
+        {
+          "code": "32 30 00",
+          "title": "Site Improvements",
+          "description": "Fences, walls, site furnishings, and other improvements",
+          "subdivisions": [
+            {
+              "code": "32 31 00",
+              "title": "Fences and Gates",
+              "description": "Chain link fences, ornamental metal fences, wood fences, and security fences"
+            },
+            {
+              "code": "32 32 00",
+              "title": "Retaining Walls",
+              "description": "Cast-in-place concrete, precast, segmental block, and gravity retaining walls"
+            },
+            {
+              "code": "32 33 00",
+              "title": "Site Furnishings",
+              "description": "Benches, trash receptacles, bike racks, planters, and bollards"
+            },
+            {
+              "code": "32 34 00",
+              "title": "Fabricated Bridges",
+              "description": "Pedestrian bridges, vehicular bridges, and prefabricated bridge systems"
+            },
+            {
+              "code": "32 35 00",
+              "title": "Screening Devices",
+              "description": "Privacy screens, dumpster enclosures, and mechanical equipment screening"
+            }
+          ]
+        },
+        {
+          "code": "32 90 00",
+          "title": "Planting",
+          "description": "Landscaping, planting, and irrigation",
+          "subdivisions": [
+            {
+              "code": "32 91 00",
+              "title": "Planting Preparation",
+              "description": "Topsoil placement, soil amendments, planting bed preparation, and fine grading"
+            },
+            {
+              "code": "32 92 00",
+              "title": "Turf and Grasses",
+              "description": "Sodding, seeding, hydro-seeding, and turf establishment"
+            },
+            {
+              "code": "32 93 00",
+              "title": "Plants",
+              "description": "Trees, shrubs, ground covers, and ornamental plantings"
+            },
+            {
+              "code": "32 94 00",
+              "title": "Planting Accessories",
+              "description": "Tree staking, guy wires, root barriers, and plant protection"
+            },
+            {
+              "code": "32 96 00",
+              "title": "Transplanting",
+              "description": "Tree and shrub transplanting, preservation, and relocation"
+            },
+            {
+              "code": "32 84 00",
+              "title": "Planting Irrigation",
+              "description": "Irrigation piping, sprinkler systems, drip irrigation, and irrigation controllers"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "33",
+      "title": "Utilities",
+      "description": "Water Utilities, Sanitary Sewerage Utilities, Storm Drainage Utilities, Electric Utilities, Communications Utilities, Fuel Distribution Utilities",
+      "subdivisions": [
+        {
+          "code": "33 10 00",
+          "title": "Water Utilities",
+          "description": "Water distribution, supply, and storage systems",
+          "subdivisions": [
+            {
+              "code": "33 11 00",
+              "title": "Water Utility Distribution Piping",
+              "description": "Ductile iron, PVC, and HDPE water main piping and fittings"
+            },
+            {
+              "code": "33 12 00",
+              "title": "Water Utility Distribution Equipment",
+              "description": "Gate valves, hydrants, meters, and water distribution appurtenances"
+            },
+            {
+              "code": "33 13 00",
+              "title": "Disinfecting of Water Utility Distribution",
+              "description": "Chlorination, flushing, and bacteriological testing of new water mains"
+            },
+            {
+              "code": "33 14 00",
+              "title": "Water Utility Transmission and Distribution",
+              "description": "Large-diameter water transmission mains and booster pump stations"
+            },
+            {
+              "code": "33 16 00",
+              "title": "Water Utility Storage Tanks",
+              "description": "Elevated tanks, ground-level storage tanks, and reservoir systems"
+            }
+          ]
+        },
+        {
+          "code": "33 30 00",
+          "title": "Sanitary Sewerage Utilities",
+          "description": "Sanitary sewer piping, manholes, and lift stations",
+          "subdivisions": [
+            {
+              "code": "33 31 00",
+              "title": "Sanitary Utility Sewerage Piping",
+              "description": "PVC, ductile iron, and concrete sanitary sewer piping and joints"
+            },
+            {
+              "code": "33 32 00",
+              "title": "Sanitary Utility Sewerage Equipment",
+              "description": "Sewer manholes, cleanouts, and sanitary sewer appurtenances"
+            },
+            {
+              "code": "33 34 00",
+              "title": "Sanitary Utility Sewerage Force Mains",
+              "description": "Pressure sewer mains and grinder pump force main systems"
+            },
+            {
+              "code": "33 36 00",
+              "title": "Utility Septic Tanks",
+              "description": "Septic tank systems, drain fields, and onsite wastewater treatment"
+            }
+          ]
+        },
+        {
+          "code": "33 40 00",
+          "title": "Storm Drainage Utilities",
+          "description": "Storm water collection, conveyance, and detention",
+          "subdivisions": [
+            {
+              "code": "33 41 00",
+              "title": "Storm Utility Drainage Piping",
+              "description": "Reinforced concrete pipe, HDPE, PVC, and corrugated metal storm drain piping"
+            },
+            {
+              "code": "33 42 00",
+              "title": "Culverts",
+              "description": "Pipe culverts, box culverts, and drainage crossing structures"
+            },
+            {
+              "code": "33 44 00",
+              "title": "Storm Utility Water Drains",
+              "description": "Catch basins, area drains, trench drains, and inlet structures"
+            },
+            {
+              "code": "33 46 00",
+              "title": "Subdrainage",
+              "description": "Foundation drains, underslab drainage, and perforated pipe subdrainage systems"
+            },
+            {
+              "code": "33 47 00",
+              "title": "Ponds and Reservoirs",
+              "description": "Stormwater detention ponds, retention basins, and water quality ponds"
+            },
+            {
+              "code": "33 49 00",
+              "title": "Storm Drainage Structures",
+              "description": "Headwalls, energy dissipators, and outfall structures"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "34",
+      "title": "Transportation",
+      "description": "Guideways, Traction Power, Transportation Signaling and Control Equipment"
+    },
+    {
+      "code": "35",
+      "title": "Waterway and Marine Construction",
+      "description": "Waterway and Marine Construction and Equipment, Coastal Construction, Waterway Construction and Equipment, Dredging"
+    },
+    {
+      "code": "40",
+      "title": "Process Integration",
+      "description": "Process Piping, Process Piping Systems, Process Pumps, Process Valves and Appurtenances, Vibration and Seismic Controls, Noise and Vibration Control for Plumbing Piping and Equipment, Manufactured Process Components"
+    },
+    {
+      "code": "41",
+      "title": "Material Processing and Handling Equipment",
+      "description": "Bulk Material Processing Equipment, Piece Material Handling Equipment, Manufacturing Equipment"
+    },
+    {
+      "code": "42",
+      "title": "Process Heating, Cooling, and Drying Equipment",
+      "description": "Process Heating Equipment, Process Cooling Equipment, Process Drying Equipment"
+    },
+    {
+      "code": "43",
+      "title": "Process Gas and Liquid Handling, Purification, and Storage Equipment",
+      "description": "Gas Handling Equipment, Liquid Handling Equipment, Gas and Liquid Purification Equipment, Gas and Liquid Storage"
+    },
+    {
+      "code": "44",
+      "title": "Pollution and Waste Control Equipment",
+      "description": "Air Pollution Control, Water Treatment Equipment, Solid Waste Control"
+    },
+    {
+      "code": "45",
+      "title": "Industry-Specific Manufacturing Equipment",
+      "description": "Equipment for Various Industries, Food and Beverage Equipment"
+    },
+    {
+      "code": "46",
+      "title": "Water and Wastewater Equipment",
+      "description": "Water and Wastewater Treatment Equipment"
+    },
+    {
+      "code": "48",
+      "title": "Electrical Power Generation",
+      "description": "Electrical Power Generation Equipment"
+    }
+  ]
+}
