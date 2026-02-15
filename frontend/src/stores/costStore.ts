@@ -1,4 +1,4 @@
-// CostPilot Zustand Store — Work Items, Estimates, Payments, EVM
+// CostPilot Zustand Store — Full CRUD for all 8 cost entities
 
 import { create } from 'zustand';
 
@@ -19,7 +19,55 @@ export interface WorkItem {
   source: string;
   sourceYear?: number;
   isActive: boolean;
-  unitPriceAnalyses?: { unitPrice: string }[];
+  unitPriceAnalyses?: UnitPriceAnalysis[];
+}
+
+export interface UnitPriceAnalysis {
+  id: string;
+  workItemId: string;
+  version: number;
+  laborCost: string;
+  materialCost: string;
+  equipmentCost: string;
+  subtotal: string;
+  overheadPct: string;
+  profitPct: string;
+  overheadAmount: string;
+  profitAmount: string;
+  unitPrice: string;
+  currency: string;
+  source: string;
+  isActive: boolean;
+  resources?: UnitPriceResource[];
+  workItem?: WorkItem;
+}
+
+export interface UnitPriceResource {
+  id: string;
+  analysisId: string;
+  resourceType: string;
+  code?: string;
+  name: string;
+  unit: string;
+  quantity: string;
+  unitRate: string;
+  total: string;
+}
+
+export interface QuantityTakeoff {
+  id: string;
+  projectId: string;
+  workItemId: string;
+  locationId?: string;
+  quantity: string;
+  unit: string;
+  calculationFormula?: string;
+  dimensions?: Record<string, number>;
+  source?: string;
+  drawingRef?: string;
+  revision: number;
+  notes?: string;
+  workItem?: WorkItem;
 }
 
 export interface Estimate {
@@ -34,22 +82,85 @@ export interface Estimate {
   grandTotal: string;
   status: string;
   version: number;
+  notes?: string;
   createdAt: string;
+  items?: EstimateItem[];
+}
+
+export interface EstimateItem {
+  id: string;
+  estimateId: string;
+  workItemId: string;
+  quantity: string;
+  unitPrice: string;
+  totalPrice: string;
+  workItem?: WorkItem;
+}
+
+export interface Budget {
+  id: string;
+  projectId: string;
+  estimateId?: string;
+  name: string;
+  totalAmount: string;
+  currency: string;
+  status: string;
+  version: number;
+  items?: BudgetItem[];
+}
+
+export interface BudgetItem {
+  id: string;
+  budgetId: string;
+  workItemId?: string;
+  wbsCode?: string;
+  description: string;
+  tradeId?: string;
+  plannedAmount: string;
+  committedAmount: string;
+  actualAmount: string;
+  category: string;
 }
 
 export interface PaymentCertificate {
   id: string;
   projectId: string;
+  budgetId?: string;
   periodNumber: number;
   periodStart: string;
   periodEnd: string;
   grossAmount: string;
+  retentionPct: string;
+  retentionAmount: string;
+  advanceDeduction: string;
+  otherDeductions: string;
+  priceEscalation: string;
+  vatPct: string;
+  vatAmount: string;
   netAmount: string;
   cumulativeAmount: string;
   status: string;
-  retentionPct: string;
-  vatPct: string;
+  submittedDate?: string;
+  approvedDate?: string;
+  paymentDate?: string;
+  createdBy: string;
   createdAt: string;
+  items?: PaymentItem[];
+}
+
+export interface PaymentItem {
+  id: string;
+  certificateId: string;
+  workItemId: string;
+  contractQty: string;
+  previousQty: string;
+  currentQty: string;
+  cumulativeQty: string;
+  unitPrice: string;
+  currentAmount: string;
+  cumulativeAmount: string;
+  completionPct: string;
+  workItem?: WorkItem;
 }
 
 export interface EvmSnapshot {
@@ -69,65 +180,17 @@ export interface EvmSnapshot {
   tcpi: string;
 }
 
-export interface CostOverviewKpis {
-  cpi: number;
-  spi: number;
-  budgetVariancePct: number;
-  eac: number;
-  cumulativeHakedis: number;
-  workItemCount: number;
-  metrajCompletionPct: number;
-  copq: number;
+export interface CostRecord {
+  id: string;
+  projectId: string;
+  budgetItemId?: string;
+  amount: string;
+  type: string;
+  date: string;
+  description?: string;
+  invoiceRef?: string;
+  vendor?: string;
 }
-
-// ============================================================================
-// DEMO DATA (fallback when API is unavailable)
-// ============================================================================
-
-const demoWorkItems: WorkItem[] = [
-  { id: '1', projectId: 'p1', code: '04.606/2A', name: '250 dozlu beton dökümü', unit: 'm3', category: 'insaat', source: 'bayindirlik', isActive: true, unitPriceAnalyses: [{ unitPrice: '2450.00' }] },
-  { id: '2', projectId: 'p1', code: '04.743/1', name: 'Demir işleri (nervürlü)', unit: 'ton', category: 'insaat', source: 'bayindirlik', isActive: true, unitPriceAnalyses: [{ unitPrice: '18200.00' }] },
-  { id: '3', projectId: 'p1', code: 'IMO-015', name: 'Soğutma tesisatı montajı', unit: 'mt', category: 'mekanik', source: 'custom', isActive: true, unitPriceAnalyses: [{ unitPrice: '345.00' }] },
-  { id: '4', projectId: 'p1', code: 'ELK-042', name: 'Kablo çekilmesi (3x2.5mm)', unit: 'mt', category: 'elektrik', source: 'custom', isActive: true, unitPriceAnalyses: [{ unitPrice: '85.50' }] },
-  { id: '5', projectId: 'p1', code: '27.581/1', name: 'Alçıpan duvar yapılması', unit: 'm2', category: 'insaat', source: 'bayindirlik', isActive: true, unitPriceAnalyses: [{ unitPrice: '520.00' }] },
-  { id: '6', projectId: 'p1', code: '23.015', name: 'Çelik konstrüksiyon montajı', unit: 'ton', category: 'insaat', source: 'custom', isActive: true, unitPriceAnalyses: [{ unitPrice: '24500.00' }] },
-  { id: '7', projectId: 'p1', code: 'MKN-008', name: 'Havalandırma kanalı', unit: 'mt', category: 'mekanik', source: 'custom', isActive: true, unitPriceAnalyses: [{ unitPrice: '275.00' }] },
-  { id: '8', projectId: 'p1', code: 'ELK-101', name: 'Pano montajı', unit: 'adet', category: 'elektrik', source: 'custom', isActive: true, unitPriceAnalyses: [{ unitPrice: '12500.00' }] },
-];
-
-const demoEstimates: Estimate[] = [
-  { id: '1', projectId: 'p1', name: 'Yaklaşık Maliyet v1', type: 'yaklasik_maliyet', totalAmount: '42000000', currency: 'TRY', vatPct: '20', vatAmount: '8400000', grandTotal: '50400000', status: 'superseded', version: 1, createdAt: '2026-01-10T10:00:00Z' },
-  { id: '2', projectId: 'p1', name: 'Yaklaşık Maliyet v2', type: 'yaklasik_maliyet', totalAmount: '44500000', currency: 'TRY', vatPct: '20', vatAmount: '8900000', grandTotal: '53400000', status: 'superseded', version: 2, createdAt: '2026-01-20T10:00:00Z' },
-  { id: '3', projectId: 'p1', name: 'Yaklaşık Maliyet v3', type: 'yaklasik_maliyet', totalAmount: '46800000', currency: 'TRY', vatPct: '20', vatAmount: '9360000', grandTotal: '56160000', status: 'approved', version: 3, createdAt: '2026-02-01T10:00:00Z' },
-];
-
-const demoPayments: PaymentCertificate[] = [
-  { id: '1', projectId: 'p1', periodNumber: 1, periodStart: '2026-01-01', periodEnd: '2026-01-31', grossAmount: '3200000', netAmount: '3456000', cumulativeAmount: '3456000', status: 'paid', retentionPct: '5', vatPct: '20', createdAt: '2026-02-05T10:00:00Z' },
-  { id: '2', projectId: 'p1', periodNumber: 2, periodStart: '2026-02-01', periodEnd: '2026-02-28', grossAmount: '4100000', netAmount: '4428000', cumulativeAmount: '7884000', status: 'paid', retentionPct: '5', vatPct: '20', createdAt: '2026-03-05T10:00:00Z' },
-  { id: '3', projectId: 'p1', periodNumber: 3, periodStart: '2026-03-01', periodEnd: '2026-03-31', grossAmount: '3800000', netAmount: '4104000', cumulativeAmount: '11988000', status: 'approved', retentionPct: '5', vatPct: '20', createdAt: '2026-04-05T10:00:00Z' },
-  { id: '4', projectId: 'p1', periodNumber: 4, periodStart: '2026-04-01', periodEnd: '2026-04-30', grossAmount: '2900000', netAmount: '3132000', cumulativeAmount: '15120000', status: 'approved', retentionPct: '5', vatPct: '20', createdAt: '2026-05-05T10:00:00Z' },
-  { id: '5', projectId: 'p1', periodNumber: 5, periodStart: '2026-05-01', periodEnd: '2026-05-31', grossAmount: '3500000', netAmount: '3780000', cumulativeAmount: '18900000', status: 'submitted', retentionPct: '5', vatPct: '20', createdAt: '2026-06-05T10:00:00Z' },
-  { id: '6', projectId: 'p1', periodNumber: 6, periodStart: '2026-06-01', periodEnd: '2026-06-30', grossAmount: '0', netAmount: '0', cumulativeAmount: '18900000', status: 'draft', retentionPct: '5', vatPct: '20', createdAt: '2026-07-01T10:00:00Z' },
-];
-
-const demoEvmSnapshots: EvmSnapshot[] = [
-  { id: '1', projectId: 'p1', snapshotDate: '2026-01-31', pv: '4000000', ev: '3200000', ac: '3100000', cv: '100000', sv: '-800000', cpi: '1.0323', spi: '0.8000', eac: '45330000', etc: '42230000', vac: '1470000', tcpi: '1.0041' },
-  { id: '2', projectId: 'p1', snapshotDate: '2026-02-28', pv: '8500000', ev: '7300000', ac: '7100000', cv: '200000', sv: '-1200000', cpi: '1.0282', spi: '0.8588', eac: '45520000', etc: '38420000', vac: '1280000', tcpi: '1.0030' },
-  { id: '3', projectId: 'p1', snapshotDate: '2026-03-31', pv: '13000000', ev: '11100000', ac: '10800000', cv: '300000', sv: '-1900000', cpi: '1.0278', spi: '0.8538', eac: '45530000', etc: '34730000', vac: '1270000', tcpi: '1.0024' },
-  { id: '4', projectId: 'p1', snapshotDate: '2026-04-30', pv: '17500000', ev: '14000000', ac: '13600000', cv: '400000', sv: '-3500000', cpi: '1.0294', spi: '0.8000', eac: '45460000', etc: '31860000', vac: '1340000', tcpi: '1.0018' },
-  { id: '5', projectId: 'p1', snapshotDate: '2026-05-31', pv: '22000000', ev: '18400000', ac: '17900000', cv: '500000', sv: '-3600000', cpi: '1.0279', spi: '0.8364', eac: '45510000', etc: '27610000', vac: '1290000', tcpi: '1.0012' },
-];
-
-const demoKpis: CostOverviewKpis = {
-  cpi: 1.03,
-  spi: 0.84,
-  budgetVariancePct: -2.1,
-  eac: 45510000,
-  cumulativeHakedis: 18900000,
-  workItemCount: 342,
-  metrajCompletionPct: 78,
-  copq: 245000,
-};
 
 // ============================================================================
 // STORE
@@ -136,23 +199,63 @@ const demoKpis: CostOverviewKpis = {
 interface CostState {
   // Data
   workItems: WorkItem[];
+  workItemsMeta: { total: number; page: number; pages: number };
+  unitPriceAnalyses: UnitPriceAnalysis[];
+  quantityTakeoffs: QuantityTakeoff[];
   estimates: Estimate[];
+  budgets: Budget[];
+  selectedBudget: Budget | null;
   payments: PaymentCertificate[];
+  costRecords: CostRecord[];
   evmSnapshots: EvmSnapshot[];
-  kpis: CostOverviewKpis;
 
   // State
   loading: boolean;
   error: string | null;
   initialized: boolean;
-  usingApi: boolean;
 
-  // Actions
-  fetchWorkItems: (projectId: string) => Promise<void>;
+  // Actions — fetch
+  fetchWorkItems: (projectId: string, opts?: { category?: string; search?: string }) => Promise<void>;
+  fetchUnitPrices: (workItemId: string) => Promise<void>;
+  fetchQuantityTakeoffs: (projectId: string) => Promise<void>;
   fetchEstimates: (projectId: string) => Promise<void>;
+  fetchBudgets: (projectId: string) => Promise<void>;
+  fetchBudgetDetail: (budgetId: string) => Promise<void>;
   fetchPayments: (projectId: string) => Promise<void>;
+  fetchCostRecords: (projectId: string) => Promise<void>;
   fetchEvmSnapshots: (projectId: string) => Promise<void>;
   fetchAll: (projectId: string) => Promise<void>;
+
+  // Actions — CRUD Work Items
+  addWorkItem: (data: { projectId: string; code: string; name: string; unit: string; category: string; description?: string; subcategory?: string; source?: string; sourceYear?: number }) => Promise<WorkItem | null>;
+  updateWorkItem: (id: string, data: Partial<WorkItem>) => Promise<WorkItem | null>;
+  deleteWorkItem: (id: string) => Promise<boolean>;
+
+  // Actions — CRUD Unit Prices
+  createUnitPriceAnalysis: (data: { workItemId: string; overheadPct?: number; profitPct?: number; resources: Array<{ resourceType: string; name: string; unit: string; quantity: number; unitRate: number }> }) => Promise<UnitPriceAnalysis | null>;
+
+  // Actions — CRUD Quantity Takeoffs
+  addQuantityTakeoff: (data: { projectId: string; workItemId: string; quantity: number; unit: string; drawingRef?: string; notes?: string }) => Promise<QuantityTakeoff | null>;
+  updateQuantityTakeoff: (id: string, data: Partial<QuantityTakeoff>) => Promise<QuantityTakeoff | null>;
+  deleteQuantityTakeoff: (id: string) => Promise<boolean>;
+
+  // Actions — CRUD Estimates
+  createEstimate: (data: { projectId: string; name: string; type: string; createdBy: string }) => Promise<Estimate | null>;
+  deleteEstimate: (id: string) => Promise<boolean>;
+
+  // Actions — CRUD Budgets
+  createBudget: (data: { projectId: string; name: string; totalAmount: number }) => Promise<Budget | null>;
+
+  // Actions — CRUD Payments
+  createPayment: (data: { projectId: string; periodNumber: number; periodStart: string; periodEnd: string; createdBy: string; retentionPct?: number }) => Promise<PaymentCertificate | null>;
+  submitPayment: (id: string) => Promise<boolean>;
+  approvePayment: (id: string, approvedBy: string) => Promise<boolean>;
+
+  // Actions — CRUD Cost Records
+  addCostRecord: (data: { projectId: string; amount: number; type: string; date: string; description?: string; vendor?: string; invoiceRef?: string }) => Promise<CostRecord | null>;
+
+  // Actions — EVM
+  createEvmSnapshot: (data: { projectId: string; snapshotDate: string; pv: number; ev: number; ac: number; bac: number }) => Promise<EvmSnapshot | null>;
 }
 
 function getAuthHeaders(): HeadersInit {
@@ -164,104 +267,355 @@ function getAuthHeaders(): HeadersInit {
   return headers;
 }
 
+const API = '/api/v1/cost';
+
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API}${path}`, {
+    ...init,
+    headers: { ...getAuthHeaders(), ...init?.headers },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `HTTP ${res.status}`);
+  }
+  if (res.status === 204) return undefined as T;
+  const json = await res.json();
+  return json.data ?? json;
+}
+
 export const useCostStore = create<CostState>((set, get) => ({
   workItems: [],
+  workItemsMeta: { total: 0, page: 1, pages: 1 },
+  unitPriceAnalyses: [],
+  quantityTakeoffs: [],
   estimates: [],
+  budgets: [],
+  selectedBudget: null,
   payments: [],
+  costRecords: [],
   evmSnapshots: [],
-  kpis: demoKpis,
 
   loading: false,
   error: null,
   initialized: false,
-  usingApi: false,
 
-  fetchWorkItems: async (projectId: string) => {
+  // ── FETCH ──
+
+  fetchWorkItems: async (projectId, opts) => {
     try {
-      const res = await fetch(`/api/v1/cost/work-items/project/${projectId}?limit=100`, {
-        headers: getAuthHeaders(),
-      });
+      const params = new URLSearchParams({ limit: '200' });
+      if (opts?.category) params.set('category', opts.category);
+      if (opts?.search) params.set('search', opts.search);
+      const res = await fetch(`${API}/work-items/project/${projectId}?${params}`, { headers: getAuthHeaders() });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      set({ workItems: json.data || [], usingApi: true });
-    } catch {
-      set({ workItems: demoWorkItems, usingApi: false });
+      set({ workItems: json.data || [], workItemsMeta: json.meta || { total: 0, page: 1, pages: 1 } });
+    } catch (e) {
+      console.error('fetchWorkItems failed:', e);
+      set({ workItems: [] });
     }
   },
 
-  fetchEstimates: async (projectId: string) => {
+  fetchUnitPrices: async (workItemId) => {
     try {
-      const res = await fetch(`/api/v1/cost/estimates/project/${projectId}`, {
-        headers: getAuthHeaders(),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      set({ estimates: json.data || [] });
+      const data = await apiFetch<UnitPriceAnalysis[]>(`/unit-prices/work-item/${workItemId}`);
+      set({ unitPriceAnalyses: data });
     } catch {
-      set({ estimates: demoEstimates });
+      set({ unitPriceAnalyses: [] });
     }
   },
 
-  fetchPayments: async (projectId: string) => {
+  fetchQuantityTakeoffs: async (projectId) => {
     try {
-      const res = await fetch(`/api/v1/cost/payments/project/${projectId}`, {
-        headers: getAuthHeaders(),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      set({ payments: json.data || [] });
+      const data = await apiFetch<QuantityTakeoff[]>(`/quantity-takeoffs/project/${projectId}`);
+      set({ quantityTakeoffs: data });
     } catch {
-      set({ payments: demoPayments });
+      set({ quantityTakeoffs: [] });
     }
   },
 
-  fetchEvmSnapshots: async (projectId: string) => {
+  fetchEstimates: async (projectId) => {
     try {
-      const res = await fetch(`/api/v1/cost/evm/project/${projectId}/history`, {
-        headers: getAuthHeaders(),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      set({ evmSnapshots: json.data || [] });
+      const data = await apiFetch<Estimate[]>(`/estimates/project/${projectId}`);
+      set({ estimates: data });
     } catch {
-      set({ evmSnapshots: demoEvmSnapshots });
+      set({ estimates: [] });
     }
   },
 
-  fetchAll: async (projectId: string) => {
+  fetchBudgets: async (projectId) => {
+    try {
+      const data = await apiFetch<Budget[]>(`/budgets/project/${projectId}`);
+      set({ budgets: data });
+    } catch {
+      set({ budgets: [] });
+    }
+  },
+
+  fetchBudgetDetail: async (budgetId) => {
+    try {
+      const data = await apiFetch<Budget>(`/budgets/${budgetId}`);
+      set({ selectedBudget: data });
+    } catch {
+      set({ selectedBudget: null });
+    }
+  },
+
+  fetchPayments: async (projectId) => {
+    try {
+      const data = await apiFetch<PaymentCertificate[]>(`/payments/project/${projectId}`);
+      set({ payments: data });
+    } catch {
+      set({ payments: [] });
+    }
+  },
+
+  fetchCostRecords: async (projectId) => {
+    try {
+      const data = await apiFetch<CostRecord[]>(`/cost-records/project/${projectId}`);
+      set({ costRecords: data });
+    } catch {
+      set({ costRecords: [] });
+    }
+  },
+
+  fetchEvmSnapshots: async (projectId) => {
+    try {
+      const data = await apiFetch<EvmSnapshot[]>(`/evm/project/${projectId}/history`);
+      set({ evmSnapshots: data });
+    } catch {
+      set({ evmSnapshots: [] });
+    }
+  },
+
+  fetchAll: async (projectId) => {
     set({ loading: true, error: null });
     try {
-      const state = get();
+      const s = get();
       await Promise.all([
-        state.fetchWorkItems(projectId),
-        state.fetchEstimates(projectId),
-        state.fetchPayments(projectId),
-        state.fetchEvmSnapshots(projectId),
+        s.fetchWorkItems(projectId),
+        s.fetchEstimates(projectId),
+        s.fetchBudgets(projectId),
+        s.fetchPayments(projectId),
+        s.fetchEvmSnapshots(projectId),
+        s.fetchQuantityTakeoffs(projectId),
+        s.fetchCostRecords(projectId),
       ]);
-
-      // Calculate KPIs from fetched data
-      const { evmSnapshots, payments, workItems } = get();
-      const latestEvm = evmSnapshots[evmSnapshots.length - 1];
-      const latestPayment = payments[payments.length - 1];
-
-      if (latestEvm) {
-        set({
-          kpis: {
-            cpi: parseFloat(latestEvm.cpi) || demoKpis.cpi,
-            spi: parseFloat(latestEvm.spi) || demoKpis.spi,
-            budgetVariancePct: demoKpis.budgetVariancePct,
-            eac: parseFloat(latestEvm.eac) || demoKpis.eac,
-            cumulativeHakedis: latestPayment ? parseFloat(latestPayment.cumulativeAmount) : demoKpis.cumulativeHakedis,
-            workItemCount: workItems.length || demoKpis.workItemCount,
-            metrajCompletionPct: demoKpis.metrajCompletionPct,
-            copq: demoKpis.copq,
-          },
-        });
-      }
     } catch (err) {
-      set({ error: err instanceof Error ? err.message : 'Failed to load cost data' });
+      set({ error: err instanceof Error ? err.message : 'Veri yüklenemedi' });
     } finally {
       set({ loading: false, initialized: true });
+    }
+  },
+
+  // ── CRUD: Work Items ──
+
+  addWorkItem: async (data) => {
+    try {
+      const created = await apiFetch<WorkItem>('/work-items', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      set((s) => ({ workItems: [...s.workItems, created] }));
+      return created;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
+    }
+  },
+
+  updateWorkItem: async (id, data) => {
+    try {
+      const updated = await apiFetch<WorkItem>(`/work-items/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+      set((s) => ({ workItems: s.workItems.map((w) => (w.id === id ? { ...w, ...updated } : w)) }));
+      return updated;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
+    }
+  },
+
+  deleteWorkItem: async (id) => {
+    try {
+      await apiFetch(`/work-items/${id}`, { method: 'DELETE' });
+      set((s) => ({ workItems: s.workItems.filter((w) => w.id !== id) }));
+      return true;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return false;
+    }
+  },
+
+  // ── CRUD: Unit Prices ──
+
+  createUnitPriceAnalysis: async (data: { workItemId: string; overheadPct?: number; profitPct?: number; resources: Array<{ resourceType: string; name: string; unit: string; quantity: number; unitRate: number }> }) => {
+    try {
+      const created = await apiFetch<UnitPriceAnalysis>('/unit-prices', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      set((s: CostState) => ({ unitPriceAnalyses: [...s.unitPriceAnalyses, created] }));
+      return created;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
+    }
+  },
+
+  // ── CRUD: Quantity Takeoffs ──
+
+  addQuantityTakeoff: async (data: { projectId: string; workItemId: string; quantity: number; unit: string; drawingRef?: string; notes?: string }) => {
+    try {
+      const created = await apiFetch<QuantityTakeoff>('/quantity-takeoffs', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      set((s: CostState) => ({ quantityTakeoffs: [...s.quantityTakeoffs, created] }));
+      return created;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
+    }
+  },
+
+  updateQuantityTakeoff: async (id: string, data: Partial<QuantityTakeoff>) => {
+    try {
+      const updated = await apiFetch<QuantityTakeoff>(`/quantity-takeoffs/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+      set((s: CostState) => ({ quantityTakeoffs: s.quantityTakeoffs.map((q: QuantityTakeoff) => (q.id === id ? { ...q, ...updated } : q)) }));
+      return updated;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
+    }
+  },
+
+  deleteQuantityTakeoff: async (id: string) => {
+    try {
+      await apiFetch(`/quantity-takeoffs/${id}`, { method: 'DELETE' });
+      set((s: CostState) => ({ quantityTakeoffs: s.quantityTakeoffs.filter((q: QuantityTakeoff) => q.id !== id) }));
+      return true;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return false;
+    }
+  },
+
+  // ── CRUD: Estimates ──
+
+  createEstimate: async (data: { projectId: string; name: string; type: string; createdBy: string }) => {
+    try {
+      const created = await apiFetch<Estimate>('/estimates', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      set((s: CostState) => ({ estimates: [...s.estimates, created] }));
+      return created;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
+    }
+  },
+
+  deleteEstimate: async (id: string) => {
+    try {
+      await apiFetch(`/estimates/${id}`, { method: 'DELETE' });
+      set((s: CostState) => ({ estimates: s.estimates.filter((e: Estimate) => e.id !== id) }));
+      return true;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return false;
+    }
+  },
+
+  // ── CRUD: Budgets ──
+
+  createBudget: async (data: { projectId: string; name: string; totalAmount: number }) => {
+    try {
+      const created = await apiFetch<Budget>('/budgets', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      set((s: CostState) => ({ budgets: [...s.budgets, created] }));
+      return created;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
+    }
+  },
+
+  // ── CRUD: Payments ──
+
+  createPayment: async (data: { projectId: string; periodNumber: number; periodStart: string; periodEnd: string; createdBy: string; retentionPct?: number }) => {
+    try {
+      const created = await apiFetch<PaymentCertificate>('/payments', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      set((s: CostState) => ({ payments: [...s.payments, created] }));
+      return created;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
+    }
+  },
+
+  submitPayment: async (id: string) => {
+    try {
+      await apiFetch(`/payments/${id}/submit`, { method: 'POST' });
+      set((s: CostState) => ({ payments: s.payments.map((p: PaymentCertificate) => (p.id === id ? { ...p, status: 'submitted' } : p)) }));
+      return true;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return false;
+    }
+  },
+
+  approvePayment: async (id: string, approvedBy: string) => {
+    try {
+      await apiFetch(`/payments/${id}/approve`, { method: 'POST', body: JSON.stringify({ approvedBy }) });
+      set((s: CostState) => ({ payments: s.payments.map((p: PaymentCertificate) => (p.id === id ? { ...p, status: 'approved' } : p)) }));
+      return true;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return false;
+    }
+  },
+
+  // ── CRUD: Cost Records ──
+
+  addCostRecord: async (data: { projectId: string; amount: number; type: string; date: string; description?: string; vendor?: string; invoiceRef?: string }) => {
+    try {
+      const created = await apiFetch<CostRecord>('/cost-records', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      set((s: CostState) => ({ costRecords: [...s.costRecords, created] }));
+      return created;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
+    }
+  },
+
+  // ── EVM ──
+
+  createEvmSnapshot: async (data: { projectId: string; snapshotDate: string; pv: number; ev: number; ac: number; bac: number }) => {
+    try {
+      const created = await apiFetch<EvmSnapshot>('/evm/snapshot', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      set((s: CostState) => ({ evmSnapshots: [...s.evmSnapshots, created] }));
+      return created;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
     }
   },
 }));
