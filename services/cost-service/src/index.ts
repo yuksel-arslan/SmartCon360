@@ -17,6 +17,7 @@ import paymentsRouter from './routes/payments';
 import costRecordsRouter from './routes/cost-records';
 import evmRouter from './routes/evm';
 import catalogRouter from './routes/catalog';
+import classificationMappingRouter from './routes/classification-mapping';
 
 const app = express();
 const PORT = process.env.PORT || 3011;
@@ -58,6 +59,7 @@ app.use('/cost/payments', authenticate, paymentsRouter);
 app.use('/cost/cost-records', authenticate, costRecordsRouter);
 app.use('/cost/evm', authenticate, evmRouter);
 app.use('/cost/catalog', authenticate, catalogRouter);
+app.use('/cost/mappings', authenticate, classificationMappingRouter);
 
 // 404 handler
 app.use((_req, res) => {

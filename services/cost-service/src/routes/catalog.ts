@@ -347,6 +347,63 @@ router.get('/uniclass/:code/ancestors', async (req, res, next) => {
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
+// UNICLASS OFFLINE CACHE + HIERARCHICAL BROWSE
+// ──────────────────────────────────────────────────────────────────────────────
+
+import { uniclassCacheService } from '../services/uniclass-cache.service';
+
+// ── Cache stats ──
+router.get('/uniclass/cache/stats', async (req, res, next) => {
+  try {
+    const stats = await uniclassCacheService.getStats();
+    res.json({ data: stats });
+  } catch (e) { next(e); }
+});
+
+// ── Sync a table to cache ──
+router.post('/uniclass/cache/sync/:table', async (req, res, next) => {
+  try {
+    const { table } = req.params;
+    const validTables = ['Ac', 'Co', 'En', 'Pr', 'SL', 'EF', 'Ss', 'FI', 'Zz'];
+    if (!validTables.includes(table)) {
+      return res.status(400).json({ error: `Invalid table. Use: ${validTables.join(', ')}` });
+    }
+    const result = await uniclassCacheService.syncTable(table);
+    res.json({ data: result });
+  } catch (e) { next(e); }
+});
+
+// ── Browse table roots (cached) ──
+router.get('/uniclass/browse/:table', async (req, res, next) => {
+  try {
+    const { table } = req.params;
+    const roots = await uniclassCacheService.getTableRoots(table);
+    res.json({ data: roots });
+  } catch (e) { next(e); }
+});
+
+// ── Browse children (cached) ──
+router.get('/uniclass/browse/:table/:code/children', async (req, res, next) => {
+  try {
+    const { code } = req.params;
+    const children = await uniclassCacheService.getChildren(code);
+    res.json({ data: children });
+  } catch (e) { next(e); }
+});
+
+// ── Cached search (falls back to local DB if API unavailable) ──
+router.get('/uniclass/cached-search', async (req, res, next) => {
+  try {
+    const { q, table } = req.query;
+    if (!q || typeof q !== 'string') {
+      return res.status(400).json({ error: 'Query parameter "q" is required' });
+    }
+    const results = await uniclassCacheService.search(q, table as string);
+    res.json({ data: results });
+  } catch (e) { next(e); }
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ──────────────────────────────────────────────────────────────────────────────
 
