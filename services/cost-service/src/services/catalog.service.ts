@@ -231,7 +231,7 @@ export class CatalogService {
       });
 
       // Auto-create unit price analysis from catalog data
-      await prisma.unitPriceAnalysis.create({
+      const analysis = await prisma.unitPriceAnalysis.create({
         data: {
           workItemId: workItem.id,
           version: 1,
@@ -243,6 +243,79 @@ export class CatalogService {
           source: ci.catalog.source,
         },
       });
+
+      // Create detailed cost breakdown as UnitPriceResource entries
+      const resources: any[] = [];
+      let sortOrder = 0;
+
+      // Material cost breakdown
+      if (ci.materialCost && ci.materialCost > 0) {
+        resources.push({
+          analysisId: analysis.id,
+          resourceType: 'material',
+          code: ci.code ? `${ci.code}-M` : undefined,
+          name: `Malzeme / Material`,
+          unit: ci.unit,
+          quantity: 1.0,
+          unitRate: ci.materialCost,
+          total: ci.materialCost,
+          rateSource: ci.catalog.source,
+          sortOrder: sortOrder++,
+        });
+      }
+
+      // Labor cost breakdown
+      if (ci.laborCost && ci.laborCost > 0) {
+        resources.push({
+          analysisId: analysis.id,
+          resourceType: 'labor',
+          code: ci.crewCode || (ci.code ? `${ci.code}-L` : undefined),
+          name: ci.crewCode ? `İşçilik / Labor (${ci.crewCode})` : 'İşçilik / Labor',
+          unit: ci.unit,
+          quantity: 1.0,
+          unitRate: ci.laborCost,
+          total: ci.laborCost,
+          rateSource: ci.catalog.source,
+          sortOrder: sortOrder++,
+        });
+      }
+
+      // Equipment cost breakdown
+      if (ci.equipmentCost && ci.equipmentCost > 0) {
+        resources.push({
+          analysisId: analysis.id,
+          resourceType: 'equipment',
+          code: ci.code ? `${ci.code}-E` : undefined,
+          name: 'Makine ve Ekipman / Equipment',
+          unit: ci.unit,
+          quantity: 1.0,
+          unitRate: ci.equipmentCost,
+          total: ci.equipmentCost,
+          rateSource: ci.catalog.source,
+          sortOrder: sortOrder++,
+        });
+      }
+
+      // If no breakdown available, create a single generic resource
+      if (resources.length === 0 && ci.unitPrice > 0) {
+        resources.push({
+          analysisId: analysis.id,
+          resourceType: 'other',
+          code: ci.code,
+          name: ci.name,
+          unit: ci.unit,
+          quantity: 1.0,
+          unitRate: ci.unitPrice,
+          total: ci.unitPrice,
+          rateSource: ci.catalog.source,
+          sortOrder: 0,
+        });
+      }
+
+      // Bulk insert resources
+      if (resources.length > 0) {
+        await prisma.unitPriceResource.createMany({ data: resources });
+      }
 
       created.push(workItem);
     }
