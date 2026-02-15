@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { SetupStepProps } from '../types';
-import { ChevronRight, ChevronDown, Loader2, Check, RefreshCw, Plus, FolderTree } from 'lucide-react';
+import { ChevronRight, ChevronDown, Loader2, Check, RefreshCw, FolderTree, AlertTriangle } from 'lucide-react';
 
 interface WbsNode {
   id: string;
@@ -21,28 +21,36 @@ export default function StepWbs({ projectId, state, onStateChange, authHeaders }
 
   const fetchWbs = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const res = await fetch(`/api/v1/projects/${projectId}/wbs`, {
         headers: { ...authHeaders },
       });
       if (res.ok) {
         const json = await res.json();
-        setWbsTree(json.data || []);
+        const tree: WbsNode[] = json.data || [];
+        setWbsTree(tree);
         // Auto-expand first level
         const firstLevel = new Set<string>();
-        (json.data || []).forEach((n: WbsNode) => firstLevel.add(n.id));
+        tree.forEach((n) => firstLevel.add(n.id));
         setExpanded(firstLevel);
+        // Sync state if server says WBS exists but local state doesn't know
+        if (tree.length > 0 && !state.wbsGenerated) {
+          onStateChange({ wbsGenerated: true, wbsNodeCount: countNodes(tree) });
+        }
       }
     } catch {
-      setError('Failed to load WBS');
+      setError('Failed to load WBS data');
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, authHeaders]);
 
+  // Always load existing WBS on mount
   useEffect(() => {
-    if (state.wbsGenerated) fetchWbs();
-  }, [state.wbsGenerated, fetchWbs]);
+    fetchWbs();
+  }, [fetchWbs]);
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -54,23 +62,24 @@ export default function StepWbs({ projectId, state, onStateChange, authHeaders }
         headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           standard: state.classificationStandard,
-          projectType: state.projectType,
+          projectType: state.projectType || undefined,
         }),
       });
 
+      const json = await res.json().catch(() => null);
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error?.message || 'Generation failed');
+        const msg = json?.error?.message || `Generation failed (HTTP ${res.status})`;
+        throw new Error(msg);
       }
 
-      const json = await res.json();
       onStateChange({
         wbsGenerated: true,
-        wbsNodeCount: json.meta?.count || 0,
+        wbsNodeCount: json?.meta?.count || json?.data?.length || 0,
       });
       await fetchWbs();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'WBS generation failed');
     } finally {
       setGenerating(false);
     }
@@ -103,7 +112,7 @@ export default function StepWbs({ projectId, state, onStateChange, authHeaders }
       <p className="text-[13px] mb-6" style={{ color: 'var(--color-text-muted)' }}>
         {state.classificationStandard === 'custom'
           ? 'Create your WBS structure manually.'
-          : `Generate WBS from ${standardLabel[state.classificationStandard] || state.classificationStandard} template for your ${state.projectType} project.`}
+          : `Generate WBS from ${standardLabel[state.classificationStandard] || state.classificationStandard} template${state.projectType ? ` for your ${state.projectType} project` : ''}.`}
       </p>
 
       {/* Generate / Regenerate button */}
@@ -133,9 +142,10 @@ export default function StepWbs({ projectId, state, onStateChange, authHeaders }
 
       {error && (
         <div
-          className="mb-4 flex items-center gap-2 rounded-lg px-3 py-2 text-[11px]"
+          className="mb-4 flex items-center gap-2 rounded-lg px-3 py-2.5 text-[12px]"
           style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--color-danger)' }}
         >
+          <AlertTriangle size={14} className="flex-shrink-0" />
           {error}
         </div>
       )}
@@ -175,6 +185,15 @@ export default function StepWbs({ projectId, state, onStateChange, authHeaders }
       )}
     </div>
   );
+}
+
+function countNodes(tree: WbsNode[]): number {
+  let count = 0;
+  for (const node of tree) {
+    count++;
+    if (node.children) count += countNodes(node.children);
+  }
+  return count;
 }
 
 function WbsTreeNode({
