@@ -9,7 +9,7 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
   const [trades, setTrades] = useState<(SubTradeTemplate & { enabled: boolean })[]>([]);
   const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState(false);
-  const [applied, setApplied] = useState(false);
+  const [applied, setApplied] = useState(state.tradeCount > 0);
   const [error, setError] = useState('');
   const [selectedDisciplines, setSelectedDisciplines] = useState<Set<string>>(
     new Set(DISCIPLINES.filter((d) => d.value !== 'general').map((d) => d.value)),

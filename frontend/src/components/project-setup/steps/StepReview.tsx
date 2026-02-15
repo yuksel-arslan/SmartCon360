@@ -1,7 +1,8 @@
 'use client';
 
 import type { SetupStepProps } from '../types';
-import { Check, X, FileText, FolderTree, DollarSign, Wrench, Image, MapPin, Clock } from 'lucide-react';
+import { getMissingRequiredSteps } from '../types';
+import { Check, X, FileText, FolderTree, DollarSign, Wrench, Image, MapPin, Clock, AlertTriangle } from 'lucide-react';
 
 export default function StepReview({ state }: SetupStepProps) {
   const standardLabel: Record<string, string> = {
@@ -155,20 +156,47 @@ export default function StepReview({ state }: SetupStepProps) {
         ))}
       </div>
 
+      {/* Missing steps warning */}
+      {(() => {
+        const missing = getMissingRequiredSteps(state);
+        if (missing.length === 0) return null;
+        return (
+          <div
+            className="mt-6 flex items-start gap-3 rounded-lg px-4 py-3 text-[12px]"
+            style={{ background: 'rgba(239,68,68,0.08)', borderLeft: '3px solid var(--color-danger)' }}
+          >
+            <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--color-danger)' }} />
+            <div>
+              <strong style={{ color: 'var(--color-danger)' }}>Cannot finalize — missing required steps:</strong>
+              <ul className="mt-1 space-y-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                {missing.map((m) => (
+                  <li key={m}>• {m}</li>
+                ))}
+              </ul>
+              <p className="mt-2" style={{ color: 'var(--color-text-muted)' }}>
+                Go back and complete the steps marked with <X size={10} className="inline" style={{ color: 'var(--color-warning)' }} /> before finalizing.
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Integration info */}
-      <div
-        className="mt-6 rounded-lg px-4 py-3 text-[12px]"
-        style={{ background: 'rgba(232,115,26,0.06)', borderLeft: '3px solid var(--color-accent)' }}
-      >
-        <strong>After finalization:</strong>
-        <ul className="mt-1 space-y-1" style={{ color: 'var(--color-text-muted)' }}>
-          <li>• LBS zones will be used in TaktFlow for trade flow scheduling</li>
-          <li>• WBS nodes will be available in TaktFlow for trade assignment</li>
-          <li>• CBS nodes will be linked to CostPilot budget items</li>
-          {state.boqUploaded && <li>• BOQ items will be transferred to CostPilot as Work Items</li>}
-          <li>• Discipline trades will flow through zones with the configured takt rhythm</li>
-        </ul>
-      </div>
+      {getMissingRequiredSteps(state).length === 0 && (
+        <div
+          className="mt-6 rounded-lg px-4 py-3 text-[12px]"
+          style={{ background: 'rgba(232,115,26,0.06)', borderLeft: '3px solid var(--color-accent)' }}
+        >
+          <strong>After finalization:</strong>
+          <ul className="mt-1 space-y-1" style={{ color: 'var(--color-text-muted)' }}>
+            <li>• LBS zones will be used in TaktFlow for trade flow scheduling</li>
+            <li>• WBS nodes will be available in TaktFlow for trade assignment</li>
+            <li>• CBS nodes will be linked to CostPilot budget items</li>
+            {state.boqUploaded && <li>• BOQ items will be transferred to CostPilot as Work Items</li>}
+            <li>• Discipline trades will flow through zones with the configured takt rhythm</li>
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

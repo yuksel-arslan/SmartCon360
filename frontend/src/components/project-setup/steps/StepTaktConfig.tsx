@@ -19,7 +19,7 @@ const ALL_DAYS = [
 export default function StepTaktConfig({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
   const template = getTemplate(state.projectType);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(state.taktPlanGenerated);
 
   // Initialize from state or template defaults
   const defaultTaktTime = state.defaultTaktTime || template?.defaultTaktTime || 5;
@@ -46,10 +46,12 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
     }
   };
 
+  const [error, setError] = useState('');
+
   const handleSave = async () => {
     setSaving(true);
+    setError('');
     try {
-      // Save takt config to project settings
       const res = await fetch(`/api/v1/projects/${projectId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...authHeaders },
@@ -65,18 +67,21 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
         }),
       });
 
-      if (res.ok) {
-        setSaved(true);
-        onStateChange({ taktPlanGenerated: true });
-
-        // Trigger plan generation (best-effort)
-        fetch(`/api/v1/projects/${projectId}/plan/generate`, {
-          method: 'POST',
-          headers: { ...authHeaders },
-        }).catch(() => {});
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || 'Failed to save takt configuration');
       }
-    } catch {
-      // ignore
+
+      setSaved(true);
+      onStateChange({ taktPlanGenerated: true });
+
+      // Trigger plan generation (best-effort)
+      fetch(`/api/v1/projects/${projectId}/plan/generate`, {
+        method: 'POST',
+        headers: { ...authHeaders },
+      }).catch(() => {});
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save');
     } finally {
       setSaving(false);
     }
@@ -221,6 +226,15 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
             style={{ background: 'rgba(245,158,11,0.08)', color: 'var(--color-warning)' }}
           >
             No zones defined yet. Configure LBS first for accurate duration estimates.
+          </div>
+        )}
+
+        {error && (
+          <div
+            className="rounded-lg px-4 py-3 text-[12px]"
+            style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--color-danger)' }}
+          >
+            {error}
           </div>
         )}
 

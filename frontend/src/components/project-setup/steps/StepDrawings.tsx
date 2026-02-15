@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { SetupStepProps, DrawingFile } from '../types';
 import { DISCIPLINES } from '../types';
 import { Upload, FileText, Trash2, Loader2, AlertCircle } from 'lucide-react';
@@ -27,11 +27,21 @@ export default function StepDrawings({ projectId, state, onStateChange, authHead
       });
       if (res.ok) {
         const json = await res.json();
-        setDrawings(json.data || []);
+        const list = json.data || [];
+        setDrawings(list);
+        if (list.length !== state.drawingCount) {
+          onStateChange({ drawingCount: list.length });
+        }
       }
     } catch {
       // ignore
     }
+  }, [projectId, authHeaders, state.drawingCount, onStateChange]);
+
+  // Load existing drawings on mount
+  useEffect(() => {
+    fetchDrawings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
   const handleUpload = async (files: FileList | null) => {
