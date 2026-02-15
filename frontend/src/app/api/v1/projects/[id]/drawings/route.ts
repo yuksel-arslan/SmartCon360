@@ -3,14 +3,15 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
 import {
-  isCloudStorageEnabled,
-  uploadFile,
+  resolveStorageProvider,
+  uploadFileS3,
   buildKey,
   MIME_TYPES,
 } from '@/lib/storage';
+import { uploadToDrive } from '@/lib/google-drive';
 
 const ALLOWED_EXTENSIONS = ['.pdf', '.dwg', '.dxf', '.rvt', '.ifc'];
-const MAX_FILE_SIZE_CLOUD = 100 * 1024 * 1024; // 100 MB for cloud storage
+const MAX_FILE_SIZE_CLOUD = 100 * 1024 * 1024; // 100 MB for cloud/Drive
 const MAX_FILE_SIZE_DB = 20 * 1024 * 1024;     // 20 MB for database fallback
 
 type Params = { params: Promise<{ id: string }> };
@@ -36,6 +37,31 @@ const DRAWING_LIST_SELECT = {
   updatedAt: true,
 };
 
+/** Look up project owner's Google refresh token */
+async function getOwnerDriveToken(projectId: string): Promise<string | null> {
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { ownerId: true, name: true },
+  });
+  if (!project) return null;
+
+  const owner = await prisma.user.findUnique({
+    where: { id: project.ownerId },
+    select: { googleRefreshToken: true },
+  });
+
+  return owner?.googleRefreshToken || null;
+}
+
+/** Get the project name for Drive folder */
+async function getProjectName(projectId: string): Promise<string> {
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { name: true, code: true },
+  });
+  return project ? `${project.code} - ${project.name}` : projectId;
+}
+
 // GET /api/v1/projects/:id/drawings — List drawings
 export async function GET(request: NextRequest, { params }: Params) {
   try {
@@ -60,7 +86,7 @@ export async function GET(request: NextRequest, { params }: Params) {
   }
 }
 
-// POST /api/v1/projects/:id/drawings — Upload drawings (cloud or database)
+// POST /api/v1/projects/:id/drawings — Upload drawings
 export async function POST(request: NextRequest, { params }: Params) {
   try {
     const userId = requireAuth(request);
@@ -77,8 +103,10 @@ export async function POST(request: NextRequest, { params }: Params) {
       );
     }
 
-    const useCloud = isCloudStorageEnabled();
-    const maxSize = useCloud ? MAX_FILE_SIZE_CLOUD : MAX_FILE_SIZE_DB;
+    // Determine storage provider
+    const ownerToken = await getOwnerDriveToken(projectId);
+    const provider = resolveStorageProvider(!!ownerToken);
+    const maxSize = provider === 'local' ? MAX_FILE_SIZE_DB : MAX_FILE_SIZE_CLOUD;
 
     const created = [];
     const errors = [];
@@ -87,13 +115,11 @@ export async function POST(request: NextRequest, { params }: Params) {
       const nameParts = file.name.split('.');
       const ext = nameParts.length > 1 ? '.' + nameParts.pop()!.toLowerCase() : '';
 
-      // Validate extension
       if (!ALLOWED_EXTENSIONS.includes(ext)) {
         errors.push(`${file.name}: unsupported file type ${ext}`);
         continue;
       }
 
-      // Validate size
       if (file.size > maxSize) {
         errors.push(`${file.name}: exceeds ${maxSize / 1024 / 1024} MB limit`);
         continue;
@@ -101,15 +127,44 @@ export async function POST(request: NextRequest, { params }: Params) {
 
       const buffer = Buffer.from(await file.arrayBuffer());
       const fileType = ext.replace('.', '');
+      const contentType = MIME_TYPES[fileType] || 'application/octet-stream';
 
-      if (useCloud) {
-        // ── Cloud storage path ──
+      if (provider === 'google-drive' && ownerToken) {
+        // ── Google Drive ──
+        const projectName = await getProjectName(projectId);
+        const { fileId: driveFileId, webViewLink } = await uploadToDrive(
+          ownerToken,
+          projectName,
+          'Drawings',
+          file.name,
+          buffer,
+          contentType,
+        );
+
+        const drawing = await prisma.drawing.create({
+          data: {
+            projectId,
+            fileName: file.name,
+            originalName: file.name,
+            fileType,
+            fileSize: file.size,
+            filePath: driveFileId,
+            discipline,
+            title: file.name.replace(/\.[^.]+$/, ''),
+            uploadedBy: userId,
+            metadata: { storageProvider: 'google-drive', driveFileId, webViewLink },
+          },
+          select: DRAWING_LIST_SELECT,
+        });
+
+        created.push(drawing);
+      } else if (provider === 's3') {
+        // ── S3-compatible ──
         const timestamp = Date.now();
         const safeFileName = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
         const key = buildKey(projectId, 'drawings', safeFileName);
-        const contentType = MIME_TYPES[fileType] || 'application/octet-stream';
 
-        const { url } = await uploadFile(key, buffer, contentType, {
+        const { url } = await uploadFileS3(key, buffer, contentType, {
           originalName: file.name,
           discipline,
           uploadedBy: userId,
@@ -122,7 +177,7 @@ export async function POST(request: NextRequest, { params }: Params) {
             originalName: file.name,
             fileType,
             fileSize: file.size,
-            filePath: key,       // S3 object key
+            filePath: key,
             discipline,
             title: file.name.replace(/\.[^.]+$/, ''),
             uploadedBy: userId,
@@ -133,7 +188,7 @@ export async function POST(request: NextRequest, { params }: Params) {
 
         created.push(drawing);
       } else {
-        // ── Database fallback (dev mode) ──
+        // ── Database fallback ──
         const drawing = await prisma.drawing.create({
           data: {
             projectId,
@@ -146,6 +201,7 @@ export async function POST(request: NextRequest, { params }: Params) {
             discipline,
             title: file.name.replace(/\.[^.]+$/, ''),
             uploadedBy: userId,
+            metadata: { storageProvider: 'local' },
           },
           select: DRAWING_LIST_SELECT,
         });
@@ -175,7 +231,7 @@ export async function POST(request: NextRequest, { params }: Params) {
         data: created,
         meta: {
           count: created.length,
-          storage: useCloud ? 's3' : 'database',
+          storage: provider,
           errors: errors.length > 0 ? errors : undefined,
         },
         error: null,

@@ -8,20 +8,22 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // ── Configuration ──────────────────────────────────────────────────
-// Supports AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, etc.
-// Set STORAGE_PROVIDER=local to fall back to database storage (dev mode)
+// Storage priority: google-drive > s3 > local (database)
+// google-drive: uses project owner's Google Drive (per-user credentials)
+// s3: platform-managed S3/R2/MinIO bucket
+// local: PostgreSQL fileData column (development fallback)
 
-export type StorageProvider = 'local' | 's3';
+export type StorageProvider = 'local' | 's3' | 'google-drive';
 
 interface StorageConfig {
   provider: StorageProvider;
   bucket: string;
   region: string;
-  endpoint?: string;       // Custom endpoint for R2, MinIO, etc.
+  endpoint?: string;
   accessKeyId: string;
   secretAccessKey: string;
-  publicUrl?: string;       // Public URL prefix if bucket is public
-  forcePathStyle?: boolean; // MinIO needs this
+  publicUrl?: string;
+  forcePathStyle?: boolean;
 }
 
 function getConfig(): StorageConfig {
@@ -58,21 +60,43 @@ function getClient(): S3Client {
   return _client;
 }
 
-// ── Public API ─────────────────────────────────────────────────────
+// ── Storage Provider Detection ─────────────────────────────────────
 
-/** Check if cloud storage is configured */
-export function isCloudStorageEnabled(): boolean {
+/** Check if S3-compatible cloud storage is configured */
+export function isS3Enabled(): boolean {
   const cfg = getConfig();
   return cfg.provider === 's3' && !!cfg.bucket && !!cfg.accessKeyId;
 }
+
+/** Check if Google Drive storage is the preferred provider */
+export function isGoogleDrivePreferred(): boolean {
+  const cfg = getConfig();
+  return cfg.provider === 'google-drive';
+}
+
+/** Determine storage provider for a project, given the owner's credentials */
+export function resolveStorageProvider(ownerHasDriveToken: boolean): StorageProvider {
+  const cfg = getConfig();
+
+  // google-drive: only if configured AND owner has connected their Drive
+  if (cfg.provider === 'google-drive' && ownerHasDriveToken) return 'google-drive';
+
+  // s3: if configured with valid credentials
+  if (cfg.provider === 's3' && !!cfg.bucket && !!cfg.accessKeyId) return 's3';
+
+  // fallback
+  return 'local';
+}
+
+// ── S3 Operations ──────────────────────────────────────────────────
 
 /** Build the object key for a project file */
 export function buildKey(projectId: string, folder: string, fileName: string): string {
   return `projects/${projectId}/${folder}/${fileName}`;
 }
 
-/** Upload a buffer to cloud storage */
-export async function uploadFile(
+/** Upload a buffer to S3-compatible storage */
+export async function uploadFileS3(
   key: string,
   body: Buffer,
   contentType: string,
@@ -103,7 +127,6 @@ export async function getDownloadUrl(key: string, expiresIn = 3600): Promise<str
   const cfg = getConfig();
   const client = getClient();
 
-  // If public URL is configured, return it directly
   if (cfg.publicUrl) {
     return `${cfg.publicUrl.replace(/\/$/, '')}/${key}`;
   }
@@ -115,7 +138,7 @@ export async function getDownloadUrl(key: string, expiresIn = 3600): Promise<str
   );
 }
 
-/** Stream file from cloud storage (for proxying downloads) */
+/** Stream file from S3-compatible storage */
 export async function getFileStream(key: string): Promise<{
   body: ReadableStream | null;
   contentType: string;
@@ -135,8 +158,8 @@ export async function getFileStream(key: string): Promise<{
   };
 }
 
-/** Delete a file from cloud storage */
-export async function deleteFile(key: string): Promise<void> {
+/** Delete a file from S3-compatible storage */
+export async function deleteFileS3(key: string): Promise<void> {
   const cfg = getConfig();
   const client = getClient();
 
@@ -145,7 +168,7 @@ export async function deleteFile(key: string): Promise<void> {
   );
 }
 
-/** Check if a file exists in cloud storage */
+/** Check if a file exists in S3-compatible storage */
 export async function fileExists(key: string): Promise<boolean> {
   const cfg = getConfig();
   const client = getClient();
@@ -160,7 +183,8 @@ export async function fileExists(key: string): Promise<boolean> {
   }
 }
 
-/** Content type mapping for common file types */
+// ── Content type mapping ───────────────────────────────────────────
+
 export const MIME_TYPES: Record<string, string> = {
   pdf: 'application/pdf',
   dwg: 'application/acad',

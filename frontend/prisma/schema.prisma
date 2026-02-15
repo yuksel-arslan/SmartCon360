@@ -25,6 +25,7 @@ model User {
   timezone        String    @default("UTC") @db.VarChar(50)
   authProvider    String    @default("local") @map("auth_provider") @db.VarChar(20)
   authProviderId  String?   @map("auth_provider_id") @db.VarChar(255)
+  googleRefreshToken String? @map("google_refresh_token") @db.VarChar(500)
   emailVerified   Boolean   @default(false) @map("email_verified")
   isActive        Boolean   @default(true) @map("is_active")
   lastLoginAt     DateTime? @map("last_login_at")

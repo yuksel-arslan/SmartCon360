@@ -3,20 +3,37 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
 import {
-  isCloudStorageEnabled,
+  isS3Enabled,
   getDownloadUrl,
   getFileStream,
-  deleteFile,
+  deleteFileS3,
   MIME_TYPES,
 } from '@/lib/storage';
+import { downloadFromDrive, getDriveDownloadLink, deleteFromDrive } from '@/lib/google-drive';
 
 type Params = { params: Promise<{ id: string; drawingId: string }> };
+
+/** Get the project owner's Google Drive refresh token */
+async function getOwnerDriveToken(projectId: string): Promise<string | null> {
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { ownerId: true },
+  });
+  if (!project) return null;
+
+  const owner = await prisma.user.findUnique({
+    where: { id: project.ownerId },
+    select: { googleRefreshToken: true },
+  });
+
+  return owner?.googleRefreshToken || null;
+}
 
 // GET /api/v1/projects/:id/drawings/:drawingId — Download drawing file
 export async function GET(request: NextRequest, { params }: Params) {
   try {
     requireAuth(request);
-    const { drawingId } = await params;
+    const { id: projectId, drawingId } = await params;
 
     const drawing = await prisma.drawing.findUnique({
       where: { id: drawingId },
@@ -31,20 +48,47 @@ export async function GET(request: NextRequest, { params }: Params) {
     }
 
     const metadata = (drawing.metadata as Record<string, unknown>) || {};
-    const isCloud = metadata.storageProvider === 's3' && drawing.filePath !== 'database';
+    const storageProvider = metadata.storageProvider as string;
+    const { searchParams } = new URL(request.url);
+    const mode = searchParams.get('mode');
 
-    if (isCloud && isCloudStorageEnabled()) {
-      // ── Cloud storage: redirect to presigned URL ──
-      const { searchParams } = new URL(request.url);
-      const mode = searchParams.get('mode');
+    // ── Google Drive ──
+    if (storageProvider === 'google-drive') {
+      const driveFileId = (metadata.driveFileId as string) || drawing.filePath;
+      const ownerToken = await getOwnerDriveToken(projectId);
+
+      if (!ownerToken) {
+        return NextResponse.json(
+          { data: null, error: { code: 'DRIVE_DISCONNECTED', message: 'Project owner has disconnected Google Drive' } },
+          { status: 503 },
+        );
+      }
 
       if (mode === 'url') {
-        // Return presigned URL as JSON (for frontend to open in new tab)
+        const url = await getDriveDownloadLink(ownerToken, driveFileId);
+        return NextResponse.json({ data: { url }, error: null });
+      }
+
+      // Proxy download through server
+      const buffer = await downloadFromDrive(ownerToken, driveFileId);
+      const mimeType = MIME_TYPES[drawing.fileType] || 'application/octet-stream';
+
+      return new NextResponse(new Uint8Array(buffer), {
+        headers: {
+          'Content-Type': mimeType,
+          'Content-Disposition': `attachment; filename="${encodeURIComponent(drawing.originalName)}"`,
+          'Content-Length': String(buffer.length),
+        },
+      });
+    }
+
+    // ── S3 ──
+    if (storageProvider === 's3' && isS3Enabled()) {
+      if (mode === 'url') {
         const url = await getDownloadUrl(drawing.filePath, 3600);
         return NextResponse.json({ data: { url }, error: null });
       }
 
-      // Proxy the file through the server (preserves auth)
       const { body, contentType, contentLength } = await getFileStream(drawing.filePath);
       if (!body) {
         return NextResponse.json(
@@ -92,7 +136,6 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const { drawingId } = await params;
     const body = await request.json();
 
-    // Only allow safe fields to be updated
     const { title, drawingNo, revision, sheetSize, discipline } = body;
     const drawing = await prisma.drawing.update({
       where: { id: drawingId },
@@ -118,7 +161,6 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     requireAuth(request);
     const { id: projectId, drawingId } = await params;
 
-    // Fetch drawing to check storage location before deleting
     const drawing = await prisma.drawing.findUnique({
       where: { id: drawingId },
       select: { filePath: true, metadata: true },
@@ -126,17 +168,21 @@ export async function DELETE(request: NextRequest, { params }: Params) {
 
     if (drawing) {
       const metadata = (drawing.metadata as Record<string, unknown>) || {};
-      const isCloud = metadata.storageProvider === 's3' && drawing.filePath !== 'database';
+      const storageProvider = metadata.storageProvider as string;
 
-      // Delete from cloud storage if applicable
-      if (isCloud && isCloudStorageEnabled()) {
-        await deleteFile(drawing.filePath).catch(() => {});
+      if (storageProvider === 'google-drive') {
+        const driveFileId = (metadata.driveFileId as string) || drawing.filePath;
+        const ownerToken = await getOwnerDriveToken(projectId);
+        if (ownerToken) {
+          await deleteFromDrive(ownerToken, driveFileId).catch(() => {});
+        }
+      } else if (storageProvider === 's3' && isS3Enabled()) {
+        await deleteFileS3(drawing.filePath).catch(() => {});
       }
     }
 
     await prisma.drawing.delete({ where: { id: drawingId } });
 
-    // Update setup drawing count
     await prisma.projectSetup.update({
       where: { projectId },
       data: { drawingCount: { decrement: 1 } },
