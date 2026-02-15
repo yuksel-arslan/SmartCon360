@@ -15,7 +15,7 @@ const t: Record<Lang, Record<string, string>> = {
     heroTagline2: 'NextGen Construction Management',
     heroTagline3: '— Zero Compromise.',
     heroDesc:
-      'SmartCon360 is an AI-powered unified construction management platform that integrates 13 specialized modules into a single SaaS application. It covers all 10 PMBOK knowledge areas plus OHS and ESG, combining Location-Based Management System (LBMS), Takt Time Construction, Last Planner System (LPS), and Deep Reinforcement Learning with a modular, licensable architecture.',
+      'SmartCon360 brings scheduling, cost control, quality, safety, procurement, risk, claims, communication, stakeholder management, and ESG together in one AI-powered platform. 13 specialized modules cover all 10 PMBOK knowledge areas plus OHS and environmental management, delivering end-to-end project visibility with a 3-layer intelligence architecture.',
     stat1Value: '13',
     stat1Label: 'Integrated Modules',
     stat2Value: '10+2',
@@ -51,7 +51,7 @@ const t: Record<Lang, Record<string, string>> = {
     heroTagline2: 'Yeni Nesil İnşaat Yönetimi',
     heroTagline3: '— Sıfır Taviz.',
     heroDesc:
-      'SmartCon360, 13 uzman modulu tek bir SaaS uygulamasinda birlestiren YZ destekli butunlesik insaat yonetim platformudur. Tum 10 PMBOK bilgi alanini, ISG ve ESG\'yi kapsar; Lokasyon Bazli Yonetim Sistemi (LBMS), Takt Zamani Insaat, Son Planlayici Sistemi (LPS) ve Derin Pekistirmeli Ogrenmeyi moduler, lisanslanabilir bir mimariyle birlestirir.',
+      'SmartCon360; planlama, maliyet kontrolu, kalite, guvenlik, tedarik, risk, talep, iletisim, paydas yonetimi ve ESG\'yi tek bir YZ destekli platformda birlestirir. 13 uzman modul, tum 10 PMBOK bilgi alanini, ISG ve cevre yonetimini kapsayarak 3 katmanli zeka mimarisiyle uctan uca proje gorunurlugu saglar.',
     stat1Value: '13',
     stat1Label: 'Entegre Modul',
     stat2Value: '10+2',
@@ -163,10 +163,10 @@ export default function LoginPage() {
   }, []);
 
   const toggleTheme = () => {
-    const next = !isDark;
-    setIsDark(!next);
-    document.documentElement.classList.toggle('light', next);
-    localStorage.setItem('theme', next ? 'light' : 'dark');
+    const newIsDark = !isDark;
+    setIsDark(newIsDark);
+    document.documentElement.classList.toggle('light', !newIsDark);
+    localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
   };
 
   const switchLang = (newLang: Lang) => {
