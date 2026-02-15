@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, ArrowRight, Globe, Layers } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Globe, Layers, Sun, Moon } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { BRAND } from '@/lib/modules';
 
@@ -15,7 +15,7 @@ const t: Record<Lang, Record<string, string>> = {
     heroTagline2: 'NextGen Construction Management',
     heroTagline3: '— Zero Compromise.',
     heroDesc:
-      'SmartCon360 is an AI-powered unified construction management platform that integrates 13 specialized modules into a single SaaS application. It covers all 10 PMBOK knowledge areas plus OHS and ESG, combining Location-Based Management System (LBMS), Takt Time Construction, Last Planner System (LPS), and Deep Reinforcement Learning with a modular, licensable architecture.',
+      'SmartCon360 brings scheduling, cost control, quality, safety, procurement, risk, claims, communication, stakeholder management, and ESG together in one AI-powered platform. 13 specialized modules cover all 10 PMBOK knowledge areas plus OHS and environmental management, delivering end-to-end project visibility with a 3-layer intelligence architecture.',
     stat1Value: '13',
     stat1Label: 'Integrated Modules',
     stat2Value: '10+2',
@@ -51,7 +51,7 @@ const t: Record<Lang, Record<string, string>> = {
     heroTagline2: 'Yeni Nesil İnşaat Yönetimi',
     heroTagline3: '— Sıfır Taviz.',
     heroDesc:
-      'SmartCon360, 13 uzman modulu tek bir SaaS uygulamasinda birlestiren YZ destekli butunlesik insaat yonetim platformudur. Tum 10 PMBOK bilgi alanini, ISG ve ESG\'yi kapsar; Lokasyon Bazli Yonetim Sistemi (LBMS), Takt Zamani Insaat, Son Planlayici Sistemi (LPS) ve Derin Pekistirmeli Ogrenmeyi moduler, lisanslanabilir bir mimariyle birlestirir.',
+      'SmartCon360; planlama, maliyet kontrolu, kalite, guvenlik, tedarik, risk, talep, iletisim, paydas yonetimi ve ESG\'yi tek bir YZ destekli platformda birlestirir. 13 uzman modul, tum 10 PMBOK bilgi alanini, ISG ve cevre yonetimini kapsayarak 3 katmanli zeka mimarisiyle uctan uca proje gorunurlugu saglar.',
     stat1Value: '13',
     stat1Label: 'Entegre Modul',
     stat2Value: '10+2',
@@ -147,11 +147,27 @@ export default function LoginPage() {
     const saved = localStorage.getItem('lang') as Lang | null;
     if (saved && (saved === 'en' || saved === 'tr')) setLang(saved);
 
-    // Detect theme: check saved preference, then system preference
-    const isLightClass = document.documentElement.classList.contains('light');
-    const systemLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-    setIsDark(!isLightClass && !systemLight);
+    // Detect theme from saved preference or system
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      setIsDark(false);
+      document.documentElement.classList.add('light');
+    } else if (savedTheme === 'dark') {
+      setIsDark(true);
+      document.documentElement.classList.remove('light');
+    } else {
+      const systemLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+      setIsDark(!systemLight);
+      document.documentElement.classList.toggle('light', systemLight);
+    }
   }, []);
+
+  const toggleTheme = () => {
+    const newIsDark = !isDark;
+    setIsDark(newIsDark);
+    document.documentElement.classList.toggle('light', !newIsDark);
+    localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
+  };
 
   const switchLang = (newLang: Lang) => {
     setLang(newLang);
@@ -542,8 +558,21 @@ export default function LoginPage() {
 
       {/* Right — Form */}
       <div className="flex-1 flex flex-col p-8">
-        {/* Language toggle — top right */}
-        <div className="flex justify-end mb-4">
+        {/* Theme + Language toggle — top right */}
+        <div className="flex justify-end gap-2 mb-4">
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark
+              ? <Sun size={15} style={{ color: 'var(--color-text-muted)' }} />
+              : <Moon size={15} style={{ color: 'var(--color-text-muted)' }} />
+            }
+          </button>
+
           <div
             className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium"
             style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
