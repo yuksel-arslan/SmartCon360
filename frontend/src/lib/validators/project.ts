@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const createProjectSchema = z.object({
   name: z.string().min(1).max(255),
   code: z.string().min(1).max(50),
-  projectType: z.enum(['hotel', 'hospital', 'residential', 'commercial', 'industrial', 'infrastructure']),
+  projectType: z.enum(['hotel', 'hospital', 'residential', 'commercial', 'industrial', 'infrastructure', 'mixed_use', 'educational', 'data_center']),
   description: z.string().optional(),
   plannedStart: z.string().optional(),
   plannedFinish: z.string().optional(),
@@ -13,6 +13,7 @@ export const createProjectSchema = z.object({
   country: z.string().optional(),
   budget: z.number().optional(),
   currency: z.string().max(3).default('USD'),
+  classificationStandard: z.string().max(30).default('uniclass'),
 });
 
 export const updateProjectSchema = z.object({

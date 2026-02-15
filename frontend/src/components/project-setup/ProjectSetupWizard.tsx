@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Loader2, Rocket } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 
-import { SETUP_STEPS } from './types';
+import { SETUP_STEPS, DEFAULT_WORKING_DAYS } from './types';
 import type { SetupState } from './types';
 
 import StepClassification from './steps/StepClassification';
@@ -12,7 +13,9 @@ import StepDrawings from './steps/StepDrawings';
 import StepBoq from './steps/StepBoq';
 import StepWbs from './steps/StepWbs';
 import StepCbs from './steps/StepCbs';
+import StepLBS from './steps/StepLBS';
 import StepTrades from './steps/StepTrades';
+import StepTaktConfig from './steps/StepTaktConfig';
 import StepReview from './steps/StepReview';
 
 const STEP_COMPONENTS = [
@@ -21,7 +24,9 @@ const STEP_COMPONENTS = [
   StepBoq,
   StepWbs,
   StepCbs,
+  StepLBS,
   StepTrades,
+  StepTaktConfig,
   StepReview,
 ];
 
@@ -41,6 +46,15 @@ const initialState: SetupState = {
   projectType: '',
   currency: 'USD',
   projectName: '',
+  // LBS
+  locationCount: 0,
+  zoneCount: 0,
+  lbsConfigured: false,
+  // Takt Config
+  defaultTaktTime: 5,
+  bufferSize: 1,
+  workingDays: [...DEFAULT_WORKING_DAYS],
+  tradeCount: 0,
 };
 
 interface Props {
@@ -49,16 +63,21 @@ interface Props {
 
 export default function ProjectSetupWizard({ projectId }: Props) {
   const router = useRouter();
+  const { getAuthHeader } = useAuthStore();
   const [step, setStep] = useState(0);
   const [state, setState] = useState<SetupState>(initialState);
   const [loading, setLoading] = useState(true);
   const [finalizing, setFinalizing] = useState(false);
   const [error, setError] = useState('');
 
+  const authHeaders = getAuthHeader() as Record<string, string>;
+
   // Fetch setup state
   const fetchState = useCallback(async () => {
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/setup`);
+      const res = await fetch(`/api/v1/projects/${projectId}/setup`, {
+        headers: { ...authHeaders },
+      });
       if (res.ok) {
         const json = await res.json();
         setState((prev) => ({ ...prev, ...json.data }));
@@ -72,7 +91,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, authHeaders]);
 
   useEffect(() => {
     fetchState();
@@ -97,7 +116,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
     try {
       await fetch(`/api/v1/projects/${projectId}/setup/complete-step`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({ step: stepId, nextStep: nextStepId }),
       });
     } catch {
@@ -124,7 +143,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
     try {
       const res = await fetch(`/api/v1/projects/${projectId}/setup/finalize`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
       });
 
       if (!res.ok) {
@@ -133,12 +152,15 @@ export default function ProjectSetupWizard({ projectId }: Props) {
       }
 
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setFinalizing(false);
     }
   };
+
+  // Steps that can be skipped (optional)
+  const optionalStepIndices = [1, 2]; // drawings, boq
 
   const isLast = step === SETUP_STEPS.length - 1;
   const StepComponent = STEP_COMPONENTS[step];
@@ -154,16 +176,16 @@ export default function ProjectSetupWizard({ projectId }: Props) {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* Stepper */}
-      <div className="flex items-center gap-1 px-6 py-3 border-b flex-shrink-0" style={{ borderColor: 'var(--color-border)' }}>
+      <div className="flex items-center gap-1 px-6 py-3 border-b flex-shrink-0 overflow-x-auto" style={{ borderColor: 'var(--color-border)' }}>
         {SETUP_STEPS.map((s, i) => {
           const isCompleted = state.completedSteps.includes(s.id) || i < step;
           const isCurrent = i === step;
           return (
-            <div key={s.id} className="flex items-center gap-1">
+            <div key={s.id} className="flex items-center gap-1 flex-shrink-0">
               <button
                 onClick={() => (isCompleted || isCurrent) && setStep(i)}
                 disabled={!isCompleted && !isCurrent}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
+                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
                 style={{
                   background: isCurrent ? 'rgba(232,115,26,0.12)' : isCompleted ? 'rgba(16,185,129,0.1)' : 'transparent',
                   color: isCurrent ? 'var(--color-accent)' : isCompleted ? 'var(--color-success)' : 'var(--color-text-muted)',
@@ -171,7 +193,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
                 }}
               >
                 <div
-                  className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium"
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium flex-shrink-0"
                   style={{
                     background: isCurrent ? 'var(--color-accent)' : isCompleted ? 'var(--color-success)' : 'var(--color-bg-input)',
                     color: isCurrent || isCompleted ? '#fff' : 'var(--color-text-muted)',
@@ -179,11 +201,11 @@ export default function ProjectSetupWizard({ projectId }: Props) {
                 >
                   {isCompleted ? <Check size={10} /> : i + 1}
                 </div>
-                <span className="hidden lg:inline">{s.label}</span>
+                <span className="hidden xl:inline whitespace-nowrap">{s.label}</span>
               </button>
               {i < SETUP_STEPS.length - 1 && (
                 <div
-                  className="w-4 h-px"
+                  className="w-3 h-px flex-shrink-0"
                   style={{ background: isCompleted ? 'var(--color-success)' : 'var(--color-border)' }}
                 />
               )}
@@ -200,6 +222,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
             state={state}
             onStateChange={onStateChange}
             onComplete={completeStep}
+            authHeaders={authHeaders}
           />
         </div>
       </div>
@@ -229,7 +252,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
 
           <div className="flex items-center gap-2">
             {/* Skip button for optional steps */}
-            {(step === 1 || step === 2) && (
+            {optionalStepIndices.includes(step) && (
               <button
                 onClick={next}
                 className="px-4 py-2.5 rounded-lg text-[12px] font-medium transition-colors hover:opacity-80"

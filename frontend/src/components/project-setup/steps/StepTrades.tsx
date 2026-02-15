@@ -5,7 +5,7 @@ import type { SetupStepProps, SubTradeTemplate } from '../types';
 import { DISCIPLINES } from '../types';
 import { Check, Loader2, Users } from 'lucide-react';
 
-export default function StepTrades({ projectId, state, onStateChange }: SetupStepProps) {
+export default function StepTrades({ projectId, state, onStateChange, onComplete, authHeaders }: SetupStepProps) {
   const [trades, setTrades] = useState<(SubTradeTemplate & { enabled: boolean })[]>([]);
   const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -18,7 +18,9 @@ export default function StepTrades({ projectId, state, onStateChange }: SetupSte
   const fetchTradeTemplates = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/setup/trade-templates`);
+      const res = await fetch(`/api/v1/projects/${projectId}/setup/trade-templates`, {
+        headers: { ...authHeaders },
+      });
       if (res.ok) {
         const json = await res.json();
         setTrades((json.data.trades || []).map((t: SubTradeTemplate) => ({ ...t, enabled: true })));
@@ -57,7 +59,7 @@ export default function StepTrades({ projectId, state, onStateChange }: SetupSte
     try {
       const res = await fetch(`/api/v1/projects/${projectId}/setup/apply-trades`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           selectedDisciplines: Array.from(selectedDisciplines),
           selectedTradeCodes: enabledTrades.map((t) => t.code),
@@ -71,8 +73,9 @@ export default function StepTrades({ projectId, state, onStateChange }: SetupSte
 
       const json = await res.json();
       setApplied(true);
-    } catch (err: any) {
-      setError(err.message);
+      onStateChange({ tradeCount: json.data?.created || enabledTrades.length });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to apply trades');
     } finally {
       setApplying(false);
     }

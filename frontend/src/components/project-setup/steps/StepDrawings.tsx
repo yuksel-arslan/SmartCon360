@@ -14,7 +14,7 @@ const FILE_TYPE_LABELS: Record<string, string> = {
   ifc: 'IFC/BIM',
 };
 
-export default function StepDrawings({ projectId, state, onStateChange }: SetupStepProps) {
+export default function StepDrawings({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
   const [drawings, setDrawings] = useState<DrawingFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -22,7 +22,9 @@ export default function StepDrawings({ projectId, state, onStateChange }: SetupS
 
   const fetchDrawings = useCallback(async () => {
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/drawings`);
+      const res = await fetch(`/api/v1/projects/${projectId}/drawings`, {
+        headers: { ...authHeaders },
+      });
       if (res.ok) {
         const json = await res.json();
         setDrawings(json.data || []);
@@ -46,6 +48,7 @@ export default function StepDrawings({ projectId, state, onStateChange }: SetupS
 
       const res = await fetch(`/api/v1/projects/${projectId}/drawings`, {
         method: 'POST',
+        headers: { ...authHeaders },
         body: formData,
       });
 
@@ -66,7 +69,7 @@ export default function StepDrawings({ projectId, state, onStateChange }: SetupS
 
   const handleDelete = async (drawingId: string) => {
     try {
-      await fetch(`/api/v1/projects/${projectId}/drawings/${drawingId}`, { method: 'DELETE' });
+      await fetch(`/api/v1/projects/${projectId}/drawings/${drawingId}`, { method: 'DELETE', headers: { ...authHeaders } });
       setDrawings((prev) => prev.filter((d) => d.id !== drawingId));
       onStateChange({ drawingCount: Math.max(0, state.drawingCount - 1) });
     } catch {

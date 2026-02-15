@@ -63,6 +63,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Initialize project setup record
+    await prisma.projectSetup.create({
+      data: {
+        projectId: project.id,
+        classificationStandard: input.classificationStandard || 'uniclass',
+      },
+    }).catch(() => {
+      // Non-critical — setup will be created on first access if missing
+    });
+
     return NextResponse.json({ data: project, error: null }, { status: 201 });
   } catch (err) {
     if (isAuthError(err)) return unauthorizedResponse();

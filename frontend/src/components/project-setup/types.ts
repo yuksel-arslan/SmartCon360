@@ -14,6 +14,15 @@ export interface SetupState {
   projectType: string;
   currency: string;
   projectName: string;
+  // LBS
+  locationCount: number;
+  zoneCount: number;
+  lbsConfigured: boolean;
+  // Takt Config
+  defaultTaktTime: number;
+  bufferSize: number;
+  workingDays: string[];
+  tradeCount: number;
 }
 
 export interface SetupStepDef {
@@ -27,6 +36,7 @@ export interface SetupStepProps {
   state: SetupState;
   onStateChange: (updates: Partial<SetupState>) => void;
   onComplete: () => void;
+  authHeaders: Record<string, string>;
 }
 
 export interface WbsStandard {
@@ -81,7 +91,9 @@ export const SETUP_STEPS: SetupStepDef[] = [
   { id: 'boq', label: 'BOQ', description: 'Bill of Quantities' },
   { id: 'wbs', label: 'WBS', description: 'Work Breakdown Structure' },
   { id: 'cbs', label: 'CBS', description: 'Cost Breakdown Structure' },
+  { id: 'lbs', label: 'LBS', description: 'Location Breakdown Structure' },
   { id: 'trades', label: 'Trades', description: 'Discipline trades' },
+  { id: 'takt', label: 'Takt Config', description: 'Takt time & schedule rhythm' },
   { id: 'review', label: 'Review', description: 'Finalize setup' },
 ];
 
@@ -93,3 +105,5 @@ export const DISCIPLINES = [
   { value: 'landscape', label: 'Landscape', color: '#16A34A' },
   { value: 'general', label: 'General', color: '#6B7280' },
 ];
+
+export const DEFAULT_WORKING_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri'];

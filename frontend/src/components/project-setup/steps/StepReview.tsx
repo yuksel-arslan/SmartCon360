@@ -1,7 +1,7 @@
 'use client';
 
 import type { SetupStepProps } from '../types';
-import { Check, X, FileText, FolderTree, DollarSign, Wrench, Image } from 'lucide-react';
+import { Check, X, FileText, FolderTree, DollarSign, Wrench, Image, MapPin, Clock } from 'lucide-react';
 
 export default function StepReview({ state }: SetupStepProps) {
   const standardLabel: Record<string, string> = {
@@ -47,10 +47,26 @@ export default function StepReview({ state }: SetupStepProps) {
       done: state.cbsGenerated,
     },
     {
+      icon: <MapPin size={16} />,
+      label: 'LBS (Location Breakdown)',
+      value: state.lbsConfigured
+        ? `${state.locationCount} locations, ${state.zoneCount} zones`
+        : 'Not configured',
+      done: state.lbsConfigured,
+    },
+    {
       icon: <Wrench size={16} />,
       label: 'Discipline Trades',
-      value: 'Configured for TaktFlow',
-      done: true,
+      value: state.tradeCount > 0 ? `${state.tradeCount} trades configured` : 'Not configured',
+      done: state.tradeCount > 0,
+    },
+    {
+      icon: <Clock size={16} />,
+      label: 'Takt Configuration',
+      value: state.taktPlanGenerated
+        ? `${state.defaultTaktTime} day takt, ${state.workingDays?.length || 5} working days/week`
+        : 'Not configured',
+      done: state.taktPlanGenerated,
     },
   ];
 
@@ -63,7 +79,7 @@ export default function StepReview({ state }: SetupStepProps) {
         Project Setup Review
       </h2>
       <p className="text-[13px] mb-6" style={{ color: 'var(--color-text-muted)' }}>
-        Review your project setup configuration. Click "Finalize Setup" to complete and activate the project.
+        Review your project setup configuration. Click &quot;Finalize Setup&quot; to complete and activate the project.
       </p>
 
       {/* Project info */}
@@ -146,10 +162,11 @@ export default function StepReview({ state }: SetupStepProps) {
       >
         <strong>After finalization:</strong>
         <ul className="mt-1 space-y-1" style={{ color: 'var(--color-text-muted)' }}>
+          <li>• LBS zones will be used in TaktFlow for trade flow scheduling</li>
           <li>• WBS nodes will be available in TaktFlow for trade assignment</li>
           <li>• CBS nodes will be linked to CostPilot budget items</li>
           {state.boqUploaded && <li>• BOQ items will be transferred to CostPilot as Work Items</li>}
-          <li>• Discipline trades will be used for automatic Takt Plan generation</li>
+          <li>• Discipline trades will flow through zones with the configured takt rhythm</li>
         </ul>
       </div>
     </div>

@@ -12,7 +12,7 @@ interface WbsNode {
   children: WbsNode[];
 }
 
-export default function StepWbs({ projectId, state, onStateChange }: SetupStepProps) {
+export default function StepWbs({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
   const [wbsTree, setWbsTree] = useState<WbsNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -22,7 +22,9 @@ export default function StepWbs({ projectId, state, onStateChange }: SetupStepPr
   const fetchWbs = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/wbs`);
+      const res = await fetch(`/api/v1/projects/${projectId}/wbs`, {
+        headers: { ...authHeaders },
+      });
       if (res.ok) {
         const json = await res.json();
         setWbsTree(json.data || []);
@@ -49,7 +51,7 @@ export default function StepWbs({ projectId, state, onStateChange }: SetupStepPr
     try {
       const res = await fetch(`/api/v1/projects/${projectId}/wbs/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           standard: state.classificationStandard,
           projectType: state.projectType,
