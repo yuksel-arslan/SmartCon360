@@ -35,7 +35,26 @@ export async function POST(request: NextRequest) {
       }
 
       const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, 'postmessage');
-      const { tokens } = await oauth2Client.getToken(code);
+
+      let tokens: { id_token?: string | null; refresh_token?: string | null; access_token?: string | null };
+      try {
+        const result = await oauth2Client.getToken(code);
+        tokens = result.tokens;
+      } catch (tokenErr: unknown) {
+        const msg = tokenErr instanceof Error ? tokenErr.message : 'Token exchange failed';
+        console.error('[Google OAuth] Token exchange error:', msg);
+        // Specific guidance for common errors
+        if (msg.includes('invalid_client')) {
+          return NextResponse.json(
+            { data: null, error: { code: 'INVALID_CLIENT', message: 'Google OAuth client configuration error. Check GOOGLE_CLIENT_SECRET in environment variables.' } },
+            { status: 500 },
+          );
+        }
+        return NextResponse.json(
+          { data: null, error: { code: 'TOKEN_EXCHANGE_FAILED', message: msg } },
+          { status: 400 },
+        );
+      }
 
       // Extract user info from id_token
       if (!tokens.id_token) {
