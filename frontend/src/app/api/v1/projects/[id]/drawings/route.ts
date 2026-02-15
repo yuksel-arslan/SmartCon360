@@ -130,34 +130,65 @@ export async function POST(request: NextRequest, { params }: Params) {
       const contentType = MIME_TYPES[fileType] || 'application/octet-stream';
 
       if (provider === 'google-drive' && ownerToken) {
-        // ── Google Drive ──
-        const projectName = await getProjectName(projectId);
-        const { fileId: driveFileId, webViewLink } = await uploadToDrive(
-          ownerToken,
-          projectName,
-          'Drawings',
-          file.name,
-          buffer,
-          contentType,
-        );
+        // ── Google Drive — with fallback to local on failure ──
+        try {
+          const projectName = await getProjectName(projectId);
+          const { fileId: driveFileId, webViewLink } = await uploadToDrive(
+            ownerToken,
+            projectName,
+            'Drawings',
+            file.name,
+            buffer,
+            contentType,
+          );
 
-        const drawing = await prisma.drawing.create({
-          data: {
-            projectId,
-            fileName: file.name,
-            originalName: file.name,
-            fileType,
-            fileSize: file.size,
-            filePath: driveFileId,
-            discipline,
-            title: file.name.replace(/\.[^.]+$/, ''),
-            uploadedBy: userId,
-            metadata: { storageProvider: 'google-drive', driveFileId, webViewLink },
-          },
-          select: DRAWING_LIST_SELECT,
-        });
+          const drawing = await prisma.drawing.create({
+            data: {
+              projectId,
+              fileName: file.name,
+              originalName: file.name,
+              fileType,
+              fileSize: file.size,
+              filePath: driveFileId,
+              discipline,
+              title: file.name.replace(/\.[^.]+$/, ''),
+              uploadedBy: userId,
+              metadata: { storageProvider: 'google-drive', driveFileId, webViewLink },
+            },
+            select: DRAWING_LIST_SELECT,
+          });
 
-        created.push(drawing);
+          created.push(drawing);
+        } catch (driveErr: unknown) {
+          const driveMsg = driveErr instanceof Error ? driveErr.message : 'Drive upload failed';
+          console.error(`[Drawings] Drive upload failed for ${file.name}:`, driveMsg);
+
+          // Fallback to database storage
+          if (file.size > MAX_FILE_SIZE_DB) {
+            errors.push(`${file.name}: Drive upload failed (${driveMsg}) and file too large for local storage (max ${MAX_FILE_SIZE_DB / 1024 / 1024} MB)`);
+            continue;
+          }
+
+          const drawing = await prisma.drawing.create({
+            data: {
+              projectId,
+              fileName: file.name,
+              originalName: file.name,
+              fileType,
+              fileSize: file.size,
+              filePath: 'database',
+              fileData: buffer,
+              discipline,
+              title: file.name.replace(/\.[^.]+$/, ''),
+              uploadedBy: userId,
+              metadata: { storageProvider: 'local', driveError: driveMsg },
+            },
+            select: DRAWING_LIST_SELECT,
+          });
+
+          created.push(drawing);
+          errors.push(`${file.name}: saved locally (Drive error: ${driveMsg})`);
+        }
       } else if (provider === 's3') {
         // ── S3-compatible ──
         const timestamp = Date.now();

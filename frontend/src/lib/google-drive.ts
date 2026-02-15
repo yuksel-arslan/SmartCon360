@@ -7,6 +7,9 @@ const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 // ── OAuth2 Client Factory ──────────────────────────────────────────
 
 function createOAuth2Client(refreshToken: string) {
+  if (!CLIENT_ID || !CLIENT_SECRET) {
+    throw new Error('GOOGLE_CLIENT_SECRET is not configured on the server');
+  }
   const oauth2 = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET);
   oauth2.setCredentials({ refresh_token: refreshToken });
   return oauth2;
