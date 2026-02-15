@@ -97,6 +97,81 @@ export const SETUP_STEPS: SetupStepDef[] = [
   { id: 'review', label: 'Review', description: 'Finalize setup' },
 ];
 
+// Steps that can be skipped without completing
+const OPTIONAL_STEPS = new Set(['drawings', 'boq']);
+
+export function isStepOptional(stepId: string): boolean {
+  return OPTIONAL_STEPS.has(stepId);
+}
+
+/**
+ * Check whether a step's requirements are met based on current setup state.
+ * Returns { valid, message } — if not valid, message explains what's missing.
+ */
+export function getStepValidation(
+  stepId: string,
+  state: SetupState,
+): { valid: boolean; message: string } {
+  switch (stepId) {
+    case 'classification':
+      return {
+        valid: !!state.classificationStandard,
+        message: 'Select a classification standard to continue.',
+      };
+    case 'drawings':
+      return { valid: true, message: '' };
+    case 'boq':
+      return { valid: true, message: '' };
+    case 'wbs':
+      return {
+        valid: state.wbsGenerated && state.wbsNodeCount > 0,
+        message:
+          state.classificationStandard === 'custom'
+            ? 'Custom WBS is not yet supported in setup. Select a standard first.'
+            : 'Click "Generate WBS" to create the work breakdown structure.',
+      };
+    case 'cbs':
+      return {
+        valid: state.cbsGenerated && state.cbsNodeCount > 0,
+        message: !state.wbsGenerated
+          ? 'Generate WBS first (previous step), then generate CBS.'
+          : 'Click "Generate CBS" to create the cost breakdown structure.',
+      };
+    case 'lbs':
+      return {
+        valid: state.lbsConfigured && state.zoneCount > 0,
+        message: 'Click "Apply Template" to create the location hierarchy with takt zones.',
+      };
+    case 'trades':
+      return {
+        valid: state.tradeCount > 0,
+        message: 'Select trades and click "Apply Trades" before proceeding.',
+      };
+    case 'takt':
+      return {
+        valid: state.taktPlanGenerated,
+        message: 'Click "Save Takt Configuration" before proceeding.',
+      };
+    case 'review':
+      return { valid: true, message: '' };
+    default:
+      return { valid: true, message: '' };
+  }
+}
+
+/**
+ * Returns list of required steps that are NOT yet completed in state.
+ */
+export function getMissingRequiredSteps(state: SetupState): string[] {
+  const missing: string[] = [];
+  for (const step of SETUP_STEPS) {
+    if (isStepOptional(step.id) || step.id === 'review') continue;
+    const { valid } = getStepValidation(step.id, state);
+    if (!valid) missing.push(step.label);
+  }
+  return missing;
+}
+
 export const DISCIPLINES = [
   { value: 'structural', label: 'Structural', color: '#6366F1' },
   { value: 'mechanical', label: 'Mechanical', color: '#06B6D4' },
