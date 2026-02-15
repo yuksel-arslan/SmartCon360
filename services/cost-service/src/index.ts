@@ -8,8 +8,12 @@ import { authenticate } from './middleware/auth';
 
 // Routes
 import workItemsRouter from './routes/work-items';
+import unitPricesRouter from './routes/unit-prices';
+import quantityTakeoffsRouter from './routes/quantity-takeoffs';
 import estimatesRouter from './routes/estimates';
+import budgetsRouter from './routes/budgets';
 import paymentsRouter from './routes/payments';
+import costRecordsRouter from './routes/cost-records';
 import evmRouter from './routes/evm';
 
 const app = express();
@@ -18,6 +22,17 @@ const PORT = process.env.PORT || 3011;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// CORS for direct access during development
+app.use((_req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  if (_req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Health check (no auth required)
 app.get('/health', (_req, res) => {
@@ -32,15 +47,13 @@ app.get('/health', (_req, res) => {
 // API routes (with authentication)
 // Gateway strips /api/v1 prefix, so paths arrive as /cost/...
 app.use('/cost/work-items', authenticate, workItemsRouter);
+app.use('/cost/unit-prices', authenticate, unitPricesRouter);
+app.use('/cost/quantity-takeoffs', authenticate, quantityTakeoffsRouter);
 app.use('/cost/estimates', authenticate, estimatesRouter);
+app.use('/cost/budgets', authenticate, budgetsRouter);
 app.use('/cost/payments', authenticate, paymentsRouter);
+app.use('/cost/cost-records', authenticate, costRecordsRouter);
 app.use('/cost/evm', authenticate, evmRouter);
-
-// TODO: Add remaining routes:
-// app.use('/cost/unit-prices', authenticate, unitPricesRouter);
-// app.use('/cost/quantity-takeoffs', authenticate, quantityTakeoffsRouter);
-// app.use('/cost/budgets', authenticate, budgetsRouter);
-// app.use('/cost/cost-records', authenticate, costRecordsRouter);
 
 // 404 handler
 app.use((_req, res) => {

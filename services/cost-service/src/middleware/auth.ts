@@ -1,8 +1,10 @@
-// Authentication middleware (placeholder)
-// TODO: Implement JWT verification when auth-service is integrated
+// Authentication middleware — JWT verification
 
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 import { UnauthorizedError } from '../utils/errors';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-smartcon360-2026';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -13,8 +15,7 @@ export interface AuthRequest extends Request {
 }
 
 /**
- * Verify JWT token
- * TODO: Integrate with auth-service for real JWT verification
+ * Verify JWT token from Authorization header
  */
 export async function authenticate(
   req: AuthRequest,
@@ -30,13 +31,21 @@ export async function authenticate(
 
     const token = authHeader.substring(7);
 
-    // TODO: Verify token with JWT
-    // For now, mock user
-    req.user = {
-      id: 'user-123',
-      email: 'user@example.com',
-      role: 'admin',
-    };
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as {
+        userId: string;
+        email: string;
+        role: string;
+      };
+
+      req.user = {
+        id: decoded.userId,
+        email: decoded.email,
+        role: decoded.role || 'user',
+      };
+    } catch {
+      throw new UnauthorizedError('Invalid or expired token');
+    }
 
     next();
   } catch (error) {
@@ -57,12 +66,20 @@ export async function optionalAuth(
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
-      // TODO: Verify token
-      req.user = {
-        id: 'user-123',
-        email: 'user@example.com',
-        role: 'admin',
-      };
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as {
+          userId: string;
+          email: string;
+          role: string;
+        };
+        req.user = {
+          id: decoded.userId,
+          email: decoded.email,
+          role: decoded.role || 'user',
+        };
+      } catch {
+        // Token invalid, continue without user
+      }
     }
 
     next();
