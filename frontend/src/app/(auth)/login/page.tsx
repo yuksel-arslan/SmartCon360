@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, ArrowRight, Globe, Layers } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Globe, Layers, Sun, Moon } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { BRAND } from '@/lib/modules';
 
@@ -147,11 +147,27 @@ export default function LoginPage() {
     const saved = localStorage.getItem('lang') as Lang | null;
     if (saved && (saved === 'en' || saved === 'tr')) setLang(saved);
 
-    // Detect theme: check saved preference, then system preference
-    const isLightClass = document.documentElement.classList.contains('light');
-    const systemLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-    setIsDark(!isLightClass && !systemLight);
+    // Detect theme from saved preference or system
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      setIsDark(false);
+      document.documentElement.classList.add('light');
+    } else if (savedTheme === 'dark') {
+      setIsDark(true);
+      document.documentElement.classList.remove('light');
+    } else {
+      const systemLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+      setIsDark(!systemLight);
+      document.documentElement.classList.toggle('light', systemLight);
+    }
   }, []);
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(!next);
+    document.documentElement.classList.toggle('light', next);
+    localStorage.setItem('theme', next ? 'light' : 'dark');
+  };
 
   const switchLang = (newLang: Lang) => {
     setLang(newLang);
@@ -542,8 +558,21 @@ export default function LoginPage() {
 
       {/* Right — Form */}
       <div className="flex-1 flex flex-col p-8">
-        {/* Language toggle — top right */}
-        <div className="flex justify-end mb-4">
+        {/* Theme + Language toggle — top right */}
+        <div className="flex justify-end gap-2 mb-4">
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark
+              ? <Sun size={15} style={{ color: 'var(--color-text-muted)' }} />
+              : <Moon size={15} style={{ color: 'var(--color-text-muted)' }} />
+            }
+          </button>
+
           <div
             className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium"
             style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
