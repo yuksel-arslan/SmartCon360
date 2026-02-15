@@ -118,17 +118,12 @@ const methods = [
   },
 ];
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: Record<string, unknown>) => void;
-          renderButton: (el: HTMLElement, config: Record<string, unknown>) => void;
-        };
-      };
-    };
-  }
+// Google OAuth2 helper — access code client for login + Drive scope
+function getGoogleOAuth2(): {
+  initCodeClient: (config: Record<string, unknown>) => { requestCode: () => void };
+} | undefined {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (window as any).google?.accounts?.oauth2;
 }
 
 export default function LoginPage() {
@@ -193,31 +188,54 @@ export default function LoginPage() {
     }, data.refreshToken);
   }, [setAuth]);
 
-  // Google Sign-In callback
-  const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
+  // Google OAuth2 — login + Drive access in one step
+  const [googleReady, setGoogleReady] = useState(false);
+
+  const handleGoogleLogin = useCallback(() => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId || !getGoogleOAuth2()) return;
+
     setLoading(true);
     setError('');
-    try {
-      const res = await fetch('/api/v1/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential: response.credential }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        const message = typeof json.error === 'object' ? json.error.message : json.error;
-        throw new Error(message || 'Google sign-in failed');
-      }
-      storeAuth(json.data);
-      router.push('/dashboard');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google sign-in failed');
-    } finally {
-      setLoading(false);
-    }
+
+    const client = getGoogleOAuth2()!.initCodeClient({
+      client_id: clientId,
+      scope: 'openid email profile https://www.googleapis.com/auth/drive.file',
+      ux_mode: 'popup',
+      callback: async (response: { code?: string; error?: string }) => {
+        if (response.error || !response.code) {
+          setLoading(false);
+          if (response.error !== 'access_denied') {
+            setError(response.error || 'Google sign-in cancelled');
+          }
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/v1/auth/google', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: response.code }),
+          });
+          const json = await res.json();
+          if (!res.ok) {
+            const message = typeof json.error === 'object' ? json.error.message : json.error;
+            throw new Error(message || 'Google sign-in failed');
+          }
+          storeAuth(json.data);
+          router.push('/dashboard');
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Google sign-in failed');
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+
+    client.requestCode();
   }, [storeAuth, router]);
 
-  // Load Google Sign-In SDK
+  // Load Google Identity Services SDK
   useEffect(() => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) return;
@@ -226,24 +244,10 @@ export default function LoginPage() {
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.defer = true;
-    script.onload = () => {
-      window.google?.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleGoogleCallback,
-      });
-      const btnEl = document.getElementById('google-signin-btn');
-      if (btnEl) {
-        window.google?.accounts.id.renderButton(btnEl, {
-          theme: 'outline',
-          size: 'large',
-          width: '100%',
-          text: 'continue_with',
-        });
-      }
-    };
+    script.onload = () => setGoogleReady(true);
     document.head.appendChild(script);
     return () => { script.remove(); };
-  }, [handleGoogleCallback]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -624,30 +628,40 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Google Sign-In */}
+          {/* Google Sign-In — OAuth2 code flow with Drive access */}
           <div className="mb-4">
-            {/* Real Google button renders here when SDK is loaded */}
-            <div id="google-signin-btn" className="flex justify-center" />
-            {/* Fallback button when Google SDK is not loaded (no client ID) */}
-            {!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
-              <button
-                type="button"
-                onClick={() => setError(lang === 'tr'
-                  ? 'Google ile giris henuz yapilandirilmadi. Lutfen e-posta ile giris yapin.'
-                  : 'Google Sign-In is not configured yet. Please use email login.'
-                )}
-                className="w-full py-2.5 rounded-lg border text-sm font-medium flex items-center justify-center gap-3 transition-colors hover:opacity-80"
-                style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'var(--color-bg-card)' }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                {i.googleContinue}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
+                  setError(lang === 'tr'
+                    ? 'Google ile giris henuz yapilandirilmadi. Lutfen e-posta ile giris yapin.'
+                    : 'Google Sign-In is not configured yet. Please use email login.');
+                  return;
+                }
+                if (!googleReady) {
+                  setError(lang === 'tr' ? 'Google SDK yukleniyor...' : 'Loading Google SDK...');
+                  return;
+                }
+                handleGoogleLogin();
+              }}
+              disabled={loading}
+              className="w-full py-2.5 rounded-lg border text-sm font-medium flex items-center justify-center gap-3 transition-colors hover:opacity-80"
+              style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'var(--color-bg-card)' }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              {i.googleContinue}
+            </button>
+            <p className="mt-2 text-center text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+              {lang === 'tr'
+                ? 'Proje yoneticileri icin Google ile giris zorunludur — proje dosyalari Drive\'a kaydedilir.'
+                : 'Google sign-in is required for project managers — project files are saved to your Drive.'}
+            </p>
           </div>
 
           <div className="flex items-center gap-3 mb-4">
