@@ -267,6 +267,16 @@ interface CostState {
   uniclassResults: Array<{ code: string; title: string; description?: string }>;
   uniclassLoading: boolean;
 
+  // Uniclass browser (hierarchical)
+  uniclassBrowseRoots: Array<{ code: string; title: string; description?: string; tableName: string; parentCode?: string | null; level: number }>;
+  uniclassBrowseChildren: Record<string, Array<{ code: string; title: string; description?: string; tableName: string; parentCode?: string | null; level: number }>>;
+  uniclassBrowseLoading: boolean;
+  uniclassCacheStats: { totalCached: number; byTable: Array<{ table: string; count: number }>; oldestSync: string | null; newestSync: string | null } | null;
+
+  // Classification mappings
+  classificationMappings: Array<{ uniclassCode?: string | null; masterformatCode?: string | null; uniformatCode?: string | null; description: string; category: string; confidence: number; source: string }>;
+  classificationMappingsGrouped: Record<string, Array<{ uniclassCode?: string | null; masterformatCode?: string | null; uniformatCode?: string | null; description: string; category: string; confidence: number; source: string }>> | null;
+
   // Division/Element filters
   catalogDivisions: Array<{ code: string; name: string }>;
   catalogCategories: string[];
@@ -330,6 +340,18 @@ interface CostState {
   // Actions — Uniclass Live Search
   searchUniclass: (query: string, table?: string) => Promise<void>;
 
+  // Actions — Uniclass Browser (hierarchical)
+  fetchUniclassTableRoots: (table: string) => Promise<void>;
+  fetchUniclassChildren: (code: string) => Promise<void>;
+  fetchUniclassCacheStats: () => Promise<void>;
+  syncUniclassTable: (table: string) => Promise<{ synced: number; errors: number } | null>;
+
+  // Actions — Classification Mappings
+  fetchClassificationMappings: () => Promise<void>;
+  lookupMapping: (opts: { uniclass?: string; masterformat?: string; uniformat?: string }) => Promise<void>;
+  searchMappings: (query: string) => Promise<void>;
+  seedMappings: () => Promise<{ created: number; skipped: number } | null>;
+
   // Actions — Division/Category Filters
   fetchCatalogDivisions: (catalogId: string) => Promise<void>;
   fetchCatalogCategories: (catalogId: string) => Promise<void>;
@@ -377,6 +399,12 @@ export const useCostStore = create<CostState>((set, get) => ({
   catalogItemsMeta: { total: 0, page: 1, pages: 1 },
   uniclassResults: [],
   uniclassLoading: false,
+  uniclassBrowseRoots: [],
+  uniclassBrowseChildren: {},
+  uniclassBrowseLoading: false,
+  uniclassCacheStats: null,
+  classificationMappings: [],
+  classificationMappingsGrouped: null,
   catalogDivisions: [],
   catalogCategories: [],
 
@@ -824,6 +852,111 @@ export const useCostStore = create<CostState>((set, get) => ({
       set({ uniclassResults: json.data || [], uniclassLoading: false });
     } catch {
       set({ uniclassResults: [], uniclassLoading: false });
+    }
+  },
+
+  // ── Uniclass Browser (hierarchical) ──
+
+  fetchUniclassTableRoots: async (table: string) => {
+    set({ uniclassBrowseLoading: true });
+    try {
+      const res = await fetch(`${API}/catalog/uniclass/browse/${table}`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      set({ uniclassBrowseRoots: json.data || [], uniclassBrowseLoading: false });
+    } catch {
+      set({ uniclassBrowseRoots: [], uniclassBrowseLoading: false });
+    }
+  },
+
+  fetchUniclassChildren: async (code: string) => {
+    try {
+      const res = await fetch(`${API}/catalog/uniclass/browse/_/${code}/children`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      set((state) => ({
+        uniclassBrowseChildren: {
+          ...state.uniclassBrowseChildren,
+          [code]: json.data || [],
+        },
+      }));
+    } catch {
+      // Keep existing state on error
+    }
+  },
+
+  fetchUniclassCacheStats: async () => {
+    try {
+      const res = await fetch(`${API}/catalog/uniclass/cache/stats`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      set({ uniclassCacheStats: json.data || null });
+    } catch {
+      set({ uniclassCacheStats: null });
+    }
+  },
+
+  syncUniclassTable: async (table: string) => {
+    try {
+      const res = await fetch(`${API}/catalog/uniclass/cache/sync/${table}`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      return json.data;
+    } catch {
+      return null;
+    }
+  },
+
+  // ── Classification Mappings ──
+
+  fetchClassificationMappings: async () => {
+    try {
+      const res = await fetch(`${API}/mappings`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      set({ classificationMappingsGrouped: json.data || null });
+    } catch {
+      set({ classificationMappingsGrouped: null });
+    }
+  },
+
+  lookupMapping: async (opts: { uniclass?: string; masterformat?: string; uniformat?: string }) => {
+    try {
+      const params = new URLSearchParams();
+      if (opts.uniclass) params.set('uniclass', opts.uniclass);
+      if (opts.masterformat) params.set('masterformat', opts.masterformat);
+      if (opts.uniformat) params.set('uniformat', opts.uniformat);
+      const res = await fetch(`${API}/mappings/lookup?${params}`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      set({ classificationMappings: json.data || [] });
+    } catch {
+      set({ classificationMappings: [] });
+    }
+  },
+
+  searchMappings: async (query: string) => {
+    try {
+      const res = await fetch(`${API}/mappings/search?q=${encodeURIComponent(query)}`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      set({ classificationMappings: json.data || [] });
+    } catch {
+      set({ classificationMappings: [] });
+    }
+  },
+
+  seedMappings: async () => {
+    try {
+      const res = await fetch(`${API}/mappings/seed`, { method: 'POST', headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      return json.data;
+    } catch {
+      return null;
     }
   },
 

@@ -547,3 +547,54 @@ model CostRecord {
   @@map("cost_records")
   @@schema("cost")
 }
+
+// ============================================================================
+// UNICLASS OFFLINE CACHE
+// ============================================================================
+
+model UniclassCache {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  code        String  @unique @db.VarChar(30)     // e.g. "Ss_25_10_30"
+  title       String  @db.VarChar(500)
+  description String?
+
+  tableName   String  @map("table_name") @db.VarChar(5)  // Ac, Co, En, Pr, SL, EF, Ss, FI, Zz
+  parentCode  String? @map("parent_code") @db.VarChar(30)
+  level       Int     @default(1)                          // depth in hierarchy
+
+  syncedAt DateTime @default(now()) @map("synced_at")
+
+  @@index([tableName], name: "idx_uniclass_cache_table")
+  @@index([parentCode], name: "idx_uniclass_cache_parent")
+  @@index([title], name: "idx_uniclass_cache_title")
+  @@map("uniclass_cache")
+  @@schema("cost")
+}
+
+// ============================================================================
+// CROSS-STANDARD MAPPING (Uniclass <-> MasterFormat <-> UNIFORMAT)
+// ============================================================================
+
+model ClassificationMapping {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  uniclassCode    String? @map("uniclass_code") @db.VarChar(30)
+  masterformatCode String? @map("masterformat_code") @db.VarChar(20)
+  uniformatCode   String? @map("uniformat_code") @db.VarChar(20)
+
+  description   String  @db.VarChar(500)     // Common description
+  category      String  @db.VarChar(100)     // e.g. "Concrete", "Masonry", "HVAC"
+
+  confidence    Decimal @default(1.0) @db.Decimal(3, 2) // 0.00-1.00 mapping confidence
+  source        String  @default("manual") @db.VarChar(30) // manual | ai | nbs | csi
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([uniclassCode], name: "idx_class_map_uniclass")
+  @@index([masterformatCode], name: "idx_class_map_masterformat")
+  @@index([uniformatCode], name: "idx_class_map_uniformat")
+  @@index([category], name: "idx_class_map_category")
+  @@map("classification_mappings")
+  @@schema("cost")
+}
