@@ -2,27 +2,11 @@
 
 import { X, Plus, Edit3, Trash2, Save, Calculator, Layers, Package } from 'lucide-react';
 import { useState } from 'react';
-import type { WorkItem, UnitPriceAnalysis } from '@/stores/costStore';
+import type { WorkItem, UnitPriceAnalysis, UnitPriceResource } from '@/stores/costStore';
 import { ResourceEditor } from './ResourceEditor';
 
 interface WorkItemDetailDrawerProps {
-  workItem: WorkItem & {
-    unitPriceAnalyses?: Array<
-      UnitPriceAnalysis & {
-        resources?: Array<{
-          id: string;
-          resourceType: 'labor' | 'material' | 'equipment' | 'other';
-          code?: string | null;
-          name: string;
-          unit: string;
-          quantity: number;
-          unitRate: number;
-          total: number;
-          sortOrder: number;
-        }>;
-      }
-    >;
-  };
+  workItem: WorkItem;
   isOpen: boolean;
   onClose: () => void;
   currency: 'TRY' | 'USD';
@@ -301,7 +285,7 @@ export function WorkItemDetailDrawer({
                           </span>
                         </div>
                         <div className="text-[11px] font-mono" style={{ color: 'var(--color-text-muted)' }}>
-                          {resource.quantity.toFixed(4)} {resource.unit} × {formatCurrency(Number(resource.unitRate))} = {' '}
+                          {Number(resource.quantity).toFixed(4)} {resource.unit} × {formatCurrency(Number(resource.unitRate))} = {' '}
                           <span className="font-semibold" style={{ color: typeInfo.color }}>
                             {formatCurrency(Number(resource.total))}
                           </span>

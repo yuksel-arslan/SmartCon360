@@ -122,7 +122,7 @@ export function WorkItemsTabEnhanced() {
     } catch (error) {
       console.error('Failed to fetch work item details:', error);
       // Fallback: open with basic data
-      setSelectedWorkItem(item as any);
+      setSelectedWorkItem(item);
       setDrawerOpen(true);
     }
   };

@@ -7,13 +7,13 @@ interface ResourceEditorProps {
   analysisId: string;
   resource?: {
     id: string;
-    resourceType: 'labor' | 'material' | 'equipment' | 'other';
+    resourceType: string;
     code?: string | null;
     name: string;
     unit: string;
-    quantity: number;
-    unitRate: number;
-    total: number;
+    quantity: string | number;
+    unitRate: string | number;
+    total: string | number;
   } | null;
   currency: 'TRY' | 'USD';
   onClose: () => void;
@@ -24,13 +24,13 @@ export function ResourceEditor({ analysisId, resource, currency, onClose, onSave
   const isEdit = !!resource;
 
   const [resourceType, setResourceType] = useState<'labor' | 'material' | 'equipment' | 'other'>(
-    resource?.resourceType || 'material'
+    (resource?.resourceType as 'labor' | 'material' | 'equipment' | 'other') || 'material'
   );
   const [code, setCode] = useState(resource?.code || '');
   const [name, setName] = useState(resource?.name || '');
   const [unit, setUnit] = useState(resource?.unit || 'm²');
-  const [quantity, setQuantity] = useState(resource?.quantity?.toString() || '1.0');
-  const [unitRate, setUnitRate] = useState(resource?.unitRate?.toString() || '0.00');
+  const [quantity, setQuantity] = useState(String(resource?.quantity ?? '1.0'));
+  const [unitRate, setUnitRate] = useState(String(resource?.unitRate ?? '0.00'));
   const [saving, setSaving] = useState(false);
 
   const calculatedTotal = parseFloat(quantity || '0') * parseFloat(unitRate || '0');
