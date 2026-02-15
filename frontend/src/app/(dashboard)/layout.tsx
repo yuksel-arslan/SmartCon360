@@ -2,6 +2,7 @@
 
 import Sidebar from '@/components/layout/Sidebar';
 import AuthGuard from '@/components/auth/AuthGuard';
+import SetupGuard from '@/components/auth/SetupGuard';
 import { useUIStore } from '@/stores/uiStore';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -29,7 +30,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
 
         <main className="flex-1 flex flex-col overflow-y-auto min-w-0">
-          {children}
+          <SetupGuard>
+            {children}
+          </SetupGuard>
         </main>
       </div>
     </AuthGuard>

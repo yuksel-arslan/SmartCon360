@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useUIStore } from '@/stores/uiStore';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -10,6 +10,7 @@ import { NAV_GROUPS, MODULE_REGISTRY, BRAND, type NavGroupItem } from '@/lib/mod
 import {
   Settings, PanelLeftClose, Plus, ChevronDown, ChevronRight,
   Building2, Hospital, Building, Landmark, Factory, Construction, FolderKanban, Loader2,
+  AlertTriangle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
@@ -26,6 +27,7 @@ const PROJECT_ICONS: Record<string, LucideIcon> = {
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { sidebarCollapsed, toggleSidebar, theme } = useUIStore();
   const { token } = useAuthStore();
   const { projects, activeProjectId, loading, initialized, error, fetchProjects, setActiveProject } = useProjectStore();
@@ -192,12 +194,17 @@ export default function Sidebar() {
                 >
                   {projects.map((project) => {
                     const Icon = PROJECT_ICONS[project.projectType] || DefaultProjectIcon;
+                    const needsSetup = project.status !== 'active';
                     return (
                       <button
                         key={project.id}
                         onClick={() => {
                           setActiveProject(project.id);
                           setProjectDropdownOpen(false);
+                          // Redirect to setup if project setup is not finalized
+                          if (needsSetup) {
+                            router.push(`/projects/${project.id}/setup`);
+                          }
                         }}
                         className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors"
                         style={{
@@ -213,14 +220,17 @@ export default function Sidebar() {
                         <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'var(--color-bg-input)' }}>
                           <Icon size={12} style={{ color: 'var(--color-text-muted)' }} strokeWidth={1.5} />
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="text-[11px] font-semibold truncate" style={{ color: 'var(--color-text)' }}>
                             {project.name}
                           </div>
-                          <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-                            {project.status === 'planning' ? 'Planning' : project.status}
+                          <div className="text-[10px]" style={{ color: needsSetup ? 'var(--color-warning)' : 'var(--color-text-muted)' }}>
+                            {needsSetup ? 'Setup Required' : 'Active'}
                           </div>
                         </div>
+                        {needsSetup && (
+                          <AlertTriangle size={12} className="flex-shrink-0" style={{ color: 'var(--color-warning)' }} />
+                        )}
                       </button>
                     );
                   })}
