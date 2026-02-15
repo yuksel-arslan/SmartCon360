@@ -2,16 +2,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
-import crypto from 'crypto';
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 const ALLOWED_EXTENSIONS = ['.pdf', '.dwg', '.dxf', '.rvt', '.ifc'];
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB (database storage limit)
 
 type Params = { params: Promise<{ id: string }> };
+
+// Fields to return in list queries (exclude fileData to avoid loading binary)
+const DRAWING_LIST_SELECT = {
+  id: true,
+  projectId: true,
+  fileName: true,
+  originalName: true,
+  fileType: true,
+  fileSize: true,
+  filePath: true,
+  discipline: true,
+  drawingNo: true,
+  title: true,
+  revision: true,
+  sheetSize: true,
+  status: true,
+  uploadedBy: true,
+  metadata: true,
+  createdAt: true,
+  updatedAt: true,
+};
 
 // GET /api/v1/projects/:id/drawings — List drawings
 export async function GET(request: NextRequest, { params }: Params) {
@@ -26,32 +42,22 @@ export async function GET(request: NextRequest, { params }: Params) {
 
     const drawings = await prisma.drawing.findMany({
       where,
+      select: DRAWING_LIST_SELECT,
       orderBy: [{ discipline: 'asc' }, { createdAt: 'desc' }],
     });
 
-    const grouped: Record<string, typeof drawings> = {};
-    for (const d of drawings) {
-      if (!grouped[d.discipline]) grouped[d.discipline] = [];
-      grouped[d.discipline].push(d);
-    }
-
-    return NextResponse.json({ data: drawings, meta: { grouped, total: drawings.length }, error: null });
+    return NextResponse.json({ data: drawings, meta: { total: drawings.length }, error: null });
   } catch (err) {
     if (isAuthError(err)) return unauthorizedResponse();
     return errorResponse(err);
   }
 }
 
-// POST /api/v1/projects/:id/drawings — Upload drawings (multipart/form-data)
+// POST /api/v1/projects/:id/drawings — Upload drawings (stored in PostgreSQL)
 export async function POST(request: NextRequest, { params }: Params) {
   try {
     const userId = requireAuth(request);
     const { id: projectId } = await params;
-
-    // Ensure uploads directory exists
-    if (!existsSync(UPLOAD_DIR)) {
-      await mkdir(UPLOAD_DIR, { recursive: true });
-    }
 
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
@@ -68,7 +74,8 @@ export async function POST(request: NextRequest, { params }: Params) {
     const errors = [];
 
     for (const file of files) {
-      const ext = path.extname(file.name).toLowerCase();
+      const nameParts = file.name.split('.');
+      const ext = nameParts.length > 1 ? '.' + nameParts.pop()!.toLowerCase() : '';
 
       // Validate extension
       if (!ALLOWED_EXTENSIONS.includes(ext)) {
@@ -78,32 +85,37 @@ export async function POST(request: NextRequest, { params }: Params) {
 
       // Validate size
       if (file.size > MAX_FILE_SIZE) {
-        errors.push(`${file.name}: exceeds 100 MB limit`);
+        errors.push(`${file.name}: exceeds ${MAX_FILE_SIZE / 1024 / 1024} MB limit`);
         continue;
       }
 
-      // Save file to disk
-      const uniqueName = `${crypto.randomUUID()}${ext}`;
-      const filePath = path.join(UPLOAD_DIR, uniqueName);
+      // Read file into buffer and store in database
       const buffer = Buffer.from(await file.arrayBuffer());
-      await writeFile(filePath, buffer);
 
-      // Create database record
       const drawing = await prisma.drawing.create({
         data: {
           projectId,
-          fileName: uniqueName,
+          fileName: file.name,
           originalName: file.name,
           fileType: ext.replace('.', ''),
           fileSize: file.size,
-          filePath,
+          filePath: 'database',
+          fileData: buffer,
           discipline,
           title: file.name.replace(/\.[^.]+$/, ''),
           uploadedBy: userId,
         },
+        select: DRAWING_LIST_SELECT,
       });
 
       created.push(drawing);
+    }
+
+    if (created.length === 0 && errors.length > 0) {
+      return NextResponse.json(
+        { data: null, error: { code: 'VALIDATION', message: errors.join('; ') } },
+        { status: 400 },
+      );
     }
 
     // Update setup drawing count

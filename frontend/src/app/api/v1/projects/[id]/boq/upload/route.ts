@@ -2,14 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
-import crypto from 'crypto';
 import * as XLSX from 'xlsx';
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
-const BOQ_EXTENSIONS = ['.xlsx', '.xls', '.csv'];
+const BOQ_EXTENSIONS = ['xlsx', 'xls', 'csv'];
 
 interface ParsedBoqItem {
   rowIndex: number;
@@ -53,10 +48,6 @@ export async function POST(request: NextRequest, { params }: Params) {
     requireAuth(request);
     const { id: projectId } = await params;
 
-    if (!existsSync(UPLOAD_DIR)) {
-      await mkdir(UPLOAD_DIR, { recursive: true });
-    }
-
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -67,21 +58,17 @@ export async function POST(request: NextRequest, { params }: Params) {
       );
     }
 
-    const ext = path.extname(file.name).toLowerCase();
+    const nameParts = file.name.split('.');
+    const ext = nameParts.length > 1 ? nameParts.pop()!.toLowerCase() : '';
     if (!BOQ_EXTENSIONS.includes(ext)) {
       return NextResponse.json(
-        { data: null, error: { code: 'INVALID_TYPE', message: `Unsupported file: ${ext}. Allowed: ${BOQ_EXTENSIONS.join(', ')}` } },
+        { data: null, error: { code: 'INVALID_TYPE', message: `Unsupported file: .${ext}. Allowed: ${BOQ_EXTENSIONS.map(e => '.' + e).join(', ')}` } },
         { status: 400 },
       );
     }
 
-    // Save file
-    const uniqueName = `${crypto.randomUUID()}${ext}`;
-    const filePath = path.join(UPLOAD_DIR, uniqueName);
+    // Parse from buffer directly — no filesystem needed
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(filePath, buffer);
-
-    // Parse with XLSX
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];

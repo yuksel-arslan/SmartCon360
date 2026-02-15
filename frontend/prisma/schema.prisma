@@ -205,6 +205,7 @@ model Drawing {
   fileType     String   @map("file_type") @db.VarChar(10)
   fileSize     Int      @map("file_size")
   filePath     String   @map("file_path") @db.VarChar(1000)
+  fileData     Bytes?   @map("file_data")
   discipline   String   @db.VarChar(30)
   drawingNo    String?  @map("drawing_no") @db.VarChar(50)
   title        String?  @db.VarChar(255)
