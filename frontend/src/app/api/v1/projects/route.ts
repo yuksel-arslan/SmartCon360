@@ -53,12 +53,13 @@ export async function POST(request: NextRequest) {
     const userId = requireAuth(request);
     const body = await request.json();
     const input = createProjectSchema.parse(body);
+    const { classificationStandard, ...projectData } = input;
 
     const project = await prisma.project.create({
       data: {
-        ...input,
-        plannedStart: input.plannedStart ? new Date(input.plannedStart) : undefined,
-        plannedFinish: input.plannedFinish ? new Date(input.plannedFinish) : undefined,
+        ...projectData,
+        plannedStart: projectData.plannedStart ? new Date(projectData.plannedStart) : undefined,
+        plannedFinish: projectData.plannedFinish ? new Date(projectData.plannedFinish) : undefined,
         ownerId: userId,
       },
     });
