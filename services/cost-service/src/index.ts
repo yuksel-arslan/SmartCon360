@@ -15,6 +15,7 @@ import budgetsRouter from './routes/budgets';
 import paymentsRouter from './routes/payments';
 import costRecordsRouter from './routes/cost-records';
 import evmRouter from './routes/evm';
+import catalogRouter from './routes/catalog';
 
 const app = express();
 const PORT = process.env.PORT || 3011;
@@ -54,6 +55,7 @@ app.use('/cost/budgets', authenticate, budgetsRouter);
 app.use('/cost/payments', authenticate, paymentsRouter);
 app.use('/cost/cost-records', authenticate, costRecordsRouter);
 app.use('/cost/evm', authenticate, evmRouter);
+app.use('/cost/catalog', authenticate, catalogRouter);
 
 // 404 handler
 app.use((_req, res) => {

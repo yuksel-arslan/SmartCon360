@@ -13,6 +13,69 @@ datasource db {
 }
 
 // ============================================================================
+// PRICE CATALOG (Unit Price Library — Bayindirlik, Iller Bankasi, Custom)
+// ============================================================================
+
+model PriceCatalog {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String?  @map("project_id") @db.Uuid  // null = global/shared catalog
+
+  name     String  @db.VarChar(255)                // "Bayindirlik 2025", "Iller Bankasi 2024-2"
+  source   String  @db.VarChar(30)                 // bayindirlik | iller_bankasi | custom | supplier
+  year     Int                                      // 2025
+  period   String? @db.VarChar(20)                 // "H1", "H2", "Q1", etc.
+  currency String  @default("TRY") @db.VarChar(3)
+
+  description String?
+  fileName    String? @map("file_name") @db.VarChar(500)
+  fileType    String? @map("file_type") @db.VarChar(10)  // xlsx, csv, pdf
+  itemCount   Int     @default(0) @map("item_count")
+
+  isActive  Boolean  @default(true) @map("is_active")
+  uploadedBy String? @map("uploaded_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  items PriceCatalogItem[]
+
+  @@index([source], name: "idx_price_catalog_source")
+  @@index([year], name: "idx_price_catalog_year")
+  @@index([projectId], name: "idx_price_catalog_project")
+  @@map("price_catalogs")
+  @@schema("cost")
+}
+
+model PriceCatalogItem {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  catalogId String @map("catalog_id") @db.Uuid
+
+  code        String  @db.VarChar(50)              // "04.001/2A", "16.050"
+  name        String  @db.VarChar(500)             // full description
+  unit        String  @db.VarChar(20)              // m², m³, kg, ton
+  unitPrice   Decimal @map("unit_price") @db.Decimal(15, 4)
+
+  category    String? @db.VarChar(100)             // grouping
+  subcategory String? @db.VarChar(100)
+
+  laborCost     Decimal? @map("labor_cost") @db.Decimal(15, 4)
+  materialCost  Decimal? @map("material_cost") @db.Decimal(15, 4)
+  equipmentCost Decimal? @map("equipment_cost") @db.Decimal(15, 4)
+
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  catalog PriceCatalog @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+
+  @@index([catalogId], name: "idx_price_catalog_items_catalog")
+  @@index([code], name: "idx_price_catalog_items_code")
+  @@index([category], name: "idx_price_catalog_items_category")
+  @@map("price_catalog_items")
+  @@schema("cost")
+}
+
+// ============================================================================
 // WORK ITEMS (Pozlar)
 // ============================================================================
 
