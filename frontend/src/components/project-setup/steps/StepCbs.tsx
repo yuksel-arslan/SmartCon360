@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { SetupStepProps } from '../types';
-import { ChevronRight, ChevronDown, Loader2, Check, RefreshCw, FolderTree, Link2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, Loader2, Check, RefreshCw, FolderTree, Link2, AlertTriangle } from 'lucide-react';
 
 interface CbsNode {
   id: string;
@@ -22,27 +22,35 @@ export default function StepCbs({ projectId, state, onStateChange, authHeaders }
 
   const fetchCbs = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const res = await fetch(`/api/v1/projects/${projectId}/cbs`, {
         headers: { ...authHeaders },
       });
       if (res.ok) {
         const json = await res.json();
-        setCbsTree(json.data || []);
+        const tree: CbsNode[] = json.data || [];
+        setCbsTree(tree);
         const firstLevel = new Set<string>();
-        (json.data || []).forEach((n: CbsNode) => firstLevel.add(n.id));
+        tree.forEach((n) => firstLevel.add(n.id));
         setExpanded(firstLevel);
+        // Sync state if server has CBS but local state doesn't know
+        if (tree.length > 0 && !state.cbsGenerated) {
+          onStateChange({ cbsGenerated: true, cbsNodeCount: countCbsNodes(tree) });
+        }
       }
     } catch {
-      setError('Failed to load CBS');
+      setError('Failed to load CBS data');
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, authHeaders]);
 
+  // Always load existing CBS on mount
   useEffect(() => {
-    if (state.cbsGenerated) fetchCbs();
-  }, [state.cbsGenerated, fetchCbs]);
+    fetchCbs();
+  }, [fetchCbs]);
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -55,19 +63,20 @@ export default function StepCbs({ projectId, state, onStateChange, authHeaders }
         body: JSON.stringify({}),
       });
 
+      const json = await res.json().catch(() => null);
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error?.message || 'Generation failed');
+        const msg = json?.error?.message || `CBS generation failed (HTTP ${res.status})`;
+        throw new Error(msg);
       }
 
-      const json = await res.json();
       onStateChange({
         cbsGenerated: true,
-        cbsNodeCount: json.meta?.count || 0,
+        cbsNodeCount: json?.meta?.count || json?.data?.length || 0,
       });
       await fetchCbs();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'CBS generation failed');
     } finally {
       setGenerating(false);
     }
@@ -98,9 +107,10 @@ export default function StepCbs({ projectId, state, onStateChange, authHeaders }
       {/* Pre-requisite check */}
       {!state.wbsGenerated && (
         <div
-          className="mb-4 rounded-lg px-4 py-3 text-[12px]"
+          className="mb-4 flex items-center gap-2 rounded-lg px-4 py-3 text-[12px]"
           style={{ background: 'rgba(245,158,11,0.08)', color: 'var(--color-warning)' }}
         >
+          <AlertTriangle size={14} className="flex-shrink-0" />
           Generate the WBS first — CBS nodes will be automatically linked to WBS elements.
         </div>
       )}
@@ -127,13 +137,19 @@ export default function StepCbs({ projectId, state, onStateChange, authHeaders }
             <><FolderTree size={14} /> Generate CBS (linked to WBS)</>
           )}
         </button>
+        {state.cbsGenerated && (
+          <p className="mt-2 text-[11px]" style={{ color: 'var(--color-warning)' }}>
+            Regenerating will replace existing CBS nodes.
+          </p>
+        )}
       </div>
 
       {error && (
         <div
-          className="mb-4 flex items-center gap-2 rounded-lg px-3 py-2 text-[11px]"
+          className="mb-4 flex items-center gap-2 rounded-lg px-3 py-2.5 text-[12px]"
           style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--color-danger)' }}
         >
+          <AlertTriangle size={14} className="flex-shrink-0" />
           {error}
         </div>
       )}
@@ -168,6 +184,15 @@ export default function StepCbs({ projectId, state, onStateChange, authHeaders }
       )}
     </div>
   );
+}
+
+function countCbsNodes(tree: CbsNode[]): number {
+  let count = 0;
+  for (const node of tree) {
+    count++;
+    if (node.children) count += countCbsNodes(node.children);
+  }
+  return count;
 }
 
 function CbsTreeNode({

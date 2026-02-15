@@ -11,14 +11,28 @@ export async function POST(request: NextRequest, { params }: Params) {
   try {
     requireAuth(request);
     const { id: projectId } = await params;
-    const { standard, projectType } = await request.json();
+    const body = await request.json();
+    const standard = body.standard;
 
-    if (!standard || !projectType) {
+    if (!standard) {
       return NextResponse.json(
-        { data: null, error: { code: 'VALIDATION', message: 'standard and projectType are required' } },
+        { data: null, error: { code: 'VALIDATION', message: 'standard is required' } },
         { status: 400 },
       );
     }
+
+    // Look up projectType from DB — don't rely on client sending it
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { projectType: true },
+    });
+    if (!project) {
+      return NextResponse.json(
+        { data: null, error: { code: 'NOT_FOUND', message: 'Project not found' } },
+        { status: 404 },
+      );
+    }
+    const projectType = body.projectType || project.projectType || 'commercial';
 
     const template = getWbsTemplate(standard, projectType);
     if (!template) {
@@ -27,6 +41,12 @@ export async function POST(request: NextRequest, { params }: Params) {
         { status: 400 },
       );
     }
+
+    // Clear CBS references to WBS nodes before deleting (prevent FK violation)
+    await prisma.cbsNode.updateMany({
+      where: { projectId, wbsNodeId: { not: null } },
+      data: { wbsNodeId: null },
+    });
 
     // Clear existing WBS nodes
     await prisma.wbsNode.deleteMany({ where: { projectId } });

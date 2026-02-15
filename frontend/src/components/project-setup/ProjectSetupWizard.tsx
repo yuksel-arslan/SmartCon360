@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Loader2, Rocket, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
@@ -61,7 +61,7 @@ interface Props {
 
 export default function ProjectSetupWizard({ projectId }: Props) {
   const router = useRouter();
-  const { getAuthHeader } = useAuthStore();
+  const token = useAuthStore((s) => s.token);
   const [step, setStep] = useState(0);
   const [state, setState] = useState<SetupState>(initialState);
   const [loading, setLoading] = useState(true);
@@ -69,7 +69,11 @@ export default function ProjectSetupWizard({ projectId }: Props) {
   const [error, setError] = useState('');
   const [validationError, setValidationError] = useState('');
 
-  const authHeaders = getAuthHeader() as Record<string, string>;
+  // Stable auth headers — only changes when token changes (prevents infinite re-renders)
+  const authHeaders = useMemo(
+    (): Record<string, string> => (token ? { Authorization: `Bearer ${token}` } : {}),
+    [token],
+  );
 
   // Fetch setup state from server
   const fetchState = useCallback(async () => {
