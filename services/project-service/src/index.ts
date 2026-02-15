@@ -5,11 +5,26 @@ import pino from 'pino';
 import pinoHttp from 'pino-http';
 import { PrismaClient } from '@prisma/client';
 import { z, ZodError } from 'zod';
+import path from 'path';
+import fs from 'fs';
+
+// Route modules
+import drawingRoutes from './routes/drawings';
+import wbsRoutes from './routes/wbs';
+import cbsRoutes from './routes/cbs';
+import boqRoutes from './routes/boq';
+import setupRoutes from './routes/setup';
 
 const PORT = parseInt(process.env.PORT || '3002');
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 const prisma = new PrismaClient();
 const app = express();
+
+// Ensure uploads directory exists
+const uploadsDir = process.env.UPLOAD_DIR || path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 app.use(helmet());
 app.use(cors());
@@ -20,7 +35,7 @@ app.use(pinoHttp({ logger }));
 const createProjectSchema = z.object({
   name: z.string().min(1).max(255),
   code: z.string().min(1).max(50),
-  projectType: z.enum(['hotel', 'hospital', 'residential', 'commercial', 'industrial', 'infrastructure']),
+  projectType: z.enum(['hotel', 'hospital', 'residential', 'commercial', 'industrial', 'infrastructure', 'mixed_use', 'educational', 'data_center']),
   description: z.string().optional(),
   plannedStart: z.string().optional(),
   plannedFinish: z.string().optional(),
@@ -30,6 +45,7 @@ const createProjectSchema = z.object({
   country: z.string().optional(),
   budget: z.number().optional(),
   currency: z.string().max(3).default('USD'),
+  classificationStandard: z.string().max(30).default('uniclass'),
 });
 
 const createLocationSchema = z.object({
@@ -48,11 +64,12 @@ const createTradeSchema = z.object({
   predecessorTradeIds: z.array(z.string().uuid()).default([]),
   companyName: z.string().optional(),
   contactEmail: z.string().email().optional(),
+  discipline: z.string().max(30).optional(),
 });
 
 // ── Health ──
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'project-service' });
+  res.json({ status: 'ok', service: 'project-service', version: '2.0.0' });
 });
 
 // ══════════════════════════════════════
@@ -72,7 +89,10 @@ app.get('/projects', async (req, res) => {
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { updatedAt: 'desc' },
-        include: { _count: { select: { locations: true, trades: true, members: true } } },
+        include: {
+          _count: { select: { locations: true, trades: true, members: true, drawings: true, wbsNodes: true } },
+          projectSetup: { select: { classificationStandard: true, boqUploaded: true, wbsGenerated: true, cbsGenerated: true } },
+        },
       }),
       prisma.project.count({ where: userId ? { ownerId: userId } : {} }),
     ]);
@@ -99,6 +119,14 @@ app.post('/projects', async (req, res) => {
       },
     });
 
+    // Initialize project setup record
+    await prisma.projectSetup.create({
+      data: {
+        projectId: project.id,
+        classificationStandard: input.classificationStandard,
+      },
+    });
+
     res.status(201).json({ data: project, error: null });
   } catch (err: any) {
     if (err instanceof ZodError) {
@@ -121,6 +149,8 @@ app.get('/projects/:id', async (req, res) => {
         locations: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } },
         trades: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } },
         members: true,
+        projectSetup: true,
+        _count: { select: { drawings: true, wbsNodes: true, cbsNodes: true } },
       },
     });
     if (!project) return res.status(404).json({ data: null, error: { code: 'NOT_FOUND', message: 'Project not found' } });
@@ -167,7 +197,6 @@ app.get('/projects/:id/locations', async (req, res) => {
       orderBy: [{ depth: 'asc' }, { sortOrder: 'asc' }],
     });
 
-    // Build tree structure
     const tree = buildLocationTree(locations);
     res.json({ data: tree, error: null });
   } catch (err: any) {
@@ -182,7 +211,6 @@ app.post('/projects/:id/locations', async (req, res) => {
     const input = createLocationSchema.parse(req.body);
     const projectId = req.params.id;
 
-    // Build code and path from parent
     let parentPath: string | null = null;
     let depth = 0;
     if (input.parentId) {
@@ -193,7 +221,6 @@ app.post('/projects/:id/locations', async (req, res) => {
       }
     }
 
-    // Auto-generate code
     const count = await prisma.location.count({ where: { projectId, parentId: input.parentId || null } });
     const codePrefix = input.locationType.charAt(0).toUpperCase();
     const code = parentPath
@@ -269,8 +296,12 @@ app.post('/projects/:id/locations/bulk', async (req, res) => {
 // GET /projects/:id/trades
 app.get('/projects/:id/trades', async (req, res) => {
   try {
+    const { discipline } = req.query;
+    const where: Record<string, unknown> = { projectId: req.params.id, isActive: true };
+    if (discipline) where.discipline = discipline;
+
     const trades = await prisma.trade.findMany({
-      where: { projectId: req.params.id, isActive: true },
+      where,
       orderBy: { sortOrder: 'asc' },
     });
     res.json({ data: trades, error: null });
@@ -306,6 +337,16 @@ app.patch('/projects/:id/trades/:tradeId', async (req, res) => {
     res.status(500).json({ data: null, error: { code: 'INTERNAL', message: err.message } });
   }
 });
+
+// ══════════════════════════════════════
+// MOUNT NEW ROUTE MODULES
+// ══════════════════════════════════════
+
+app.use(drawingRoutes(prisma));
+app.use(wbsRoutes(prisma));
+app.use(cbsRoutes(prisma));
+app.use(boqRoutes(prisma));
+app.use(setupRoutes(prisma));
 
 // ── Helpers ──
 function buildLocationTree(locations: any[]): any[] {
