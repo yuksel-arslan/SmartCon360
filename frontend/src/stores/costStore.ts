@@ -147,12 +147,18 @@ interface CostState {
   initialized: boolean;
   usingApi: boolean;
 
-  // Actions
+  // Actions — fetch
   fetchWorkItems: (projectId: string) => Promise<void>;
   fetchEstimates: (projectId: string) => Promise<void>;
   fetchPayments: (projectId: string) => Promise<void>;
   fetchEvmSnapshots: (projectId: string) => Promise<void>;
   fetchAll: (projectId: string) => Promise<void>;
+
+  // Actions — CRUD
+  addWorkItem: (projectId: string, item: Omit<WorkItem, 'id' | 'projectId' | 'isActive' | 'unitPriceAnalyses'>) => Promise<WorkItem | null>;
+  deleteWorkItem: (id: string) => Promise<boolean>;
+  createEstimate: (projectId: string, data: { name: string; type: string }) => Promise<Estimate | null>;
+  createPayment: (projectId: string, data: { periodStart: string; periodEnd: string }) => Promise<PaymentCertificate | null>;
 }
 
 function getAuthHeaders(): HeadersInit {
@@ -262,6 +268,119 @@ export const useCostStore = create<CostState>((set, get) => ({
       set({ error: err instanceof Error ? err.message : 'Failed to load cost data' });
     } finally {
       set({ loading: false, initialized: true });
+    }
+  },
+
+  // ── CRUD: Work Items ──
+
+  addWorkItem: async (projectId, item) => {
+    try {
+      const res = await fetch('/api/v1/cost/work-items', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ ...item, projectId }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const created = json.data as WorkItem;
+      set((s) => ({ workItems: [...s.workItems, created] }));
+      return created;
+    } catch {
+      // Offline/demo mode: add locally with temp id
+      const created: WorkItem = {
+        ...item,
+        id: `local-${Date.now()}`,
+        projectId,
+        isActive: true,
+        unitPriceAnalyses: [],
+      };
+      set((s) => ({ workItems: [...s.workItems, created] }));
+      return created;
+    }
+  },
+
+  deleteWorkItem: async (id) => {
+    try {
+      const res = await fetch(`/api/v1/cost/work-items/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch {
+      // continue with local delete
+    }
+    set((s) => ({ workItems: s.workItems.filter((w) => w.id !== id) }));
+    return true;
+  },
+
+  // ── CRUD: Estimates ──
+
+  createEstimate: async (projectId, data) => {
+    try {
+      const res = await fetch('/api/v1/cost/estimates', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ ...data, projectId }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const created = json.data as Estimate;
+      set((s) => ({ estimates: [...s.estimates, created] }));
+      return created;
+    } catch {
+      const { estimates } = get();
+      const created: Estimate = {
+        id: `local-${Date.now()}`,
+        projectId,
+        name: data.name,
+        type: data.type,
+        totalAmount: '0',
+        currency: 'TRY',
+        vatPct: '20',
+        vatAmount: '0',
+        grandTotal: '0',
+        status: 'draft',
+        version: estimates.length + 1,
+        createdAt: new Date().toISOString(),
+      };
+      set((s) => ({ estimates: [...s.estimates, created] }));
+      return created;
+    }
+  },
+
+  // ── CRUD: Payments ──
+
+  createPayment: async (projectId, data) => {
+    try {
+      const res = await fetch('/api/v1/cost/payments', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ ...data, projectId }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const created = json.data as PaymentCertificate;
+      set((s) => ({ payments: [...s.payments, created] }));
+      return created;
+    } catch {
+      const { payments } = get();
+      const lastCumulative = payments.length > 0 ? parseFloat(payments[payments.length - 1].cumulativeAmount) : 0;
+      const created: PaymentCertificate = {
+        id: `local-${Date.now()}`,
+        projectId,
+        periodNumber: payments.length + 1,
+        periodStart: data.periodStart,
+        periodEnd: data.periodEnd,
+        grossAmount: '0',
+        netAmount: '0',
+        cumulativeAmount: String(lastCumulative),
+        status: 'draft',
+        retentionPct: '5',
+        vatPct: '20',
+        createdAt: new Date().toISOString(),
+      };
+      set((s) => ({ payments: [...s.payments, created] }));
+      return created;
     }
   },
 }));

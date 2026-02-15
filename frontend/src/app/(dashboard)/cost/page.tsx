@@ -18,8 +18,12 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
+  X,
+  Trash2,
+  Plus,
+  Upload,
 } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ModulePageHeader } from '@/components/modules';
 import { useCostStore } from '@/stores/costStore';
 import { useProjectStore } from '@/stores/projectStore';
@@ -371,9 +375,20 @@ function OverviewTab() {
 // ============================================================================
 
 function WorkItemsTab() {
-  const { workItems } = useCostStore();
+  const { workItems, addWorkItem, deleteWorkItem } = useCostStore();
+  const { activeProjectId } = useProjectStore();
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Form fields
+  const [formCode, setFormCode] = useState('');
+  const [formName, setFormName] = useState('');
+  const [formUnit, setFormUnit] = useState('m2');
+  const [formCategory, setFormCategory] = useState('insaat');
+  const [formSource, setFormSource] = useState('custom');
 
   const categories = [...new Set(workItems.map((w) => w.category))];
 
@@ -386,6 +401,30 @@ function WorkItemsTab() {
     return matchSearch && matchCategory;
   });
 
+  const handleAdd = async () => {
+    if (!formCode.trim() || !formName.trim()) return;
+    setSaving(true);
+    await addWorkItem(activeProjectId || 'p1', {
+      code: formCode.trim(),
+      name: formName.trim(),
+      unit: formUnit,
+      category: formCategory,
+      source: formSource,
+    });
+    setSaving(false);
+    setFormCode('');
+    setFormName('');
+    setShowForm(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteWorkItem(id);
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -393,7 +432,6 @@ function WorkItemsTab() {
           Work Items / Pozlar ({filtered.length})
         </h3>
         <div className="flex gap-2 flex-wrap">
-          {/* Search */}
           <input
             type="text"
             placeholder="Ara..."
@@ -406,8 +444,6 @@ function WorkItemsTab() {
               color: 'var(--color-text)',
             }}
           />
-
-          {/* Category Filter */}
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
@@ -424,20 +460,80 @@ function WorkItemsTab() {
             ))}
           </select>
 
+          <input type="file" ref={fileInputRef} accept=".xlsx,.xls,.csv" className="hidden" />
           <button
-            className="text-xs px-3 py-1.5 rounded-lg border"
+            onClick={handleImportClick}
+            className="text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
             style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
           >
-            Import Excel
+            <Upload size={12} /> Import Excel
           </button>
           <button
-            className="text-xs px-3 py-1.5 rounded-lg"
-            style={{ background: 'var(--color-accent)', color: '#fff' }}
+            onClick={() => setShowForm(!showForm)}
+            className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5"
+            style={{ background: showForm ? 'var(--color-danger)' : 'var(--color-accent)', color: '#fff' }}
           >
-            + Add Item
+            {showForm ? <><X size={12} /> Cancel</> : <><Plus size={12} /> Add Item</>}
           </button>
         </div>
       </div>
+
+      {/* Inline Add Form */}
+      {showForm && (
+        <div
+          className="rounded-xl border p-4"
+          style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-accent)' }}
+        >
+          <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Yeni Poz Ekle</h4>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <input
+              type="text"
+              placeholder="Poz kodu *"
+              value={formCode}
+              onChange={(e) => setFormCode(e.target.value)}
+              className="text-xs px-3 py-2 rounded-lg border outline-none"
+              style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-input)', color: 'var(--color-text)' }}
+            />
+            <input
+              type="text"
+              placeholder="Poz adı *"
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+              className="text-xs px-3 py-2 rounded-lg border outline-none col-span-2"
+              style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-input)', color: 'var(--color-text)' }}
+            />
+            <select
+              value={formUnit}
+              onChange={(e) => setFormUnit(e.target.value)}
+              className="text-xs px-3 py-2 rounded-lg border outline-none"
+              style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-input)', color: 'var(--color-text)' }}
+            >
+              {['m2', 'm3', 'mt', 'kg', 'ton', 'adet', 'tk', 'sa'].map((u) => (
+                <option key={u} value={u}>{u}</option>
+              ))}
+            </select>
+            <select
+              value={formCategory}
+              onChange={(e) => setFormCategory(e.target.value)}
+              className="text-xs px-3 py-2 rounded-lg border outline-none"
+              style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-input)', color: 'var(--color-text)' }}
+            >
+              {['insaat', 'mekanik', 'elektrik', 'altyapi', 'peyzaj'].map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <button
+              onClick={handleAdd}
+              disabled={saving || !formCode.trim() || !formName.trim()}
+              className="text-xs px-3 py-2 rounded-lg flex items-center justify-center gap-1.5 disabled:opacity-50"
+              style={{ background: 'var(--color-accent)', color: '#fff' }}
+            >
+              {saving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+              Ekle
+            </button>
+          </div>
+        </div>
+      )}
 
       <div
         className="rounded-xl border overflow-hidden"
@@ -453,13 +549,14 @@ function WorkItemsTab() {
                 <th className="text-left px-4 py-3 font-semibold" style={{ color: 'var(--color-text-muted)' }}>Category</th>
                 <th className="text-left px-4 py-3 font-semibold" style={{ color: 'var(--color-text-muted)' }}>Source</th>
                 <th className="text-right px-4 py-3 font-semibold" style={{ color: 'var(--color-text-muted)' }}>Unit Price (₺)</th>
+                <th className="w-10 px-2 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((item) => (
                 <tr
                   key={item.id}
-                  className="border-t cursor-pointer transition-colors"
+                  className="border-t cursor-pointer transition-colors group"
                   style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-card)' }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-bg-card)'; }}
@@ -484,6 +581,15 @@ function WorkItemsTab() {
                       ? formatNumber(parseFloat(item.unitPriceAnalyses[0].unitPrice))
                       : '—'}
                   </td>
+                  <td className="px-2 py-3">
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-50"
+                      title="Sil"
+                    >
+                      <Trash2 size={12} style={{ color: 'var(--color-danger)' }} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -499,9 +605,33 @@ function WorkItemsTab() {
 // ============================================================================
 
 function EstimatesTab() {
-  const { estimates } = useCostStore();
+  const { estimates, createEstimate } = useCostStore();
+  const { activeProjectId } = useProjectStore();
+  const [showForm, setShowForm] = useState(false);
+  const [formName, setFormName] = useState('');
+  const [formType, setFormType] = useState('yaklasik_maliyet');
+  const [saving, setSaving] = useState(false);
 
-  if (estimates.length === 0) {
+  const handleCreate = async () => {
+    if (!formName.trim()) return;
+    setSaving(true);
+    await createEstimate(activeProjectId || 'p1', { name: formName.trim(), type: formType });
+    setSaving(false);
+    setFormName('');
+    setShowForm(false);
+  };
+
+  const createButton = (
+    <button
+      onClick={() => setShowForm(true)}
+      className="text-xs px-4 py-2 rounded-lg flex items-center gap-1.5"
+      style={{ background: 'var(--color-accent)', color: '#fff' }}
+    >
+      <Plus size={12} /> Yeni Keşif
+    </button>
+  );
+
+  if (estimates.length === 0 && !showForm) {
     return (
       <div
         className="rounded-xl border p-8 flex flex-col items-center justify-center text-center"
@@ -514,12 +644,7 @@ function EstimatesTab() {
         <p className="text-sm mt-2 max-w-lg" style={{ color: 'var(--color-text-muted)' }}>
           Metraj ve birim fiyat analizlerinden otomatik keşif oluşturun veya manuel ekleyin.
         </p>
-        <button
-          className="mt-4 text-xs px-4 py-2 rounded-lg"
-          style={{ background: 'var(--color-accent)', color: '#fff' }}
-        >
-          + Yeni Keşif
-        </button>
+        <div className="mt-4">{createButton}</div>
       </div>
     );
   }
@@ -531,20 +656,56 @@ function EstimatesTab() {
           Keşifler ({estimates.length})
         </h3>
         <div className="flex gap-2">
-          <button
-            className="text-xs px-3 py-1.5 rounded-lg border"
-            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
-          >
-            Auto-Generate
-          </button>
-          <button
-            className="text-xs px-3 py-1.5 rounded-lg"
-            style={{ background: 'var(--color-accent)', color: '#fff' }}
-          >
-            + Yeni Keşif
-          </button>
+          {showForm ? (
+            <button
+              onClick={() => setShowForm(false)}
+              className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5"
+              style={{ background: 'var(--color-danger)', color: '#fff' }}
+            >
+              <X size={12} /> Cancel
+            </button>
+          ) : createButton}
         </div>
       </div>
+
+      {/* Inline Create Form */}
+      {showForm && (
+        <div
+          className="rounded-xl border p-4"
+          style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-accent)' }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <input
+              type="text"
+              placeholder="Keşif adı *"
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+              className="text-xs px-3 py-2 rounded-lg border outline-none col-span-2"
+              style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-input)', color: 'var(--color-text)' }}
+            />
+            <select
+              value={formType}
+              onChange={(e) => setFormType(e.target.value)}
+              className="text-xs px-3 py-2 rounded-lg border outline-none"
+              style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-input)', color: 'var(--color-text)' }}
+            >
+              <option value="yaklasik_maliyet">Yaklaşık Maliyet</option>
+              <option value="ihale_teklifi">İhale Teklifi</option>
+              <option value="revize_kesif">Revize Keşif</option>
+              <option value="ek_kesif">Ek Keşif</option>
+            </select>
+            <button
+              onClick={handleCreate}
+              disabled={saving || !formName.trim()}
+              className="text-xs px-3 py-2 rounded-lg flex items-center justify-center gap-1.5 disabled:opacity-50"
+              style={{ background: 'var(--color-accent)', color: '#fff' }}
+            >
+              {saving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+              Oluştur
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {estimates.map((e) => (
@@ -583,9 +744,34 @@ function EstimatesTab() {
 // ============================================================================
 
 function HakedisTab() {
-  const { payments } = useCostStore();
+  const { payments, createPayment } = useCostStore();
+  const { activeProjectId } = useProjectStore();
+  const [showForm, setShowForm] = useState(false);
+  const [formStart, setFormStart] = useState('');
+  const [formEnd, setFormEnd] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  if (payments.length === 0) {
+  const handleCreate = async () => {
+    if (!formStart || !formEnd) return;
+    setSaving(true);
+    await createPayment(activeProjectId || 'p1', { periodStart: formStart, periodEnd: formEnd });
+    setSaving(false);
+    setFormStart('');
+    setFormEnd('');
+    setShowForm(false);
+  };
+
+  const createButton = (
+    <button
+      onClick={() => setShowForm(!showForm)}
+      className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5"
+      style={{ background: showForm ? 'var(--color-danger)' : 'var(--color-accent)', color: '#fff' }}
+    >
+      {showForm ? <><X size={12} /> Cancel</> : <><Plus size={12} /> Yeni Hakediş</>}
+    </button>
+  );
+
+  if (payments.length === 0 && !showForm) {
     return (
       <div
         className="rounded-xl border p-8 flex flex-col items-center justify-center text-center"
@@ -598,12 +784,7 @@ function HakedisTab() {
         <p className="text-sm mt-2 max-w-lg" style={{ color: 'var(--color-text-muted)' }}>
           İmalat metrajı girerek hakediş oluşturun. Teminat, avans kesintisi, fiyat farkı ve KDV otomatik hesaplanır.
         </p>
-        <button
-          className="mt-4 text-xs px-4 py-2 rounded-lg"
-          style={{ background: 'var(--color-accent)', color: '#fff' }}
-        >
-          + Hakediş #1 Oluştur
-        </button>
+        <div className="mt-4">{createButton}</div>
       </div>
     );
   }
@@ -623,13 +804,53 @@ function HakedisTab() {
         <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
           Hakediş Belgeleri ({payments.length})
         </h3>
-        <button
-          className="text-xs px-3 py-1.5 rounded-lg"
-          style={{ background: 'var(--color-accent)', color: '#fff' }}
-        >
-          + Yeni Hakediş
-        </button>
+        {createButton}
       </div>
+
+      {/* Inline Create Form */}
+      {showForm && (
+        <div
+          className="rounded-xl border p-4"
+          style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-accent)' }}
+        >
+          <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
+            Hakediş #{payments.length + 1}
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+              <label className="text-[10px] block mb-1" style={{ color: 'var(--color-text-muted)' }}>Dönem Başlangıç</label>
+              <input
+                type="date"
+                value={formStart}
+                onChange={(e) => setFormStart(e.target.value)}
+                className="text-xs px-3 py-2 rounded-lg border outline-none w-full"
+                style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-input)', color: 'var(--color-text)' }}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] block mb-1" style={{ color: 'var(--color-text-muted)' }}>Dönem Bitiş</label>
+              <input
+                type="date"
+                value={formEnd}
+                onChange={(e) => setFormEnd(e.target.value)}
+                className="text-xs px-3 py-2 rounded-lg border outline-none w-full"
+                style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-input)', color: 'var(--color-text)' }}
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={handleCreate}
+                disabled={saving || !formStart || !formEnd}
+                className="text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 disabled:opacity-50 w-full justify-center"
+                style={{ background: 'var(--color-accent)', color: '#fff' }}
+              >
+                {saving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                Oluştur
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Summary Card */}
       <div
