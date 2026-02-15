@@ -103,6 +103,11 @@ export class WorkItemService {
           where: { isActive: true },
           orderBy: { version: 'desc' },
           take: 1,
+          include: {
+            resources: {
+              orderBy: { sortOrder: 'asc' },
+            },
+          },
         },
       },
     });
