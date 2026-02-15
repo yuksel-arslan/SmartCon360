@@ -140,6 +140,7 @@ export default function ProjectWizard() {
           budget: data.budget ? Number(data.budget) : undefined,
           currency: data.currency,
           defaultTaktTime: data.defaultTaktTime,
+          classificationStandard: 'uniclass',
         }),
       });
 
@@ -199,7 +200,8 @@ export default function ProjectWizard() {
 
       // Refresh the project list so the new project appears in sidebar
       await fetchProjects();
-      router.push('/projects');
+      // Redirect to Project Setup wizard for the new project
+      router.push(`/projects/${project.id}/setup`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {

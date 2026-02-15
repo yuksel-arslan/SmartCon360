@@ -7,7 +7,7 @@ import { useProjectStore } from '@/stores/projectStore';
 import { useAuthStore } from '@/stores/authStore';
 import {
   Plus, Building2, Hospital, Building, Landmark, Factory, Construction,
-  FolderKanban, MapPin, Calendar, Loader2, AlertCircle, ArrowRight,
+  FolderKanban, MapPin, Calendar, Loader2, AlertCircle, ArrowRight, Settings2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -62,6 +62,11 @@ export default function ProjectsPage() {
   const handleOpenProject = (projectId: string) => {
     setActiveProject(projectId);
     router.push('/dashboard');
+  };
+
+  const handleSetup = (e: React.MouseEvent, projectId: string) => {
+    e.stopPropagation();
+    router.push(`/projects/${projectId}/setup`);
   };
 
   return (
@@ -226,9 +231,19 @@ export default function ProjectsPage() {
                     </div>
                   )}
 
-                  {/* Open arrow */}
-                  <div className="flex justify-end mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ArrowRight size={14} style={{ color: 'var(--color-accent)' }} />
+                  {/* Actions */}
+                  <div className="flex items-center justify-between mt-2">
+                    <button
+                      onClick={(e) => handleSetup(e, project.id)}
+                      className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors hover:opacity-80"
+                      style={{ background: 'var(--color-accent-muted)', color: 'var(--color-accent)' }}
+                    >
+                      <Settings2 size={10} />
+                      Setup
+                    </button>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ArrowRight size={14} style={{ color: 'var(--color-accent)' }} />
+                    </div>
                   </div>
                 </button>
               );
