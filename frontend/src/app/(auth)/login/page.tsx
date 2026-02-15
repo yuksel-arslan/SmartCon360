@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, ArrowRight, Globe, Check, Layers } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Globe, Layers } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { BRAND } from '@/lib/modules';
 
@@ -85,19 +85,19 @@ const t: Record<Lang, Record<string, string>> = {
 };
 
 const modules = [
-  { name: 'TaktFlow', desc: 'Planning & scheduling — takt time, flowline, LPS, LBS hierarchy, constraint management', tag: 'Schedule · Scope' },
-  { name: 'CostPilot', desc: 'Cost & EVM management — budgets, CPI/SPI, S-curve, forecasting', tag: 'Cost Management' },
-  { name: 'CrewFlow', desc: 'Resource management — labor crews, equipment tracking, material allocation', tag: 'Resource Mgmt' },
-  { name: 'QualityGate', desc: 'Quality control — NCR tracking, inspection checklists, FTR rate, COPQ', tag: 'Quality Mgmt' },
-  { name: 'SafeZone', desc: 'OHS / HSE — risk matrix, incident reporting, PTW, toolbox talks', tag: 'OHS / HSE' },
-  { name: 'VisionAI', desc: 'Visual progress tracking — photo analysis, defect detection via Gemini Vision', tag: 'AI · Layer 2' },
-  { name: 'SupplyChain AI', desc: 'Procurement — MRP, JIT delivery, supplier management, RFQ workflows', tag: 'Procurement' },
-  { name: 'RiskRadar', desc: 'Risk management — risk register, heat map, what-if analysis, mitigation tracking', tag: 'Risk Mgmt' },
-  { name: 'ClaimShield', desc: 'Claims & change orders — claims register, delay analysis, change order management', tag: 'Scope · Claims' },
-  { name: 'CommHub', desc: 'Communication management — RFI, transmittals, meeting minutes, escalation engine', tag: 'Communication' },
-  { name: 'StakeHub', desc: 'Stakeholder management — stakeholder register, authority matrix, engagement tracking', tag: 'Stakeholder' },
-  { name: 'GreenSite', desc: 'ESG & environmental — carbon tracking, waste management, LEED/BREEAM compliance', tag: 'ESG' },
-  { name: 'SmartCon360 Hub', desc: 'Master AI orchestrator — cross-module synthesis, Project Health Score, unified dashboard', tag: 'Integration' },
+  { name: 'TaktFlow', icon: '/icons/modules/taktflow.svg', desc: 'Planning & scheduling — takt time, flowline, LPS, LBS hierarchy, constraint management', tag: 'Schedule · Scope' },
+  { name: 'CostPilot', icon: '/icons/modules/costpilot.svg', desc: 'Cost & EVM management — budgets, CPI/SPI, S-curve, forecasting', tag: 'Cost Management' },
+  { name: 'CrewFlow', icon: '/icons/modules/crewflow.svg', desc: 'Resource management — labor crews, equipment tracking, material allocation', tag: 'Resource Mgmt' },
+  { name: 'QualityGate', icon: '/icons/modules/qualitygate.svg', desc: 'Quality control — NCR tracking, inspection checklists, FTR rate, COPQ', tag: 'Quality Mgmt' },
+  { name: 'SafeZone', icon: '/icons/modules/safezone.svg', desc: 'OHS / HSE — risk matrix, incident reporting, PTW, toolbox talks', tag: 'OHS / HSE' },
+  { name: 'VisionAI', icon: '/icons/modules/visionai.svg', desc: 'Visual progress tracking — photo analysis, defect detection via Gemini Vision', tag: 'AI · Layer 2' },
+  { name: 'SupplyChain AI', icon: '/icons/modules/supplychain.svg', desc: 'Procurement — MRP, JIT delivery, supplier management, RFQ workflows', tag: 'Procurement' },
+  { name: 'RiskRadar', icon: '/icons/modules/riskradar.svg', desc: 'Risk management — risk register, heat map, what-if analysis, mitigation tracking', tag: 'Risk Mgmt' },
+  { name: 'ClaimShield', icon: '/icons/modules/claimshield.svg', desc: 'Claims & change orders — claims register, delay analysis, change order management', tag: 'Scope · Claims' },
+  { name: 'CommHub', icon: '/icons/modules/commhub.svg', desc: 'Communication management — RFI, transmittals, meeting minutes, escalation engine', tag: 'Communication' },
+  { name: 'StakeHub', icon: '/icons/modules/stakehub.svg', desc: 'Stakeholder management — stakeholder register, authority matrix, engagement tracking', tag: 'Stakeholder' },
+  { name: 'GreenSite', icon: '/icons/modules/greensite.svg', desc: 'ESG & environmental — carbon tracking, waste management, LEED/BREEAM compliance', tag: 'ESG' },
+  { name: 'SmartCon360 Hub', icon: '/icons/modules/hub.svg', desc: 'Master AI orchestrator — cross-module synthesis, Project Health Score, unified dashboard', tag: 'Integration' },
 ];
 
 const methods = [
@@ -140,11 +140,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ email: '', password: '', firstName: '', lastName: '' });
+  const [isDark, setIsDark] = useState(true);
 
-  // Load saved language preference
+  // Load saved language + theme preference
   useEffect(() => {
     const saved = localStorage.getItem('lang') as Lang | null;
     if (saved && (saved === 'en' || saved === 'tr')) setLang(saved);
+
+    // Detect theme: check saved preference, then system preference
+    const isLightClass = document.documentElement.classList.contains('light');
+    const systemLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    setIsDark(!isLightClass && !systemLight);
   }, []);
 
   const switchLang = (newLang: Lang) => {
@@ -288,7 +294,9 @@ export default function LoginPage() {
       <div
         className="hidden lg:flex lg:w-1/2 flex-col overflow-y-auto"
         style={{
-          background: 'linear-gradient(170deg, #0c1017 0%, #0f1520 35%, #111824 100%)',
+          background: isDark
+            ? 'linear-gradient(170deg, #0c1017 0%, #0f1520 35%, #111824 100%)'
+            : 'linear-gradient(170deg, #f8f9fb 0%, #f1f3f7 35%, #edf0f5 100%)',
         }}
       >
         {/* Ambient orbs */}
@@ -297,7 +305,7 @@ export default function LoginPage() {
             className="absolute rounded-full"
             style={{
               top: '-15%', left: '-5%', width: 500, height: 500,
-              background: 'rgba(245, 158, 11, 0.05)',
+              background: isDark ? 'rgba(245, 158, 11, 0.05)' : 'rgba(245, 158, 11, 0.08)',
               filter: 'blur(100px)',
             }}
           />
@@ -305,7 +313,7 @@ export default function LoginPage() {
             className="absolute rounded-full"
             style={{
               bottom: '-20%', right: '25%', width: 600, height: 600,
-              background: 'rgba(20, 184, 166, 0.03)',
+              background: isDark ? 'rgba(20, 184, 166, 0.03)' : 'rgba(20, 184, 166, 0.06)',
               filter: 'blur(100px)',
             }}
           />
@@ -316,7 +324,7 @@ export default function LoginPage() {
           <div className="flex items-center gap-3.5 mb-14">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={BRAND.logoDark}
+              src={isDark ? BRAND.logoDark : BRAND.logoLight}
               alt={BRAND.name}
               className="self-start"
               style={{ height: 56, width: 'auto' }}
@@ -332,16 +340,16 @@ export default function LoginPage() {
                 fontSize: 'clamp(36px, 4vw, 56px)',
                 letterSpacing: '-1.5px',
                 fontWeight: 400,
-                color: '#f1f3f7',
+                color: isDark ? '#f1f3f7' : '#1a1a2e',
               }}
             >
               {i.heroTagline1}<br />
-              <em style={{ fontStyle: 'italic', color: '#f59e0b' }}>{i.heroTagline2}</em><br />
+              <em style={{ fontStyle: 'italic', color: isDark ? '#f59e0b' : '#d97706' }}>{i.heroTagline2}</em><br />
               {i.heroTagline3}
             </h1>
             <p
               className="text-sm leading-relaxed max-w-xl"
-              style={{ color: '#8895a7', fontWeight: 400 }}
+              style={{ color: isDark ? '#8895a7' : '#64748b', fontWeight: 400 }}
             >
               {i.heroDesc}
             </p>
@@ -351,8 +359,8 @@ export default function LoginPage() {
           <div
             className="grid grid-cols-4 rounded-xl overflow-hidden mb-12"
             style={{
-              border: '1px solid rgba(255,255,255,0.06)',
-              boxShadow: '0 4px 32px rgba(0,0,0,0.4)',
+              border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)',
+              boxShadow: isDark ? '0 4px 32px rgba(0,0,0,0.4)' : '0 4px 32px rgba(0,0,0,0.06)',
             }}
           >
             {[
@@ -364,15 +372,15 @@ export default function LoginPage() {
               <div
                 key={stat.label}
                 className="text-center py-5 px-3 transition-colors"
-                style={{ background: '#151c2a' }}
+                style={{ background: isDark ? '#151c2a' : '#ffffff' }}
               >
                 <div
                   className="text-2xl font-bold"
-                  style={{ fontFamily: 'var(--font-mono)', color: '#f59e0b', letterSpacing: '-0.5px' }}
+                  style={{ fontFamily: 'var(--font-mono)', color: isDark ? '#f59e0b' : '#d97706', letterSpacing: '-0.5px' }}
                 >
                   {stat.value}
                 </div>
-                <div className="text-[11px] mt-1" style={{ color: '#556178' }}>
+                <div className="text-[11px] mt-1" style={{ color: isDark ? '#556178' : '#94a3b8' }}>
                   {stat.label}
                 </div>
               </div>
@@ -381,48 +389,54 @@ export default function LoginPage() {
 
           {/* Modules Section */}
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-6 h-0.5 rounded-sm" style={{ background: '#f59e0b' }} />
+            <div className="w-6 h-0.5 rounded-sm" style={{ background: isDark ? '#f59e0b' : '#d97706' }} />
             <span
               className="text-[11px] font-bold uppercase"
-              style={{ letterSpacing: '1.8px', color: '#556178' }}
+              style={{ letterSpacing: '1.8px', color: isDark ? '#556178' : '#94a3b8' }}
             >
               {i.secModules}
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-1.5 mb-12">
+          <div className="grid grid-cols-2 gap-2 mb-12">
             {modules.map((m) => (
               <div
                 key={m.name}
-                className="flex items-start gap-3 px-3 py-2.5 rounded-lg transition-all"
+                className="flex items-start gap-3 px-3.5 py-3 rounded-xl transition-all group"
                 style={{ border: '1px solid transparent' }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#151c2a';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+                  e.currentTarget.style.background = isDark ? '#151c2a' : '#ffffff';
+                  e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+                  e.currentTarget.style.boxShadow = isDark ? 'none' : '0 2px 12px rgba(0,0,0,0.04)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'transparent';
                   e.currentTarget.style.borderColor = 'transparent';
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div
-                  className="w-5 h-5 min-w-5 rounded-md flex items-center justify-center mt-0.5"
-                  style={{ background: 'rgba(245,158,11,0.1)' }}
-                >
-                  <Check size={11} style={{ color: '#fbbf24' }} />
-                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={m.icon}
+                  alt={m.name}
+                  className="w-9 h-9 min-w-9 rounded-lg mt-0.5 transition-transform group-hover:scale-110"
+                  style={{
+                    background: isDark ? 'rgba(245,158,11,0.06)' : 'rgba(245,158,11,0.08)',
+                    padding: 3,
+                  }}
+                />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-bold" style={{ color: '#f1f3f7', letterSpacing: '-0.2px' }}>
+                  <div className="text-[13px] font-bold" style={{ color: isDark ? '#f1f3f7' : '#1a1a2e', letterSpacing: '-0.2px' }}>
                     {m.name}
                   </div>
-                  <div className="text-[11px] leading-relaxed" style={{ color: '#556178' }}>
+                  <div className="text-[11px] leading-relaxed" style={{ color: isDark ? '#556178' : '#64748b' }}>
                     {m.desc}
                   </div>
                   <span
                     className="inline-block text-[9px] font-semibold mt-1 px-1.5 py-0.5 rounded"
                     style={{
                       fontFamily: 'var(--font-mono)',
-                      background: 'rgba(245,158,11,0.1)',
+                      background: isDark ? 'rgba(245,158,11,0.1)' : 'rgba(217,119,6,0.1)',
                       color: '#d97706',
                       letterSpacing: '0.3px',
                     }}
@@ -439,7 +453,7 @@ export default function LoginPage() {
             <div className="w-6 h-0.5 rounded-sm" style={{ background: '#14b8a6' }} />
             <span
               className="text-[11px] font-bold uppercase"
-              style={{ letterSpacing: '1.8px', color: '#556178' }}
+              style={{ letterSpacing: '1.8px', color: isDark ? '#556178' : '#94a3b8' }}
             >
               {i.secMethods}
             </span>
@@ -451,8 +465,8 @@ export default function LoginPage() {
                 key={m.label}
                 className="p-5 rounded-xl transition-all"
                 style={{
-                  border: '1px solid rgba(20,184,166,0.2)',
-                  background: 'rgba(20,184,166,0.04)',
+                  border: isDark ? '1px solid rgba(20,184,166,0.2)' : '1px solid rgba(20,184,166,0.25)',
+                  background: isDark ? 'rgba(20,184,166,0.04)' : 'rgba(20,184,166,0.04)',
                 }}
               >
                 <div
@@ -461,10 +475,10 @@ export default function LoginPage() {
                 >
                   {m.label}
                 </div>
-                <div className="text-[14px] font-bold mb-1.5" style={{ color: '#f1f3f7', letterSpacing: '-0.2px' }}>
+                <div className="text-[14px] font-bold mb-1.5" style={{ color: isDark ? '#f1f3f7' : '#1a1a2e', letterSpacing: '-0.2px' }}>
                   {m.title}
                 </div>
-                <div className="text-[12px] leading-relaxed" style={{ color: '#8895a7' }}>
+                <div className="text-[12px] leading-relaxed" style={{ color: isDark ? '#8895a7' : '#64748b' }}>
                   {m.desc}
                 </div>
               </div>
@@ -475,9 +489,9 @@ export default function LoginPage() {
           <div
             className="flex items-center gap-5 p-5 rounded-xl"
             style={{
-              background: '#151c2a',
-              border: '1px solid rgba(245,158,11,0.25)',
-              boxShadow: '0 0 80px rgba(245,158,11,0.06)',
+              background: isDark ? '#151c2a' : '#ffffff',
+              border: isDark ? '1px solid rgba(245,158,11,0.25)' : '1px solid rgba(217,119,6,0.2)',
+              boxShadow: isDark ? '0 0 80px rgba(245,158,11,0.06)' : '0 4px 24px rgba(0,0,0,0.06)',
             }}
           >
             <div
@@ -490,10 +504,10 @@ export default function LoginPage() {
               <Layers size={20} style={{ color: '#fff' }} />
             </div>
             <div className="flex-1">
-              <div className="text-[13px] font-bold mb-1" style={{ color: '#f1f3f7' }}>
+              <div className="text-[13px] font-bold mb-1" style={{ color: isDark ? '#f1f3f7' : '#1a1a2e' }}>
                 {i.aiTitle}
               </div>
-              <div className="text-[12px] leading-relaxed" style={{ color: '#8895a7' }}>
+              <div className="text-[12px] leading-relaxed" style={{ color: isDark ? '#8895a7' : '#64748b' }}>
                 {i.aiDesc}
               </div>
               <div className="flex gap-2 mt-2.5 flex-wrap">
@@ -503,9 +517,9 @@ export default function LoginPage() {
                     className="text-[10px] font-medium px-2 py-0.5 rounded"
                     style={{
                       fontFamily: 'var(--font-mono)',
-                      background: 'rgba(245,158,11,0.1)',
-                      color: '#f59e0b',
-                      border: '1px solid rgba(245,158,11,0.25)',
+                      background: isDark ? 'rgba(245,158,11,0.1)' : 'rgba(217,119,6,0.1)',
+                      color: isDark ? '#f59e0b' : '#d97706',
+                      border: isDark ? '1px solid rgba(245,158,11,0.25)' : '1px solid rgba(217,119,6,0.2)',
                       letterSpacing: '0.3px',
                     }}
                   >
@@ -519,7 +533,7 @@ export default function LoginPage() {
           {/* Footer */}
           <div
             className="mt-12 pt-5 text-[11px]"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: '#556178' }}
+            style={{ borderTop: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)', color: isDark ? '#556178' : '#94a3b8' }}
           >
             {i.copyright}
           </div>
