@@ -55,6 +55,19 @@ const SERVICES = {
   bim: process.env.BIM_URL || 'http://localhost:8005',
   concierge: process.env.CONCIERGE_URL || 'http://localhost:3008',
   analytics: process.env.ANALYTICS_URL || 'http://localhost:8006',
+  // Phase 2 modules
+  quality: process.env.QUALITY_URL || 'http://localhost:3009',
+  safety: process.env.SAFETY_URL || 'http://localhost:3010',
+  cost: process.env.COST_URL || 'http://localhost:3011',
+  claims: process.env.CLAIMS_URL || 'http://localhost:3012',
+  supplyChain: process.env.SUPPLY_CHAIN_URL || 'http://localhost:3013',
+  risk: process.env.RISK_URL || 'http://localhost:3014',
+  comm: process.env.COMM_URL || 'http://localhost:3015',
+  stakeholder: process.env.STAKEHOLDER_URL || 'http://localhost:3016',
+  sustainability: process.env.SUSTAINABILITY_URL || 'http://localhost:3017',
+  vision: process.env.VISION_URL || 'http://localhost:8008',
+  hub: process.env.HUB_URL || 'http://localhost:3018',
+  drl: process.env.DRL_URL || 'http://localhost:8007',
 };
 
 function proxy(target: string, pathRewrite?: Record<string, string>) {
@@ -96,6 +109,22 @@ app.use('/api/v1/concierge', aiLimiter, authMiddleware, proxy(SERVICES.concierge
 app.use('/api/v1/reports', aiLimiter, authMiddleware, proxy(SERVICES.reporting, { '^/api/v1': '' }));
 app.use('/api/v1/bim', defaultLimiter, authMiddleware, proxy(SERVICES.bim, { '^/api/v1': '' }));
 app.use('/api/v1/analytics', defaultLimiter, authMiddleware, proxy(SERVICES.analytics, { '^/api/v1': '' }));
+
+// ── Phase 2 Module Routes ──
+app.use('/api/v1/cost', defaultLimiter, authMiddleware, proxy(SERVICES.cost, { '^/api/v1': '' }));
+app.use('/api/v1/quality', defaultLimiter, authMiddleware, proxy(SERVICES.quality, { '^/api/v1': '' }));
+app.use('/api/v1/safety', defaultLimiter, authMiddleware, proxy(SERVICES.safety, { '^/api/v1': '' }));
+app.use('/api/v1/claims', defaultLimiter, authMiddleware, proxy(SERVICES.claims, { '^/api/v1': '' }));
+app.use('/api/v1/supply-chain', defaultLimiter, authMiddleware, proxy(SERVICES.supplyChain, { '^/api/v1': '' }));
+app.use('/api/v1/risk', defaultLimiter, authMiddleware, proxy(SERVICES.risk, { '^/api/v1': '' }));
+app.use('/api/v1/comm', defaultLimiter, authMiddleware, proxy(SERVICES.comm, { '^/api/v1': '' }));
+app.use('/api/v1/stakeholder', defaultLimiter, authMiddleware, proxy(SERVICES.stakeholder, { '^/api/v1': '' }));
+app.use('/api/v1/sustainability', defaultLimiter, authMiddleware, proxy(SERVICES.sustainability, { '^/api/v1': '' }));
+app.use('/api/v1/hub', defaultLimiter, authMiddleware, proxy(SERVICES.hub, { '^/api/v1': '' }));
+
+// AI-powered module routes (stricter rate limiting)
+app.use('/api/v1/vision', aiLimiter, authMiddleware, proxy(SERVICES.vision, { '^/api/v1': '' }));
+app.use('/api/v1/drl', aiLimiter, authMiddleware, proxy(SERVICES.drl, { '^/api/v1': '' }));
 
 // ── 404 ──
 app.use((_req, res) => {
