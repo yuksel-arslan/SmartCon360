@@ -9,6 +9,7 @@ import { authenticate } from './middleware/auth';
 // Routes
 import workItemsRouter from './routes/work-items';
 import unitPricesRouter from './routes/unit-prices';
+import resourcesRouter from './routes/resources';
 import quantityTakeoffsRouter from './routes/quantity-takeoffs';
 import estimatesRouter from './routes/estimates';
 import budgetsRouter from './routes/budgets';
@@ -49,6 +50,7 @@ app.get('/health', (_req, res) => {
 // Gateway strips /api/v1 prefix, so paths arrive as /cost/...
 app.use('/cost/work-items', authenticate, workItemsRouter);
 app.use('/cost/unit-prices', authenticate, unitPricesRouter);
+app.use('/cost/resources', authenticate, resourcesRouter);
 app.use('/cost/quantity-takeoffs', authenticate, quantityTakeoffsRouter);
 app.use('/cost/estimates', authenticate, estimatesRouter);
 app.use('/cost/budgets', authenticate, budgetsRouter);
