@@ -5,7 +5,7 @@ import {
   Package, ClipboardList, Loader2, AlertCircle, CheckCircle2, Clock, Send,
   FileText, ArrowUpRight, ArrowDownRight, Minus, X, Trash2, Plus, Upload,
   Edit3, Eye, ChevronDown, Building2, Landmark, Wrench, Library, Search,
-  Download, Check, FolderOpen,
+  Download, Check, FolderOpen, Globe, Filter, Layers, ExternalLink,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ModulePageHeader } from '@/components/modules';
@@ -261,6 +261,10 @@ function LibraryTab() {
     catalogs, catalogItems, catalogItemsMeta,
     fetchCatalogs, createCatalog, deleteCatalog, uploadCatalogFile,
     searchCatalogItems, copyToProject, fetchWorkItems,
+    // New actions
+    searchUniclass, uniclassResults, uniclassLoading,
+    fetchCatalogDivisions, fetchCatalogCategories,
+    catalogDivisions, catalogCategories,
   } = useCostStore();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -282,7 +286,17 @@ function LibraryTab() {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [copyResult, setCopyResult] = useState<{ created: number; skipped: number } | null>(null);
   const [catFilter, setCatFilter] = useState('');
+  const [divFilter, setDivFilter] = useState('');
   const [page, setPage] = useState(1);
+
+  // Source filter tabs
+  type SourceGroup = 'all' | 'turkish' | 'international' | 'custom';
+  const [sourceGroup, setSourceGroup] = useState<SourceGroup>('all');
+
+  // Uniclass live search
+  const [uniclassQuery, setUniclassQuery] = useState('');
+  const [uniclassTable, setUniclassTable] = useState('');
+  const uniclassTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetchCatalogs();
@@ -293,15 +307,37 @@ function LibraryTab() {
       setPage(1);
       setSelectedItems(new Set());
       setCopyResult(null);
-      searchCatalogItems({ catalogId: selectedCatalog, search: searchQuery, category: catFilter, page: 1, limit: 50 });
+      setCatFilter('');
+      setDivFilter('');
+      searchCatalogItems({ catalogId: selectedCatalog, search: searchQuery, page: 1, limit: 50 });
+      fetchCatalogDivisions(selectedCatalog);
+      fetchCatalogCategories(selectedCatalog);
     }
-  }, [selectedCatalog, searchCatalogItems]);
+  }, [selectedCatalog, searchCatalogItems, fetchCatalogDivisions, fetchCatalogCategories]);
 
   const doSearch = useCallback(() => {
     if (selectedCatalog) {
-      searchCatalogItems({ catalogId: selectedCatalog, search: searchQuery, category: catFilter, page, limit: 50 });
+      searchCatalogItems({
+        catalogId: selectedCatalog,
+        search: searchQuery,
+        category: catFilter || undefined,
+        divisionCode: divFilter || undefined,
+        page,
+        limit: 50,
+      });
     }
-  }, [selectedCatalog, searchQuery, catFilter, page, searchCatalogItems]);
+  }, [selectedCatalog, searchQuery, catFilter, divFilter, page, searchCatalogItems]);
+
+  // Debounced Uniclass search
+  const handleUniclassSearch = useCallback((query: string) => {
+    setUniclassQuery(query);
+    if (uniclassTimerRef.current) clearTimeout(uniclassTimerRef.current);
+    if (query.length >= 2) {
+      uniclassTimerRef.current = setTimeout(() => {
+        searchUniclass(query, uniclassTable || undefined);
+      }, 400);
+    }
+  }, [searchUniclass, uniclassTable]);
 
   const handleCreate = async () => {
     if (!fName.trim() || !fYear) return;
@@ -331,10 +367,8 @@ function LibraryTab() {
     setUploading(false);
     if (result) {
       setUploadResult(result);
-      // Refresh items
       searchCatalogItems({ catalogId: selectedCatalog, page: 1, limit: 50 });
     }
-    // Reset file input
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -395,13 +429,31 @@ function LibraryTab() {
 
   const activeCatalog = catalogs.find((c: PriceCatalog) => c.id === selectedCatalog);
 
+  // Filter catalogs by source group
+  const groupedCatalogs = catalogs.filter((c: PriceCatalog) => {
+    if (sourceGroup === 'all') return true;
+    if (sourceGroup === 'turkish') return ['bayindirlik', 'iller_bankasi'].includes(c.source);
+    if (sourceGroup === 'international') return ['masterformat', 'uniformat', 'uniclass', 'rsmeans'].includes(c.source);
+    if (sourceGroup === 'custom') return ['custom', 'supplier'].includes(c.source);
+    return true;
+  });
+
+  // Group counts
+  const turkishCount = catalogs.filter((c: PriceCatalog) => ['bayindirlik', 'iller_bankasi'].includes(c.source)).length;
+  const intlCount = catalogs.filter((c: PriceCatalog) => ['masterformat', 'uniformat', 'uniclass', 'rsmeans'].includes(c.source)).length;
+  const customCount = catalogs.filter((c: PriceCatalog) => ['custom', 'supplier'].includes(c.source)).length;
+
+  // Check if active catalog is a MasterFormat or UNIFORMAT type (for division/element filter)
+  const isMasterFormat = activeCatalog?.source === 'masterformat' || activeCatalog?.standard === 'masterformat';
+  const isUniformat = activeCatalog?.source === 'uniformat' || activeCatalog?.standard === 'uniformat';
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Unit Price Library</h3>
           <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            Turkish standards (Bayındırlık, İller Bankası) and International standards (MasterFormat, UNIFORMAT, Uniclass, RSMeans)
+            Turkish standards, International standards (MasterFormat, UNIFORMAT, Uniclass, RSMeans) and Custom catalogs
           </p>
         </div>
         <Btn variant={showCreateForm ? 'danger' : 'primary'} onClick={() => setShowCreateForm(!showCreateForm)}>
@@ -442,46 +494,157 @@ function LibraryTab() {
         </Card>
       )}
 
+      {/* Uniclass Live Search Widget */}
+      <Card>
+        <div className="flex items-center gap-2 mb-3">
+          <Globe size={14} style={{ color: 'rgb(236,72,153)' }} />
+          <h4 className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>Uniclass Live Search</h4>
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'rgba(236,72,153,0.1)', color: 'rgb(236,72,153)' }}>
+            UK NBS API
+          </span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex-1 min-w-[250px] relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-muted)' }} />
+            <Input
+              placeholder="Search Uniclass classifications (e.g. concrete, steel, HVAC...)"
+              value={uniclassQuery}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleUniclassSearch(e.target.value)}
+              className="w-full !pl-9"
+            />
+          </div>
+          <Select value={uniclassTable} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setUniclassTable(e.target.value); if (uniclassQuery.length >= 2) searchUniclass(uniclassQuery, e.target.value || undefined); }}>
+            <option value="">All Tables</option>
+            <option value="Ac">Activities</option>
+            <option value="Co">Complexes</option>
+            <option value="En">Entities</option>
+            <option value="Pr">Products</option>
+            <option value="SL">Spaces/Locations</option>
+            <option value="EF">Elements/Functions</option>
+            <option value="Ss">Systems</option>
+          </Select>
+          {uniclassLoading && <Loader2 size={14} className="animate-spin" style={{ color: 'rgb(236,72,153)' }} />}
+        </div>
+        {/* Results */}
+        {uniclassResults.length > 0 && (
+          <div className="mt-3 max-h-[200px] overflow-y-auto rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
+            <table className="w-full text-xs">
+              <thead>
+                <tr style={{ background: 'var(--color-bg-input)' }}>
+                  <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--color-text-muted)' }}>Code</th>
+                  <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--color-text-muted)' }}>Title</th>
+                  <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--color-text-muted)' }}>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {uniclassResults.map((item, i) => (
+                  <tr key={`${item.code}-${i}`} className="border-t hover:opacity-80" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-card)' }}>
+                    <td className="px-3 py-2 font-mono font-medium whitespace-nowrap" style={{ color: 'rgb(236,72,153)' }}>{item.code}</td>
+                    <td className="px-3 py-2 font-medium" style={{ color: 'var(--color-text)' }}>{item.title}</td>
+                    <td className="px-3 py-2 text-[10px] max-w-[300px] truncate" style={{ color: 'var(--color-text-muted)' }}>{item.description || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {uniclassQuery.length >= 2 && !uniclassLoading && uniclassResults.length === 0 && (
+          <p className="text-[10px] mt-2" style={{ color: 'var(--color-text-muted)' }}>
+            No results found. Note: Uniclass API requires API credentials (UNICLASS_CLIENT_ID, UNICLASS_CLIENT_SECRET) to be configured.
+          </p>
+        )}
+      </Card>
+
+      {/* Source Group Tabs */}
+      <div className="flex gap-1 rounded-lg border p-1" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
+        {([
+          { id: 'all' as SourceGroup, label: 'All', count: catalogs.length, icon: Layers },
+          { id: 'turkish' as SourceGroup, label: 'Turkish', count: turkishCount, icon: Landmark },
+          { id: 'international' as SourceGroup, label: 'International', count: intlCount, icon: Globe },
+          { id: 'custom' as SourceGroup, label: 'Custom', count: customCount, icon: Wrench },
+        ]).map(tab => (
+          <button key={tab.id} onClick={() => setSourceGroup(tab.id)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors"
+            style={{
+              background: sourceGroup === tab.id ? 'var(--color-accent-muted)' : 'transparent',
+              color: sourceGroup === tab.id ? 'var(--color-accent)' : 'var(--color-text-muted)',
+            }}>
+            <tab.icon size={12} /> {tab.label}
+            <span className="text-[9px] px-1 py-0.5 rounded-full" style={{ background: 'var(--color-bg-input)' }}>{tab.count}</span>
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Catalog List (Left Panel) */}
         <div className="lg:col-span-1">
           <Card className="!p-3 max-h-[700px] overflow-y-auto">
             <h4 className="text-[10px] font-semibold mb-2 px-2" style={{ color: 'var(--color-text-muted)' }}>
-              Catalogs ({catalogs.length})
+              Catalogs ({groupedCatalogs.length})
             </h4>
-            {catalogs.length === 0 && (
+            {groupedCatalogs.length === 0 && (
               <div className="text-center py-8">
                 <Library size={32} strokeWidth={1} className="mx-auto mb-2" style={{ color: 'var(--color-text-muted)' }} />
-                <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>No catalogs yet</p>
+                <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>No catalogs in this category</p>
               </div>
             )}
-            {catalogs.map((cat: PriceCatalog) => (
-              <button key={cat.id} onClick={() => setSelectedCatalog(cat.id)}
-                className="w-full text-left px-3 py-2.5 rounded-lg text-xs mb-1 transition-colors group relative"
-                style={{
-                  background: selectedCatalog === cat.id ? 'var(--color-accent-muted)' : 'transparent',
-                  color: selectedCatalog === cat.id ? 'var(--color-accent)' : 'var(--color-text)',
-                }}>
-                <div className="flex items-center justify-between">
-                  <span className="font-medium truncate">{cat.name}</span>
-                  <button onClick={(e) => { e.stopPropagation(); deleteCatalog(cat.id); }}
-                    className="opacity-0 group-hover:opacity-100 p-0.5" title="Delete">
-                    <Trash2 size={10} style={{ color: 'var(--color-danger)' }} />
-                  </button>
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium"
-                    style={{ background: `${sourceColor(cat.source)}15`, color: sourceColor(cat.source) }}>
-                    {sourceLabel(cat.source)}
-                  </span>
-                  <span className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>{cat.year}</span>
-                </div>
-                <div className="text-[9px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                  {cat.itemCount || cat._count?.items || 0} items
-                  {cat.fileName && <> — {cat.fileName}</>}
-                </div>
-              </button>
-            ))}
+
+            {/* Global Standards Section */}
+            {sourceGroup !== 'custom' && sourceGroup !== 'turkish' && (
+              (() => {
+                const globalCats = groupedCatalogs.filter((c: PriceCatalog) => !c.projectId && ['masterformat', 'uniformat', 'rsmeans'].includes(c.source));
+                if (globalCats.length === 0) return null;
+                return (
+                  <>
+                    <div className="flex items-center gap-1.5 px-2 py-1 mb-1">
+                      <Globe size={10} style={{ color: 'var(--color-accent)' }} />
+                      <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-accent)' }}>
+                        Global Standards
+                      </span>
+                    </div>
+                    {globalCats.map((cat: PriceCatalog) => (
+                      <CatalogListItem key={cat.id} cat={cat} isSelected={selectedCatalog === cat.id}
+                        onSelect={() => setSelectedCatalog(cat.id)} onDelete={() => deleteCatalog(cat.id)}
+                        sourceLabel={sourceLabel} sourceColor={sourceColor} isGlobal />
+                    ))}
+                    <div className="h-px my-2 mx-2" style={{ background: 'var(--color-border)' }} />
+                  </>
+                );
+              })()
+            )}
+
+            {/* Project Catalogs Section */}
+            {(() => {
+              const projectCats = groupedCatalogs.filter((c: PriceCatalog) =>
+                c.projectId || !['masterformat', 'uniformat', 'rsmeans'].includes(c.source) || sourceGroup === 'turkish' || sourceGroup === 'custom'
+              );
+              // De-duplicate: remove globalCats that were shown above
+              const globalIds = new Set(
+                groupedCatalogs.filter((c: PriceCatalog) => !c.projectId && ['masterformat', 'uniformat', 'rsmeans'].includes(c.source)).map((c: PriceCatalog) => c.id)
+              );
+              const filtered = (sourceGroup !== 'custom' && sourceGroup !== 'turkish')
+                ? projectCats.filter((c: PriceCatalog) => !globalIds.has(c.id))
+                : projectCats;
+
+              if (filtered.length === 0) return null;
+              return (
+                <>
+                  {sourceGroup !== 'custom' && sourceGroup !== 'turkish' && (
+                    <div className="flex items-center gap-1.5 px-2 py-1 mb-1">
+                      <FolderOpen size={10} style={{ color: 'var(--color-text-muted)' }} />
+                      <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
+                        Project Catalogs
+                      </span>
+                    </div>
+                  )}
+                  {filtered.map((cat: PriceCatalog) => (
+                    <CatalogListItem key={cat.id} cat={cat} isSelected={selectedCatalog === cat.id}
+                      onSelect={() => setSelectedCatalog(cat.id)} onDelete={() => deleteCatalog(cat.id)}
+                      sourceLabel={sourceLabel} sourceColor={sourceColor} />
+                  ))}
+                </>
+              );
+            })()}
           </Card>
         </div>
 
@@ -492,7 +655,7 @@ function LibraryTab() {
               <FolderOpen size={48} strokeWidth={1} style={{ color: 'var(--color-accent)' }} />
               <p className="text-sm mt-3 font-medium" style={{ color: 'var(--color-text)' }}>Select a catalog or create a new one</p>
               <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                Upload Excel/CSV files with unit prices from official sources or your own price lists
+                Browse global standards (MasterFormat, UNIFORMAT II) or upload your own price lists
               </p>
             </Card>
           )}
@@ -509,6 +672,12 @@ function LibraryTab() {
                         style={{ background: `${sourceColor(activeCatalog.source)}15`, color: sourceColor(activeCatalog.source) }}>
                         {sourceLabel(activeCatalog.source)} {activeCatalog.year}
                       </span>
+                      {!activeCatalog.projectId && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium"
+                          style={{ background: 'var(--color-accent-muted)', color: 'var(--color-accent)' }}>
+                          Global
+                        </span>
+                      )}
                     </div>
                     {activeCatalog.description && (
                       <p className="text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>{activeCatalog.description}</p>
@@ -549,31 +718,69 @@ function LibraryTab() {
                 </div>
               </Card>
 
-              {/* Search + Actions Bar */}
+              {/* Search + Filter Bar */}
               {(activeCatalog.itemCount > 0 || (activeCatalog._count?.items || 0) > 0) && (
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex-1 min-w-[200px] relative">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-muted)' }} />
-                    <Input
-                      placeholder="Search by code or name..."
-                      value={searchQuery}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter') doSearch(); }}
-                      className="w-full !pl-9"
-                    />
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex-1 min-w-[200px] relative">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-muted)' }} />
+                      <Input
+                        placeholder="Search by code or name..."
+                        value={searchQuery}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter') doSearch(); }}
+                        className="w-full !pl-9"
+                      />
+                    </div>
+                    <Btn variant="ghost" onClick={doSearch}><Search size={12} /> Search</Btn>
+                    {selectedItems.size > 0 && (
+                      <Btn variant="primary" onClick={handleCopyToProject} disabled={saving}>
+                        {saving ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
+                        Add {selectedItems.size} to Project
+                      </Btn>
+                    )}
+                    {copyResult && (
+                      <span className="text-xs flex items-center gap-1" style={{ color: 'rgb(34,197,94)' }}>
+                        <Check size={12} /> {copyResult.created} added, {copyResult.skipped} skipped (already exists)
+                      </span>
+                    )}
                   </div>
-                  <Btn variant="ghost" onClick={doSearch}><Search size={12} /> Search</Btn>
-                  {selectedItems.size > 0 && (
-                    <Btn variant="primary" onClick={handleCopyToProject} disabled={saving}>
-                      {saving ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
-                      Add {selectedItems.size} to Project
-                    </Btn>
-                  )}
-                  {copyResult && (
-                    <span className="text-xs flex items-center gap-1" style={{ color: 'rgb(34,197,94)' }}>
-                      <Check size={12} /> {copyResult.created} added, {copyResult.skipped} skipped (already exists)
-                    </span>
-                  )}
+
+                  {/* Division / Category / Element Filters */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Filter size={12} style={{ color: 'var(--color-text-muted)' }} />
+
+                    {/* Category Filter - always available */}
+                    {catalogCategories.length > 0 && (
+                      <Select value={catFilter} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setCatFilter(e.target.value); setPage(1); setTimeout(doSearch, 0); }}>
+                        <option value="">All Categories</option>
+                        {catalogCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                      </Select>
+                    )}
+
+                    {/* MasterFormat Division Filter */}
+                    {isMasterFormat && catalogDivisions.length > 0 && (
+                      <Select value={divFilter} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setDivFilter(e.target.value); setPage(1); setTimeout(doSearch, 0); }}>
+                        <option value="">All Divisions</option>
+                        {catalogDivisions.map(d => <option key={d.code} value={d.code}>Div {d.code} — {d.name}</option>)}
+                      </Select>
+                    )}
+
+                    {/* UNIFORMAT Element Filter - using categories which map to level groups */}
+                    {isUniformat && catalogCategories.length > 0 && !catFilter && (
+                      <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                        Use Category filter to browse by UNIFORMAT level
+                      </span>
+                    )}
+
+                    {(catFilter || divFilter) && (
+                      <button onClick={() => { setCatFilter(''); setDivFilter(''); setPage(1); setTimeout(doSearch, 0); }}
+                        className="text-[10px] flex items-center gap-1 px-2 py-1 rounded"
+                        style={{ color: 'var(--color-danger)' }}>
+                        <X size={10} /> Clear Filters
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -590,7 +797,7 @@ function LibraryTab() {
                               onChange={toggleAll}
                               className="rounded" />
                           </th>
-                          {['Code', 'Name', 'Unit', 'Unit Price (₺)', 'Category', 'Labor', 'Material', 'Equipment'].map(h => (
+                          {['Code', 'Name', 'Unit', 'Unit Price', 'Category', 'Labor', 'Material', 'Equipment'].map(h => (
                             <th key={h} className="text-left px-3 py-3 font-semibold" style={{ color: 'var(--color-text-muted)' }}>{h}</th>
                           ))}
                         </tr>
@@ -604,7 +811,10 @@ function LibraryTab() {
                               <input type="checkbox" checked={selectedItems.has(item.id)} onChange={() => toggleItem(item.id)} className="rounded" />
                             </td>
                             <td className="px-3 py-2.5 font-mono font-medium" style={{ color: 'var(--color-accent)' }}>{item.code}</td>
-                            <td className="px-3 py-2.5 max-w-[300px] truncate" style={{ color: 'var(--color-text)' }}>{item.name}</td>
+                            <td className="px-3 py-2.5 max-w-[300px] truncate" style={{ color: 'var(--color-text)' }}>
+                              {item.name}
+                              {item.divisionName && <span className="ml-1 text-[9px]" style={{ color: 'var(--color-text-muted)' }}>[{item.divisionName}]</span>}
+                            </td>
                             <td className="px-3 py-2.5" style={{ color: 'var(--color-text-muted)' }}>{item.unit}</td>
                             <td className="px-3 py-2.5 font-mono font-medium text-right" style={{ color: 'var(--color-text)' }}>{fmt(item.unitPrice)}</td>
                             <td className="px-3 py-2.5 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{item.category || '—'}</td>
@@ -623,8 +833,8 @@ function LibraryTab() {
                         {catalogItemsMeta.total} items — Page {catalogItemsMeta.page} of {catalogItemsMeta.pages}
                       </span>
                       <div className="flex gap-1">
-                        <Btn variant="ghost" disabled={page <= 1} onClick={() => { setPage(p => p - 1); doSearch(); }}>Previous</Btn>
-                        <Btn variant="ghost" disabled={page >= catalogItemsMeta.pages} onClick={() => { setPage(p => p + 1); doSearch(); }}>Next</Btn>
+                        <Btn variant="ghost" disabled={page <= 1} onClick={() => { setPage(p => p - 1); setTimeout(doSearch, 0); }}>Previous</Btn>
+                        <Btn variant="ghost" disabled={page >= catalogItemsMeta.pages} onClick={() => { setPage(p => p + 1); setTimeout(doSearch, 0); }}>Next</Btn>
                       </div>
                     </div>
                   )}
@@ -649,6 +859,46 @@ function LibraryTab() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Catalog list item component for left panel */
+function CatalogListItem({ cat, isSelected, onSelect, onDelete, sourceLabel, sourceColor, isGlobal }: {
+  cat: PriceCatalog; isSelected: boolean; onSelect: () => void; onDelete: () => void;
+  sourceLabel: (s: string) => string; sourceColor: (s: string) => string; isGlobal?: boolean;
+}) {
+  return (
+    <button onClick={onSelect}
+      className="w-full text-left px-3 py-2.5 rounded-lg text-xs mb-1 transition-colors group relative"
+      style={{
+        background: isSelected ? 'var(--color-accent-muted)' : 'transparent',
+        color: isSelected ? 'var(--color-accent)' : 'var(--color-text)',
+      }}>
+      <div className="flex items-center justify-between">
+        <span className="font-medium truncate">{cat.name}</span>
+        <button onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          className="opacity-0 group-hover:opacity-100 p-0.5" title="Delete">
+          <Trash2 size={10} style={{ color: 'var(--color-danger)' }} />
+        </button>
+      </div>
+      <div className="flex items-center gap-2 mt-1">
+        <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium"
+          style={{ background: `${sourceColor(cat.source)}15`, color: sourceColor(cat.source) }}>
+          {sourceLabel(cat.source)}
+        </span>
+        <span className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>{cat.year}</span>
+        {isGlobal && (
+          <span className="text-[8px] px-1 py-0.5 rounded font-medium"
+            style={{ background: 'var(--color-accent-muted)', color: 'var(--color-accent)' }}>
+            PRE-LOADED
+          </span>
+        )}
+      </div>
+      <div className="text-[9px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+        {cat.itemCount || cat._count?.items || 0} items
+        {cat.fileName && <> — {cat.fileName}</>}
+      </div>
+    </button>
   );
 }
 

@@ -91,11 +91,13 @@ router.get('/:id/categories', async (req, res, next) => {
 // ── Search items across catalogs ──
 router.get('/items/search', async (req, res, next) => {
   try {
-    const { catalogId, search, category, page, limit } = req.query;
+    const { catalogId, search, category, divisionCode, uniformatCode, page, limit } = req.query;
     const result = await catalogService.searchItems({
       catalogId: catalogId as string,
       search: search as string,
       category: category as string,
+      divisionCode: divisionCode as string,
+      uniformatCode: uniformatCode as string,
       page: page ? parseInt(page as string) : 1,
       limit: limit ? parseInt(limit as string) : 50,
     });
