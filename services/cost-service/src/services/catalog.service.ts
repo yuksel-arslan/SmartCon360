@@ -1,4 +1,6 @@
-// Price Catalog Service — Bayindirlik, Iller Bankasi, Custom unit price libraries
+// Price Catalog Service — Turkish + International Standards
+// Turkish: Bayindirlik, Iller Bankasi
+// International: MasterFormat (CSI), UNIFORMAT II, Uniclass (UK), RSMeans
 
 import { prisma } from '../utils/prisma';
 import { NotFoundError } from '../utils/errors';
@@ -7,8 +9,10 @@ export interface CreateCatalogInput {
   projectId?: string;
   name: string;
   source: string;
+  standard?: string;
   year: number;
   period?: string;
+  region?: string;
   currency?: string;
   description?: string;
   fileName?: string;
@@ -23,9 +27,26 @@ export interface CatalogItemInput {
   unitPrice: number;
   category?: string;
   subcategory?: string;
+
+  // Cost breakdown
   laborCost?: number;
   materialCost?: number;
   equipmentCost?: number;
+
+  // International classification codes
+  csiCode?: string;
+  divisionCode?: string;
+  divisionName?: string;
+  uniformatCode?: string;
+  uniclassCode?: string;
+
+  // RSMeans specific
+  locationFactor?: number;
+  location?: string;
+  crewCode?: string;
+  productivity?: number;
+  assemblyType?: string;
+
   notes?: string;
 }
 
@@ -87,6 +108,18 @@ export class CatalogService {
         laborCost: item.laborCost,
         materialCost: item.materialCost,
         equipmentCost: item.equipmentCost,
+        // International codes
+        csiCode: item.csiCode,
+        divisionCode: item.divisionCode,
+        divisionName: item.divisionName,
+        uniformatCode: item.uniformatCode,
+        uniclassCode: item.uniclassCode,
+        // RSMeans fields
+        locationFactor: item.locationFactor,
+        location: item.location,
+        crewCode: item.crewCode,
+        productivity: item.productivity,
+        assemblyType: item.assemblyType,
         notes: item.notes,
       })),
     });
@@ -106,6 +139,8 @@ export class CatalogService {
     catalogId?: string;
     search?: string;
     category?: string;
+    divisionCode?: string;
+    standard?: string;
     page?: number;
     limit?: number;
   }) {
@@ -116,17 +151,27 @@ export class CatalogService {
     const where: Record<string, unknown> = {};
     if (opts.catalogId) where.catalogId = opts.catalogId;
     if (opts.category) where.category = opts.category;
+    if (opts.divisionCode) where.divisionCode = opts.divisionCode;
+
     if (opts.search) {
       where.OR = [
         { code: { contains: opts.search, mode: 'insensitive' } },
         { name: { contains: opts.search, mode: 'insensitive' } },
+        { csiCode: { contains: opts.search, mode: 'insensitive' } },
+        { uniformatCode: { contains: opts.search, mode: 'insensitive' } },
+        { uniclassCode: { contains: opts.search, mode: 'insensitive' } },
       ];
+    }
+
+    // Filter by catalog standard
+    if (opts.standard) {
+      where.catalog = { standard: opts.standard };
     }
 
     const [items, total] = await Promise.all([
       prisma.priceCatalogItem.findMany({
         where,
-        include: { catalog: { select: { name: true, source: true, year: true } } },
+        include: { catalog: { select: { name: true, source: true, standard: true, year: true, region: true } } },
         orderBy: { code: 'asc' },
         skip,
         take: limit,

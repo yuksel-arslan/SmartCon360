@@ -13,17 +13,21 @@ datasource db {
 }
 
 // ============================================================================
-// PRICE CATALOG (Unit Price Library — Bayindirlik, Iller Bankasi, Custom)
+// PRICE CATALOG (Unit Price Library — Turkish + International Standards)
+// Turkish: Bayindirlik, Iller Bankasi
+// International: MasterFormat (CSI), UNIFORMAT II, Uniclass (UK), RSMeans
 // ============================================================================
 
 model PriceCatalog {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   projectId String?  @map("project_id") @db.Uuid  // null = global/shared catalog
 
-  name     String  @db.VarChar(255)                // "Bayindirlik 2025", "Iller Bankasi 2024-2"
-  source   String  @db.VarChar(30)                 // bayindirlik | iller_bankasi | custom | supplier
-  year     Int                                      // 2025
+  name     String  @db.VarChar(255)                // "Bayindirlik 2025", "RSMeans 2026 US Northeast"
+  source   String  @db.VarChar(30)                 // bayindirlik | iller_bankasi | custom | supplier | masterformat | uniformat | uniclass | rsmeans
+  standard String? @db.VarChar(30)                 // masterformat | uniformat | uniclass | null (for Turkish standards)
+  year     Int                                      // 2025, 2026
   period   String? @db.VarChar(20)                 // "H1", "H2", "Q1", etc.
+  region   String? @db.VarChar(50)                 // "US_Northeast", "UK_London", "TR_Istanbul", etc.
   currency String  @default("TRY") @db.VarChar(3)
 
   description String?
@@ -40,7 +44,9 @@ model PriceCatalog {
   items PriceCatalogItem[]
 
   @@index([source], name: "idx_price_catalog_source")
+  @@index([standard], name: "idx_price_catalog_standard")
   @@index([year], name: "idx_price_catalog_year")
+  @@index([region], name: "idx_price_catalog_region")
   @@index([projectId], name: "idx_price_catalog_project")
   @@map("price_catalogs")
   @@schema("cost")
@@ -50,17 +56,36 @@ model PriceCatalogItem {
   id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   catalogId String @map("catalog_id") @db.Uuid
 
-  code        String  @db.VarChar(50)              // "04.001/2A", "16.050"
+  code        String  @db.VarChar(50)              // "04.001/2A" (Turkish), "03-30-00" (CSI), "B2010.10" (UNIFORMAT)
   name        String  @db.VarChar(500)             // full description
-  unit        String  @db.VarChar(20)              // m², m³, kg, ton
+  unit        String  @db.VarChar(20)              // m², m³, kg, ton, SF, CY, LF
   unitPrice   Decimal @map("unit_price") @db.Decimal(15, 4)
 
   category    String? @db.VarChar(100)             // grouping
   subcategory String? @db.VarChar(100)
 
+  // Cost breakdown (Turkish + RSMeans compatible)
   laborCost     Decimal? @map("labor_cost") @db.Decimal(15, 4)
   materialCost  Decimal? @map("material_cost") @db.Decimal(15, 4)
   equipmentCost Decimal? @map("equipment_cost") @db.Decimal(15, 4)
+
+  // International classification codes
+  csiCode       String?  @map("csi_code") @db.VarChar(20)        // MasterFormat: "03-30-00", "26-05-19"
+  divisionCode  String?  @map("division_code") @db.VarChar(10)   // MasterFormat Division: "03", "26", "33"
+  divisionName  String?  @map("division_name") @db.VarChar(100)  // "Concrete", "Electrical"
+  uniformatCode String?  @map("uniformat_code") @db.VarChar(20)  // UNIFORMAT II: "B2010.10", "C3010"
+  uniclassCode  String?  @map("uniclass_code") @db.VarChar(30)   // Uniclass 2015 code
+
+  // Location-specific pricing (RSMeans)
+  locationFactor Decimal? @map("location_factor") @db.Decimal(6, 4)  // Location multiplier: 0.85-1.45
+  location       String?  @map("location") @db.VarChar(100)          // "Boston MA", "New York NY"
+
+  // Assembly vs Unit cost (RSMeans)
+  assemblyType String?  @map("assembly_type") @db.VarChar(20)   // "unit" | "assembly" | null
+
+  // Productivity data
+  crewCode     String?  @map("crew_code") @db.VarChar(20)       // RSMeans crew code
+  productivity Decimal? @db.Decimal(10, 4)                       // Daily output rate
 
   notes     String?
   createdAt DateTime @default(now()) @map("created_at")
@@ -71,6 +96,9 @@ model PriceCatalogItem {
   @@index([catalogId], name: "idx_price_catalog_items_catalog")
   @@index([code], name: "idx_price_catalog_items_code")
   @@index([category], name: "idx_price_catalog_items_category")
+  @@index([csiCode], name: "idx_price_catalog_items_csi")
+  @@index([divisionCode], name: "idx_price_catalog_items_division")
+  @@index([uniformatCode], name: "idx_price_catalog_items_uniformat")
   @@map("price_catalog_items")
   @@schema("cost")
 }

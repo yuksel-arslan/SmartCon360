@@ -196,9 +196,11 @@ export interface PriceCatalog {
   id: string;
   projectId?: string;
   name: string;
-  source: string;
+  source: string; // bayindirlik | iller_bankasi | masterformat | uniformat | uniclass | rsmeans | custom | supplier
+  standard?: string; // masterformat | uniformat | uniclass | null
   year: number;
   period?: string;
+  region?: string; // US_Northeast, UK_London, TR_Istanbul, etc.
   currency: string;
   description?: string;
   fileName?: string;
@@ -219,11 +221,24 @@ export interface PriceCatalogItem {
   unitPrice: string;
   category?: string;
   subcategory?: string;
+  // Cost breakdown
   laborCost?: string;
   materialCost?: string;
   equipmentCost?: string;
+  // International classification codes
+  csiCode?: string;
+  divisionCode?: string;
+  divisionName?: string;
+  uniformatCode?: string;
+  uniclassCode?: string;
+  // RSMeans specific
+  locationFactor?: string;
+  location?: string;
+  crewCode?: string;
+  productivity?: string;
+  assemblyType?: string;
   notes?: string;
-  catalog?: { name: string; source: string; year: number };
+  catalog?: { name: string; source: string; standard?: string; year: number; region?: string };
 }
 
 // ============================================================================
@@ -298,7 +313,7 @@ interface CostState {
 
   // Actions — Catalog
   fetchCatalogs: (opts?: { source?: string; year?: number; projectId?: string }) => Promise<void>;
-  createCatalog: (data: { name: string; source: string; year: number; period?: string; description?: string; projectId?: string }) => Promise<PriceCatalog | null>;
+  createCatalog: (data: { name: string; source: string; year: number; period?: string; region?: string; description?: string; projectId?: string }) => Promise<PriceCatalog | null>;
   deleteCatalog: (id: string) => Promise<boolean>;
   uploadCatalogFile: (catalogId: string, file: File) => Promise<{ imported: number; errors: number; errorDetails: string[] } | null>;
   searchCatalogItems: (opts: { catalogId?: string; search?: string; category?: string; page?: number; limit?: number }) => Promise<void>;
@@ -685,7 +700,7 @@ export const useCostStore = create<CostState>((set, get) => ({
     }
   },
 
-  createCatalog: async (data: { name: string; source: string; year: number; period?: string; description?: string; projectId?: string }) => {
+  createCatalog: async (data: { name: string; source: string; year: number; period?: string; region?: string; description?: string; projectId?: string }) => {
     try {
       const created = await apiFetch<PriceCatalog>('/catalog', {
         method: 'POST',

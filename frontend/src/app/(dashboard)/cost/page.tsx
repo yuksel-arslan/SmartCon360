@@ -273,6 +273,7 @@ function LibraryTab() {
   const [fSource, setFSource] = useState('bayindirlik');
   const [fYear, setFYear] = useState(String(new Date().getFullYear()));
   const [fPeriod, setFPeriod] = useState('');
+  const [fRegion, setFRegion] = useState('');
   const [fDesc, setFDesc] = useState('');
 
   // Browse state
@@ -310,11 +311,12 @@ function LibraryTab() {
       source: fSource,
       year: parseInt(fYear),
       period: fPeriod || undefined,
+      region: fRegion || undefined,
       description: fDesc || undefined,
     });
     setSaving(false);
     if (catalog) {
-      setFName(''); setFDesc(''); setFPeriod('');
+      setFName(''); setFDesc(''); setFPeriod(''); setFRegion('');
       setShowCreateForm(false);
       setSelectedCatalog(catalog.id);
     }
@@ -367,9 +369,13 @@ function LibraryTab() {
     switch (s) {
       case 'bayindirlik': return 'Min. of Public Works';
       case 'iller_bankasi': return 'Provincial Bank';
+      case 'masterformat': return 'MasterFormat (CSI)';
+      case 'uniformat': return 'UNIFORMAT II';
+      case 'uniclass': return 'Uniclass (UK)';
+      case 'rsmeans': return 'RSMeans';
       case 'custom': return 'Custom';
-      case 'supplier': return 'Supplier Quote';
-      default: return s;
+      case 'supplier': return 'Supplier';
+      default: return s.toUpperCase();
     }
   };
 
@@ -377,6 +383,10 @@ function LibraryTab() {
     switch (s) {
       case 'bayindirlik': return 'rgb(239,68,68)';
       case 'iller_bankasi': return 'rgb(59,130,246)';
+      case 'masterformat': return 'rgb(34,197,94)';
+      case 'uniformat': return 'rgb(168,85,247)';
+      case 'uniclass': return 'rgb(236,72,153)';
+      case 'rsmeans': return 'rgb(14,165,233)';
       case 'custom': return 'var(--color-accent)';
       case 'supplier': return 'rgb(245,158,11)';
       default: return 'var(--color-text-muted)';
@@ -391,7 +401,7 @@ function LibraryTab() {
         <div>
           <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Unit Price Library</h3>
           <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            Import unit prices from Ministry of Public Works, Provincial Bank, or custom Excel/CSV files
+            Turkish standards (Bayındırlık, İller Bankası) and International standards (MasterFormat, UNIFORMAT, Uniclass, RSMeans)
           </p>
         </div>
         <Btn variant={showCreateForm ? 'danger' : 'primary'} onClick={() => setShowCreateForm(!showCreateForm)}>
@@ -406,12 +416,23 @@ function LibraryTab() {
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
             <Input placeholder="Catalog name *" value={fName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFName(e.target.value)} className="col-span-2" />
             <Select value={fSource} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFSource(e.target.value)}>
-              <option value="bayindirlik">Min. of Public Works</option>
-              <option value="iller_bankasi">Provincial Bank</option>
-              <option value="custom">Custom</option>
-              <option value="supplier">Supplier Quote</option>
+              <optgroup label="Turkish Standards">
+                <option value="bayindirlik">Min. of Public Works</option>
+                <option value="iller_bankasi">Provincial Bank</option>
+              </optgroup>
+              <optgroup label="International Standards">
+                <option value="masterformat">MasterFormat (CSI)</option>
+                <option value="uniformat">UNIFORMAT II</option>
+                <option value="uniclass">Uniclass (UK)</option>
+                <option value="rsmeans">RSMeans</option>
+              </optgroup>
+              <optgroup label="Custom">
+                <option value="custom">Custom</option>
+                <option value="supplier">Supplier</option>
+              </optgroup>
             </Select>
             <Input placeholder="Year *" value={fYear} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFYear(e.target.value)} type="number" />
+            <Input placeholder="Region (optional)" value={fRegion} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFRegion(e.target.value)} />
             <Input placeholder="Period (e.g. H1)" value={fPeriod} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFPeriod(e.target.value)} />
             <Btn onClick={handleCreate} disabled={saving || !fName.trim() || !fYear}>
               {saving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Create

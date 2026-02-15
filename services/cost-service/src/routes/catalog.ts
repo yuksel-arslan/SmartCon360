@@ -1,4 +1,5 @@
-// Price Catalog Routes — Library management + Excel/CSV import
+// Price Catalog Routes — Turkish + International Standards Library management
+// Supports: Bayindirlik, Iller Bankasi, MasterFormat, UNIFORMAT, Uniclass, RSMeans
 
 import { Router } from 'express';
 import multer from 'multer';
@@ -6,6 +7,7 @@ import * as XLSX from 'xlsx';
 import { catalogService } from '../services/catalog.service';
 import { prisma } from '../utils/prisma';
 import type { CatalogItemInput } from '../services/catalog.service';
+import { autoDetectAndParse } from '../utils/international-parsers';
 
 const router = Router();
 
@@ -44,12 +46,14 @@ router.get('/', async (req, res, next) => {
 // ── Create catalog (metadata only) ──
 router.post('/', async (req, res, next) => {
   try {
-    const { name, source, year, period, currency, description, projectId } = req.body;
+    const { name, source, standard, year, period, region, currency, description, projectId } = req.body;
     const catalog = await catalogService.createCatalog({
       name,
       source,
+      standard,
       year: parseInt(year),
       period,
+      region,
       currency,
       description,
       projectId,
@@ -107,6 +111,12 @@ router.post('/:id/import', upload.single('file'), async (req, res, next) => {
 
     const catalogId = req.params.id as string;
 
+    // Get catalog to check name for standard detection
+    const catalog = await prisma.priceCatalog.findUnique({ where: { id: catalogId } });
+    if (!catalog) {
+      return res.status(404).json({ error: 'Catalog not found' });
+    }
+
     // Parse the Excel/CSV file
     const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
@@ -117,42 +127,63 @@ router.post('/:id/import', upload.single('file'), async (req, res, next) => {
       return res.status(400).json({ error: 'File is empty or has no data rows' });
     }
 
-    // Auto-detect column mapping
-    const mapping = detectColumnMapping(rows[0]);
+    // Try international standard auto-detection first
+    const intlResult = autoDetectAndParse(catalog.name, rows);
 
-    // Parse rows into catalog items
-    const items: CatalogItemInput[] = [];
-    const errors: string[] = [];
+    let items: CatalogItemInput[] = [];
+    let errors: string[] = [];
+    let detectedStandard: string | null = null;
+    let detectedMapping: any = null;
 
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      try {
-        const code = String(row[mapping.code] || '').trim();
-        const name = String(row[mapping.name] || '').trim();
-        const unit = String(row[mapping.unit] || '').trim();
-        const unitPrice = parseNumber(row[mapping.unitPrice]);
+    if (intlResult.standard && intlResult.items.length > 0) {
+      // International standard detected and parsed successfully
+      items = intlResult.items;
+      errors = intlResult.errors;
+      detectedStandard = intlResult.standard;
+      detectedMapping = intlResult.mapping;
 
-        if (!code || !name || !unit) {
-          errors.push(`Row ${i + 2}: Missing code, name, or unit`);
-          continue;
-        }
-        if (isNaN(unitPrice) || unitPrice <= 0) {
-          errors.push(`Row ${i + 2}: Invalid unit price for ${code}`);
-          continue;
-        }
-
-        items.push({
-          code,
-          name,
-          unit,
-          unitPrice,
-          category: mapping.category ? String(row[mapping.category] || '').trim() || undefined : undefined,
-          laborCost: mapping.laborCost ? parseNumber(row[mapping.laborCost]) || undefined : undefined,
-          materialCost: mapping.materialCost ? parseNumber(row[mapping.materialCost]) || undefined : undefined,
-          equipmentCost: mapping.equipmentCost ? parseNumber(row[mapping.equipmentCost]) || undefined : undefined,
+      // Update catalog with detected standard if not already set
+      if (!catalog.standard) {
+        await prisma.priceCatalog.update({
+          where: { id: catalogId },
+          data: { standard: detectedStandard },
         });
-      } catch {
-        errors.push(`Row ${i + 2}: Parse error`);
+      }
+    } else {
+      // Fall back to Turkish/manual column detection
+      const mapping = detectColumnMapping(rows[0]);
+      detectedMapping = mapping;
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        try {
+          const code = String(row[mapping.code] || '').trim();
+          const name = String(row[mapping.name] || '').trim();
+          const unit = String(row[mapping.unit] || '').trim();
+          const unitPrice = parseNumber(row[mapping.unitPrice]);
+
+          if (!code || !name || !unit) {
+            errors.push(`Row ${i + 2}: Missing code, name, or unit`);
+            continue;
+          }
+          if (isNaN(unitPrice) || unitPrice <= 0) {
+            errors.push(`Row ${i + 2}: Invalid unit price for ${code}`);
+            continue;
+          }
+
+          items.push({
+            code,
+            name,
+            unit,
+            unitPrice,
+            category: mapping.category ? String(row[mapping.category] || '').trim() || undefined : undefined,
+            laborCost: mapping.laborCost ? parseNumber(row[mapping.laborCost]) || undefined : undefined,
+            materialCost: mapping.materialCost ? parseNumber(row[mapping.materialCost]) || undefined : undefined,
+            equipmentCost: mapping.equipmentCost ? parseNumber(row[mapping.equipmentCost]) || undefined : undefined,
+          });
+        } catch {
+          errors.push(`Row ${i + 2}: Parse error`);
+        }
       }
     }
 
@@ -160,7 +191,8 @@ router.post('/:id/import', upload.single('file'), async (req, res, next) => {
       return res.status(400).json({
         error: 'No valid items found in file',
         details: errors.slice(0, 20),
-        detectedColumns: mapping,
+        detectedStandard,
+        detectedColumns: detectedMapping,
       });
     }
 
@@ -181,7 +213,8 @@ router.post('/:id/import', upload.single('file'), async (req, res, next) => {
         ...result,
         errors: errors.length,
         errorDetails: errors.slice(0, 20),
-        detectedColumns: mapping,
+        detectedStandard,
+        detectedColumns: detectedMapping,
       },
     });
   } catch (e) { next(e); }
@@ -208,6 +241,25 @@ router.post('/:id/copy-to-project', async (req, res, next) => {
     }
     const result = await catalogService.copyToWorkItems(req.params.id, itemIds, projectId);
     res.json({ data: result });
+  } catch (e) { next(e); }
+});
+
+// ── Get MasterFormat divisions in a catalog ──
+router.get('/:id/divisions', async (req, res, next) => {
+  try {
+    const catalogId = req.params.id;
+    const divisions = await prisma.priceCatalogItem.findMany({
+      where: { catalogId },
+      select: { divisionCode: true, divisionName: true },
+      distinct: ['divisionCode'],
+      orderBy: { divisionCode: 'asc' },
+    });
+
+    const filtered = divisions
+      .filter(d => d.divisionCode)
+      .map(d => ({ code: d.divisionCode, name: d.divisionName || '' }));
+
+    res.json({ data: filtered });
   } catch (e) { next(e); }
 });
 
