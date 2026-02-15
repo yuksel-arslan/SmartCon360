@@ -63,11 +63,43 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   fetchProjects: async () => {
     set({ loading: true, error: null });
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const headers: HeadersInit = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const getToken = () => typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-      const res = await fetch('/api/v1/projects?limit=100', { headers });
+      const doFetch = async (token: string | null) => {
+        const headers: HeadersInit = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        return fetch('/api/v1/projects?limit=100', { headers });
+      };
+
+      let res = await doFetch(getToken());
+
+      // Auto-retry with refreshed token on 401
+      if (res.status === 401) {
+        const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+        if (refreshToken) {
+          try {
+            const refreshRes = await fetch('/api/v1/auth/refresh', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refreshToken }),
+            });
+            if (refreshRes.ok) {
+              const refreshJson = await refreshRes.json();
+              const newToken = refreshJson.data?.accessToken;
+              if (newToken && typeof window !== 'undefined') {
+                localStorage.setItem('token', newToken);
+                if (refreshJson.data?.refreshToken) {
+                  localStorage.setItem('refreshToken', refreshJson.data.refreshToken);
+                }
+              }
+              res = await doFetch(newToken);
+            }
+          } catch {
+            // refresh failed, continue with original 401
+          }
+        }
+      }
+
       if (!res.ok) {
         throw new Error(`Failed to fetch projects (${res.status})`);
       }

@@ -28,7 +28,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebar, theme } = useUIStore();
   const { token } = useAuthStore();
-  const { projects, activeProjectId, loading, initialized, fetchProjects, setActiveProject } = useProjectStore();
+  const { projects, activeProjectId, loading, initialized, error, fetchProjects, setActiveProject } = useProjectStore();
   const sidebarLogo = theme === 'dark' ? BRAND.logoDark : BRAND.logoLight;
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
@@ -127,6 +127,15 @@ export default function Sidebar() {
               <Loader2 size={14} className="animate-spin" style={{ color: 'var(--color-text-muted)' }} />
               <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>Loading projects...</span>
             </div>
+          ) : error ? (
+            <button
+              onClick={() => fetchProjects()}
+              className="w-full rounded-xl px-3 py-3 border flex flex-col items-center justify-center gap-1.5 transition-colors hover:opacity-80"
+              style={{ background: 'var(--color-bg-input)', borderColor: 'rgba(239,68,68,0.3)', color: 'var(--color-danger)' }}
+            >
+              <span className="text-[10px]">Failed to load projects</span>
+              <span className="text-[10px] font-semibold" style={{ color: 'var(--color-accent)' }}>Tap to retry</span>
+            </button>
           ) : projects.length === 0 ? (
             <Link
               href="/projects/new"
