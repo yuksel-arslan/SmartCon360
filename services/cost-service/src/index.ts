@@ -30,16 +30,17 @@ app.get('/health', (_req, res) => {
 });
 
 // API routes (with authentication)
-app.use('/api/v1/cost/work-items', authenticate, workItemsRouter);
-app.use('/api/v1/cost/estimates', authenticate, estimatesRouter);
-app.use('/api/v1/cost/payments', authenticate, paymentsRouter);
-app.use('/api/v1/cost/evm', authenticate, evmRouter);
+// Gateway strips /api/v1 prefix, so paths arrive as /cost/...
+app.use('/cost/work-items', authenticate, workItemsRouter);
+app.use('/cost/estimates', authenticate, estimatesRouter);
+app.use('/cost/payments', authenticate, paymentsRouter);
+app.use('/cost/evm', authenticate, evmRouter);
 
 // TODO: Add remaining routes:
-// app.use('/api/v1/cost/unit-prices', authenticate, unitPricesRouter);
-// app.use('/api/v1/cost/quantity-takeoffs', authenticate, quantityTakeoffsRouter);
-// app.use('/api/v1/cost/budgets', authenticate, budgetsRouter);
-// app.use('/api/v1/cost/cost-records', authenticate, costRecordsRouter);
+// app.use('/cost/unit-prices', authenticate, unitPricesRouter);
+// app.use('/cost/quantity-takeoffs', authenticate, quantityTakeoffsRouter);
+// app.use('/cost/budgets', authenticate, budgetsRouter);
+// app.use('/cost/cost-records', authenticate, costRecordsRouter);
 
 // 404 handler
 app.use((_req, res) => {
