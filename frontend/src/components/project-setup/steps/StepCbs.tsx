@@ -13,7 +13,7 @@ interface CbsNode {
   children: CbsNode[];
 }
 
-export default function StepCbs({ projectId, state, onStateChange }: SetupStepProps) {
+export default function StepCbs({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
   const [cbsTree, setCbsTree] = useState<CbsNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -23,7 +23,9 @@ export default function StepCbs({ projectId, state, onStateChange }: SetupStepPr
   const fetchCbs = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/cbs`);
+      const res = await fetch(`/api/v1/projects/${projectId}/cbs`, {
+        headers: { ...authHeaders },
+      });
       if (res.ok) {
         const json = await res.json();
         setCbsTree(json.data || []);
@@ -49,7 +51,7 @@ export default function StepCbs({ projectId, state, onStateChange }: SetupStepPr
     try {
       const res = await fetch(`/api/v1/projects/${projectId}/cbs/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({}),
       });
 

@@ -3,7 +3,7 @@
 import type { SetupStepProps } from '../types';
 import { Check, X, FileText, FolderTree, DollarSign, Wrench, Image } from 'lucide-react';
 
-export default function StepReview({ state }: SetupStepProps) {
+export default function StepReview({ state, authHeaders }: SetupStepProps) {
   const standardLabel: Record<string, string> = {
     uniclass: 'Uniclass 2015',
     masterformat: 'MasterFormat 2018',

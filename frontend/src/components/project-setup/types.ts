@@ -27,6 +27,7 @@ export interface SetupStepProps {
   state: SetupState;
   onStateChange: (updates: Partial<SetupState>) => void;
   onComplete: () => void;
+  authHeaders: Record<string, string>;
 }
 
 export interface WbsStandard {

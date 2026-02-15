@@ -10,7 +10,7 @@ const WBS_STANDARDS: (WbsStandard & { icon: string })[] = [
   { value: 'custom', label: 'Custom', description: 'Create your own WBS structure manually without a predefined standard.', region: 'Any', icon: '✏️' },
 ];
 
-export default function StepClassification({ state, onStateChange, onComplete }: SetupStepProps) {
+export default function StepClassification({ state, onStateChange, onComplete, authHeaders }: SetupStepProps) {
   const selected = state.classificationStandard;
 
   return (
