@@ -280,13 +280,11 @@ export function UniclassBrowser({ onSelect }: UniclassBrowserProps) {
                 <div>
                   <div className="font-semibold mb-0.5" style={{ color: 'var(--color-text-muted)' }}>Category</div>
                   <span style={{ color: 'var(--color-text)' }}>{m.category}</span>
-                  <div className="mt-0.5 opacity-60">{(m.confidence * 100).toFixed(0)}% confidence</div>
                 </div>
                 <div>
-                  <div className="font-semibold mb-0.5" style={{ color: 'var(--color-text-muted)' }}>OmniClass</div>
-                  <span className="font-mono font-bold" style={{ color: 'rgb(168,85,247)' }}>
-                    {m.omniclassCode || '—'}
-                  </span>
+                  <div className="font-semibold mb-0.5" style={{ color: 'var(--color-text-muted)' }}>Description</div>
+                  <span style={{ color: 'var(--color-text)' }}>{m.description}</span>
+                  <div className="mt-0.5 opacity-60">{(m.confidence * 100).toFixed(0)}% confidence</div>
                 </div>
               </div>
             ))}
