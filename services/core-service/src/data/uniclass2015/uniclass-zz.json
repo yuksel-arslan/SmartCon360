@@ -1,0 +1,1581 @@
+{
+  "standard": "uniclass2015",
+  "table": "Zz",
+  "tableName": "CAD",
+  "version": "2015",
+  "generatedAt": "2026-02-19T14:21:01.297380+00:00",
+  "totalItems": 129,
+  "levelDistribution": {
+    "1": 11,
+    "2": 52,
+    "3": 66
+  },
+  "items": [
+    {
+      "code": "Zz_10",
+      "title": "Title sheet",
+      "level": 1,
+      "group": "10",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "Zz_10_20",
+        "Zz_10_40",
+        "Zz_10_70",
+        "Zz_10_80"
+      ]
+    },
+    {
+      "code": "Zz_10_20",
+      "title": "Drawing frame",
+      "level": 2,
+      "group": "10",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_10",
+      "children": [
+        "Zz_10_20_45",
+        "Zz_10_20_95"
+      ]
+    },
+    {
+      "code": "Zz_10_20_45",
+      "title": "Logo",
+      "level": 3,
+      "group": "10",
+      "subGroup": "20",
+      "section": "45",
+      "object": null,
+      "parentCode": "Zz_10_20",
+      "children": []
+    },
+    {
+      "code": "Zz_10_20_95",
+      "title": "Viewports",
+      "level": 3,
+      "group": "10",
+      "subGroup": "20",
+      "section": "95",
+      "object": null,
+      "parentCode": "Zz_10_20",
+      "children": []
+    },
+    {
+      "code": "Zz_10_40",
+      "title": "Hold clouds and notation",
+      "level": 2,
+      "group": "10",
+      "subGroup": "40",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_10",
+      "children": []
+    },
+    {
+      "code": "Zz_10_70",
+      "title": "Revisions",
+      "level": 2,
+      "group": "10",
+      "subGroup": "70",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_10",
+      "children": [
+        "Zz_10_70_05",
+        "Zz_10_70_10",
+        "Zz_10_70_20"
+      ]
+    },
+    {
+      "code": "Zz_10_70_05",
+      "title": "Annotation",
+      "level": 3,
+      "group": "10",
+      "subGroup": "70",
+      "section": "05",
+      "object": null,
+      "parentCode": "Zz_10_70",
+      "children": []
+    },
+    {
+      "code": "Zz_10_70_10",
+      "title": "Blocks and cells",
+      "level": 3,
+      "group": "10",
+      "subGroup": "70",
+      "section": "10",
+      "object": null,
+      "parentCode": "Zz_10_70",
+      "children": []
+    },
+    {
+      "code": "Zz_10_70_20",
+      "title": "Clouds and notations",
+      "level": 3,
+      "group": "10",
+      "subGroup": "70",
+      "section": "20",
+      "object": null,
+      "parentCode": "Zz_10_70",
+      "children": []
+    },
+    {
+      "code": "Zz_10_80",
+      "title": "Status stamps",
+      "level": 2,
+      "group": "10",
+      "subGroup": "80",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_10",
+      "children": []
+    },
+    {
+      "code": "Zz_20",
+      "title": "Textual content",
+      "level": 1,
+      "group": "20",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "Zz_20_10",
+        "Zz_20_20",
+        "Zz_20_30",
+        "Zz_20_40",
+        "Zz_20_70",
+        "Zz_20_80",
+        "Zz_20_90"
+      ]
+    },
+    {
+      "code": "Zz_20_10",
+      "title": "Annotation",
+      "level": 2,
+      "group": "20",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_20",
+      "children": [
+        "Zz_20_10_40",
+        "Zz_20_10_45",
+        "Zz_20_10_50",
+        "Zz_20_10_55",
+        "Zz_20_10_70",
+        "Zz_20_10_85",
+        "Zz_20_10_90"
+      ]
+    },
+    {
+      "code": "Zz_20_10_40",
+      "title": "Keynotes",
+      "level": 3,
+      "group": "20",
+      "subGroup": "10",
+      "section": "40",
+      "object": null,
+      "parentCode": "Zz_20_10",
+      "children": []
+    },
+    {
+      "code": "Zz_20_10_45",
+      "title": "Labels",
+      "level": 3,
+      "group": "20",
+      "subGroup": "10",
+      "section": "45",
+      "object": null,
+      "parentCode": "Zz_20_10",
+      "children": []
+    },
+    {
+      "code": "Zz_20_10_50",
+      "title": "Leaders",
+      "level": 3,
+      "group": "20",
+      "subGroup": "10",
+      "section": "50",
+      "object": null,
+      "parentCode": "Zz_20_10",
+      "children": []
+    },
+    {
+      "code": "Zz_20_10_55",
+      "title": "Notes",
+      "level": 3,
+      "group": "20",
+      "subGroup": "10",
+      "section": "55",
+      "object": null,
+      "parentCode": "Zz_20_10",
+      "children": []
+    },
+    {
+      "code": "Zz_20_10_70",
+      "title": "Reference",
+      "level": 3,
+      "group": "20",
+      "subGroup": "10",
+      "section": "70",
+      "object": null,
+      "parentCode": "Zz_20_10",
+      "children": []
+    },
+    {
+      "code": "Zz_20_10_85",
+      "title": "Tags",
+      "level": 3,
+      "group": "20",
+      "subGroup": "10",
+      "section": "85",
+      "object": null,
+      "parentCode": "Zz_20_10",
+      "children": []
+    },
+    {
+      "code": "Zz_20_10_90",
+      "title": "Text",
+      "level": 3,
+      "group": "20",
+      "subGroup": "10",
+      "section": "90",
+      "object": null,
+      "parentCode": "Zz_20_10",
+      "children": []
+    },
+    {
+      "code": "Zz_20_20",
+      "title": "Dimensions",
+      "level": 2,
+      "group": "20",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_20",
+      "children": []
+    },
+    {
+      "code": "Zz_20_30",
+      "title": "General masking",
+      "level": 2,
+      "group": "20",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_20",
+      "children": [
+        "Zz_20_30_50",
+        "Zz_20_30_95"
+      ]
+    },
+    {
+      "code": "Zz_20_30_50",
+      "title": "Masks",
+      "level": 3,
+      "group": "20",
+      "subGroup": "30",
+      "section": "50",
+      "object": null,
+      "parentCode": "Zz_20_30",
+      "children": []
+    },
+    {
+      "code": "Zz_20_30_95",
+      "title": "Wipeouts",
+      "level": 3,
+      "group": "20",
+      "subGroup": "30",
+      "section": "95",
+      "object": null,
+      "parentCode": "Zz_20_30",
+      "children": []
+    },
+    {
+      "code": "Zz_20_40",
+      "title": "Hatching",
+      "level": 2,
+      "group": "20",
+      "subGroup": "40",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_20",
+      "children": [
+        "Zz_20_40_05",
+        "Zz_20_40_35",
+        "Zz_20_40_60",
+        "Zz_20_40_80"
+      ]
+    },
+    {
+      "code": "Zz_20_40_05",
+      "title": "Area fill",
+      "level": 3,
+      "group": "20",
+      "subGroup": "40",
+      "section": "05",
+      "object": null,
+      "parentCode": "Zz_20_40",
+      "children": []
+    },
+    {
+      "code": "Zz_20_40_35",
+      "title": "Hatch boundaries",
+      "level": 3,
+      "group": "20",
+      "subGroup": "40",
+      "section": "35",
+      "object": null,
+      "parentCode": "Zz_20_40",
+      "children": []
+    },
+    {
+      "code": "Zz_20_40_60",
+      "title": "Pattern",
+      "level": 3,
+      "group": "20",
+      "subGroup": "40",
+      "section": "60",
+      "object": null,
+      "parentCode": "Zz_20_40",
+      "children": []
+    },
+    {
+      "code": "Zz_20_40_80",
+      "title": "Solid fill",
+      "level": 3,
+      "group": "20",
+      "subGroup": "40",
+      "section": "80",
+      "object": null,
+      "parentCode": "Zz_20_40",
+      "children": []
+    },
+    {
+      "code": "Zz_20_70",
+      "title": "Redlining",
+      "level": 2,
+      "group": "20",
+      "subGroup": "70",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_20",
+      "children": [
+        "Zz_20_70_20"
+      ]
+    },
+    {
+      "code": "Zz_20_70_20",
+      "title": "Comments",
+      "level": 3,
+      "group": "20",
+      "subGroup": "70",
+      "section": "20",
+      "object": null,
+      "parentCode": "Zz_20_70",
+      "children": []
+    },
+    {
+      "code": "Zz_20_80",
+      "title": "Symbols",
+      "level": 2,
+      "group": "20",
+      "subGroup": "80",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_20",
+      "children": [
+        "Zz_20_80_10",
+        "Zz_20_80_15",
+        "Zz_20_80_40",
+        "Zz_20_80_50",
+        "Zz_20_80_55"
+      ]
+    },
+    {
+      "code": "Zz_20_80_10",
+      "title": "Barscales",
+      "level": 3,
+      "group": "20",
+      "subGroup": "80",
+      "section": "10",
+      "object": null,
+      "parentCode": "Zz_20_80",
+      "children": []
+    },
+    {
+      "code": "Zz_20_80_15",
+      "title": "Cross references",
+      "level": 3,
+      "group": "20",
+      "subGroup": "80",
+      "section": "15",
+      "object": null,
+      "parentCode": "Zz_20_80",
+      "children": []
+    },
+    {
+      "code": "Zz_20_80_40",
+      "title": "Key plan",
+      "level": 3,
+      "group": "20",
+      "subGroup": "80",
+      "section": "40",
+      "object": null,
+      "parentCode": "Zz_20_80",
+      "children": []
+    },
+    {
+      "code": "Zz_20_80_50",
+      "title": "Legends",
+      "level": 3,
+      "group": "20",
+      "subGroup": "80",
+      "section": "50",
+      "object": null,
+      "parentCode": "Zz_20_80",
+      "children": []
+    },
+    {
+      "code": "Zz_20_80_55",
+      "title": "North point",
+      "level": 3,
+      "group": "20",
+      "subGroup": "80",
+      "section": "55",
+      "object": null,
+      "parentCode": "Zz_20_80",
+      "children": []
+    },
+    {
+      "code": "Zz_20_90",
+      "title": "Title annotation",
+      "level": 2,
+      "group": "20",
+      "subGroup": "90",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_20",
+      "children": []
+    },
+    {
+      "code": "Zz_30",
+      "title": "Insertions",
+      "level": 1,
+      "group": "30",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "Zz_30_20",
+        "Zz_30_30",
+        "Zz_30_40",
+        "Zz_30_60",
+        "Zz_30_90"
+      ]
+    },
+    {
+      "code": "Zz_30_20",
+      "title": "Blocks and cells",
+      "level": 2,
+      "group": "30",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_30",
+      "children": []
+    },
+    {
+      "code": "Zz_30_30",
+      "title": "External references",
+      "level": 2,
+      "group": "30",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_30",
+      "children": []
+    },
+    {
+      "code": "Zz_30_40",
+      "title": "Images",
+      "level": 2,
+      "group": "30",
+      "subGroup": "40",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_30",
+      "children": []
+    },
+    {
+      "code": "Zz_30_60",
+      "title": "Objects",
+      "level": 2,
+      "group": "30",
+      "subGroup": "60",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_30",
+      "children": []
+    },
+    {
+      "code": "Zz_30_90",
+      "title": "Tables and schedules",
+      "level": 2,
+      "group": "30",
+      "subGroup": "90",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_30",
+      "children": []
+    },
+    {
+      "code": "Zz_35",
+      "title": "Setting out",
+      "level": 1,
+      "group": "35",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "Zz_35_10",
+        "Zz_35_20",
+        "Zz_35_30",
+        "Zz_35_40",
+        "Zz_35_60",
+        "Zz_35_80"
+      ]
+    },
+    {
+      "code": "Zz_35_10",
+      "title": "Alignments and super elevations",
+      "level": 2,
+      "group": "35",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_35",
+      "children": [
+        "Zz_35_10_40",
+        "Zz_35_10_80",
+        "Zz_35_10_90"
+      ]
+    },
+    {
+      "code": "Zz_35_10_40",
+      "title": "Horizontal alignment",
+      "level": 3,
+      "group": "35",
+      "subGroup": "10",
+      "section": "40",
+      "object": null,
+      "parentCode": "Zz_35_10",
+      "children": []
+    },
+    {
+      "code": "Zz_35_10_80",
+      "title": "Super elevation",
+      "level": 3,
+      "group": "35",
+      "subGroup": "10",
+      "section": "80",
+      "object": null,
+      "parentCode": "Zz_35_10",
+      "children": []
+    },
+    {
+      "code": "Zz_35_10_90",
+      "title": "Vertical alignment",
+      "level": 3,
+      "group": "35",
+      "subGroup": "10",
+      "section": "90",
+      "object": null,
+      "parentCode": "Zz_35_10",
+      "children": []
+    },
+    {
+      "code": "Zz_35_20",
+      "title": "Centrelines",
+      "level": 2,
+      "group": "35",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_35",
+      "children": []
+    },
+    {
+      "code": "Zz_35_30",
+      "title": "Geospatial control points",
+      "level": 2,
+      "group": "35",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_35",
+      "children": []
+    },
+    {
+      "code": "Zz_35_40",
+      "title": "Gridlines",
+      "level": 2,
+      "group": "35",
+      "subGroup": "40",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_35",
+      "children": [
+        "Zz_35_40_20",
+        "Zz_35_40_80"
+      ]
+    },
+    {
+      "code": "Zz_35_40_20",
+      "title": "Ceiling grid",
+      "level": 3,
+      "group": "35",
+      "subGroup": "40",
+      "section": "20",
+      "object": null,
+      "parentCode": "Zz_35_40",
+      "children": []
+    },
+    {
+      "code": "Zz_35_40_80",
+      "title": "Structural grid",
+      "level": 3,
+      "group": "35",
+      "subGroup": "40",
+      "section": "80",
+      "object": null,
+      "parentCode": "Zz_35_40",
+      "children": []
+    },
+    {
+      "code": "Zz_35_60",
+      "title": "Points",
+      "level": 2,
+      "group": "35",
+      "subGroup": "60",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_35",
+      "children": []
+    },
+    {
+      "code": "Zz_35_80",
+      "title": "Survey control points",
+      "level": 2,
+      "group": "35",
+      "subGroup": "80",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_35",
+      "children": [
+        "Zz_35_80_55",
+        "Zz_35_80_60",
+        "Zz_35_80_80",
+        "Zz_35_80_85",
+        "Zz_35_80_90"
+      ]
+    },
+    {
+      "code": "Zz_35_80_55",
+      "title": "Bench mark",
+      "level": 3,
+      "group": "35",
+      "subGroup": "80",
+      "section": "55",
+      "object": null,
+      "parentCode": "Zz_35_80",
+      "children": []
+    },
+    {
+      "code": "Zz_35_80_60",
+      "title": "Trigonometrical station",
+      "level": 3,
+      "group": "35",
+      "subGroup": "80",
+      "section": "60",
+      "object": null,
+      "parentCode": "Zz_35_80",
+      "children": []
+    },
+    {
+      "code": "Zz_35_80_80",
+      "title": "Site bench mark",
+      "level": 3,
+      "group": "35",
+      "subGroup": "80",
+      "section": "80",
+      "object": null,
+      "parentCode": "Zz_35_80",
+      "children": []
+    },
+    {
+      "code": "Zz_35_80_85",
+      "title": "Site survey control station",
+      "level": 3,
+      "group": "35",
+      "subGroup": "80",
+      "section": "85",
+      "object": null,
+      "parentCode": "Zz_35_80",
+      "children": []
+    },
+    {
+      "code": "Zz_35_80_90",
+      "title": "Temporary bench mark",
+      "level": 3,
+      "group": "35",
+      "subGroup": "80",
+      "section": "90",
+      "object": null,
+      "parentCode": "Zz_35_80",
+      "children": []
+    },
+    {
+      "code": "Zz_40",
+      "title": "Topography",
+      "level": 1,
+      "group": "40",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "Zz_40_15",
+        "Zz_40_20",
+        "Zz_40_50"
+      ]
+    },
+    {
+      "code": "Zz_40_15",
+      "title": "Contours",
+      "level": 2,
+      "group": "40",
+      "subGroup": "15",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_40",
+      "children": [
+        "Zz_40_15_50",
+        "Zz_40_15_55"
+      ]
+    },
+    {
+      "code": "Zz_40_15_50",
+      "title": "Major contours",
+      "level": 3,
+      "group": "40",
+      "subGroup": "15",
+      "section": "50",
+      "object": null,
+      "parentCode": "Zz_40_15",
+      "children": []
+    },
+    {
+      "code": "Zz_40_15_55",
+      "title": "Minor contours",
+      "level": 3,
+      "group": "40",
+      "subGroup": "15",
+      "section": "55",
+      "object": null,
+      "parentCode": "Zz_40_15",
+      "children": []
+    },
+    {
+      "code": "Zz_40_20",
+      "title": "Cuttings and embankment indicators",
+      "level": 2,
+      "group": "40",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_40",
+      "children": []
+    },
+    {
+      "code": "Zz_40_50",
+      "title": "Level indicators",
+      "level": 2,
+      "group": "40",
+      "subGroup": "50",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_40",
+      "children": []
+    },
+    {
+      "code": "Zz_50",
+      "title": "Zones and boundaries",
+      "level": 1,
+      "group": "50",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "Zz_50_10",
+        "Zz_50_50",
+        "Zz_50_60",
+        "Zz_50_90",
+        "Zz_50_95"
+      ]
+    },
+    {
+      "code": "Zz_50_10",
+      "title": "Boundaries",
+      "level": 2,
+      "group": "50",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_50",
+      "children": [
+        "Zz_50_10_10",
+        "Zz_50_10_70"
+      ]
+    },
+    {
+      "code": "Zz_50_10_10",
+      "title": "Blue line boundary",
+      "level": 3,
+      "group": "50",
+      "subGroup": "10",
+      "section": "10",
+      "object": null,
+      "parentCode": "Zz_50_10",
+      "children": []
+    },
+    {
+      "code": "Zz_50_10_70",
+      "title": "Red line boundary",
+      "level": 3,
+      "group": "50",
+      "subGroup": "10",
+      "section": "70",
+      "object": null,
+      "parentCode": "Zz_50_10",
+      "children": []
+    },
+    {
+      "code": "Zz_50_50",
+      "title": "Lots",
+      "level": 2,
+      "group": "50",
+      "subGroup": "50",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_50",
+      "children": []
+    },
+    {
+      "code": "Zz_50_60",
+      "title": "Parcels",
+      "level": 2,
+      "group": "50",
+      "subGroup": "60",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_50",
+      "children": []
+    },
+    {
+      "code": "Zz_50_90",
+      "title": "Volumes",
+      "level": 2,
+      "group": "50",
+      "subGroup": "90",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_50",
+      "children": []
+    },
+    {
+      "code": "Zz_50_95",
+      "title": "Zones",
+      "level": 2,
+      "group": "50",
+      "subGroup": "95",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_50",
+      "children": []
+    },
+    {
+      "code": "Zz_60",
+      "title": "Drawing symbols",
+      "level": 1,
+      "group": "60",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "Zz_60_20",
+        "Zz_60_30",
+        "Zz_60_40",
+        "Zz_60_45",
+        "Zz_60_50",
+        "Zz_60_55"
+      ]
+    },
+    {
+      "code": "Zz_60_20",
+      "title": "Detail call ups",
+      "level": 2,
+      "group": "60",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_60",
+      "children": []
+    },
+    {
+      "code": "Zz_60_30",
+      "title": "Fall indicators",
+      "level": 2,
+      "group": "60",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_60",
+      "children": []
+    },
+    {
+      "code": "Zz_60_40",
+      "title": "Joint lines",
+      "level": 2,
+      "group": "60",
+      "subGroup": "40",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_60",
+      "children": [
+        "Zz_60_40_15",
+        "Zz_60_40_20",
+        "Zz_60_40_30"
+      ]
+    },
+    {
+      "code": "Zz_60_40_15",
+      "title": "Construction joints",
+      "level": 3,
+      "group": "60",
+      "subGroup": "40",
+      "section": "15",
+      "object": null,
+      "parentCode": "Zz_60_40",
+      "children": []
+    },
+    {
+      "code": "Zz_60_40_20",
+      "title": "Contraction joints",
+      "level": 3,
+      "group": "60",
+      "subGroup": "40",
+      "section": "20",
+      "object": null,
+      "parentCode": "Zz_60_40",
+      "children": []
+    },
+    {
+      "code": "Zz_60_40_30",
+      "title": "Expansion joints",
+      "level": 3,
+      "group": "60",
+      "subGroup": "40",
+      "section": "30",
+      "object": null,
+      "parentCode": "Zz_60_40",
+      "children": []
+    },
+    {
+      "code": "Zz_60_45",
+      "title": "Levels",
+      "level": 2,
+      "group": "60",
+      "subGroup": "45",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_60",
+      "children": [
+        "Zz_60_45_20",
+        "Zz_60_45_60",
+        "Zz_60_45_70"
+      ]
+    },
+    {
+      "code": "Zz_60_45_20",
+      "title": "Datum",
+      "level": 3,
+      "group": "60",
+      "subGroup": "45",
+      "section": "20",
+      "object": null,
+      "parentCode": "Zz_60_45",
+      "children": []
+    },
+    {
+      "code": "Zz_60_45_60",
+      "title": "Original ground level",
+      "level": 3,
+      "group": "60",
+      "subGroup": "45",
+      "section": "60",
+      "object": null,
+      "parentCode": "Zz_60_45",
+      "children": []
+    },
+    {
+      "code": "Zz_60_45_70",
+      "title": "Regrade ground level",
+      "level": 3,
+      "group": "60",
+      "subGroup": "45",
+      "section": "70",
+      "object": null,
+      "parentCode": "Zz_60_45",
+      "children": []
+    },
+    {
+      "code": "Zz_60_50",
+      "title": "Markers",
+      "level": 2,
+      "group": "60",
+      "subGroup": "50",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_60",
+      "children": [
+        "Zz_60_50_10",
+        "Zz_60_50_20",
+        "Zz_60_50_30",
+        "Zz_60_50_60",
+        "Zz_60_50_80",
+        "Zz_60_50_85",
+        "Zz_60_50_90"
+      ]
+    },
+    {
+      "code": "Zz_60_50_10",
+      "title": "Break marks",
+      "level": 3,
+      "group": "60",
+      "subGroup": "50",
+      "section": "10",
+      "object": null,
+      "parentCode": "Zz_60_50",
+      "children": []
+    },
+    {
+      "code": "Zz_60_50_20",
+      "title": "Callout marks",
+      "level": 3,
+      "group": "60",
+      "subGroup": "50",
+      "section": "20",
+      "object": null,
+      "parentCode": "Zz_60_50",
+      "children": []
+    },
+    {
+      "code": "Zz_60_50_30",
+      "title": "Elevation marks",
+      "level": 3,
+      "group": "60",
+      "subGroup": "50",
+      "section": "30",
+      "object": null,
+      "parentCode": "Zz_60_50",
+      "children": []
+    },
+    {
+      "code": "Zz_60_50_60",
+      "title": "Plan",
+      "level": 3,
+      "group": "60",
+      "subGroup": "50",
+      "section": "60",
+      "object": null,
+      "parentCode": "Zz_60_50",
+      "children": []
+    },
+    {
+      "code": "Zz_60_50_80",
+      "title": "Section marks",
+      "level": 3,
+      "group": "60",
+      "subGroup": "50",
+      "section": "80",
+      "object": null,
+      "parentCode": "Zz_60_50",
+      "children": []
+    },
+    {
+      "code": "Zz_60_50_85",
+      "title": "Span direction markers",
+      "level": 3,
+      "group": "60",
+      "subGroup": "50",
+      "section": "85",
+      "object": null,
+      "parentCode": "Zz_60_50",
+      "children": []
+    },
+    {
+      "code": "Zz_60_50_90",
+      "title": "Void and opening markers",
+      "level": 3,
+      "group": "60",
+      "subGroup": "50",
+      "section": "90",
+      "object": null,
+      "parentCode": "Zz_60_50",
+      "children": []
+    },
+    {
+      "code": "Zz_60_55",
+      "title": "Match lines",
+      "level": 2,
+      "group": "60",
+      "subGroup": "55",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_60",
+      "children": []
+    },
+    {
+      "code": "Zz_70",
+      "title": "Views",
+      "level": 1,
+      "group": "70",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "Zz_70_05",
+        "Zz_70_20",
+        "Zz_70_30",
+        "Zz_70_60",
+        "Zz_70_80",
+        "Zz_70_90"
+      ]
+    },
+    {
+      "code": "Zz_70_05",
+      "title": "3D views",
+      "level": 2,
+      "group": "70",
+      "subGroup": "05",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_70",
+      "children": []
+    },
+    {
+      "code": "Zz_70_20",
+      "title": "Details",
+      "level": 2,
+      "group": "70",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_70",
+      "children": []
+    },
+    {
+      "code": "Zz_70_30",
+      "title": "Elevations",
+      "level": 2,
+      "group": "70",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_70",
+      "children": []
+    },
+    {
+      "code": "Zz_70_60",
+      "title": "Plans",
+      "level": 2,
+      "group": "70",
+      "subGroup": "60",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_70",
+      "children": []
+    },
+    {
+      "code": "Zz_70_80",
+      "title": "Sections",
+      "level": 2,
+      "group": "70",
+      "subGroup": "80",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_70",
+      "children": []
+    },
+    {
+      "code": "Zz_70_90",
+      "title": "Visualizations",
+      "level": 2,
+      "group": "70",
+      "subGroup": "90",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_70",
+      "children": []
+    },
+    {
+      "code": "Zz_80",
+      "title": "Presentation",
+      "level": 1,
+      "group": "80",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "Zz_80_30",
+        "Zz_80_45",
+        "Zz_80_60",
+        "Zz_80_85",
+        "Zz_80_90"
+      ]
+    },
+    {
+      "code": "Zz_80_30",
+      "title": "Entourage",
+      "level": 2,
+      "group": "80",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_80",
+      "children": []
+    },
+    {
+      "code": "Zz_80_45",
+      "title": "Lines",
+      "level": 2,
+      "group": "80",
+      "subGroup": "45",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_80",
+      "children": [
+        "Zz_80_45_10",
+        "Zz_80_45_20",
+        "Zz_80_45_30",
+        "Zz_80_45_40",
+        "Zz_80_45_50",
+        "Zz_80_45_60",
+        "Zz_80_45_70",
+        "Zz_80_45_80",
+        "Zz_80_45_90"
+      ]
+    },
+    {
+      "code": "Zz_80_45_10",
+      "title": "Fine",
+      "level": 3,
+      "group": "80",
+      "subGroup": "45",
+      "section": "10",
+      "object": null,
+      "parentCode": "Zz_80_45",
+      "children": []
+    },
+    {
+      "code": "Zz_80_45_20",
+      "title": "Thin",
+      "level": 3,
+      "group": "80",
+      "subGroup": "45",
+      "section": "20",
+      "object": null,
+      "parentCode": "Zz_80_45",
+      "children": []
+    },
+    {
+      "code": "Zz_80_45_30",
+      "title": "Light",
+      "level": 3,
+      "group": "80",
+      "subGroup": "45",
+      "section": "30",
+      "object": null,
+      "parentCode": "Zz_80_45",
+      "children": []
+    },
+    {
+      "code": "Zz_80_45_40",
+      "title": "Medium",
+      "level": 3,
+      "group": "80",
+      "subGroup": "45",
+      "section": "40",
+      "object": null,
+      "parentCode": "Zz_80_45",
+      "children": []
+    },
+    {
+      "code": "Zz_80_45_50",
+      "title": "Heavy",
+      "level": 3,
+      "group": "80",
+      "subGroup": "45",
+      "section": "50",
+      "object": null,
+      "parentCode": "Zz_80_45",
+      "children": []
+    },
+    {
+      "code": "Zz_80_45_60",
+      "title": "Wide",
+      "level": 3,
+      "group": "80",
+      "subGroup": "45",
+      "section": "60",
+      "object": null,
+      "parentCode": "Zz_80_45",
+      "children": []
+    },
+    {
+      "code": "Zz_80_45_70",
+      "title": "Extra-wide",
+      "level": 3,
+      "group": "80",
+      "subGroup": "45",
+      "section": "70",
+      "object": null,
+      "parentCode": "Zz_80_45",
+      "children": []
+    },
+    {
+      "code": "Zz_80_45_80",
+      "title": "XX wide",
+      "level": 3,
+      "group": "80",
+      "subGroup": "45",
+      "section": "80",
+      "object": null,
+      "parentCode": "Zz_80_45",
+      "children": []
+    },
+    {
+      "code": "Zz_80_45_90",
+      "title": "XXX wide",
+      "level": 3,
+      "group": "80",
+      "subGroup": "45",
+      "section": "90",
+      "object": null,
+      "parentCode": "Zz_80_45",
+      "children": []
+    },
+    {
+      "code": "Zz_80_60",
+      "title": "People",
+      "level": 2,
+      "group": "80",
+      "subGroup": "60",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_80",
+      "children": []
+    },
+    {
+      "code": "Zz_80_85",
+      "title": "Trees and planting",
+      "level": 2,
+      "group": "80",
+      "subGroup": "85",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_80",
+      "children": []
+    },
+    {
+      "code": "Zz_80_90",
+      "title": "Vehicles",
+      "level": 2,
+      "group": "80",
+      "subGroup": "90",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_80",
+      "children": []
+    },
+    {
+      "code": "Zz_85",
+      "title": "Generic 3D",
+      "level": 1,
+      "group": "85",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "Zz_85_05",
+        "Zz_85_20"
+      ]
+    },
+    {
+      "code": "Zz_85_05",
+      "title": "3D solids",
+      "level": 2,
+      "group": "85",
+      "subGroup": "05",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_85",
+      "children": [
+        "Zz_85_05_60",
+        "Zz_85_05_80",
+        "Zz_85_05_85"
+      ]
+    },
+    {
+      "code": "Zz_85_05_60",
+      "title": "Paths",
+      "level": 3,
+      "group": "85",
+      "subGroup": "05",
+      "section": "60",
+      "object": null,
+      "parentCode": "Zz_85_05",
+      "children": []
+    },
+    {
+      "code": "Zz_85_05_80",
+      "title": "Solids",
+      "level": 3,
+      "group": "85",
+      "subGroup": "05",
+      "section": "80",
+      "object": null,
+      "parentCode": "Zz_85_05",
+      "children": []
+    },
+    {
+      "code": "Zz_85_05_85",
+      "title": "Solid voids",
+      "level": 3,
+      "group": "85",
+      "subGroup": "05",
+      "section": "85",
+      "object": null,
+      "parentCode": "Zz_85_05",
+      "children": []
+    },
+    {
+      "code": "Zz_85_20",
+      "title": "Concept",
+      "level": 2,
+      "group": "85",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_85",
+      "children": [
+        "Zz_85_20_20",
+        "Zz_85_20_50",
+        "Zz_85_20_55"
+      ]
+    },
+    {
+      "code": "Zz_85_20_20",
+      "title": "Concept massing",
+      "level": 3,
+      "group": "85",
+      "subGroup": "20",
+      "section": "20",
+      "object": null,
+      "parentCode": "Zz_85_20",
+      "children": []
+    },
+    {
+      "code": "Zz_85_20_50",
+      "title": "Mass group",
+      "level": 3,
+      "group": "85",
+      "subGroup": "20",
+      "section": "50",
+      "object": null,
+      "parentCode": "Zz_85_20",
+      "children": []
+    },
+    {
+      "code": "Zz_85_20_55",
+      "title": "Mass slice",
+      "level": 3,
+      "group": "85",
+      "subGroup": "20",
+      "section": "55",
+      "object": null,
+      "parentCode": "Zz_85_20",
+      "children": []
+    },
+    {
+      "code": "Zz_90",
+      "title": "Readme and plotting lines",
+      "level": 1,
+      "group": "90",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "Zz_90_20",
+        "Zz_90_30",
+        "Zz_90_70"
+      ]
+    },
+    {
+      "code": "Zz_90_20",
+      "title": "Construction lines",
+      "level": 2,
+      "group": "90",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_90",
+      "children": []
+    },
+    {
+      "code": "Zz_90_30",
+      "title": "External reference information",
+      "level": 2,
+      "group": "90",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_90",
+      "children": []
+    },
+    {
+      "code": "Zz_90_70",
+      "title": "Readme",
+      "level": 2,
+      "group": "90",
+      "subGroup": "70",
+      "section": null,
+      "object": null,
+      "parentCode": "Zz_90",
+      "children": []
+    }
+  ]
+}

@@ -1,0 +1,1307 @@
+{
+  "standard": "uniclass2015",
+  "table": "EF",
+  "tableName": "Elements/Functions",
+  "version": "2015",
+  "generatedAt": "2026-02-19T14:21:01.054078+00:00",
+  "totalItems": 107,
+  "levelDistribution": {
+    "1": 15,
+    "2": 68,
+    "3": 24
+  },
+  "items": [
+    {
+      "code": "EF_15",
+      "title": "Earthworks and remediation",
+      "level": 1,
+      "group": "15",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_15_10",
+        "EF_15_30"
+      ]
+    },
+    {
+      "code": "EF_15_10",
+      "title": "Groundworks and earthworks",
+      "level": 2,
+      "group": "15",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_15",
+      "children": []
+    },
+    {
+      "code": "EF_15_30",
+      "title": "Remediation, repair and renovation",
+      "level": 2,
+      "group": "15",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_15",
+      "children": []
+    },
+    {
+      "code": "EF_20",
+      "title": "Structural elements",
+      "level": 1,
+      "group": "20",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_20_05",
+        "EF_20_10",
+        "EF_20_50"
+      ]
+    },
+    {
+      "code": "EF_20_05",
+      "title": "Substructure",
+      "level": 2,
+      "group": "20",
+      "subGroup": "05",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_20",
+      "children": [
+        "EF_20_05_30"
+      ]
+    },
+    {
+      "code": "EF_20_05_30",
+      "title": "Foundations",
+      "level": 3,
+      "group": "20",
+      "subGroup": "05",
+      "section": "30",
+      "object": null,
+      "parentCode": "EF_20_05",
+      "children": []
+    },
+    {
+      "code": "EF_20_10",
+      "title": "Superstructure",
+      "level": 2,
+      "group": "20",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_20",
+      "children": [
+        "EF_20_10_15",
+        "EF_20_10_30",
+        "EF_20_10_50",
+        "EF_20_10_75",
+        "EF_20_10_80"
+      ]
+    },
+    {
+      "code": "EF_20_10_15",
+      "title": "Composite structures",
+      "level": 3,
+      "group": "20",
+      "subGroup": "10",
+      "section": "15",
+      "object": null,
+      "parentCode": "EF_20_10",
+      "children": []
+    },
+    {
+      "code": "EF_20_10_30",
+      "title": "Framed structures",
+      "level": 3,
+      "group": "20",
+      "subGroup": "10",
+      "section": "30",
+      "object": null,
+      "parentCode": "EF_20_10",
+      "children": []
+    },
+    {
+      "code": "EF_20_10_50",
+      "title": "Membrane structures",
+      "level": 3,
+      "group": "20",
+      "subGroup": "10",
+      "section": "50",
+      "object": null,
+      "parentCode": "EF_20_10",
+      "children": []
+    },
+    {
+      "code": "EF_20_10_75",
+      "title": "Shell structures",
+      "level": 3,
+      "group": "20",
+      "subGroup": "10",
+      "section": "75",
+      "object": null,
+      "parentCode": "EF_20_10",
+      "children": []
+    },
+    {
+      "code": "EF_20_10_80",
+      "title": "Solid structures",
+      "level": 3,
+      "group": "20",
+      "subGroup": "10",
+      "section": "80",
+      "object": null,
+      "parentCode": "EF_20_10",
+      "children": []
+    },
+    {
+      "code": "EF_20_50",
+      "title": "Bridge structures",
+      "level": 2,
+      "group": "20",
+      "subGroup": "50",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_20",
+      "children": [
+        "EF_20_50_01",
+        "EF_20_50_07",
+        "EF_20_50_10",
+        "EF_20_50_64",
+        "EF_20_50_82"
+      ]
+    },
+    {
+      "code": "EF_20_50_01",
+      "title": "Abutments",
+      "level": 3,
+      "group": "20",
+      "subGroup": "50",
+      "section": "01",
+      "object": null,
+      "parentCode": "EF_20_50",
+      "children": []
+    },
+    {
+      "code": "EF_20_50_07",
+      "title": "Bearings",
+      "level": 3,
+      "group": "20",
+      "subGroup": "50",
+      "section": "07",
+      "object": null,
+      "parentCode": "EF_20_50",
+      "children": []
+    },
+    {
+      "code": "EF_20_50_10",
+      "title": "Bridge decks",
+      "level": 3,
+      "group": "20",
+      "subGroup": "50",
+      "section": "10",
+      "object": null,
+      "parentCode": "EF_20_50",
+      "children": []
+    },
+    {
+      "code": "EF_20_50_64",
+      "title": "Piers",
+      "level": 3,
+      "group": "20",
+      "subGroup": "50",
+      "section": "64",
+      "object": null,
+      "parentCode": "EF_20_50",
+      "children": []
+    },
+    {
+      "code": "EF_20_50_82",
+      "title": "Span",
+      "level": 3,
+      "group": "20",
+      "subGroup": "50",
+      "section": "82",
+      "object": null,
+      "parentCode": "EF_20_50",
+      "children": []
+    },
+    {
+      "code": "EF_25",
+      "title": "Wall and barrier elements",
+      "level": 1,
+      "group": "25",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_25_10",
+        "EF_25_30",
+        "EF_25_55"
+      ]
+    },
+    {
+      "code": "EF_25_10",
+      "title": "Walls",
+      "level": 2,
+      "group": "25",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_25",
+      "children": []
+    },
+    {
+      "code": "EF_25_30",
+      "title": "Doors and windows",
+      "level": 2,
+      "group": "25",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_25",
+      "children": []
+    },
+    {
+      "code": "EF_25_55",
+      "title": "Barriers",
+      "level": 2,
+      "group": "25",
+      "subGroup": "55",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_25",
+      "children": []
+    },
+    {
+      "code": "EF_30",
+      "title": "Roofs, floor and paving elements",
+      "level": 1,
+      "group": "30",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_30_10",
+        "EF_30_20",
+        "EF_30_25",
+        "EF_30_30",
+        "EF_30_60"
+      ]
+    },
+    {
+      "code": "EF_30_10",
+      "title": "Roofs",
+      "level": 2,
+      "group": "30",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_30",
+      "children": []
+    },
+    {
+      "code": "EF_30_20",
+      "title": "Floors",
+      "level": 2,
+      "group": "30",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_30",
+      "children": []
+    },
+    {
+      "code": "EF_30_25",
+      "title": "Ceilings and soffits",
+      "level": 2,
+      "group": "30",
+      "subGroup": "25",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_30",
+      "children": []
+    },
+    {
+      "code": "EF_30_30",
+      "title": "Decks",
+      "level": 2,
+      "group": "30",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_30",
+      "children": []
+    },
+    {
+      "code": "EF_30_60",
+      "title": "Pavements",
+      "level": 2,
+      "group": "30",
+      "subGroup": "60",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_30",
+      "children": [
+        "EF_30_60_60",
+        "EF_30_60_95"
+      ]
+    },
+    {
+      "code": "EF_30_60_60",
+      "title": "Pedestrian paving",
+      "level": 3,
+      "group": "30",
+      "subGroup": "60",
+      "section": "60",
+      "object": null,
+      "parentCode": "EF_30_60",
+      "children": []
+    },
+    {
+      "code": "EF_30_60_95",
+      "title": "Vehicular paving",
+      "level": 3,
+      "group": "30",
+      "subGroup": "60",
+      "section": "95",
+      "object": null,
+      "parentCode": "EF_30_60",
+      "children": []
+    },
+    {
+      "code": "EF_35",
+      "title": "Stairs and ramps",
+      "level": 1,
+      "group": "35",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_35_10",
+        "EF_35_20"
+      ]
+    },
+    {
+      "code": "EF_35_10",
+      "title": "Stairs",
+      "level": 2,
+      "group": "35",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_35",
+      "children": [
+        "EF_35_10_30",
+        "EF_35_10_40"
+      ]
+    },
+    {
+      "code": "EF_35_10_30",
+      "title": "External stairs",
+      "level": 3,
+      "group": "35",
+      "subGroup": "10",
+      "section": "30",
+      "object": null,
+      "parentCode": "EF_35_10",
+      "children": []
+    },
+    {
+      "code": "EF_35_10_40",
+      "title": "Internal stairs",
+      "level": 3,
+      "group": "35",
+      "subGroup": "10",
+      "section": "40",
+      "object": null,
+      "parentCode": "EF_35_10",
+      "children": []
+    },
+    {
+      "code": "EF_35_20",
+      "title": "Ramps",
+      "level": 2,
+      "group": "35",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_35",
+      "children": [
+        "EF_35_20_30",
+        "EF_35_20_40"
+      ]
+    },
+    {
+      "code": "EF_35_20_30",
+      "title": "External ramps",
+      "level": 3,
+      "group": "35",
+      "subGroup": "20",
+      "section": "30",
+      "object": null,
+      "parentCode": "EF_35_20",
+      "children": []
+    },
+    {
+      "code": "EF_35_20_40",
+      "title": "Internal ramps",
+      "level": 3,
+      "group": "35",
+      "subGroup": "20",
+      "section": "40",
+      "object": null,
+      "parentCode": "EF_35_20",
+      "children": []
+    },
+    {
+      "code": "EF_37",
+      "title": "Tunnel, vessel and tower elements",
+      "level": 1,
+      "group": "37",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_37_16",
+        "EF_37_17",
+        "EF_37_50"
+      ]
+    },
+    {
+      "code": "EF_37_16",
+      "title": "Vessels and trenches",
+      "level": 2,
+      "group": "37",
+      "subGroup": "16",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_37",
+      "children": [
+        "EF_37_16_90",
+        "EF_37_16_94"
+      ]
+    },
+    {
+      "code": "EF_37_16_90",
+      "title": "Trenches",
+      "level": 3,
+      "group": "37",
+      "subGroup": "16",
+      "section": "90",
+      "object": null,
+      "parentCode": "EF_37_16",
+      "children": []
+    },
+    {
+      "code": "EF_37_16_94",
+      "title": "Vessels",
+      "level": 3,
+      "group": "37",
+      "subGroup": "16",
+      "section": "94",
+      "object": null,
+      "parentCode": "EF_37_16",
+      "children": []
+    },
+    {
+      "code": "EF_37_17",
+      "title": "Towers, chimneys and masts",
+      "level": 2,
+      "group": "37",
+      "subGroup": "17",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_37",
+      "children": [
+        "EF_37_17_15",
+        "EF_37_17_35",
+        "EF_37_17_50",
+        "EF_37_17_70",
+        "EF_37_17_90"
+      ]
+    },
+    {
+      "code": "EF_37_17_15",
+      "title": "Chimneys",
+      "level": 3,
+      "group": "37",
+      "subGroup": "17",
+      "section": "15",
+      "object": null,
+      "parentCode": "EF_37_17",
+      "children": []
+    },
+    {
+      "code": "EF_37_17_35",
+      "title": "Gantries",
+      "level": 3,
+      "group": "37",
+      "subGroup": "17",
+      "section": "35",
+      "object": null,
+      "parentCode": "EF_37_17",
+      "children": []
+    },
+    {
+      "code": "EF_37_17_50",
+      "title": "Masts",
+      "level": 3,
+      "group": "37",
+      "subGroup": "17",
+      "section": "50",
+      "object": null,
+      "parentCode": "EF_37_17",
+      "children": []
+    },
+    {
+      "code": "EF_37_17_70",
+      "title": "Pylons",
+      "level": 3,
+      "group": "37",
+      "subGroup": "17",
+      "section": "70",
+      "object": null,
+      "parentCode": "EF_37_17",
+      "children": []
+    },
+    {
+      "code": "EF_37_17_90",
+      "title": "Towers",
+      "level": 3,
+      "group": "37",
+      "subGroup": "17",
+      "section": "90",
+      "object": null,
+      "parentCode": "EF_37_17",
+      "children": []
+    },
+    {
+      "code": "EF_37_50",
+      "title": "Tunnels and shafts",
+      "level": 2,
+      "group": "37",
+      "subGroup": "50",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_37",
+      "children": []
+    },
+    {
+      "code": "EF_40",
+      "title": "Signage, fittings, furnishings and equipment",
+      "level": 1,
+      "group": "40",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_40_10",
+        "EF_40_20",
+        "EF_40_30",
+        "EF_40_40"
+      ]
+    },
+    {
+      "code": "EF_40_10",
+      "title": "Signage",
+      "level": 2,
+      "group": "40",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_40",
+      "children": []
+    },
+    {
+      "code": "EF_40_20",
+      "title": "Fittings",
+      "level": 2,
+      "group": "40",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_40",
+      "children": []
+    },
+    {
+      "code": "EF_40_30",
+      "title": "Furnishings",
+      "level": 2,
+      "group": "40",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_40",
+      "children": []
+    },
+    {
+      "code": "EF_40_40",
+      "title": "Equipment",
+      "level": 2,
+      "group": "40",
+      "subGroup": "40",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_40",
+      "children": []
+    },
+    {
+      "code": "EF_45",
+      "title": "Flora and fauna elements",
+      "level": 1,
+      "group": "45",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_45_03",
+        "EF_45_05",
+        "EF_45_20",
+        "EF_45_45",
+        "EF_45_90"
+      ]
+    },
+    {
+      "code": "EF_45_03",
+      "title": "Aquatic fauna elements",
+      "level": 2,
+      "group": "45",
+      "subGroup": "03",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_45",
+      "children": []
+    },
+    {
+      "code": "EF_45_05",
+      "title": "Aquatic flora elements",
+      "level": 2,
+      "group": "45",
+      "subGroup": "05",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_45",
+      "children": []
+    },
+    {
+      "code": "EF_45_20",
+      "title": "Grass and meadow elements",
+      "level": 2,
+      "group": "45",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_45",
+      "children": []
+    },
+    {
+      "code": "EF_45_45",
+      "title": "Land fauna elements",
+      "level": 2,
+      "group": "45",
+      "subGroup": "45",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_45",
+      "children": []
+    },
+    {
+      "code": "EF_45_90",
+      "title": "Tree, shrub and herbaceous plant elements",
+      "level": 2,
+      "group": "45",
+      "subGroup": "90",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_45",
+      "children": []
+    },
+    {
+      "code": "EF_50",
+      "title": "Waste disposal functions",
+      "level": 1,
+      "group": "50",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_50_10",
+        "EF_50_20",
+        "EF_50_30",
+        "EF_50_35",
+        "EF_50_40",
+        "EF_50_50",
+        "EF_50_60",
+        "EF_50_70",
+        "EF_50_75",
+        "EF_50_80"
+      ]
+    },
+    {
+      "code": "EF_50_10",
+      "title": "Gas waste collection",
+      "level": 2,
+      "group": "50",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_50",
+      "children": []
+    },
+    {
+      "code": "EF_50_20",
+      "title": "Wet waste collection",
+      "level": 2,
+      "group": "50",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_50",
+      "children": []
+    },
+    {
+      "code": "EF_50_30",
+      "title": "Above-ground drainage collection",
+      "level": 2,
+      "group": "50",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_50",
+      "children": []
+    },
+    {
+      "code": "EF_50_35",
+      "title": "Below-ground drainage collection",
+      "level": 2,
+      "group": "50",
+      "subGroup": "35",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_50",
+      "children": []
+    },
+    {
+      "code": "EF_50_40",
+      "title": "Dry waste collection",
+      "level": 2,
+      "group": "50",
+      "subGroup": "40",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_50",
+      "children": []
+    },
+    {
+      "code": "EF_50_50",
+      "title": "Gas waste treatment and disposal",
+      "level": 2,
+      "group": "50",
+      "subGroup": "50",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_50",
+      "children": []
+    },
+    {
+      "code": "EF_50_60",
+      "title": "Wet waste treatment and disposal",
+      "level": 2,
+      "group": "50",
+      "subGroup": "60",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_50",
+      "children": []
+    },
+    {
+      "code": "EF_50_70",
+      "title": "Drainage treatment and disposal",
+      "level": 2,
+      "group": "50",
+      "subGroup": "70",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_50",
+      "children": []
+    },
+    {
+      "code": "EF_50_75",
+      "title": "Wastewater treatment and disposal",
+      "level": 2,
+      "group": "50",
+      "subGroup": "75",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_50",
+      "children": []
+    },
+    {
+      "code": "EF_50_80",
+      "title": "Dry waste treatment and disposal",
+      "level": 2,
+      "group": "50",
+      "subGroup": "80",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_50",
+      "children": []
+    },
+    {
+      "code": "EF_55",
+      "title": "Piped supply functions",
+      "level": 1,
+      "group": "55",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_55_05",
+        "EF_55_10",
+        "EF_55_15",
+        "EF_55_20",
+        "EF_55_30",
+        "EF_55_40",
+        "EF_55_50",
+        "EF_55_60",
+        "EF_55_70",
+        "EF_55_90"
+      ]
+    },
+    {
+      "code": "EF_55_05",
+      "title": "Gas extraction and treatment",
+      "level": 2,
+      "group": "55",
+      "subGroup": "05",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_55",
+      "children": []
+    },
+    {
+      "code": "EF_55_10",
+      "title": "Liquid fuel extraction and treatment",
+      "level": 2,
+      "group": "55",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_55",
+      "children": []
+    },
+    {
+      "code": "EF_55_15",
+      "title": "Water extraction and treatment",
+      "level": 2,
+      "group": "55",
+      "subGroup": "15",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_55",
+      "children": []
+    },
+    {
+      "code": "EF_55_20",
+      "title": "Gas supply",
+      "level": 2,
+      "group": "55",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_55",
+      "children": []
+    },
+    {
+      "code": "EF_55_30",
+      "title": "Fire-extinguishing supply",
+      "level": 2,
+      "group": "55",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_55",
+      "children": []
+    },
+    {
+      "code": "EF_55_40",
+      "title": "Steam supply",
+      "level": 2,
+      "group": "55",
+      "subGroup": "40",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_55",
+      "children": []
+    },
+    {
+      "code": "EF_55_50",
+      "title": "Liquid fuel distribution supply",
+      "level": 2,
+      "group": "55",
+      "subGroup": "50",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_55",
+      "children": []
+    },
+    {
+      "code": "EF_55_60",
+      "title": "Process liquid supply",
+      "level": 2,
+      "group": "55",
+      "subGroup": "60",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_55",
+      "children": []
+    },
+    {
+      "code": "EF_55_70",
+      "title": "Water supply",
+      "level": 2,
+      "group": "55",
+      "subGroup": "70",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_55",
+      "children": []
+    },
+    {
+      "code": "EF_55_90",
+      "title": "Piped solids supply",
+      "level": 2,
+      "group": "55",
+      "subGroup": "90",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_55",
+      "children": []
+    },
+    {
+      "code": "EF_60",
+      "title": "Heating, cooling and refrigeration functions",
+      "level": 1,
+      "group": "60",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_60_30",
+        "EF_60_40",
+        "EF_60_60",
+        "EF_60_80"
+      ]
+    },
+    {
+      "code": "EF_60_30",
+      "title": "Rail and paving heating",
+      "level": 2,
+      "group": "60",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_60",
+      "children": []
+    },
+    {
+      "code": "EF_60_40",
+      "title": "Space heating and cooling",
+      "level": 2,
+      "group": "60",
+      "subGroup": "40",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_60",
+      "children": []
+    },
+    {
+      "code": "EF_60_60",
+      "title": "Refrigeration",
+      "level": 2,
+      "group": "60",
+      "subGroup": "60",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_60",
+      "children": []
+    },
+    {
+      "code": "EF_60_80",
+      "title": "Drying",
+      "level": 2,
+      "group": "60",
+      "subGroup": "80",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_60",
+      "children": []
+    },
+    {
+      "code": "EF_65",
+      "title": "Ventilation and air conditioning functions",
+      "level": 1,
+      "group": "65",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_65_40",
+        "EF_65_80"
+      ]
+    },
+    {
+      "code": "EF_65_40",
+      "title": "Ventilation",
+      "level": 2,
+      "group": "65",
+      "subGroup": "40",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_65",
+      "children": []
+    },
+    {
+      "code": "EF_65_80",
+      "title": "Air conditioning",
+      "level": 2,
+      "group": "65",
+      "subGroup": "80",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_65",
+      "children": []
+    },
+    {
+      "code": "EF_70",
+      "title": "Electrical power and lighting functions",
+      "level": 1,
+      "group": "70",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_70_10",
+        "EF_70_30",
+        "EF_70_80"
+      ]
+    },
+    {
+      "code": "EF_70_10",
+      "title": "Electrical power generation",
+      "level": 2,
+      "group": "70",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_70",
+      "children": []
+    },
+    {
+      "code": "EF_70_30",
+      "title": "Electricity distribution and transmission",
+      "level": 2,
+      "group": "70",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_70",
+      "children": []
+    },
+    {
+      "code": "EF_70_80",
+      "title": "Lighting",
+      "level": 2,
+      "group": "70",
+      "subGroup": "80",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_70",
+      "children": []
+    },
+    {
+      "code": "EF_75",
+      "title": "Communications, security, safety and protection functions",
+      "level": 1,
+      "group": "75",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_75_10",
+        "EF_75_30",
+        "EF_75_40",
+        "EF_75_50",
+        "EF_75_60",
+        "EF_75_70",
+        "EF_75_80"
+      ]
+    },
+    {
+      "code": "EF_75_10",
+      "title": "Communication",
+      "level": 2,
+      "group": "75",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_75",
+      "children": []
+    },
+    {
+      "code": "EF_75_30",
+      "title": "Signalling",
+      "level": 2,
+      "group": "75",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_75",
+      "children": []
+    },
+    {
+      "code": "EF_75_40",
+      "title": "Security",
+      "level": 2,
+      "group": "75",
+      "subGroup": "40",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_75",
+      "children": []
+    },
+    {
+      "code": "EF_75_50",
+      "title": "Safety and protection",
+      "level": 2,
+      "group": "75",
+      "subGroup": "50",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_75",
+      "children": []
+    },
+    {
+      "code": "EF_75_60",
+      "title": "Environmental safety",
+      "level": 2,
+      "group": "75",
+      "subGroup": "60",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_75",
+      "children": []
+    },
+    {
+      "code": "EF_75_70",
+      "title": "Control and management",
+      "level": 2,
+      "group": "75",
+      "subGroup": "70",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_75",
+      "children": []
+    },
+    {
+      "code": "EF_75_80",
+      "title": "Protection",
+      "level": 2,
+      "group": "75",
+      "subGroup": "80",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_75",
+      "children": []
+    },
+    {
+      "code": "EF_80",
+      "title": "Transport functions",
+      "level": 1,
+      "group": "80",
+      "subGroup": null,
+      "section": null,
+      "object": null,
+      "parentCode": null,
+      "children": [
+        "EF_80_10",
+        "EF_80_20",
+        "EF_80_30",
+        "EF_80_50",
+        "EF_80_70"
+      ]
+    },
+    {
+      "code": "EF_80_10",
+      "title": "Cable transport",
+      "level": 2,
+      "group": "80",
+      "subGroup": "10",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_80",
+      "children": []
+    },
+    {
+      "code": "EF_80_20",
+      "title": "Conveyors",
+      "level": 2,
+      "group": "80",
+      "subGroup": "20",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_80",
+      "children": []
+    },
+    {
+      "code": "EF_80_30",
+      "title": "Cranes and hoists",
+      "level": 2,
+      "group": "80",
+      "subGroup": "30",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_80",
+      "children": []
+    },
+    {
+      "code": "EF_80_50",
+      "title": "Lifts",
+      "level": 2,
+      "group": "80",
+      "subGroup": "50",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_80",
+      "children": []
+    },
+    {
+      "code": "EF_80_70",
+      "title": "Rail tracks",
+      "level": 2,
+      "group": "80",
+      "subGroup": "70",
+      "section": null,
+      "object": null,
+      "parentCode": "EF_80",
+      "children": []
+    }
+  ]
+}
