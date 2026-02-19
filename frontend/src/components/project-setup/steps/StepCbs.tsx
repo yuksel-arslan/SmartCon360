@@ -101,7 +101,13 @@ export default function StepCbs({ projectId, state, onStateChange, authHeaders }
       </h2>
       <p className="text-[13px] mb-6" style={{ color: 'var(--color-text-muted)' }}>
         CBS is automatically linked to the WBS structure. It provides cost categorization for CostPilot
-        budget management using <strong>Uniclass 2015 Ss (Systems)</strong> classification.
+        budget management using{' '}
+        <strong>
+          {state.classificationStandard === 'omniclass'
+            ? 'OmniClass Table 33 (Disciplines)'
+            : 'Uniclass 2015 Ss (Systems)'}
+        </strong>{' '}
+        classification.
       </p>
 
       {/* Pre-requisite check */}

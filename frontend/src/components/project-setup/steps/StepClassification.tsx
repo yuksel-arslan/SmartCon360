@@ -5,6 +5,7 @@ import { FileText, Globe2, Building2 } from 'lucide-react';
 
 const WBS_STANDARDS: (WbsStandard & { icon: string })[] = [
   { value: 'uniclass', label: 'Uniclass 2015', description: 'UK NBS standard — Elements/Functions classification. Widely used internationally.', region: 'UK / International', icon: '🇬🇧' },
+  { value: 'omniclass', label: 'OmniClass', description: 'International construction classification — Table 33 Disciplines (251 items). Used across North America and globally.', region: 'International', icon: '🌍' },
   { value: 'custom', label: 'Custom', description: 'Create your own WBS structure manually without a predefined standard.', region: 'Any', icon: '✏️' },
 ];
 

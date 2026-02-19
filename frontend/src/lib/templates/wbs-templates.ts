@@ -197,6 +197,7 @@ function filterForProjectType(
 
 export const WBS_STANDARDS = [
   { value: 'uniclass', label: 'Uniclass 2015', description: 'UK standard — Elements/Functions classification', region: 'UK/International' },
+  { value: 'omniclass', label: 'OmniClass', description: 'International — Table 33 Disciplines (251 items)', region: 'International' },
   { value: 'custom', label: 'Custom', description: 'Create your own WBS structure manually', region: 'Any' },
 ] as const;
 
