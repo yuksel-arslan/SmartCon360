@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
+import { requireAuth, isAuthError, isForbiddenError, unauthorizedResponse, forbiddenResponse } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
+import { requireProjectAccess } from '@/lib/project-access';
 import * as XLSX from 'xlsx';
 
+// Next.js App Router config for BOQ uploads
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
+
 const BOQ_EXTENSIONS = ['xlsx', 'xls', 'csv'];
+const MAX_BOQ_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+const MAX_BOQ_ROWS = 50000;
 
 interface ParsedBoqItem {
   rowIndex: number;
@@ -45,8 +52,9 @@ type Params = { params: Promise<{ id: string }> };
 // POST /api/v1/projects/:id/boq/upload — Upload and parse BOQ file
 export async function POST(request: NextRequest, { params }: Params) {
   try {
-    requireAuth(request);
+    const userId = requireAuth(request);
     const { id: projectId } = await params;
+    await requireProjectAccess(userId, projectId);
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -67,6 +75,13 @@ export async function POST(request: NextRequest, { params }: Params) {
       );
     }
 
+    if (file.size > MAX_BOQ_FILE_SIZE) {
+      return NextResponse.json(
+        { data: null, error: { code: 'FILE_TOO_LARGE', message: `File size ${(file.size / 1024 / 1024).toFixed(1)} MB exceeds maximum ${MAX_BOQ_FILE_SIZE / 1024 / 1024} MB` } },
+        { status: 400 },
+      );
+    }
+
     // Parse from buffer directly — no filesystem needed
     const buffer = Buffer.from(await file.arrayBuffer());
     const workbook = XLSX.read(buffer, { type: 'buffer' });
@@ -80,6 +95,13 @@ export async function POST(request: NextRequest, { params }: Params) {
         meta: { parseErrors: ['File is empty or has only headers'] },
         error: null,
       });
+    }
+
+    if (rawData.length > MAX_BOQ_ROWS + 1) {
+      return NextResponse.json(
+        { data: null, error: { code: 'TOO_MANY_ROWS', message: `File has ${rawData.length - 1} data rows, maximum is ${MAX_BOQ_ROWS}` } },
+        { status: 400 },
+      );
     }
 
     const headers = rawData[0].map((h) => String(h || '').trim());
@@ -157,6 +179,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     });
   } catch (err) {
     if (isAuthError(err)) return unauthorizedResponse();
+    if (isForbiddenError(err)) return forbiddenResponse();
     return errorResponse(err);
   }
 }

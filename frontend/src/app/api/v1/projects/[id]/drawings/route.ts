@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
+import { requireAuth, isAuthError, isForbiddenError, unauthorizedResponse, forbiddenResponse } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
+import { requireProjectAccess } from '@/lib/project-access';
 import {
   resolveStorageProvider,
   uploadFileS3,
@@ -9,6 +10,10 @@ import {
   MIME_TYPES,
 } from '@/lib/storage';
 import { uploadToDrive } from '@/lib/google-drive';
+
+// Next.js App Router body size limit — allow up to 100 MB for file uploads
+export const maxDuration = 120; // 2 min timeout for large uploads
+export const dynamic = 'force-dynamic';
 
 const ALLOWED_EXTENSIONS = ['.pdf', '.dwg', '.dxf', '.rvt', '.ifc'];
 const MAX_FILE_SIZE_CLOUD = 100 * 1024 * 1024; // 100 MB for cloud/Drive
@@ -65,8 +70,9 @@ async function getProjectName(projectId: string): Promise<string> {
 // GET /api/v1/projects/:id/drawings — List drawings
 export async function GET(request: NextRequest, { params }: Params) {
   try {
-    requireAuth(request);
+    const userId = requireAuth(request);
     const { id: projectId } = await params;
+    await requireProjectAccess(userId, projectId);
     const { searchParams } = new URL(request.url);
     const discipline = searchParams.get('discipline');
 
@@ -82,6 +88,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     return NextResponse.json({ data: drawings, meta: { total: drawings.length }, error: null });
   } catch (err) {
     if (isAuthError(err)) return unauthorizedResponse();
+    if (isForbiddenError(err)) return forbiddenResponse();
     return errorResponse(err);
   }
 }
@@ -91,6 +98,7 @@ export async function POST(request: NextRequest, { params }: Params) {
   try {
     const userId = requireAuth(request);
     const { id: projectId } = await params;
+    await requireProjectAccess(userId, projectId);
 
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
@@ -161,11 +169,15 @@ export async function POST(request: NextRequest, { params }: Params) {
           created.push(drawing);
         } catch (driveErr: unknown) {
           const driveMsg = driveErr instanceof Error ? driveErr.message : 'Drive upload failed';
+          const isTokenError = driveMsg.includes('invalid_grant') || driveMsg.includes('Token has been expired') || driveMsg.includes('unauthorized');
+          const userMsg = isTokenError
+            ? 'Google Drive access expired. Please reconnect Drive in Settings.'
+            : driveMsg;
           console.error(`[Drawings] Drive upload failed for ${file.name}:`, driveMsg);
 
           // Fallback to database storage
           if (file.size > MAX_FILE_SIZE_DB) {
-            errors.push(`${file.name}: Drive upload failed (${driveMsg}) and file too large for local storage (max ${MAX_FILE_SIZE_DB / 1024 / 1024} MB)`);
+            errors.push(`${file.name}: ${userMsg}. File too large for local fallback (max ${MAX_FILE_SIZE_DB / 1024 / 1024} MB).`);
             continue;
           }
 
@@ -181,13 +193,13 @@ export async function POST(request: NextRequest, { params }: Params) {
               discipline,
               title: file.name.replace(/\.[^.]+$/, ''),
               uploadedBy: userId,
-              metadata: { storageProvider: 'local', driveError: driveMsg },
+              metadata: { storageProvider: 'local', driveError: driveMsg, fallbackReason: userMsg },
             },
             select: DRAWING_LIST_SELECT,
           });
 
           created.push(drawing);
-          errors.push(`${file.name}: saved locally (Drive error: ${driveMsg})`);
+          errors.push(`${file.name}: saved locally (${userMsg})`);
         }
       } else if (provider === 's3') {
         // ── S3-compatible ──
@@ -271,6 +283,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     );
   } catch (err) {
     if (isAuthError(err)) return unauthorizedResponse();
+    if (isForbiddenError(err)) return forbiddenResponse();
     return errorResponse(err);
   }
 }

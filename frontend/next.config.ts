@@ -3,7 +3,11 @@ import type { NextConfig } from 'next';
 const API_GATEWAY_URL = process.env.API_GATEWAY_URL || 'http://localhost:3000';
 
 const nextConfig: NextConfig = {
-  experimental: {},
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '100mb',
+    },
+  },
   images: {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
