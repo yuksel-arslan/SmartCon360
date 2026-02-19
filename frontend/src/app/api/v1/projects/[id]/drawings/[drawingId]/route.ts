@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
+import { requireAuth, isAuthError, isForbiddenError, unauthorizedResponse, forbiddenResponse } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
+import { requireProjectAccess } from '@/lib/project-access';
 import {
   isS3Enabled,
   getDownloadUrl,
@@ -32,8 +33,9 @@ async function getOwnerDriveToken(projectId: string): Promise<string | null> {
 // GET /api/v1/projects/:id/drawings/:drawingId — Download drawing file
 export async function GET(request: NextRequest, { params }: Params) {
   try {
-    requireAuth(request);
+    const userId = requireAuth(request);
     const { id: projectId, drawingId } = await params;
+    await requireProjectAccess(userId, projectId);
 
     const drawing = await prisma.drawing.findUnique({
       where: { id: drawingId },
@@ -59,7 +61,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 
       if (!ownerToken) {
         return NextResponse.json(
-          { data: null, error: { code: 'DRIVE_DISCONNECTED', message: 'Project owner has disconnected Google Drive' } },
+          { data: null, error: { code: 'DRIVE_DISCONNECTED', message: 'Google Drive access is not available. The project owner needs to reconnect Drive in Settings.' } },
           { status: 503 },
         );
       }
@@ -125,6 +127,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     });
   } catch (err) {
     if (isAuthError(err)) return unauthorizedResponse();
+    if (isForbiddenError(err)) return forbiddenResponse();
     return errorResponse(err);
   }
 }
@@ -132,8 +135,9 @@ export async function GET(request: NextRequest, { params }: Params) {
 // PATCH /api/v1/projects/:id/drawings/:drawingId — Update metadata
 export async function PATCH(request: NextRequest, { params }: Params) {
   try {
-    requireAuth(request);
-    const { drawingId } = await params;
+    const userId = requireAuth(request);
+    const { id: projectId, drawingId } = await params;
+    await requireProjectAccess(userId, projectId);
     const body = await request.json();
 
     const { title, drawingNo, revision, sheetSize, discipline } = body;
@@ -151,6 +155,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     return NextResponse.json({ data: drawing, error: null });
   } catch (err) {
     if (isAuthError(err)) return unauthorizedResponse();
+    if (isForbiddenError(err)) return forbiddenResponse();
     return errorResponse(err);
   }
 }
@@ -158,8 +163,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 // DELETE /api/v1/projects/:id/drawings/:drawingId
 export async function DELETE(request: NextRequest, { params }: Params) {
   try {
-    requireAuth(request);
+    const userId = requireAuth(request);
     const { id: projectId, drawingId } = await params;
+    await requireProjectAccess(userId, projectId);
 
     const drawing = await prisma.drawing.findUnique({
       where: { id: drawingId },
@@ -191,6 +197,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     return new NextResponse(null, { status: 204 });
   } catch (err) {
     if (isAuthError(err)) return unauthorizedResponse();
+    if (isForbiddenError(err)) return forbiddenResponse();
     return errorResponse(err);
   }
 }

@@ -49,3 +49,21 @@ export function unauthorizedResponse() {
 export function isAuthError(err: unknown): boolean {
   return err instanceof AuthError;
 }
+
+export class ForbiddenError extends Error {
+  constructor(message = 'You do not have access to this project') {
+    super(message);
+    this.name = 'ForbiddenError';
+  }
+}
+
+export function isForbiddenError(err: unknown): boolean {
+  return err instanceof ForbiddenError;
+}
+
+export function forbiddenResponse(message?: string) {
+  return NextResponse.json(
+    { data: null, error: { code: 'FORBIDDEN', message: message || 'You do not have access to this project' } },
+    { status: 403 }
+  );
+}
