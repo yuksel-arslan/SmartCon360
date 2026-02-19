@@ -6,6 +6,7 @@
  *
  * Supported standards:
  * - Uniclass 2015 Ss (Systems) — loaded from parsed CSV JSON
+ * - OmniClass Table 33 (Disciplines) — loaded from parsed CSV JSON
  * - Custom — user-defined CBS
  *
  * CBS nodes map to CostPilot budget items for cost tracking.
@@ -102,11 +103,81 @@ function buildCbsTreeFromItems(items: UniclassJsonItem[]): CbsTemplateNode[] {
 }
 
 // ============================================================================
+// DATA LOADER — OmniClass Table 33 for discipline-based CBS
+// ============================================================================
+
+interface OmniClassJsonItem {
+  code: string;
+  codeNormalized: string;
+  title: string;
+  definition: string;
+  level: number;
+  parentCode: string | null;
+  children: string[];
+}
+
+interface OmniClassJsonFile {
+  items: OmniClassJsonItem[];
+}
+
+let omniclass33CbsCache: CbsTemplateNode[] | null = null;
+
+function loadOmniClass33CbsNodes(): CbsTemplateNode[] {
+  if (omniclass33CbsCache) return omniclass33CbsCache;
+
+  const filePath = path.join(__dirname, '../../../data/omniclass/omniclass-33.json');
+  if (!fs.existsSync(filePath)) {
+    console.warn('OmniClass Table 33 JSON not found, using empty array');
+    return [];
+  }
+
+  const data: OmniClassJsonFile = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  // CBS uses levels 1-2 for initial template (deeper levels available via search)
+  const filtered = data.items.filter((i) => i.level <= 2);
+  omniclass33CbsCache = buildOmniClassCbsTree(filtered);
+  return omniclass33CbsCache;
+}
+
+function buildOmniClassCbsTree(items: OmniClassJsonItem[]): CbsTemplateNode[] {
+  const map = new Map<string, CbsTemplateNode>();
+
+  for (const item of items) {
+    map.set(item.code, {
+      code: item.code,
+      name: item.title,
+      description: item.definition || undefined,
+      children: [],
+    });
+  }
+
+  const roots: CbsTemplateNode[] = [];
+  for (const item of items) {
+    const node = map.get(item.code)!;
+    if (item.parentCode && map.has(item.parentCode)) {
+      map.get(item.parentCode)!.children!.push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+
+  const clean = (node: CbsTemplateNode): CbsTemplateNode => {
+    if (node.children && node.children.length === 0) {
+      const { children, ...rest } = node;
+      return rest;
+    }
+    return { ...node, children: node.children?.map(clean) };
+  };
+
+  return roots.map(clean);
+}
+
+// ============================================================================
 // PUBLIC API
 // ============================================================================
 
 export const CBS_STANDARDS = [
   { value: 'uniclass_ss', label: 'Uniclass 2015 Ss (Systems)', description: 'UK standard — 2,415 systems, 4 levels deep (from official CSV)', region: 'UK/International' },
+  { value: 'omniclass_33', label: 'OmniClass Table 33 (Disciplines)', description: 'International — 251 disciplines, discipline-based cost breakdown', region: 'International' },
   { value: 'custom', label: 'Custom', description: 'Create your own CBS structure manually', region: 'Any' },
 ] as const;
 
@@ -116,9 +187,15 @@ const CBS_STANDARD_MAP: Record<string, { label: string; description: string; get
     description: 'Uniclass 2015 Systems table for cost breakdown — loaded from official CSV (level 1-2 for template, full depth available via search)',
     getNodes: loadUniclassSsNodes,
   },
+  omniclass_33: {
+    label: 'OmniClass Table 33',
+    description: 'OmniClass Table 33 Disciplines for discipline-based cost breakdown (level 1-2 for template)',
+    getNodes: loadOmniClass33CbsNodes,
+  },
 };
 
 export function getDefaultCbsStandard(wbsStandard: string): string {
+  if (wbsStandard === 'omniclass') return 'omniclass_33';
   return 'uniclass_ss';
 }
 

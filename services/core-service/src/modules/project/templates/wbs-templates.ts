@@ -3,11 +3,11 @@
  *
  * Supported standards:
  * - Uniclass 2015 (UK — default) — EF (Elements/Functions) table — REAL DATA from CSV
+ * - OmniClass (International) — Table 33 Disciplines — REAL DATA from CSV
  * - Custom — user-defined WBS
  *
  * Uniclass EF data is loaded from parsed JSON (107 items, 3 levels)
- * rather than hardcoded templates. This gives the user the COMPLETE
- * Uniclass 2015 classification for WBS generation.
+ * OmniClass Table 33 data is loaded from parsed JSON (251 items, 5 levels)
  */
 
 import path from 'path';
@@ -44,6 +44,7 @@ interface UniclassJsonFile {
 }
 
 let uniclassEfCache: WbsTemplateNode[] | null = null;
+let omniclass33Cache: WbsTemplateNode[] | null = null;
 
 function loadUniclassEfNodes(): WbsTemplateNode[] {
   if (uniclassEfCache) return uniclassEfCache;
@@ -57,6 +58,69 @@ function loadUniclassEfNodes(): WbsTemplateNode[] {
   const data: UniclassJsonFile = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
   uniclassEfCache = buildTreeFromItems(data.items);
   return uniclassEfCache;
+}
+
+interface OmniClassJsonItem {
+  code: string;
+  codeNormalized: string;
+  title: string;
+  definition: string;
+  level: number;
+  parentCode: string | null;
+  children: string[];
+}
+
+interface OmniClassJsonFile {
+  items: OmniClassJsonItem[];
+}
+
+function loadOmniClass33Nodes(): WbsTemplateNode[] {
+  if (omniclass33Cache) return omniclass33Cache;
+
+  const filePath = path.join(__dirname, '../../../data/omniclass/omniclass-33.json');
+  if (!fs.existsSync(filePath)) {
+    console.warn('OmniClass Table 33 JSON not found, using empty array');
+    return [];
+  }
+
+  const data: OmniClassJsonFile = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  // Use levels 1-3 for WBS template (levels 4-5 can be expanded via search)
+  const filtered = data.items.filter((i) => i.level <= 3);
+  omniclass33Cache = buildTreeFromOmniClass(filtered);
+  return omniclass33Cache;
+}
+
+function buildTreeFromOmniClass(items: OmniClassJsonItem[]): WbsTemplateNode[] {
+  const map = new Map<string, WbsTemplateNode>();
+
+  for (const item of items) {
+    map.set(item.code, {
+      code: item.code,
+      name: item.title,
+      description: item.definition || undefined,
+      children: [],
+    });
+  }
+
+  const roots: WbsTemplateNode[] = [];
+  for (const item of items) {
+    const node = map.get(item.code)!;
+    if (item.parentCode && map.has(item.parentCode)) {
+      map.get(item.parentCode)!.children!.push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+
+  const clean = (node: WbsTemplateNode): WbsTemplateNode => {
+    if (node.children && node.children.length === 0) {
+      const { children, ...rest } = node;
+      return rest;
+    }
+    return { ...node, children: node.children?.map(clean) };
+  };
+
+  return roots.map(clean);
 }
 
 function buildTreeFromItems(items: UniclassJsonItem[]): WbsTemplateNode[] {
@@ -92,11 +156,24 @@ function buildTreeFromItems(items: UniclassJsonItem[]): WbsTemplateNode[] {
 }
 
 // ============================================================================
+// Project-type filter — returns relevant nodes for each project type
+// ============================================================================
+
+function filterForProjectType(
+  nodes: WbsTemplateNode[],
+  _projectType: string,
+): WbsTemplateNode[] {
+  // All project types get the full WBS — the template is already comprehensive.
+  return nodes;
+}
+
+// ============================================================================
 // PUBLIC API
 // ============================================================================
 
 export const WBS_STANDARDS = [
   { value: 'uniclass', label: 'Uniclass 2015', description: 'UK standard — Elements/Functions classification (107 items, 3 levels)', region: 'UK/International' },
+  { value: 'omniclass', label: 'OmniClass', description: 'International — Table 33 Disciplines (251 items, 5 levels)', region: 'International' },
   { value: 'custom', label: 'Custom', description: 'Create your own WBS structure manually', region: 'Any' },
 ] as const;
 
@@ -107,6 +184,11 @@ const STANDARD_MAP: Record<string, { label: string; description: string; getNode
     label: 'Uniclass 2015',
     description: 'UK NBS standard — EF (Elements/Functions) table — 107 items from official Uniclass 2015 CSV',
     getNodes: loadUniclassEfNodes,
+  },
+  omniclass: {
+    label: 'OmniClass',
+    description: 'International — Table 33 Disciplines — 251 items from official OmniClass data',
+    getNodes: loadOmniClass33Nodes,
   },
 };
 

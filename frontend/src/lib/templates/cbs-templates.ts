@@ -215,6 +215,7 @@ const UNICLASS_SS_BASE: CbsTemplateNode[] = [
 
 export const CBS_STANDARDS = [
   { value: 'uniclass_ss', label: 'Uniclass 2015 Ss (Systems)', description: 'UK standard — Systems classification for CBS', region: 'UK/International' },
+  { value: 'omniclass_33', label: 'OmniClass Table 33 (Disciplines)', description: 'International — Discipline-based cost breakdown', region: 'International' },
   { value: 'custom', label: 'Custom', description: 'Create your own CBS structure manually', region: 'Any' },
 ] as const;
 
@@ -230,6 +231,7 @@ const CBS_STANDARD_MAP: Record<string, { label: string; description: string; nod
  * Get the default CBS standard for a given WBS standard.
  */
 export function getDefaultCbsStandard(wbsStandard: string): string {
+  if (wbsStandard === 'omniclass') return 'omniclass_33';
   return 'uniclass_ss';
 }
 
