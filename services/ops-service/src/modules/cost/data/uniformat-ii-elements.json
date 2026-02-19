@@ -1,0 +1,349 @@
+{
+  "version": "UNIFORMAT II (ASTM E1557)",
+  "standard": "UNIFORMAT II",
+  "description": "Elemental Classification for Building Specifications, Cost Estimating, and Cost Analysis",
+  "level1_elements": [
+    {
+      "code": "A",
+      "title": "Substructure",
+      "description": "All work below the first floor construction or below grade, whichever is higher",
+      "level2": [
+        {"code": "A10", "title": "Foundations", "description": "Standard spread footings, pile caps, and grade beams"},
+        {"code": "A20", "title": "Basement Construction", "description": "Basement excavation, basement walls, and basement floors"}
+      ]
+    },
+    {
+      "code": "B",
+      "title": "Shell",
+      "description": "Superstructure, exterior closure, and roofing",
+      "level2": [
+        {"code": "B10", "title": "Superstructure", "description": "Floor and roof construction above the first floor"},
+        {"code": "B20", "title": "Exterior Enclosure", "description": "Exterior walls, exterior windows, and exterior doors"},
+        {"code": "B30", "title": "Roofing", "description": "Roof coverings and openings"}
+      ]
+    },
+    {
+      "code": "C",
+      "title": "Interiors",
+      "description": "Interior construction, interior finishes, and stair construction",
+      "level2": [
+        {"code": "C10", "title": "Interior Construction", "description": "Partitions and interior doors"},
+        {"code": "C20", "title": "Stairs", "description": "Stair construction"},
+        {"code": "C30", "title": "Interior Finishes", "description": "Wall finishes, floor finishes, and ceiling finishes"}
+      ]
+    },
+    {
+      "code": "D",
+      "title": "Services",
+      "description": "Conveying systems, plumbing, HVAC, fire protection, and electrical systems",
+      "level2": [
+        {"code": "D10", "title": "Conveying", "description": "Elevators, escalators, moving walks, lifts, material handling systems"},
+        {"code": "D20", "title": "Plumbing", "description": "Plumbing fixtures, domestic water distribution, sanitary waste, and rain water drainage"},
+        {"code": "D30", "title": "HVAC", "description": "Energy supply, heat generating systems, cooling systems, distribution systems, terminal and package units, controls and instrumentation"},
+        {"code": "D40", "title": "Fire Protection", "description": "Sprinklers, standpipes, fire protection specialties"},
+        {"code": "D50", "title": "Electrical", "description": "Electrical service and distribution, lighting and branch wiring, communications and security, other electrical systems"}
+      ]
+    },
+    {
+      "code": "E",
+      "title": "Equipment and Furnishings",
+      "description": "Equipment and furnishings unique to building types",
+      "level2": [
+        {"code": "E10", "title": "Equipment", "description": "Commercial equipment, institutional equipment, vehicular equipment, other equipment"},
+        {"code": "E20", "title": "Furnishings", "description": "Fixed furnishings, movable furnishings"}
+      ]
+    },
+    {
+      "code": "F",
+      "title": "Special Construction and Demolition",
+      "description": "Special construction systems and building demolition",
+      "level2": [
+        {"code": "F10", "title": "Special Construction", "description": "Special structures, integrated construction, special facilities, special controls and instrumentation"},
+        {"code": "F20", "title": "Selective Building Demolition", "description": "Building elements demolition, hazardous components abatement"}
+      ]
+    },
+    {
+      "code": "G",
+      "title": "Building Sitework",
+      "description": "Site preparation, improvement, mechanical utilities, and electrical utilities",
+      "level2": [
+        {"code": "G10", "title": "Site Preparation", "description": "Site clearing, earthwork, site dewatering, shoring and underpinning"},
+        {"code": "G20", "title": "Site Improvements", "description": "Roadways, parking lots, pedestrian paving, site development, landscaping"},
+        {"code": "G30", "title": "Site Mechanical Utilities", "description": "Water supply, sanitary sewer, storm sewer, heating distribution systems, cooling distribution systems, fuel distribution systems"},
+        {"code": "G40", "title": "Site Electrical Utilities", "description": "Electrical distribution, site lighting, site communications and security"},
+        {"code": "G90", "title": "Other Site Construction", "description": "Other site systems and equipment"}
+      ]
+    },
+    {
+      "code": "Z",
+      "title": "General",
+      "description": "General conditions, overhead, and markup",
+      "level2": [
+        {"code": "Z10", "title": "General Requirements", "description": "Project management, field engineering, temporary facilities"},
+        {"code": "Z20", "title": "Bidding Requirements", "description": "Procurement, bidding procedures, contracting requirements"}
+      ]
+    }
+  ],
+  "common_level3_examples": [
+    {
+      "code": "A1010",
+      "title": "Standard Foundations",
+      "parent": "A10",
+      "description": "Spread footings, column pads, continuous footings",
+      "level4": [
+        {"code": "A1010.10", "title": "Wall Foundations", "description": "Continuous strip footings and grade beams supporting load-bearing walls"},
+        {"code": "A1010.20", "title": "Column Foundations", "description": "Isolated spread footings and pad footings supporting columns"},
+        {"code": "A1010.30", "title": "Perimeter Drainage", "description": "Foundation drainage systems including drain tiles, gravel beds, and waterproofing"}
+      ]
+    },
+    {
+      "code": "A1020",
+      "title": "Special Foundations",
+      "parent": "A10",
+      "description": "Piles, caissons, mat foundations",
+      "level4": [
+        {"code": "A1020.10", "title": "Driven Piles", "description": "Steel H-piles, precast concrete piles, timber piles driven to bearing strata"},
+        {"code": "A1020.20", "title": "Bored Piles", "description": "Drilled shafts, auger-cast piles, and micropiles"},
+        {"code": "A1020.30", "title": "Caissons", "description": "Open caissons, pneumatic caissons, and drilled caisson foundations"}
+      ]
+    },
+    {
+      "code": "A1030",
+      "title": "Slab on Grade",
+      "parent": "A10",
+      "description": "Concrete slabs on grade",
+      "level4": [
+        {"code": "A1030.10", "title": "Standard Slab", "description": "Non-structural concrete slabs on grade with vapor barrier and reinforcement"},
+        {"code": "A1030.20", "title": "Structural Slab", "description": "Structural slabs on grade for heavy loads, including post-tensioned and reinforced slabs"}
+      ]
+    },
+    {
+      "code": "B1010",
+      "title": "Floor Construction",
+      "parent": "B10",
+      "description": "Floor structural systems including joists, beams, and slabs",
+      "level4": [
+        {"code": "B1010.10", "title": "Cast-in-Place Floors", "description": "Reinforced and post-tensioned cast-in-place concrete floor systems"},
+        {"code": "B1010.20", "title": "Precast Floors", "description": "Precast concrete planks, double-tees, and hollow-core floor systems"},
+        {"code": "B1010.30", "title": "Steel Floors", "description": "Steel beam and joist floor framing with composite or non-composite deck"}
+      ]
+    },
+    {
+      "code": "B1020",
+      "title": "Roof Construction",
+      "parent": "B10",
+      "description": "Roof structural systems including joists, beams, and decks",
+      "level4": [
+        {"code": "B1020.10", "title": "Steel Roof", "description": "Steel roof framing with metal deck, open-web joists, and structural beams"},
+        {"code": "B1020.20", "title": "Concrete Roof", "description": "Cast-in-place and precast concrete roof structural systems"},
+        {"code": "B1020.30", "title": "Wood Roof", "description": "Wood truss, rafter, and glulam beam roof structural systems"}
+      ]
+    },
+    {
+      "code": "B2010",
+      "title": "Exterior Walls",
+      "parent": "B20",
+      "description": "Curtain walls, load-bearing walls, non-load-bearing walls",
+      "level4": [
+        {"code": "B2010.10", "title": "Curtain Walls", "description": "Aluminum and glass curtain wall systems including unitized and stick-built assemblies"},
+        {"code": "B2010.20", "title": "Masonry Walls", "description": "Brick veneer, concrete block, and stone exterior wall assemblies with backup systems"},
+        {"code": "B2010.30", "title": "Precast Panels", "description": "Precast concrete panels including architectural and insulated sandwich panels"}
+      ]
+    },
+    {
+      "code": "B2020",
+      "title": "Exterior Windows",
+      "parent": "B20",
+      "description": "Fixed windows, operable windows, storefronts",
+      "level4": [
+        {"code": "B2020.10", "title": "Fixed Windows", "description": "Non-operable glazed window units including picture, transom, and sidelite windows"},
+        {"code": "B2020.20", "title": "Operable Windows", "description": "Casement, awning, hopper, sliding, and double-hung operable window units"}
+      ]
+    },
+    {
+      "code": "B2030",
+      "title": "Exterior Doors",
+      "parent": "B20",
+      "description": "Personnel doors, vehicular doors, revolving doors"
+    },
+    {
+      "code": "B3010",
+      "title": "Roof Coverings",
+      "parent": "B30",
+      "description": "Membrane roofing, shingles, roof tiles",
+      "level4": [
+        {"code": "B3010.10", "title": "Built-Up Roofing", "description": "Multi-ply asphalt and tar built-up roofing systems with gravel or cap sheet surfacing"},
+        {"code": "B3010.20", "title": "Single-Ply Membrane", "description": "TPO, EPDM, and PVC single-ply roofing membrane systems mechanically attached or fully adhered"},
+        {"code": "B3010.30", "title": "Metal Roofing", "description": "Standing seam, corrugated, and architectural metal roof panel systems"}
+      ]
+    },
+    {
+      "code": "C1010",
+      "title": "Partitions",
+      "parent": "C10",
+      "description": "Fixed partitions, demountable partitions",
+      "level4": [
+        {"code": "C1010.10", "title": "Gypsum Board Partitions", "description": "Metal stud framed partitions with gypsum board sheathing, including fire-rated assemblies"},
+        {"code": "C1010.20", "title": "Masonry Partitions", "description": "Concrete masonry unit (CMU) and brick interior partition walls"},
+        {"code": "C1010.30", "title": "Glass Partitions", "description": "Frameless glass, framed glass, and demountable glass partition systems"}
+      ]
+    },
+    {
+      "code": "C1020",
+      "title": "Interior Doors",
+      "parent": "C10",
+      "description": "Standard doors, special doors, door hardware"
+    },
+    {
+      "code": "C3010",
+      "title": "Wall Finishes",
+      "parent": "C30",
+      "description": "Paint, wall coverings, tile, paneling",
+      "level4": [
+        {"code": "C3010.10", "title": "Paint", "description": "Interior wall and ceiling paint coatings including primer, latex, and epoxy finishes"},
+        {"code": "C3010.20", "title": "Tile", "description": "Ceramic, porcelain, and natural stone wall tile installations with backer board and setting materials"},
+        {"code": "C3010.30", "title": "Wall Coverings", "description": "Vinyl wall coverings, fabric wall coverings, and specialty wallpaper systems"}
+      ]
+    },
+    {
+      "code": "C3020",
+      "title": "Floor Finishes",
+      "parent": "C30",
+      "description": "Carpet, resilient flooring, stone flooring, special flooring",
+      "level4": [
+        {"code": "C3020.10", "title": "Carpet", "description": "Broadloom carpet, carpet tile, and modular carpet with pad and adhesive"},
+        {"code": "C3020.20", "title": "Resilient Flooring", "description": "VCT, LVT, sheet vinyl, rubber, and linoleum floor finishes"},
+        {"code": "C3020.30", "title": "Stone/Terrazzo", "description": "Natural stone, engineered stone, and poured or precast terrazzo flooring systems"},
+        {"code": "C3020.40", "title": "Hardwood", "description": "Solid hardwood, engineered hardwood, and reclaimed wood strip and plank flooring"}
+      ]
+    },
+    {
+      "code": "C3030",
+      "title": "Ceiling Finishes",
+      "parent": "C30",
+      "description": "Acoustical ceilings, gypsum board ceilings, special ceilings",
+      "level4": [
+        {"code": "C3030.10", "title": "Acoustical Tile", "description": "Suspended acoustical ceiling tile and panel systems with exposed or concealed grid"},
+        {"code": "C3030.20", "title": "Gypsum Board Ceiling", "description": "Suspended gypsum board ceiling systems including flat, stepped, and curved assemblies"}
+      ]
+    },
+    {
+      "code": "D2010",
+      "title": "Plumbing Fixtures",
+      "parent": "D20",
+      "description": "Water closets, urinals, lavatories, sinks, showers",
+      "level4": [
+        {"code": "D2010.10", "title": "Water Closets", "description": "Floor-mounted and wall-hung water closets including flush valves and low-flow fixtures"},
+        {"code": "D2010.20", "title": "Lavatories", "description": "Countertop, wall-hung, and pedestal lavatories with faucets and trim"},
+        {"code": "D2010.30", "title": "Sinks", "description": "Kitchen, utility, service, and laboratory sinks with fittings and accessories"}
+      ]
+    },
+    {
+      "code": "D2020",
+      "title": "Domestic Water Distribution",
+      "parent": "D20",
+      "description": "Domestic water supply piping and equipment"
+    },
+    {
+      "code": "D3010",
+      "title": "Energy Supply",
+      "parent": "D30",
+      "description": "Oil supply, gas supply, steam supply"
+    },
+    {
+      "code": "D3020",
+      "title": "Heat Generating Systems",
+      "parent": "D30",
+      "description": "Boilers, furnaces, fuel-fired heaters"
+    },
+    {
+      "code": "D3030",
+      "title": "Cooling Generating Systems",
+      "parent": "D30",
+      "description": "Chillers, cooling towers, direct expansion systems",
+      "level4": [
+        {"code": "D3030.10", "title": "Chillers", "description": "Centrifugal, screw, scroll, and absorption chiller units with piping connections"},
+        {"code": "D3030.20", "title": "Cooling Towers", "description": "Induced draft, forced draft, and crossflow cooling tower systems with basin and controls"}
+      ]
+    },
+    {
+      "code": "D3040",
+      "title": "Distribution Systems",
+      "parent": "D30",
+      "description": "Ducts, piping, pumps, fans"
+    },
+    {
+      "code": "D3050",
+      "title": "Terminal and Package Units",
+      "parent": "D30",
+      "description": "Air handling units, fan coil units, package units"
+    },
+    {
+      "code": "D4010",
+      "title": "Sprinklers",
+      "parent": "D40",
+      "description": "Wet pipe, dry pipe, pre-action, deluge systems"
+    },
+    {
+      "code": "D5010",
+      "title": "Electrical Service/Distribution",
+      "parent": "D50",
+      "description": "Service entrance, switchgear, transformers, panelboards",
+      "level4": [
+        {"code": "D5010.10", "title": "Service Entrance", "description": "Main electrical service entrance including utility metering, main breakers, and grounding systems"},
+        {"code": "D5010.20", "title": "Switchgear", "description": "Medium and low voltage switchgear, switchboards, and motor control centers"},
+        {"code": "D5010.30", "title": "Panelboards", "description": "Lighting and power panelboards, distribution panels, and circuit breaker assemblies"}
+      ]
+    },
+    {
+      "code": "D5020",
+      "title": "Lighting and Branch Wiring",
+      "parent": "D50",
+      "description": "Fixtures, lamps, branch wiring, lighting controls",
+      "level4": [
+        {"code": "D5020.10", "title": "Interior Lighting", "description": "Recessed, surface-mounted, pendant, and track interior lighting fixtures with LED drivers"},
+        {"code": "D5020.20", "title": "Exterior Lighting", "description": "Building-mounted, pole-mounted, and landscape exterior lighting fixtures and controls"},
+        {"code": "D5020.30", "title": "Emergency Lighting", "description": "Emergency egress lighting, exit signs, and battery backup lighting units"}
+      ]
+    },
+    {
+      "code": "D5030",
+      "title": "Communications and Security",
+      "parent": "D50",
+      "description": "Telecommunications, data systems, fire alarm, security systems"
+    },
+    {
+      "code": "G2010",
+      "title": "Roadways",
+      "parent": "G20",
+      "description": "Site roadways, access roads, and driveways including base courses and paving",
+      "level4": [
+        {"code": "G2010.10", "title": "Asphalt Paving", "description": "Hot-mix asphalt paving for roadways including base, binder, and wearing courses"},
+        {"code": "G2010.20", "title": "Concrete Paving", "description": "Portland cement concrete paving for roadways including joints and reinforcement"},
+        {"code": "G2010.30", "title": "Curbs and Gutters", "description": "Cast-in-place and precast concrete curbs, gutters, and combined curb-gutter sections"}
+      ]
+    },
+    {
+      "code": "G2020",
+      "title": "Parking Lots",
+      "parent": "G20",
+      "description": "Surface parking areas including paving, striping, and accessories",
+      "level4": [
+        {"code": "G2020.10", "title": "Asphalt Parking", "description": "Asphalt paved parking areas with aggregate base, striping, and sealcoat"},
+        {"code": "G2020.20", "title": "Concrete Parking", "description": "Concrete paved parking areas with joints, reinforcement, and surface treatment"},
+        {"code": "G2020.30", "title": "Parking Accessories", "description": "Wheel stops, bollards, signage, and parking area drainage structures"}
+      ]
+    },
+    {
+      "code": "G2030",
+      "title": "Pedestrian Paving",
+      "parent": "G20",
+      "description": "Sidewalks, plazas, and pedestrian hardscape areas",
+      "level4": [
+        {"code": "G2030.10", "title": "Sidewalks", "description": "Concrete, asphalt, and paver sidewalks including ADA-compliant ramps and detectable warnings"},
+        {"code": "G2030.20", "title": "Unit Pavers", "description": "Brick, concrete, and natural stone unit paver systems with setting bed and edge restraints"},
+        {"code": "G2030.30", "title": "Plazas and Courtyards", "description": "Hardscape plaza areas including decorative paving, benches, planters, and site furnishings"}
+      ]
+    }
+  ]
+}

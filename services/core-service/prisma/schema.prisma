@@ -1,0 +1,990 @@
+// Core Service — Unified Prisma Schema
+// Merged from: auth-service, project-service, progress-service, cost-service
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["public", "cost"]
+}
+
+// ============================================================================
+// AUTH MODULE (from auth-service)
+// ============================================================================
+
+model User {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email           String    @unique @db.VarChar(255)
+  passwordHash    String?   @map("password_hash") @db.VarChar(255)
+  firstName       String    @map("first_name") @db.VarChar(100)
+  lastName        String    @map("last_name") @db.VarChar(100)
+  avatarUrl       String?   @map("avatar_url")
+  phone           String?   @db.VarChar(20)
+  company         String?   @db.VarChar(255)
+  jobTitle        String?   @map("job_title") @db.VarChar(100)
+  locale          String    @default("en") @db.VarChar(10)
+  timezone        String    @default("UTC") @db.VarChar(50)
+  authProvider    String    @default("local") @map("auth_provider") @db.VarChar(20)
+  authProviderId  String?   @map("auth_provider_id") @db.VarChar(255)
+  googleRefreshToken String? @map("google_refresh_token") @db.VarChar(500)
+  emailVerified   Boolean   @default(false) @map("email_verified")
+  isActive        Boolean   @default(true) @map("is_active")
+  lastLoginAt     DateTime? @map("last_login_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  sessions  Session[]
+  userRoles UserRole[]
+
+  @@map("users")
+  @@schema("public")
+}
+
+model Session {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  refreshToken String   @map("refresh_token") @db.VarChar(500)
+  deviceInfo   Json?    @map("device_info")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshToken])
+  @@map("sessions")
+  @@schema("public")
+}
+
+model Role {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique @db.VarChar(50)
+  description String?
+  permissions Json     @default("[]")
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userRoles UserRole[]
+
+  @@map("roles")
+  @@schema("public")
+}
+
+model UserRole {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  roleId    String   @map("role_id") @db.Uuid
+  projectId String?  @map("project_id") @db.Uuid
+  grantedBy String?  @map("granted_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId, projectId])
+  @@map("user_roles")
+  @@schema("public")
+}
+
+// ============================================================================
+// PROJECT MODULE (from project-service)
+// ============================================================================
+
+model Project {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String    @db.VarChar(255)
+  code            String    @unique @db.VarChar(50)
+  description     String?
+  projectType     String    @map("project_type") @db.VarChar(50)
+  status          String    @default("planning") @db.VarChar(30)
+  address         String?
+  city            String?   @db.VarChar(100)
+  country         String?   @db.VarChar(100)
+  plannedStart    DateTime? @map("planned_start") @db.Date
+  plannedFinish   DateTime? @map("planned_finish") @db.Date
+  actualStart     DateTime? @map("actual_start") @db.Date
+  actualFinish    DateTime? @map("actual_finish") @db.Date
+  defaultTaktTime Int       @default(5) @map("default_takt_time")
+  workingDays     Json      @default("[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"]") @map("working_days")
+  budget          Decimal?  @db.Decimal(15, 2)
+  currency        String    @default("USD") @db.VarChar(3)
+  ownerId         String    @map("owner_id") @db.Uuid
+  settings        Json      @default("{}")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  locations        Location[]
+  trades           Trade[]
+  members          ProjectMember[]
+  drawings         Drawing[]
+  wbsNodes         WbsNode[]
+  cbsNodes         CbsNode[]
+  projectSetup     ProjectSetup?
+  obsNodes         ObsNode[]
+  boqItems         BoqItem[]
+  projectDocuments ProjectDocument[]
+  cashFlowPeriods  CashFlowPeriod[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@map("projects")
+  @@schema("public")
+}
+
+model ProjectMember {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  role      String   @db.VarChar(50)
+  trade     String?  @db.VarChar(100)
+  status    String   @default("active") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@map("project_members")
+  @@schema("public")
+}
+
+model Location {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  parentId     String?  @map("parent_id") @db.Uuid
+  code         String   @db.VarChar(50)
+  name         String   @db.VarChar(255)
+  locationType String   @map("location_type") @db.VarChar(30)
+  areaSqm      Decimal? @map("area_sqm") @db.Decimal(10, 2)
+  volumeCbm    Decimal? @map("volume_cbm") @db.Decimal(10, 2)
+  sortOrder    Int      @default(0) @map("sort_order")
+  path         String?  @db.VarChar(500)
+  depth        Int      @default(0)
+  bimGuid      String?  @map("bim_guid") @db.VarChar(100)
+  metadata     Json     @default("{}")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project  Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   Location?  @relation("LocationTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children Location[] @relation("LocationTree")
+  boqItems BoqItem[]
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([parentId])
+  @@index([path])
+  @@map("locations")
+  @@schema("public")
+}
+
+model Trade {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId           String   @map("project_id") @db.Uuid
+  name                String   @db.VarChar(100)
+  code                String   @db.VarChar(20)
+  color               String   @db.VarChar(7)
+  defaultCrewSize     Int      @default(4) @map("default_crew_size")
+  productivityRate    Decimal? @map("productivity_rate") @db.Decimal(8, 4)
+  unitOfMeasure       String?  @map("unit_of_measure") @db.VarChar(20)
+  sortOrder           Int      @default(0) @map("sort_order")
+  predecessorTradeIds String[] @default([]) @map("predecessor_trade_ids") @db.Uuid
+  companyName         String?  @map("company_name") @db.VarChar(255)
+  contactName         String?  @map("contact_name") @db.VarChar(100)
+  contactEmail        String?  @map("contact_email") @db.VarChar(255)
+  discipline          String?  @db.VarChar(30)
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@map("trades")
+  @@schema("public")
+}
+
+model Drawing {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  fileName     String   @map("file_name") @db.VarChar(500)
+  originalName String   @map("original_name") @db.VarChar(500)
+  fileType     String   @map("file_type") @db.VarChar(10)
+  fileSize     Int      @map("file_size")
+  filePath     String   @map("file_path") @db.VarChar(1000)
+  discipline   String   @db.VarChar(30)
+  drawingNo    String?  @map("drawing_no") @db.VarChar(50)
+  title        String?  @db.VarChar(255)
+  revision     String?  @db.VarChar(10)
+  sheetSize    String?  @map("sheet_size") @db.VarChar(10)
+  status       String   @default("uploaded") @db.VarChar(20)
+  uploadedBy   String?  @map("uploaded_by") @db.Uuid
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([discipline])
+  @@map("drawings")
+  @@schema("public")
+}
+
+model WbsNode {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId   String   @map("project_id") @db.Uuid
+  parentId    String?  @map("parent_id") @db.Uuid
+  code        String   @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  description String?
+  standard    String   @db.VarChar(30)
+  level       Int      @default(1)
+  sortOrder   Int      @default(0) @map("sort_order")
+  path        String?  @db.VarChar(500)
+  locationId  String?  @map("location_id") @db.Uuid
+  tradeId     String?  @map("trade_id") @db.Uuid
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project  Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   WbsNode?   @relation("WbsTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children WbsNode[]  @relation("WbsTree")
+  cbsNodes CbsNode[]
+  boqItems BoqItem[]
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([parentId])
+  @@index([path])
+  @@map("wbs_nodes")
+  @@schema("public")
+}
+
+model CbsNode {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId   String   @map("project_id") @db.Uuid
+  parentId    String?  @map("parent_id") @db.Uuid
+  wbsNodeId   String?  @map("wbs_node_id") @db.Uuid
+  code        String   @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  description String?
+  standard    String   @db.VarChar(30)
+  level       Int      @default(1)
+  sortOrder   Int      @default(0) @map("sort_order")
+  path        String?  @db.VarChar(500)
+  budgetCode  String?  @map("budget_code") @db.VarChar(30)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project  Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   CbsNode?   @relation("CbsTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children CbsNode[]  @relation("CbsTree")
+  wbsNode  WbsNode?   @relation(fields: [wbsNodeId], references: [id])
+  boqItems BoqItem[]
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([parentId])
+  @@index([wbsNodeId])
+  @@map("cbs_nodes")
+  @@schema("public")
+}
+
+model ProjectSetup {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String @unique @map("project_id") @db.Uuid
+
+  currentStep    String   @default("classification") @map("current_step") @db.VarChar(30)
+  completedSteps String[] @default([]) @map("completed_steps")
+
+  classificationStandard String @default("uniclass") @map("classification_standard") @db.VarChar(30)
+
+  boqUploaded  Boolean @default(false) @map("boq_uploaded")
+  boqFileName  String? @map("boq_file_name") @db.VarChar(500)
+  boqItemCount Int     @default(0) @map("boq_item_count")
+
+  drawingCount Int @default(0) @map("drawing_count")
+
+  wbsGenerated      Boolean @default(false) @map("wbs_generated")
+  wbsNodeCount      Int     @default(0) @map("wbs_node_count")
+  cbsGenerated      Boolean @default(false) @map("cbs_generated")
+  cbsNodeCount      Int     @default(0) @map("cbs_node_count")
+
+  taktPlanGenerated Boolean @default(false) @map("takt_plan_generated")
+
+  obsGenerated        Boolean   @default(false) @map("obs_generated")
+  obsNodeCount        Int       @default(0)     @map("obs_node_count")
+  documentCount       Int       @default(0)     @map("document_count")
+  cashFlowGenerated   Boolean   @default(false) @map("cash_flow_generated")
+  cashFlowPeriodCount Int       @default(0)     @map("cash_flow_period_count")
+  setupCompleted      Boolean   @default(false) @map("setup_completed")
+  setupCompletedAt    DateTime?                 @map("setup_completed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_setup")
+  @@schema("public")
+}
+
+model ObsNode {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  parentId     String?  @map("parent_id") @db.Uuid
+  code         String   @db.VarChar(50)
+  name         String   @db.VarChar(255)
+  description  String?
+  uniclassCode String?  @map("uniclass_code") @db.VarChar(30)
+  omniclassCode String? @map("omniclass_code") @db.VarChar(30)
+  level        Int      @default(1)
+  sortOrder    Int      @default(0) @map("sort_order")
+  path         String?  @db.VarChar(500)
+  nodeType     String   @default("company") @map("node_type") @db.VarChar(20)
+  companyName  String?  @map("company_name") @db.VarChar(255)
+  contactName  String?  @map("contact_name") @db.VarChar(100)
+  contactEmail String?  @map("contact_email") @db.VarChar(255)
+  contactPhone String?  @map("contact_phone") @db.VarChar(20)
+  wbsResponsibility String[] @default([]) @map("wbs_responsibility") @db.Uuid
+  isActive     Boolean  @default(true) @map("is_active")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   ObsNode?  @relation("ObsTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children ObsNode[] @relation("ObsTree")
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([parentId])
+  @@index([path])
+  @@map("obs_nodes")
+  @@schema("public")
+}
+
+model BoqItem {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  cbsNodeId    String?  @map("cbs_node_id") @db.Uuid
+  wbsNodeId    String?  @map("wbs_node_id") @db.Uuid
+  locationId   String?  @map("location_id") @db.Uuid
+  uniclassCode  String?  @map("uniclass_code") @db.VarChar(30)
+  omniclassCode String?  @map("omniclass_code") @db.VarChar(30)
+  itemCode     String   @map("item_code") @db.VarChar(50)
+  description  String   @db.VarChar(1000)
+  specification String?
+  unit         String   @db.VarChar(20)
+  quantity     Decimal  @db.Decimal(15, 4)
+  unitRate     Decimal  @map("unit_rate") @db.Decimal(15, 4)
+  totalAmount  Decimal  @map("total_amount") @db.Decimal(18, 2)
+  currency     String   @default("USD") @db.VarChar(3)
+  sourceRowRef String?  @map("source_row_ref") @db.VarChar(50)
+  itemType     String   @default("firm") @map("item_type") @db.VarChar(20)
+  status       String   @default("draft") @db.VarChar(20)
+  sortOrder    Int      @default(0) @map("sort_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  cbsNode  CbsNode? @relation(fields: [cbsNodeId], references: [id])
+  wbsNode  WbsNode? @relation(fields: [wbsNodeId], references: [id])
+  location Location? @relation(fields: [locationId], references: [id])
+
+  @@index([projectId])
+  @@index([cbsNodeId])
+  @@index([wbsNodeId])
+  @@index([locationId])
+  @@index([itemCode])
+  @@map("boq_items")
+  @@schema("public")
+}
+
+model ProjectDocument {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  documentType String   @map("document_type") @db.VarChar(30)
+  title        String   @db.VarChar(500)
+  description  String?
+  contractValue   Decimal? @map("contract_value") @db.Decimal(18, 2)
+  contractType    String?  @map("contract_type") @db.VarChar(50)
+  contractForm    String?  @map("contract_form") @db.VarChar(50)
+  programBaseline DateTime? @map("program_baseline") @db.Date
+  version      String   @default("1.0") @db.VarChar(20)
+  revision     String?  @db.VarChar(10)
+  revisionDate DateTime? @map("revision_date") @db.Date
+  fileName     String   @map("file_name") @db.VarChar(500)
+  originalName String   @map("original_name") @db.VarChar(500)
+  fileType     String   @map("file_type") @db.VarChar(20)
+  fileSize     Int      @map("file_size")
+  filePath     String   @map("file_path") @db.VarChar(1000)
+  status       String   @default("active") @db.VarChar(20)
+  uploadedBy   String?  @map("uploaded_by") @db.Uuid
+  approvedBy   String?  @map("approved_by") @db.Uuid
+  approvedAt   DateTime? @map("approved_at")
+  isConfidential Boolean @default(false) @map("is_confidential")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([documentType])
+  @@index([status])
+  @@map("project_documents")
+  @@schema("public")
+}
+
+model CashFlowPeriod {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String   @map("project_id") @db.Uuid
+  periodType      String   @default("monthly") @map("period_type") @db.VarChar(20)
+  periodNumber    Int      @map("period_number")
+  periodStart     DateTime @map("period_start") @db.Date
+  periodEnd       DateTime @map("period_end") @db.Date
+  plannedIncome   Decimal  @default(0) @map("planned_income") @db.Decimal(18, 2)
+  plannedExpense  Decimal  @default(0) @map("planned_expense") @db.Decimal(18, 2)
+  plannedCumIncome  Decimal @default(0) @map("planned_cum_income") @db.Decimal(18, 2)
+  plannedCumExpense Decimal @default(0) @map("planned_cum_expense") @db.Decimal(18, 2)
+  actualIncome    Decimal  @default(0) @map("actual_income") @db.Decimal(18, 2)
+  actualExpense   Decimal  @default(0) @map("actual_expense") @db.Decimal(18, 2)
+  actualCumIncome   Decimal @default(0) @map("actual_cum_income") @db.Decimal(18, 2)
+  actualCumExpense  Decimal @default(0) @map("actual_cum_expense") @db.Decimal(18, 2)
+  currency        String   @default("USD") @db.VarChar(3)
+  notes           String?
+  metadata        Json     @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, periodType, periodNumber])
+  @@index([projectId])
+  @@index([periodStart])
+  @@map("cash_flow_periods")
+  @@schema("public")
+}
+
+// ============================================================================
+// PROGRESS MODULE (from progress-service)
+// ============================================================================
+
+model ProgressUpdate {
+  id              String   @id @default(uuid()) @db.Uuid
+  projectId       String   @db.Uuid
+  assignmentId    String   @db.Uuid
+  zoneId          String   @db.Uuid
+  tradeId         String   @db.Uuid
+  reportedBy      String   @db.Uuid
+  percentComplete Float    @default(0)
+  previousPercent Float    @default(0)
+  status          String   @default("not_started")
+  notes           String?
+  photoUrls       String[] @default([])
+  reportedAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("progress.updates")
+  @@index([projectId])
+  @@index([assignmentId])
+  @@index([zoneId])
+  @@index([tradeId])
+  @@schema("public")
+}
+
+model WeeklyCommitment {
+  id               String   @id @default(uuid()) @db.Uuid
+  projectId        String   @db.Uuid
+  weekStart        DateTime @db.Date
+  weekEnd          DateTime @db.Date
+  tradeId          String   @db.Uuid
+  tradeName        String
+  zoneId           String   @db.Uuid
+  zoneName         String
+  description      String
+  committed        Boolean  @default(true)
+  completed        Boolean  @default(false)
+  varianceReason   String?
+  varianceCategory String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("progress.weekly_commitments")
+  @@index([projectId, weekStart])
+  @@index([tradeId])
+  @@schema("public")
+}
+
+model PPCRecord {
+  id                String   @id @default(uuid()) @db.Uuid
+  projectId         String   @db.Uuid
+  weekStart         DateTime @db.Date
+  weekEnd           DateTime @db.Date
+  totalCommitted    Int
+  totalCompleted    Int
+  ppcPercent        Float
+  byTrade           Json     @default("[]")
+  topVarianceReasons Json    @default("[]")
+  createdAt         DateTime @default(now())
+
+  @@map("progress.ppc_records")
+  @@index([projectId, weekStart])
+  @@unique([projectId, weekStart])
+  @@schema("public")
+}
+
+model DailyLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @db.Uuid
+  date      DateTime @db.Date
+  weather   String?
+  temperature Float?
+  crewCount Int?
+  notes     String?
+  issues    Json     @default("[]")
+  createdBy String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("progress.daily_logs")
+  @@index([projectId, date])
+  @@unique([projectId, date])
+  @@schema("public")
+}
+
+// ============================================================================
+// COST MODULE (from cost-service) — uses "cost" schema
+// ============================================================================
+
+model PriceCatalog {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String?  @map("project_id") @db.Uuid
+  name     String  @db.VarChar(255)
+  source   String  @db.VarChar(30)
+  standard String? @db.VarChar(30)
+  year     Int
+  period   String? @db.VarChar(20)
+  region   String? @db.VarChar(50)
+  currency String  @default("TRY") @db.VarChar(3)
+  description String?
+  fileName    String? @map("file_name") @db.VarChar(500)
+  fileType    String? @map("file_type") @db.VarChar(10)
+  itemCount   Int     @default(0) @map("item_count")
+  isActive  Boolean  @default(true) @map("is_active")
+  uploadedBy String? @map("uploaded_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  items PriceCatalogItem[]
+
+  @@index([source], name: "idx_price_catalog_source")
+  @@index([standard], name: "idx_price_catalog_standard")
+  @@index([year], name: "idx_price_catalog_year")
+  @@index([region], name: "idx_price_catalog_region")
+  @@index([projectId], name: "idx_price_catalog_project")
+  @@map("price_catalogs")
+  @@schema("cost")
+}
+
+model PriceCatalogItem {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  catalogId String @map("catalog_id") @db.Uuid
+  code        String  @db.VarChar(50)
+  name        String  @db.VarChar(500)
+  unit        String  @db.VarChar(20)
+  unitPrice   Decimal @map("unit_price") @db.Decimal(15, 4)
+  category    String? @db.VarChar(100)
+  subcategory String? @db.VarChar(100)
+  laborCost     Decimal? @map("labor_cost") @db.Decimal(15, 4)
+  materialCost  Decimal? @map("material_cost") @db.Decimal(15, 4)
+  equipmentCost Decimal? @map("equipment_cost") @db.Decimal(15, 4)
+  csiCode       String?  @map("csi_code") @db.VarChar(20)
+  divisionCode  String?  @map("division_code") @db.VarChar(10)
+  divisionName  String?  @map("division_name") @db.VarChar(100)
+  uniformatCode String?  @map("uniformat_code") @db.VarChar(20)
+  uniclassCode  String?  @map("uniclass_code") @db.VarChar(30)
+  locationFactor Decimal? @map("location_factor") @db.Decimal(6, 4)
+  location       String?  @map("location") @db.VarChar(100)
+  assemblyType String?  @map("assembly_type") @db.VarChar(20)
+  crewCode     String?  @map("crew_code") @db.VarChar(20)
+  productivity Decimal? @db.Decimal(10, 4)
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  catalog PriceCatalog @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+
+  @@index([catalogId], name: "idx_price_catalog_items_catalog")
+  @@index([code], name: "idx_price_catalog_items_code")
+  @@index([category], name: "idx_price_catalog_items_category")
+  @@index([csiCode], name: "idx_price_catalog_items_csi")
+  @@index([divisionCode], name: "idx_price_catalog_items_division")
+  @@index([uniformatCode], name: "idx_price_catalog_items_uniformat")
+  @@map("price_catalog_items")
+  @@schema("cost")
+}
+
+model WorkItem {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId   String   @map("project_id") @db.Uuid
+  code        String   @db.VarChar(50)
+  name        String   @db.VarChar(500)
+  description String?
+  unit        String   @db.VarChar(20)
+  category    String   @db.VarChar(50)
+  subcategory String?  @db.VarChar(100)
+  tradeId     String?  @map("trade_id") @db.Uuid
+  source      String   @default("custom") @db.VarChar(30)
+  sourceYear  Int?     @map("source_year")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  unitPriceAnalyses UnitPriceAnalysis[]
+  quantityTakeoffs  QuantityTakeoff[]
+  estimateItems     EstimateItem[]
+  budgetItems       BudgetItem[]
+  paymentItems      PaymentItem[]
+
+  @@unique([projectId, code])
+  @@index([projectId], name: "idx_work_items_project")
+  @@index([category], name: "idx_work_items_category")
+  @@index([tradeId], name: "idx_work_items_trade")
+  @@map("work_items")
+  @@schema("cost")
+}
+
+model UnitPriceAnalysis {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workItemId   String   @map("work_item_id") @db.Uuid
+  version      Int      @default(1)
+  analysisDate DateTime @default(dbgenerated("CURRENT_DATE")) @map("analysis_date") @db.Date
+  laborCost     Decimal  @default(0) @map("labor_cost") @db.Decimal(15, 4)
+  materialCost  Decimal  @default(0) @map("material_cost") @db.Decimal(15, 4)
+  equipmentCost Decimal  @default(0) @map("equipment_cost") @db.Decimal(15, 4)
+  subtotal      Decimal  @default(0) @db.Decimal(15, 4)
+  overheadPct    Decimal  @default(0) @map("overhead_pct") @db.Decimal(5, 2)
+  profitPct      Decimal  @default(0) @map("profit_pct") @db.Decimal(5, 2)
+  overheadAmount Decimal  @default(0) @map("overhead_amount") @db.Decimal(15, 4)
+  profitAmount   Decimal  @default(0) @map("profit_amount") @db.Decimal(15, 4)
+  unitPrice Decimal  @map("unit_price") @db.Decimal(15, 4)
+  currency  String   @default("TRY") @db.VarChar(3)
+  source   String   @default("manual") @db.VarChar(30)
+  notes    String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  workItem  WorkItem               @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  resources UnitPriceResource[]
+
+  @@index([workItemId], name: "idx_unit_price_work_item")
+  @@map("unit_price_analyses")
+  @@schema("cost")
+}
+
+model UnitPriceResource {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  analysisId String   @map("analysis_id") @db.Uuid
+  resourceType String  @map("resource_type") @db.VarChar(20)
+  code     String?  @db.VarChar(30)
+  name     String   @db.VarChar(500)
+  unit     String   @db.VarChar(20)
+  quantity Decimal  @db.Decimal(15, 6)
+  unitRate Decimal  @map("unit_rate") @db.Decimal(15, 4)
+  total    Decimal  @db.Decimal(15, 4)
+  rateSource String?   @map("rate_source") @default("manual") @db.VarChar(30)
+  rateDate   DateTime? @map("rate_date") @db.Date
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  analysis UnitPriceAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId], name: "idx_unit_price_resources_analysis")
+  @@index([resourceType], name: "idx_unit_price_resources_type")
+  @@map("unit_price_resources")
+  @@schema("cost")
+}
+
+model QuantityTakeoff {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId  String   @map("project_id") @db.Uuid
+  workItemId String   @map("work_item_id") @db.Uuid
+  locationId String?  @map("location_id") @db.Uuid
+  quantity Decimal  @db.Decimal(15, 4)
+  unit     String   @db.VarChar(20)
+  calculationFormula String? @map("calculation_formula")
+  dimensions         Json?
+  source       String?  @default("manual") @db.VarChar(30)
+  drawingRef   String?  @map("drawing_ref") @db.VarChar(100)
+  bimElementId String?  @map("bim_element_id") @db.VarChar(100)
+  revision       Int     @default(1)
+  revisionReason String? @map("revision_reason")
+  notes String?
+  measuredBy String? @map("measured_by") @db.Uuid
+  verifiedBy String? @map("verified_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  workItem WorkItem @relation(fields: [workItemId], references: [id])
+
+  @@index([projectId], name: "idx_qty_project")
+  @@index([workItemId], name: "idx_qty_work_item")
+  @@index([locationId], name: "idx_qty_location")
+  @@map("quantity_takeoffs")
+  @@schema("cost")
+}
+
+model Estimate {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  name String  @db.VarChar(255)
+  type String  @db.VarChar(30)
+  totalAmount Decimal  @default(0) @map("total_amount") @db.Decimal(18, 2)
+  currency    String   @default("TRY") @db.VarChar(3)
+  vatPct      Decimal  @default(20) @map("vat_pct") @db.Decimal(5, 2)
+  vatAmount   Decimal  @default(0) @map("vat_amount") @db.Decimal(18, 2)
+  grandTotal  Decimal  @default(0) @map("grand_total") @db.Decimal(18, 2)
+  status String @default("draft") @db.VarChar(20)
+  approvedBy   String?   @map("approved_by") @db.Uuid
+  approvedDate DateTime? @map("approved_date") @db.Date
+  version      Int       @default(1)
+  parentEstimateId String? @map("parent_estimate_id") @db.Uuid
+  notes String?
+  createdBy String   @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  items   EstimateItem[]
+  budgets Budget[]
+
+  @@index([projectId], name: "idx_estimates_project")
+  @@index([status], name: "idx_estimates_status")
+  @@map("estimates")
+  @@schema("cost")
+}
+
+model EstimateItem {
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  estimateId String @map("estimate_id") @db.Uuid
+  workItemId String @map("work_item_id") @db.Uuid
+  locationId String? @map("location_id") @db.Uuid
+  quantity   Decimal @db.Decimal(15, 4)
+  unitPrice  Decimal @map("unit_price") @db.Decimal(15, 4)
+  totalPrice Decimal @map("total_price") @db.Decimal(18, 2)
+  sortOrder Int     @default(0) @map("sort_order")
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  estimate Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  workItem WorkItem @relation(fields: [workItemId], references: [id])
+
+  @@index([estimateId], name: "idx_estimate_items_estimate")
+  @@map("estimate_items")
+  @@schema("cost")
+}
+
+model Budget {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId  String  @map("project_id") @db.Uuid
+  estimateId String? @map("estimate_id") @db.Uuid
+  name        String  @db.VarChar(255)
+  totalAmount Decimal @map("total_amount") @db.Decimal(18, 2)
+  currency    String  @default("TRY") @db.VarChar(3)
+  status String @default("draft") @db.VarChar(20)
+  approvedBy String? @map("approved_by") @db.Uuid
+  version    Int     @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  estimate            Estimate?            @relation(fields: [estimateId], references: [id])
+  items               BudgetItem[]
+  paymentCertificates PaymentCertificate[]
+
+  @@index([projectId], name: "idx_budgets_project")
+  @@map("budgets")
+  @@schema("cost")
+}
+
+model BudgetItem {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  budgetId   String  @map("budget_id") @db.Uuid
+  workItemId String? @map("work_item_id") @db.Uuid
+  wbsCode     String? @map("wbs_code") @db.VarChar(30)
+  description String  @db.VarChar(500)
+  tradeId     String? @map("trade_id") @db.Uuid
+  plannedAmount   Decimal @map("planned_amount") @db.Decimal(18, 2)
+  committedAmount Decimal @default(0) @map("committed_amount") @db.Decimal(18, 2)
+  actualAmount    Decimal @default(0) @map("actual_amount") @db.Decimal(18, 2)
+  category String @db.VarChar(30)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  budget      Budget       @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  workItem    WorkItem?    @relation(fields: [workItemId], references: [id])
+  costRecords CostRecord[]
+
+  @@index([budgetId], name: "idx_budget_items_budget")
+  @@map("budget_items")
+  @@schema("cost")
+}
+
+model PaymentCertificate {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String  @map("project_id") @db.Uuid
+  budgetId  String? @map("budget_id") @db.Uuid
+  periodNumber Int      @map("period_number")
+  periodStart  DateTime @map("period_start") @db.Date
+  periodEnd    DateTime @map("period_end") @db.Date
+  grossAmount Decimal @default(0) @map("gross_amount") @db.Decimal(18, 2)
+  retentionPct     Decimal @default(0) @map("retention_pct") @db.Decimal(5, 2)
+  retentionAmount  Decimal @default(0) @map("retention_amount") @db.Decimal(18, 2)
+  advanceDeduction Decimal @default(0) @map("advance_deduction") @db.Decimal(18, 2)
+  otherDeductions  Decimal @default(0) @map("other_deductions") @db.Decimal(18, 2)
+  deductionNotes   String? @map("deduction_notes")
+  priceEscalation   Decimal @default(0) @map("price_escalation") @db.Decimal(18, 2)
+  escalationIndex   String? @map("escalation_index") @db.VarChar(50)
+  escalationFormula String? @map("escalation_formula")
+  vatPct    Decimal @default(20) @map("vat_pct") @db.Decimal(5, 2)
+  vatAmount Decimal @default(0) @map("vat_amount") @db.Decimal(18, 2)
+  netAmount        Decimal @default(0) @map("net_amount") @db.Decimal(18, 2)
+  cumulativeAmount Decimal @default(0) @map("cumulative_amount") @db.Decimal(18, 2)
+  status String @default("draft") @db.VarChar(20)
+  submittedDate DateTime? @map("submitted_date") @db.Date
+  approvedBy    String?   @map("approved_by") @db.Uuid
+  approvedDate  DateTime? @map("approved_date") @db.Date
+  paymentDate   DateTime? @map("payment_date") @db.Date
+  notes String?
+  createdBy String   @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  budget Budget?       @relation(fields: [budgetId], references: [id])
+  items  PaymentItem[]
+
+  @@unique([projectId, periodNumber])
+  @@index([projectId], name: "idx_payment_certs_project")
+  @@index([status], name: "idx_payment_certs_status")
+  @@map("payment_certificates")
+  @@schema("cost")
+}
+
+model PaymentItem {
+  id            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  certificateId String @map("certificate_id") @db.Uuid
+  workItemId    String @map("work_item_id") @db.Uuid
+  locationId String? @map("location_id") @db.Uuid
+  contractQty   Decimal @map("contract_qty") @db.Decimal(15, 4)
+  previousQty   Decimal @default(0) @map("previous_qty") @db.Decimal(15, 4)
+  currentQty    Decimal @default(0) @map("current_qty") @db.Decimal(15, 4)
+  cumulativeQty Decimal @default(0) @map("cumulative_qty") @db.Decimal(15, 4)
+  unitPrice Decimal @map("unit_price") @db.Decimal(15, 4)
+  currentAmount    Decimal @default(0) @map("current_amount") @db.Decimal(18, 2)
+  cumulativeAmount Decimal @default(0) @map("cumulative_amount") @db.Decimal(18, 2)
+  completionPct Decimal @default(0) @map("completion_pct") @db.Decimal(5, 2)
+  notes String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  certificate PaymentCertificate @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+  workItem    WorkItem           @relation(fields: [workItemId], references: [id])
+
+  @@index([certificateId], name: "idx_payment_items_cert")
+  @@index([workItemId], name: "idx_payment_items_work_item")
+  @@map("payment_items")
+  @@schema("cost")
+}
+
+model EvmSnapshot {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  snapshotDate DateTime @map("snapshot_date") @db.Date
+  pv Decimal @db.Decimal(18, 2)
+  ev Decimal @db.Decimal(18, 2)
+  ac Decimal @db.Decimal(18, 2)
+  cv Decimal? @db.Decimal(18, 2)
+  sv Decimal? @db.Decimal(18, 2)
+  cpi Decimal? @db.Decimal(8, 4)
+  spi Decimal? @db.Decimal(8, 4)
+  eac  Decimal? @db.Decimal(18, 2)
+  etc  Decimal? @db.Decimal(18, 2)
+  vac  Decimal? @db.Decimal(18, 2)
+  tcpi Decimal? @db.Decimal(8, 4)
+  dataSource String @default("calculated") @map("data_source") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([projectId], name: "idx_evm_project")
+  @@index([snapshotDate], name: "idx_evm_date")
+  @@map("evm_snapshots")
+  @@schema("cost")
+}
+
+model CostRecord {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String  @map("project_id") @db.Uuid
+  budgetItemId String? @map("budget_item_id") @db.Uuid
+  amount      Decimal  @db.Decimal(18, 2)
+  type        String   @db.VarChar(20)
+  date        DateTime @db.Date
+  description String?
+  invoiceRef  String?  @map("invoice_ref") @db.VarChar(100)
+  vendor      String?  @db.VarChar(255)
+  approvedBy String? @map("approved_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  budgetItem BudgetItem? @relation(fields: [budgetItemId], references: [id])
+
+  @@index([projectId], name: "idx_cost_records_project")
+  @@index([type], name: "idx_cost_records_type")
+  @@index([date], name: "idx_cost_records_date")
+  @@map("cost_records")
+  @@schema("cost")
+}
+
+model UniclassCache {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String  @unique @db.VarChar(30)
+  title       String  @db.VarChar(500)
+  description String?
+  tableName   String  @map("table_name") @db.VarChar(5)
+  parentCode  String? @map("parent_code") @db.VarChar(30)
+  level       Int     @default(1)
+  syncedAt DateTime @default(now()) @map("synced_at")
+
+  @@index([tableName], name: "idx_uniclass_cache_table")
+  @@index([parentCode], name: "idx_uniclass_cache_parent")
+  @@index([title], name: "idx_uniclass_cache_title")
+  @@map("uniclass_cache")
+  @@schema("cost")
+}
+
+model ClassificationMapping {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  uniclassCode    String? @map("uniclass_code") @db.VarChar(30)
+  masterformatCode String? @map("masterformat_code") @db.VarChar(20)
+  uniformatCode   String? @map("uniformat_code") @db.VarChar(20)
+  description   String  @db.VarChar(500)
+  category      String  @db.VarChar(100)
+  confidence    Decimal @default(1.0) @db.Decimal(3, 2)
+  source        String  @default("manual") @db.VarChar(30)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([uniclassCode], name: "idx_class_map_uniclass")
+  @@index([masterformatCode], name: "idx_class_map_masterformat")
+  @@index([uniformatCode], name: "idx_class_map_uniformat")
+  @@index([category], name: "idx_class_map_category")
+  @@map("classification_mappings")
+  @@schema("cost")
+}
