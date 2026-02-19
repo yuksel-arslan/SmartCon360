@@ -1,6 +1,6 @@
 // Price Catalog Service — Turkish + International Standards
 // Turkish: Bayindirlik, Iller Bankasi
-// International: MasterFormat (CSI), UNIFORMAT II, Uniclass (UK), RSMeans
+// International: Uniclass (UK), RSMeans
 
 import { prisma } from '../utils/prisma';
 import { NotFoundError } from '../utils/errors';

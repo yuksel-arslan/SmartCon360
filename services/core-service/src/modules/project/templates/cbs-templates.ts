@@ -6,7 +6,7 @@
  *
  * Supported standards:
  * - Uniclass 2015 Ss (Systems) — loaded from parsed CSV JSON
- * - UniFormat II CBS — hardcoded cost-focused view
+ * - Custom — user-defined CBS
  *
  * CBS nodes map to CostPilot budget items for cost tracking.
  */
@@ -102,80 +102,11 @@ function buildCbsTreeFromItems(items: UniclassJsonItem[]): CbsTemplateNode[] {
 }
 
 // ============================================================================
-// UNIFORMAT II CBS (cost-focused view) — hardcoded
-// ============================================================================
-
-const UNIFORMAT_CBS_BASE: CbsTemplateNode[] = [
-  {
-    code: 'A-CBS',
-    name: 'Substructure Costs',
-    wbsCodes: ['A'],
-    children: [
-      { code: 'A10-CBS', name: 'Foundation Costs', wbsCodes: ['A10'] },
-      { code: 'A20-CBS', name: 'Basement Construction Costs', wbsCodes: ['A20'] },
-    ],
-  },
-  {
-    code: 'B-CBS',
-    name: 'Shell Costs',
-    wbsCodes: ['B'],
-    children: [
-      { code: 'B10-CBS', name: 'Superstructure Costs', wbsCodes: ['B10'] },
-      { code: 'B20-CBS', name: 'Exterior Enclosure Costs', wbsCodes: ['B20'] },
-      { code: 'B30-CBS', name: 'Roofing Costs', wbsCodes: ['B30'] },
-    ],
-  },
-  {
-    code: 'C-CBS',
-    name: 'Interiors Costs',
-    wbsCodes: ['C'],
-    children: [
-      { code: 'C10-CBS', name: 'Interior Construction Costs', wbsCodes: ['C10'] },
-      { code: 'C20-CBS', name: 'Stairs Costs', wbsCodes: ['C20'] },
-      { code: 'C30-CBS', name: 'Interior Finishes Costs', wbsCodes: ['C30'] },
-    ],
-  },
-  {
-    code: 'D-CBS',
-    name: 'Services Costs',
-    wbsCodes: ['D'],
-    children: [
-      { code: 'D10-CBS', name: 'Conveying Costs', wbsCodes: ['D10'] },
-      { code: 'D20-CBS', name: 'Plumbing Costs', wbsCodes: ['D20'] },
-      { code: 'D30-CBS', name: 'HVAC Costs', wbsCodes: ['D30'] },
-      { code: 'D40-CBS', name: 'Fire Protection Costs', wbsCodes: ['D40'] },
-      { code: 'D50-CBS', name: 'Electrical Costs', wbsCodes: ['D50'] },
-    ],
-  },
-  {
-    code: 'E-CBS',
-    name: 'Equipment & Furnishings Costs',
-    wbsCodes: ['E'],
-    children: [
-      { code: 'E10-CBS', name: 'Equipment Costs', wbsCodes: ['E10'] },
-      { code: 'E20-CBS', name: 'Furnishings Costs', wbsCodes: ['E20'] },
-    ],
-  },
-  {
-    code: 'G-CBS',
-    name: 'Building Sitework Costs',
-    wbsCodes: ['G'],
-    children: [
-      { code: 'G10-CBS', name: 'Site Preparation Costs', wbsCodes: ['G10'] },
-      { code: 'G20-CBS', name: 'Site Improvements Costs', wbsCodes: ['G20'] },
-      { code: 'G30-CBS', name: 'Site Mechanical Utilities Costs', wbsCodes: ['G30'] },
-      { code: 'G40-CBS', name: 'Site Electrical Utilities Costs', wbsCodes: ['G40'] },
-    ],
-  },
-];
-
-// ============================================================================
 // PUBLIC API
 // ============================================================================
 
 export const CBS_STANDARDS = [
   { value: 'uniclass_ss', label: 'Uniclass 2015 Ss (Systems)', description: 'UK standard — 2,415 systems, 4 levels deep (from official CSV)', region: 'UK/International' },
-  { value: 'uniformat_cbs', label: 'UniFormat II CBS', description: 'ASTM E1557 — cost breakdown by system', region: 'US/International' },
   { value: 'custom', label: 'Custom', description: 'Create your own CBS structure manually', region: 'Any' },
 ] as const;
 
@@ -185,20 +116,10 @@ const CBS_STANDARD_MAP: Record<string, { label: string; description: string; get
     description: 'Uniclass 2015 Systems table for cost breakdown — loaded from official CSV (level 1-2 for template, full depth available via search)',
     getNodes: loadUniclassSsNodes,
   },
-  uniformat_cbs: {
-    label: 'UniFormat II CBS',
-    description: 'UniFormat II cost breakdown structure',
-    getNodes: () => UNIFORMAT_CBS_BASE,
-  },
 };
 
 export function getDefaultCbsStandard(wbsStandard: string): string {
-  const map: Record<string, string> = {
-    uniclass: 'uniclass_ss',
-    masterformat: 'uniclass_ss',
-    uniformat: 'uniformat_cbs',
-  };
-  return map[wbsStandard] || 'uniclass_ss';
+  return 'uniclass_ss';
 }
 
 export function getCbsTemplate(standard: string): CbsTemplate | null {

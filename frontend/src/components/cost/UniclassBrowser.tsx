@@ -129,7 +129,7 @@ export function UniclassBrowser({ onSelect }: UniclassBrowserProps) {
             disabled={seeding}
             className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors disabled:opacity-50"
             style={{ background: 'rgba(168,85,247,0.1)', color: 'rgb(168,85,247)' }}
-            title="Seed cross-standard mappings (Uniclass, MasterFormat, UNIFORMAT)"
+            title="Seed cross-standard mappings (Uniclass, OmniClass)"
           >
             {seedResult ? (
               <><CheckCircle2 size={10} /> {seedResult.created} seeded</>
@@ -269,7 +269,7 @@ export function UniclassBrowser({ onSelect }: UniclassBrowserProps) {
           </div>
           <div className="space-y-2">
             {classificationMappings.map((m, i) => (
-              <div key={i} className="grid grid-cols-4 gap-2 text-[10px] px-3 py-2 rounded-lg"
+              <div key={i} className="grid grid-cols-3 gap-2 text-[10px] px-3 py-2 rounded-lg"
                 style={{ background: 'var(--color-bg-main)' }}>
                 <div>
                   <div className="font-semibold mb-0.5" style={{ color: 'var(--color-text-muted)' }}>Uniclass</div>
@@ -278,21 +278,15 @@ export function UniclassBrowser({ onSelect }: UniclassBrowserProps) {
                   </span>
                 </div>
                 <div>
-                  <div className="font-semibold mb-0.5" style={{ color: 'var(--color-text-muted)' }}>MasterFormat</div>
-                  <span className="font-mono font-bold" style={{ color: 'rgb(34,197,94)' }}>
-                    {m.masterformatCode || '—'}
-                  </span>
-                </div>
-                <div>
-                  <div className="font-semibold mb-0.5" style={{ color: 'var(--color-text-muted)' }}>UNIFORMAT</div>
-                  <span className="font-mono font-bold" style={{ color: 'rgb(168,85,247)' }}>
-                    {m.uniformatCode || '—'}
-                  </span>
-                </div>
-                <div>
                   <div className="font-semibold mb-0.5" style={{ color: 'var(--color-text-muted)' }}>Category</div>
                   <span style={{ color: 'var(--color-text)' }}>{m.category}</span>
                   <div className="mt-0.5 opacity-60">{(m.confidence * 100).toFixed(0)}% confidence</div>
+                </div>
+                <div>
+                  <div className="font-semibold mb-0.5" style={{ color: 'var(--color-text-muted)' }}>OmniClass</div>
+                  <span className="font-mono font-bold" style={{ color: 'rgb(168,85,247)' }}>
+                    {m.omniclassCode || '—'}
+                  </span>
                 </div>
               </div>
             ))}

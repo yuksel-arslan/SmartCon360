@@ -96,8 +96,6 @@ export default function StepWbs({ projectId, state, onStateChange, authHeaders }
 
   const standardLabel: Record<string, string> = {
     uniclass: 'Uniclass 2015 (EF)',
-    masterformat: 'MasterFormat 2018',
-    uniformat: 'UniFormat II',
     custom: 'Custom',
   };
 

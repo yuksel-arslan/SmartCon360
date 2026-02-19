@@ -1,5 +1,5 @@
 // Cross-Standard Classification Mapping Routes
-// Uniclass 2015 (UK) ↔ MasterFormat (US CSI) ↔ UNIFORMAT II (US)
+// Uniclass 2015 (UK) ↔ OmniClass (International)
 
 import { Router } from 'express';
 import { classificationMappingService } from '../services/classification-mapping.service';
@@ -90,7 +90,7 @@ router.post('/', async (req, res, next) => {
 
 /**
  * POST /cost/mappings/seed
- * Seed common construction mappings (Uniclass ↔ MasterFormat ↔ UNIFORMAT)
+ * Seed common construction classification mappings (Uniclass ↔ OmniClass)
  */
 router.post('/seed', async (req, res, next) => {
   try {
