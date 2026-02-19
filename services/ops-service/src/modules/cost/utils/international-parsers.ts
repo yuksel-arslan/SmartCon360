@@ -1,5 +1,5 @@
 // International Construction Cost Standard Parsers
-// Supports: MasterFormat (CSI), UNIFORMAT II, Uniclass (UK), RSMeans
+// Supports: Uniclass (UK), RSMeans
 
 import type { CatalogItemInput } from '../services/catalog.service';
 

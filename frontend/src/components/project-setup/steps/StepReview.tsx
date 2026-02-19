@@ -7,8 +7,6 @@ import { Check, X, FileText, FolderTree, DollarSign, Wrench, Image, MapPin, Cloc
 export default function StepReview({ state }: SetupStepProps) {
   const standardLabel: Record<string, string> = {
     uniclass: 'Uniclass 2015',
-    masterformat: 'MasterFormat 2018',
-    uniformat: 'UniFormat II',
     custom: 'Custom',
   };
 

@@ -5,8 +5,6 @@ import { FileText, Globe2, Building2 } from 'lucide-react';
 
 const WBS_STANDARDS: (WbsStandard & { icon: string })[] = [
   { value: 'uniclass', label: 'Uniclass 2015', description: 'UK NBS standard — Elements/Functions classification. Widely used internationally.', region: 'UK / International', icon: '🇬🇧' },
-  { value: 'masterformat', label: 'MasterFormat 2018', description: 'CSI/CSC — Division-based classification (50 divisions). North American standard.', region: 'US / Canada', icon: '🇺🇸' },
-  { value: 'uniformat', label: 'UniFormat II', description: 'ASTM E1557 — System/assembly classification. Used for early cost estimating.', region: 'US / International', icon: '🌐' },
   { value: 'custom', label: 'Custom', description: 'Create your own WBS structure manually without a predefined standard.', region: 'Any', icon: '✏️' },
 ];
 

@@ -1,5 +1,5 @@
 // Price Catalog Routes — Turkish + International Standards Library management
-// Supports: Bayindirlik, Iller Bankasi, MasterFormat, UNIFORMAT, Uniclass, RSMeans
+// Supports: Bayindirlik, Iller Bankasi, Uniclass, RSMeans
 
 import { Router } from 'express';
 import multer from 'multer';
@@ -247,7 +247,7 @@ router.post('/:id/copy-to-project', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// ── Get MasterFormat divisions in a catalog ──
+// ── Get divisions in a catalog (legacy, kept for backward compat) ──
 router.get('/:id/divisions', async (req, res, next) => {
   try {
     const catalogId = req.params.id;

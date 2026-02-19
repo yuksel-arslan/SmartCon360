@@ -386,8 +386,6 @@ function LibraryTab() {
     switch (s) {
       case 'bayindirlik': return 'Min. of Public Works';
       case 'iller_bankasi': return 'Provincial Bank';
-      case 'masterformat': return 'MasterFormat (CSI)';
-      case 'uniformat': return 'UNIFORMAT II';
       case 'uniclass': return 'Uniclass (UK)';
       case 'rsmeans': return 'RSMeans';
       case 'custom': return 'Custom';
@@ -400,8 +398,6 @@ function LibraryTab() {
     switch (s) {
       case 'bayindirlik': return 'rgb(239,68,68)';
       case 'iller_bankasi': return 'rgb(59,130,246)';
-      case 'masterformat': return 'rgb(34,197,94)';
-      case 'uniformat': return 'rgb(168,85,247)';
       case 'uniclass': return 'rgb(236,72,153)';
       case 'rsmeans': return 'rgb(14,165,233)';
       case 'custom': return 'var(--color-accent)';
@@ -416,19 +412,15 @@ function LibraryTab() {
   const groupedCatalogs = catalogs.filter((c: PriceCatalog) => {
     if (sourceGroup === 'all') return true;
     if (sourceGroup === 'turkish') return ['bayindirlik', 'iller_bankasi'].includes(c.source);
-    if (sourceGroup === 'international') return ['masterformat', 'uniformat', 'uniclass', 'rsmeans'].includes(c.source);
+    if (sourceGroup === 'international') return ['uniclass', 'rsmeans'].includes(c.source);
     if (sourceGroup === 'custom') return ['custom', 'supplier'].includes(c.source);
     return true;
   });
 
   // Group counts
   const turkishCount = catalogs.filter((c: PriceCatalog) => ['bayindirlik', 'iller_bankasi'].includes(c.source)).length;
-  const intlCount = catalogs.filter((c: PriceCatalog) => ['masterformat', 'uniformat', 'uniclass', 'rsmeans'].includes(c.source)).length;
+  const intlCount = catalogs.filter((c: PriceCatalog) => ['uniclass', 'rsmeans'].includes(c.source)).length;
   const customCount = catalogs.filter((c: PriceCatalog) => ['custom', 'supplier'].includes(c.source)).length;
-
-  // Check if active catalog is a MasterFormat or UNIFORMAT type (for division/element filter)
-  const isMasterFormat = activeCatalog?.source === 'masterformat' || activeCatalog?.standard === 'masterformat';
-  const isUniformat = activeCatalog?.source === 'uniformat' || activeCatalog?.standard === 'uniformat';
 
   return (
     <div className="space-y-4">
@@ -436,7 +428,7 @@ function LibraryTab() {
         <div>
           <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Unit Price Library</h3>
           <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            Turkish standards, International standards (MasterFormat, UNIFORMAT, Uniclass, RSMeans) and Custom catalogs
+            Turkish standards, International standards (Uniclass, RSMeans) and Custom catalogs
           </p>
         </div>
         <Btn variant={showCreateForm ? 'danger' : 'primary'} onClick={() => setShowCreateForm(!showCreateForm)}>
@@ -456,8 +448,6 @@ function LibraryTab() {
                 <option value="iller_bankasi">Provincial Bank</option>
               </optgroup>
               <optgroup label="International Standards">
-                <option value="masterformat">MasterFormat (CSI)</option>
-                <option value="uniformat">UNIFORMAT II</option>
                 <option value="uniclass">Uniclass (UK)</option>
                 <option value="rsmeans">RSMeans</option>
               </optgroup>
@@ -519,7 +509,7 @@ function LibraryTab() {
             {/* Global Standards Section */}
             {sourceGroup !== 'custom' && sourceGroup !== 'turkish' && (
               (() => {
-                const globalCats = groupedCatalogs.filter((c: PriceCatalog) => !c.projectId && ['masterformat', 'uniformat', 'rsmeans'].includes(c.source));
+                const globalCats = groupedCatalogs.filter((c: PriceCatalog) => !c.projectId && ['rsmeans'].includes(c.source));
                 if (globalCats.length === 0) return null;
                 return (
                   <>
@@ -543,11 +533,11 @@ function LibraryTab() {
             {/* Project Catalogs Section */}
             {(() => {
               const projectCats = groupedCatalogs.filter((c: PriceCatalog) =>
-                c.projectId || !['masterformat', 'uniformat', 'rsmeans'].includes(c.source) || sourceGroup === 'turkish' || sourceGroup === 'custom'
+                c.projectId || !['rsmeans'].includes(c.source) || sourceGroup === 'turkish' || sourceGroup === 'custom'
               );
               // De-duplicate: remove globalCats that were shown above
               const globalIds = new Set(
-                groupedCatalogs.filter((c: PriceCatalog) => !c.projectId && ['masterformat', 'uniformat', 'rsmeans'].includes(c.source)).map((c: PriceCatalog) => c.id)
+                groupedCatalogs.filter((c: PriceCatalog) => !c.projectId && ['rsmeans'].includes(c.source)).map((c: PriceCatalog) => c.id)
               );
               const filtered = (sourceGroup !== 'custom' && sourceGroup !== 'turkish')
                 ? projectCats.filter((c: PriceCatalog) => !globalIds.has(c.id))
@@ -582,7 +572,7 @@ function LibraryTab() {
               <FolderOpen size={48} strokeWidth={1} style={{ color: 'var(--color-accent)' }} />
               <p className="text-sm mt-3 font-medium" style={{ color: 'var(--color-text)' }}>Select a catalog or create a new one</p>
               <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                Browse global standards (MasterFormat, UNIFORMAT II) or upload your own price lists
+                Browse global standards (Uniclass, RSMeans) or upload your own price lists
               </p>
             </Card>
           )}
@@ -685,20 +675,6 @@ function LibraryTab() {
                       </Select>
                     )}
 
-                    {/* MasterFormat Division Filter */}
-                    {isMasterFormat && catalogDivisions.length > 0 && (
-                      <Select value={divFilter} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setDivFilter(e.target.value); setPage(1); setTimeout(doSearch, 0); }}>
-                        <option value="">All Divisions</option>
-                        {catalogDivisions.map(d => <option key={d.code} value={d.code}>Div {d.code} — {d.name}</option>)}
-                      </Select>
-                    )}
-
-                    {/* UNIFORMAT Element Filter - using categories which map to level groups */}
-                    {isUniformat && catalogCategories.length > 0 && !catFilter && (
-                      <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-                        Use Category filter to browse by UNIFORMAT level
-                      </span>
-                    )}
 
                     {(catFilter || divFilter) && (
                       <button onClick={() => { setCatFilter(''); setDivFilter(''); setPage(1); setTimeout(doSearch, 0); }}

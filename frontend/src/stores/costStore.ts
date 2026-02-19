@@ -196,8 +196,8 @@ export interface PriceCatalog {
   id: string;
   projectId?: string;
   name: string;
-  source: string; // bayindirlik | iller_bankasi | masterformat | uniformat | uniclass | rsmeans | custom | supplier
-  standard?: string; // masterformat | uniformat | uniclass | null
+  source: string; // bayindirlik | iller_bankasi | uniclass | rsmeans | custom | supplier
+  standard?: string; // uniclass | null
   year: number;
   period?: string;
   region?: string; // US_Northeast, UK_London, TR_Istanbul, etc.
