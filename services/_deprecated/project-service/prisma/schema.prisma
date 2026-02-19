@@ -1,0 +1,440 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// EXISTING MODELS
+// ============================================================================
+
+model Project {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String    @db.VarChar(255)
+  code            String    @unique @db.VarChar(50)
+  description     String?
+  projectType     String    @map("project_type") @db.VarChar(50)
+  status          String    @default("planning") @db.VarChar(30)
+  address         String?
+  city            String?   @db.VarChar(100)
+  country         String?   @db.VarChar(100)
+  plannedStart    DateTime? @map("planned_start") @db.Date
+  plannedFinish   DateTime? @map("planned_finish") @db.Date
+  actualStart     DateTime? @map("actual_start") @db.Date
+  actualFinish    DateTime? @map("actual_finish") @db.Date
+  defaultTaktTime Int       @default(5) @map("default_takt_time")
+  workingDays     Json      @default("[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"]") @map("working_days")
+  budget          Decimal?  @db.Decimal(15, 2)
+  currency        String    @default("USD") @db.VarChar(3)
+  ownerId         String    @map("owner_id") @db.Uuid
+  settings        Json      @default("{}")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  locations        Location[]
+  trades           Trade[]
+  members          ProjectMember[]
+  drawings         Drawing[]
+  wbsNodes         WbsNode[]
+  cbsNodes         CbsNode[]
+  projectSetup     ProjectSetup?
+  obsNodes         ObsNode[]
+  boqItems         BoqItem[]
+  projectDocuments ProjectDocument[]
+  cashFlowPeriods  CashFlowPeriod[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  role      String   @db.VarChar(50)
+  trade     String?  @db.VarChar(100)
+  status    String   @default("active") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@map("project_members")
+}
+
+model Location {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  parentId     String?  @map("parent_id") @db.Uuid
+  code         String   @db.VarChar(50)
+  name         String   @db.VarChar(255)
+  locationType String   @map("location_type") @db.VarChar(30)
+  areaSqm      Decimal? @map("area_sqm") @db.Decimal(10, 2)
+  volumeCbm    Decimal? @map("volume_cbm") @db.Decimal(10, 2)
+  sortOrder    Int      @default(0) @map("sort_order")
+  path         String?  @db.VarChar(500)
+  depth        Int      @default(0)
+  bimGuid      String?  @map("bim_guid") @db.VarChar(100)
+  metadata     Json     @default("{}")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project  Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   Location?  @relation("LocationTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children Location[] @relation("LocationTree")
+  boqItems BoqItem[]
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([parentId])
+  @@index([path])
+  @@map("locations")
+}
+
+model Trade {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId           String   @map("project_id") @db.Uuid
+  name                String   @db.VarChar(100)
+  code                String   @db.VarChar(20)
+  color               String   @db.VarChar(7)
+  defaultCrewSize     Int      @default(4) @map("default_crew_size")
+  productivityRate    Decimal? @map("productivity_rate") @db.Decimal(8, 4)
+  unitOfMeasure       String?  @map("unit_of_measure") @db.VarChar(20)
+  sortOrder           Int      @default(0) @map("sort_order")
+  predecessorTradeIds String[] @default([]) @map("predecessor_trade_ids") @db.Uuid
+  companyName         String?  @map("company_name") @db.VarChar(255)
+  contactName         String?  @map("contact_name") @db.VarChar(100)
+  contactEmail        String?  @map("contact_email") @db.VarChar(255)
+  discipline          String?  @db.VarChar(30)
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@map("trades")
+}
+
+// ============================================================================
+// PROJECT SETUP — Drawing, WBS, CBS, BOQ Management
+// ============================================================================
+
+model Drawing {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+
+  fileName     String   @map("file_name") @db.VarChar(500)
+  originalName String   @map("original_name") @db.VarChar(500)
+  fileType     String   @map("file_type") @db.VarChar(10)
+  fileSize     Int      @map("file_size")
+  filePath     String   @map("file_path") @db.VarChar(1000)
+
+  discipline   String   @db.VarChar(30)
+  drawingNo    String?  @map("drawing_no") @db.VarChar(50)
+  title        String?  @db.VarChar(255)
+  revision     String?  @db.VarChar(10)
+  sheetSize    String?  @map("sheet_size") @db.VarChar(10)
+
+  status       String   @default("uploaded") @db.VarChar(20)
+  uploadedBy   String?  @map("uploaded_by") @db.Uuid
+  metadata     Json     @default("{}")
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([discipline])
+  @@map("drawings")
+}
+
+model WbsNode {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId   String   @map("project_id") @db.Uuid
+  parentId    String?  @map("parent_id") @db.Uuid
+
+  code        String   @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  description String?
+
+  standard    String   @db.VarChar(30)
+  level       Int      @default(1)
+  sortOrder   Int      @default(0) @map("sort_order")
+  path        String?  @db.VarChar(500)
+
+  locationId  String?  @map("location_id") @db.Uuid
+  tradeId     String?  @map("trade_id") @db.Uuid
+
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project  Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   WbsNode?   @relation("WbsTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children WbsNode[]  @relation("WbsTree")
+  cbsNodes CbsNode[]
+  boqItems BoqItem[]
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([parentId])
+  @@index([path])
+  @@map("wbs_nodes")
+}
+
+model CbsNode {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId   String   @map("project_id") @db.Uuid
+  parentId    String?  @map("parent_id") @db.Uuid
+  wbsNodeId   String?  @map("wbs_node_id") @db.Uuid
+
+  code        String   @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  description String?
+
+  standard    String   @db.VarChar(30)
+  level       Int      @default(1)
+  sortOrder   Int      @default(0) @map("sort_order")
+  path        String?  @db.VarChar(500)
+
+  budgetCode  String?  @map("budget_code") @db.VarChar(30)
+
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project  Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   CbsNode?   @relation("CbsTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children CbsNode[]  @relation("CbsTree")
+  wbsNode  WbsNode?   @relation(fields: [wbsNodeId], references: [id])
+  boqItems BoqItem[]
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([parentId])
+  @@index([wbsNodeId])
+  @@map("cbs_nodes")
+}
+
+model ProjectSetup {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String @unique @map("project_id") @db.Uuid
+
+  currentStep    String   @default("classification") @map("current_step") @db.VarChar(30)
+  completedSteps String[] @default([]) @map("completed_steps")
+
+  classificationStandard String @default("uniclass") @map("classification_standard") @db.VarChar(30)
+
+  boqUploaded  Boolean @default(false) @map("boq_uploaded")
+  boqFileName  String? @map("boq_file_name") @db.VarChar(500)
+  boqItemCount Int     @default(0) @map("boq_item_count")
+
+  drawingCount Int @default(0) @map("drawing_count")
+
+  wbsGenerated      Boolean @default(false) @map("wbs_generated")
+  wbsNodeCount      Int     @default(0) @map("wbs_node_count")
+  cbsGenerated      Boolean @default(false) @map("cbs_generated")
+  cbsNodeCount      Int     @default(0) @map("cbs_node_count")
+
+  taktPlanGenerated Boolean @default(false) @map("takt_plan_generated")
+
+  obsGenerated        Boolean   @default(false) @map("obs_generated")
+  obsNodeCount        Int       @default(0)     @map("obs_node_count")
+  documentCount       Int       @default(0)     @map("document_count")
+  cashFlowGenerated   Boolean   @default(false) @map("cash_flow_generated")
+  cashFlowPeriodCount Int       @default(0)     @map("cash_flow_period_count")
+  setupCompleted      Boolean   @default(false) @map("setup_completed")
+  setupCompletedAt    DateTime?                 @map("setup_completed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_setup")
+}
+
+// ============================================================================
+// OBS — ORGANIZATIONAL BREAKDOWN STRUCTURE
+// ============================================================================
+
+model ObsNode {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  parentId     String?  @map("parent_id") @db.Uuid
+  code         String   @db.VarChar(50)
+  name         String   @db.VarChar(255)
+  description  String?
+  // Uniclass Ro tablosu: Ro_10 Client, Ro_20 Designer, Ro_30 Contractor...
+  uniclassCode String?  @map("uniclass_code") @db.VarChar(30)
+  // OmniClass 33: Project Roles
+  omniclassCode String? @map("omniclass_code") @db.VarChar(30)
+  level        Int      @default(1)
+  sortOrder    Int      @default(0) @map("sort_order")
+  path         String?  @db.VarChar(500)
+  // Organizasyon tipi: company | department | team | individual
+  nodeType     String   @default("company") @map("node_type") @db.VarChar(20)
+  companyName  String?  @map("company_name") @db.VarChar(255)
+  contactName  String?  @map("contact_name") @db.VarChar(100)
+  contactEmail String?  @map("contact_email") @db.VarChar(255)
+  contactPhone String?  @map("contact_phone") @db.VarChar(20)
+  // WBS sorumluluğu — hangi WBS nodelarından sorumlu
+  wbsResponsibility String[] @default([]) @map("wbs_responsibility") @db.Uuid
+  isActive     Boolean  @default(true) @map("is_active")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   ObsNode?  @relation("ObsTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children ObsNode[] @relation("ObsTree")
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([parentId])
+  @@index([path])
+  @@map("obs_nodes")
+}
+
+// ============================================================================
+// BOQ — BILL OF QUANTITIES
+// ============================================================================
+
+model BoqItem {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  // CBS node bağlantısı — maliyet kodlaması
+  cbsNodeId    String?  @map("cbs_node_id") @db.Uuid
+  // WBS node bağlantısı — iş paketi
+  wbsNodeId    String?  @map("wbs_node_id") @db.Uuid
+  // LBS bağlantısı — lokasyon
+  locationId   String?  @map("location_id") @db.Uuid
+  // Uniclass Ss (Systems) veya Pr (Products) kodu
+  uniclassCode  String?  @map("uniclass_code") @db.VarChar(30)
+  // OmniClass 22: Work Results
+  omniclassCode String?  @map("omniclass_code") @db.VarChar(30)
+  itemCode     String   @map("item_code") @db.VarChar(50)
+  description  String   @db.VarChar(1000)
+  // Detay açıklama — özellikler, standartlar
+  specification String?
+  unit         String   @db.VarChar(20)
+  quantity     Decimal  @db.Decimal(15, 4)
+  unitRate     Decimal  @map("unit_rate") @db.Decimal(15, 4)
+  totalAmount  Decimal  @map("total_amount") @db.Decimal(18, 2)
+  currency     String   @default("USD") @db.VarChar(3)
+  // Kullanıcının kendi BOQ dosyasından geliyorsa kaynak satır no
+  sourceRowRef String?  @map("source_row_ref") @db.VarChar(50)
+  // BOQ tipi: provisional | firm | prime_cost | daywork
+  itemType     String   @default("firm") @map("item_type") @db.VarChar(20)
+  // Onay durumu
+  status       String   @default("draft") @db.VarChar(20)
+  sortOrder    Int      @default(0) @map("sort_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  cbsNode  CbsNode? @relation(fields: [cbsNodeId], references: [id])
+  wbsNode  WbsNode? @relation(fields: [wbsNodeId], references: [id])
+  location Location? @relation(fields: [locationId], references: [id])
+
+  @@index([projectId])
+  @@index([cbsNodeId])
+  @@index([wbsNodeId])
+  @@index([locationId])
+  @@index([itemCode])
+  @@map("boq_items")
+}
+
+// ============================================================================
+// PROJECT DOCUMENTS
+// ============================================================================
+
+model ProjectDocument {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  // Doküman tipi: contract | master_program | cash_flow | specification
+  //               method_statement | insurance | permit | correspondence | other
+  documentType String   @map("document_type") @db.VarChar(30)
+  title        String   @db.VarChar(500)
+  description  String?
+  // Sözleşme'ye özel alanlar
+  contractValue   Decimal? @map("contract_value") @db.Decimal(18, 2)
+  contractType    String?  @map("contract_type") @db.VarChar(50)
+  // FIDIC, NEC3, NEC4, JCT, bespoke...
+  contractForm    String?  @map("contract_form") @db.VarChar(50)
+  // Program'a özel alanlar
+  programBaseline DateTime? @map("program_baseline") @db.Date
+  // Versiyon takibi
+  version      String   @default("1.0") @db.VarChar(20)
+  revision     String?  @db.VarChar(10)
+  revisionDate DateTime? @map("revision_date") @db.Date
+  // Dosya bilgileri
+  fileName     String   @map("file_name") @db.VarChar(500)
+  originalName String   @map("original_name") @db.VarChar(500)
+  fileType     String   @map("file_type") @db.VarChar(20)
+  fileSize     Int      @map("file_size")
+  filePath     String   @map("file_path") @db.VarChar(1000)
+  // Durum: draft | active | superseded | archived
+  status       String   @default("active") @db.VarChar(20)
+  uploadedBy   String?  @map("uploaded_by") @db.Uuid
+  approvedBy   String?  @map("approved_by") @db.Uuid
+  approvedAt   DateTime? @map("approved_at")
+  isConfidential Boolean @default(false) @map("is_confidential")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([documentType])
+  @@index([status])
+  @@map("project_documents")
+}
+
+// ============================================================================
+// CASH FLOW
+// ============================================================================
+
+model CashFlowPeriod {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String   @map("project_id") @db.Uuid
+  // Dönem tipi: monthly | quarterly | weekly
+  periodType      String   @default("monthly") @map("period_type") @db.VarChar(20)
+  periodNumber    Int      @map("period_number")
+  periodStart     DateTime @map("period_start") @db.Date
+  periodEnd       DateTime @map("period_end") @db.Date
+  // Planlanan değerler
+  plannedIncome   Decimal  @default(0) @map("planned_income") @db.Decimal(18, 2)
+  plannedExpense  Decimal  @default(0) @map("planned_expense") @db.Decimal(18, 2)
+  plannedCumIncome  Decimal @default(0) @map("planned_cum_income") @db.Decimal(18, 2)
+  plannedCumExpense Decimal @default(0) @map("planned_cum_expense") @db.Decimal(18, 2)
+  // Gerçekleşen değerler (ilerledikçe dolacak)
+  actualIncome    Decimal  @default(0) @map("actual_income") @db.Decimal(18, 2)
+  actualExpense   Decimal  @default(0) @map("actual_expense") @db.Decimal(18, 2)
+  actualCumIncome   Decimal @default(0) @map("actual_cum_income") @db.Decimal(18, 2)
+  actualCumExpense  Decimal @default(0) @map("actual_cum_expense") @db.Decimal(18, 2)
+  currency        String   @default("USD") @db.VarChar(3)
+  notes           String?
+  metadata        Json     @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, periodType, periodNumber])
+  @@index([projectId])
+  @@index([periodStart])
+  @@map("cash_flow_periods")
+}
