@@ -5,6 +5,7 @@ import { getTradesForProjectType, getDisciplineOptions } from '../templates/trad
 import { getAvailableStandards } from '../templates/wbs-templates';
 import { CBS_STANDARDS, getDefaultCbsStandard } from '../templates/cbs-templates';
 import { notifyHubSetupComplete } from '../utils/service-client';
+import { classificationService } from '../services/classification.service';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -216,6 +217,170 @@ export default function setupRoutes(prisma: PrismaClient) {
         error: null,
       });
     } catch (err: any) {
+      res.status(500).json({ data: null, error: { code: 'INTERNAL', message: err.message } });
+    }
+  });
+
+  // ══════════════════════════════════════
+  // OBS GENERATION — from Uniclass Ro or OmniClass Table 33
+  // ══════════════════════════════════════
+
+  /** GET /projects/:id/setup/obs-templates — Get OBS template options */
+  router.get('/projects/:id/setup/obs-templates', async (_req, res) => {
+    const uniclassRoTree = classificationService.getObsUniclassNodes();
+    const omniclass33Tree = classificationService.getObsOmniClassNodes();
+
+    res.json({
+      data: {
+        standards: [
+          {
+            value: 'uniclass_ro',
+            label: 'Uniclass 2015 Ro (Roles)',
+            description: '232 construction roles — Management, Delivery, Design, Site roles',
+            region: 'UK/International',
+            rootCategories: uniclassRoTree.map((n) => ({ code: n.code, title: n.title, childCount: n.children.length })),
+          },
+          {
+            value: 'omniclass_33',
+            label: 'OmniClass Table 33 (Disciplines)',
+            description: '251 disciplines — Planning, Design, Construction, PM, Support',
+            region: 'International',
+            rootCategories: omniclass33Tree.map((n) => ({ code: n.code, title: n.title, childCount: n.children.length })),
+          },
+          {
+            value: 'custom',
+            label: 'Custom',
+            description: 'Create your own OBS structure manually',
+            region: 'Any',
+            rootCategories: [],
+          },
+        ],
+      },
+      error: null,
+    });
+  });
+
+  /** POST /projects/:id/setup/generate-obs — Generate OBS from Uniclass Ro or OmniClass 33 */
+  router.post('/projects/:id/setup/generate-obs', async (req, res) => {
+    try {
+      const projectId = req.params.id;
+      const { standard, selectedCodes } = req.body;
+
+      if (!standard) {
+        return res.status(400).json({
+          data: null,
+          error: { code: 'VALIDATION', message: 'standard is required (uniclass_ro, omniclass_33, or custom)' },
+        });
+      }
+
+      // Clear existing OBS nodes
+      await prisma.obsNode.deleteMany({ where: { projectId } });
+
+      if (standard === 'custom') {
+        await prisma.projectSetup.upsert({
+          where: { projectId },
+          create: { projectId, obsGenerated: true, obsNodeCount: 0 },
+          update: { obsGenerated: true, obsNodeCount: 0 },
+        });
+        return res.status(201).json({ data: [], meta: { standard: 'custom', count: 0 }, error: null });
+      }
+
+      let items: Array<{ code: string; title: string; level: number; parentCode: string | null }> = [];
+
+      if (standard === 'uniclass_ro') {
+        const table = classificationService.getUniclassTable('Ro');
+        if (!table) {
+          return res.status(500).json({ data: null, error: { code: 'DATA_NOT_FOUND', message: 'Uniclass Ro data not found' } });
+        }
+        items = table.items.filter((i) => i.level <= 3).map((i) => ({
+          code: i.code, title: i.title, level: i.level, parentCode: i.parentCode,
+        }));
+      } else if (standard === 'omniclass_33') {
+        const table = classificationService.getOmniClassTable('33');
+        if (!table) {
+          return res.status(500).json({ data: null, error: { code: 'DATA_NOT_FOUND', message: 'OmniClass Table 33 data not found' } });
+        }
+        items = table.items.filter((i) => i.level <= 3).map((i) => ({
+          code: i.code, title: i.title, level: i.level, parentCode: i.parentCode,
+        }));
+      } else {
+        return res.status(400).json({
+          data: null,
+          error: { code: 'INVALID_STANDARD', message: `Unknown OBS standard: ${standard}` },
+        });
+      }
+
+      // Filter by selected codes if provided
+      if (selectedCodes && selectedCodes.length > 0) {
+        const selectedSet = new Set<string>(selectedCodes);
+        // Include selected codes and all their ancestors
+        const toInclude = new Set<string>();
+        for (const code of selectedCodes) {
+          toInclude.add(code);
+          // Walk up to root
+          let current = items.find((i) => i.code === code);
+          while (current?.parentCode) {
+            toInclude.add(current.parentCode);
+            current = items.find((i) => i.code === current!.parentCode);
+          }
+          // Also include direct children of selected
+          items.filter((i) => i.parentCode === code).forEach((i) => toInclude.add(i.code));
+        }
+        items = items.filter((i) => toInclude.has(i.code));
+      }
+
+      // Create OBS nodes in order (parents first)
+      const codeToId = new Map<string, string>();
+      const createdNodes = [];
+      let sortOrder = 0;
+
+      // Determine nodeType from level
+      const levelToNodeType = (level: number): string => {
+        if (level === 1) return 'company';
+        if (level === 2) return 'department';
+        return 'team';
+      };
+
+      for (const item of items) {
+        const parentId = item.parentCode ? codeToId.get(item.parentCode) || null : null;
+        const parentPath = item.parentCode
+          ? (createdNodes.find((n) => n.code === item.parentCode)?.path || '')
+          : '';
+
+        const node = await prisma.obsNode.create({
+          data: {
+            projectId,
+            code: item.code,
+            name: item.title,
+            uniclassCode: standard === 'uniclass_ro' ? item.code : undefined,
+            omniclassCode: standard === 'omniclass_33' ? item.code : undefined,
+            nodeType: levelToNodeType(item.level),
+            level: item.level,
+            path: parentPath ? `${parentPath}.${item.code}` : item.code,
+            sortOrder: sortOrder++,
+            parentId,
+            metadata: { sourceStandard: standard },
+          },
+        });
+
+        codeToId.set(item.code, node.id);
+        createdNodes.push(node);
+      }
+
+      // Update project setup
+      await prisma.projectSetup.upsert({
+        where: { projectId },
+        create: { projectId, obsGenerated: true, obsNodeCount: createdNodes.length },
+        update: { obsGenerated: true, obsNodeCount: createdNodes.length },
+      });
+
+      res.status(201).json({
+        data: createdNodes,
+        meta: { standard, count: createdNodes.length },
+        error: null,
+      });
+    } catch (err: any) {
+      logger.error(err, 'OBS generation failed');
       res.status(500).json({ data: null, error: { code: 'INTERNAL', message: err.message } });
     }
   });

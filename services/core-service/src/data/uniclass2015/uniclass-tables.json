@@ -1,0 +1,155 @@
+{
+  "standard": "uniclass2015",
+  "version": "2015",
+  "generatedAt": "2026-02-19T14:21:01.299259+00:00",
+  "totalTables": 12,
+  "totalItems": 15363,
+  "tables": {
+    "EF": {
+      "code": "EF",
+      "name": "Elements/Functions",
+      "usage": "used for WBS",
+      "file": "uniclass-ef.json",
+      "itemCount": 107,
+      "levelDistribution": {
+        "1": 15,
+        "2": 68,
+        "3": 24
+      }
+    },
+    "Ss": {
+      "code": "Ss",
+      "name": "Systems",
+      "usage": "used for CBS",
+      "file": "uniclass-ss.json",
+      "itemCount": 2415,
+      "levelDistribution": {
+        "1": 18,
+        "2": 165,
+        "3": 566,
+        "4": 1666
+      }
+    },
+    "Ro": {
+      "code": "Ro",
+      "name": "Roles",
+      "usage": "used for OBS",
+      "file": "uniclass-ro.json",
+      "itemCount": 232,
+      "levelDistribution": {
+        "1": 4,
+        "2": 19,
+        "3": 209
+      }
+    },
+    "Ac": {
+      "code": "Ac",
+      "name": "Activities",
+      "usage": "used for project activities",
+      "file": "uniclass-ac.json",
+      "itemCount": 926,
+      "levelDistribution": {
+        "1": 20,
+        "2": 115,
+        "3": 791
+      }
+    },
+    "Co": {
+      "code": "Co",
+      "name": "Complexes",
+      "usage": "used for project types",
+      "file": "uniclass-co.json",
+      "itemCount": 392,
+      "levelDistribution": {
+        "1": 16,
+        "2": 73,
+        "3": 303
+      }
+    },
+    "En": {
+      "code": "En",
+      "name": "Entities",
+      "usage": "used for building types",
+      "file": "uniclass-en.json",
+      "itemCount": 530,
+      "levelDistribution": {
+        "1": 16,
+        "2": 105,
+        "3": 409
+      }
+    },
+    "SL": {
+      "code": "SL",
+      "name": "Spaces/Locations",
+      "usage": "used for LBS",
+      "file": "uniclass-sl.json",
+      "itemCount": 1040,
+      "levelDistribution": {
+        "1": 15,
+        "2": 119,
+        "3": 906
+      }
+    },
+    "Pr": {
+      "code": "Pr",
+      "name": "Products",
+      "usage": "used for materials/products",
+      "file": "uniclass-pr.json",
+      "itemCount": 7891,
+      "levelDistribution": {
+        "1": 15,
+        "2": 71,
+        "3": 557,
+        "4": 7248
+      }
+    },
+    "PM": {
+      "code": "PM",
+      "name": "Project Management",
+      "usage": "used for documents",
+      "file": "uniclass-pm.json",
+      "itemCount": 775,
+      "levelDistribution": {
+        "1": 9,
+        "2": 48,
+        "3": 718
+      }
+    },
+    "TE": {
+      "code": "TE",
+      "name": "Tools and Equipment",
+      "usage": "used for equipment",
+      "file": "uniclass-te.json",
+      "itemCount": 831,
+      "levelDistribution": {
+        "1": 7,
+        "2": 35,
+        "3": 161,
+        "4": 628
+      }
+    },
+    "FI": {
+      "code": "FI",
+      "name": "Form of Information",
+      "usage": "used for document types",
+      "file": "uniclass-fi.json",
+      "itemCount": 95,
+      "levelDistribution": {
+        "1": 9,
+        "2": 86
+      }
+    },
+    "Zz": {
+      "code": "Zz",
+      "name": "CAD",
+      "usage": "used for CAD layers",
+      "file": "uniclass-zz.json",
+      "itemCount": 129,
+      "levelDistribution": {
+        "1": 11,
+        "2": 52,
+        "3": 66
+      }
+    }
+  }
+}

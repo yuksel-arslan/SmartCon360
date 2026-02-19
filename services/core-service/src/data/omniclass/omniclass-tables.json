@@ -1,0 +1,23 @@
+{
+  "standard": "omniclass",
+  "version": "2012",
+  "generatedAt": "2026-02-19T14:24:27.072062+00:00",
+  "totalTables": 1,
+  "totalItems": 251,
+  "tables": {
+    "33": {
+      "code": "33",
+      "name": "Disciplines",
+      "usage": "used for discipline/trade classification in construction projects",
+      "file": "omniclass-33.json",
+      "itemCount": 251,
+      "levelDistribution": {
+        "1": 7,
+        "2": 65,
+        "3": 109,
+        "4": 64,
+        "5": 6
+      }
+    }
+  }
+}

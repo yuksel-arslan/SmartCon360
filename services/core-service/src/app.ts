@@ -19,6 +19,7 @@ import cbsRoutes from './modules/project/routes/cbs';
 import boqRoutes from './modules/project/routes/boq';
 import setupRoutes from './modules/project/routes/setup';
 import projectSetupRoutes from './modules/project/routes/project-setup.routes';
+import classificationRoutes from './modules/project/routes/classification';
 
 // Constraint module
 import constraintsRouter from './modules/constraint/routes/constraints';
@@ -405,6 +406,11 @@ app.use(cbsRoutes(prisma));
 app.use(boqRoutes(prisma));
 app.use(setupRoutes(prisma));
 app.use('/projects/:projectId', projectSetupRoutes);
+
+// ══════════════════════════════════════
+// CLASSIFICATION MODULE — /classification
+// ══════════════════════════════════════
+app.use(classificationRoutes());
 
 // ══════════════════════════════════════
 // CONSTRAINT MODULE — /constraints

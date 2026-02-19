@@ -1,0 +1,2575 @@
+{
+  "standard": "omniclass",
+  "table": "33",
+  "tableName": "Disciplines",
+  "version": "2012",
+  "generatedAt": "2026-02-19T14:24:27.068757+00:00",
+  "totalItems": 251,
+  "levelDistribution": {
+    "1": 7,
+    "2": 65,
+    "3": 109,
+    "4": 64,
+    "5": 6
+  },
+  "items": [
+    {
+      "code": "33-11 00 00",
+      "codeNormalized": "33-11-00-00",
+      "title": "Planning Disciplines",
+      "definition": "Developing organized and thought out designs for the implementation of typically large scale items such as roads, cities, land use and/or buildings.",
+      "level": 1,
+      "parentCode": null,
+      "children": [
+        "33-11 11 00",
+        "33-11 21 00",
+        "33-11 31 00",
+        "33-11 41 00",
+        "33-11 44 00",
+        "33-11 51 00",
+        "33-11 61 00"
+      ]
+    },
+    {
+      "code": "33-11 11 00",
+      "codeNormalized": "33-11-11-00",
+      "title": "Regional Planning",
+      "definition": "Administration and planning of development of urban and rural areas. Included in this discipline are government zoning boards and commissions.",
+      "level": 2,
+      "parentCode": "33-11 00 00",
+      "children": []
+    },
+    {
+      "code": "33-11 21 00",
+      "codeNormalized": "33-11-21-00",
+      "title": "Development Planning",
+      "definition": "Formulating, developing, or addressing issues regarding land use or community planning. Knowledge for assessing the feasibility of proposals and identify necessary changes, designing, promoting, or administering government plans or policies affecting land use, zoning, public utilities, community facilities, housing, or transportation.",
+      "level": 2,
+      "parentCode": "33-11 00 00",
+      "children": []
+    },
+    {
+      "code": "33-11 31 00",
+      "codeNormalized": "33-11-31-00",
+      "title": "Rural Planning",
+      "definition": "Planning rural/non-urban areas of land and building development, including planning for subdivisions, agricultural land and minor road ways and streets.",
+      "level": 2,
+      "parentCode": "33-11 00 00",
+      "children": []
+    },
+    {
+      "code": "33-11 41 00",
+      "codeNormalized": "33-11-41-00",
+      "title": "Urban Planning",
+      "definition": "Planning public transportation systems and urban land use. Knowledge may also include holding public meetings with government officials, land developers, lawyers, special interest groups, and the general public to develop or address issues regarding city land use.",
+      "level": 2,
+      "parentCode": "33-11 00 00",
+      "children": []
+    },
+    {
+      "code": "33-11 44 00",
+      "codeNormalized": "33-11-44-00",
+      "title": "Transportation Planning",
+      "definition": "Developing design ideas for new or improved transport infrastructure, such as junction improvements, pedestrian priority schemes, or bus priority facilities. Knowledge may also include the use of statistical analysis to examine travel data, and using mathematical and computer simulation models to forecast the effects of road improvements, policy changes and/or public transport schemes.",
+      "level": 2,
+      "parentCode": "33-11 00 00",
+      "children": []
+    },
+    {
+      "code": "33-11 51 00",
+      "codeNormalized": "33-11-51-00",
+      "title": "Environmental Planning",
+      "definition": "Compiling and analyzing data on conditions such as location, drainage, and location of structures for environmental reports and landscaping plans. Knowledge may also include preparing graphic representations or drawings of proposed plans or designs, and inspecting landscape work to ensure it complies with specifications.",
+      "level": 2,
+      "parentCode": "33-11 00 00",
+      "children": []
+    },
+    {
+      "code": "33-11 61 00",
+      "codeNormalized": "33-11-61-00",
+      "title": "Facility Conservation Planning",
+      "definition": "Developing implementation strategies for both the retention of existing facilities or buildings for reuse or repurposing.",
+      "level": 2,
+      "parentCode": "33-11 00 00",
+      "children": [
+        "33-11 61 21",
+        "33-11 61 31",
+        "33-11 61 41"
+      ]
+    },
+    {
+      "code": "33-11 61 21",
+      "codeNormalized": "33-11-61-21",
+      "title": "Historic Building Conservation Planning",
+      "definition": "Identifying, protecting, and enhancing buildings, places, and objects of historical and cultural significance. Knowledge may also include surveying and evaluation of historical, architectural, and cultural resources, and the development of planning and legal measures to protect these resources.",
+      "level": 3,
+      "parentCode": "33-11 61 00",
+      "children": []
+    },
+    {
+      "code": "33-11 61 31",
+      "codeNormalized": "33-11-61-31",
+      "title": "Ancient Monument Conservation Planning",
+      "definition": "Developing long term oversight and maintenance of pre-historic and ancient buildings, facilities and monuments, and the surround sites.",
+      "level": 3,
+      "parentCode": "33-11 61 00",
+      "children": []
+    },
+    {
+      "code": "33-11 61 41",
+      "codeNormalized": "33-11-61-41",
+      "title": "Archaeological Area Conservation Planning",
+      "definition": "Developing the process and method for properly addressing an archaeological site for extraction and long term preservation.",
+      "level": 3,
+      "parentCode": "33-11 61 00",
+      "children": []
+    },
+    {
+      "code": "33-21 00 00",
+      "codeNormalized": "33-21-00-00",
+      "title": "Design Disciplines",
+      "definition": "Development and creation of building and site solutions based on specific knowledge or experience.",
+      "level": 1,
+      "parentCode": null,
+      "children": [
+        "33-21 11 00",
+        "33-21 21 00",
+        "33-21 23 00",
+        "33-21 27 00",
+        "33-21 25 00",
+        "33-21 31 00",
+        "33-21 51 00",
+        "33-21 99 00"
+      ]
+    },
+    {
+      "code": "33-21 11 00",
+      "codeNormalized": "33-21-11-00",
+      "title": "Architecture",
+      "definition": "Planning and designing of buildings and structures by applying knowledge of design, construction procedures, zoning regulations, building codes, and building materials.",
+      "level": 2,
+      "parentCode": "33-21 00 00",
+      "children": [
+        "33-21 11 11",
+        "33-21 11 21",
+        "33-21 11 24",
+        "33-21 11 27"
+      ]
+    },
+    {
+      "code": "33-21 11 11",
+      "codeNormalized": "33-21-11-11",
+      "title": "Residential Architecture",
+      "definition": "Planning and designing of structures and buildings with the specific purpose of residence.",
+      "level": 3,
+      "parentCode": "33-21 11 00",
+      "children": []
+    },
+    {
+      "code": "33-21 11 21",
+      "codeNormalized": "33-21-11-21",
+      "title": "Commercial Architecture",
+      "definition": "Planning and designing of structures and buildings with the specific purpose of commercial application.",
+      "level": 3,
+      "parentCode": "33-21 11 00",
+      "children": []
+    },
+    {
+      "code": "33-21 11 24",
+      "codeNormalized": "33-21-11-24",
+      "title": "Institutional Architecture",
+      "definition": "Planning and designing of structures and buildings with the specific purpose of institutional purposes.",
+      "level": 3,
+      "parentCode": "33-21 11 00",
+      "children": []
+    },
+    {
+      "code": "33-21 11 27",
+      "codeNormalized": "33-21-11-27",
+      "title": "Industrial Architecture",
+      "definition": "Planning and designing of structures and buildings with the specific purpose of industrial purposes.",
+      "level": 3,
+      "parentCode": "33-21 11 00",
+      "children": []
+    },
+    {
+      "code": "33-21 21 00",
+      "codeNormalized": "33-21-21-00",
+      "title": "Landscape Architecture",
+      "definition": "Planning and designing the development of land areas for projects, such as parks and other recreational areas; airports; highways; hospitals; schools; land subdivisions; and commercial, industrial, and residential areas, by applying knowledge of land characteristics, location of buildings and structures, use of land areas, and design of landscape projects.",
+      "level": 2,
+      "parentCode": "33-21 00 00",
+      "children": []
+    },
+    {
+      "code": "33-21 23 00",
+      "codeNormalized": "33-21-23-00",
+      "title": "Interior Design",
+      "definition": "Planning, designing, and administering of projects in interior spaces to meet the physical and aesthetic needs of people using them, taking into consideration building codes, health and safety regulations, traffic patterns and floor planning, mechanical and electrical needs, and interior fittings and furniture.",
+      "level": 2,
+      "parentCode": "33-21 00 00",
+      "children": []
+    },
+    {
+      "code": "33-21 27 00",
+      "codeNormalized": "33-21-27-00",
+      "title": "Graphic Design",
+      "definition": "Planning, designing, and managing the production of visual communication in order to convey specific messages or concepts, clarify complex information, or project visual identities. These services can include the design of printed materials, packaging, advertising, signage systems, and corporate identification (logos).",
+      "level": 2,
+      "parentCode": "33-21 00 00",
+      "children": [
+        "33-21 27 11"
+      ]
+    },
+    {
+      "code": "33-21 27 11",
+      "codeNormalized": "33-21-27-11",
+      "title": "Signage Graphic Design",
+      "definition": "Planning, designing, and managing the production of signage and instructional/informational graphic items.",
+      "level": 3,
+      "parentCode": "33-21 27 00",
+      "children": []
+    },
+    {
+      "code": "33-21 25 00",
+      "codeNormalized": "33-21-25-00",
+      "title": "Specifying",
+      "definition": "Collection and distribution of technical information vital to product selection and installation, as well as technical instructions vital to the proper method for construction on a building, site or project. These instructions or selection documents are typically referred to as specifications and are to be included within the Construction Documents.",
+      "level": 2,
+      "parentCode": "33-21 00 00",
+      "children": []
+    },
+    {
+      "code": "33-21 31 00",
+      "codeNormalized": "33-21-31-00",
+      "title": "Engineering",
+      "definition": "Applying physical laws and principles of engineering in the design, development, and utilization of machines, materials, instruments, structures, processes, and systems. The assignments undertaken by these individuals may involve any of the following activities: provision of advice, preparation of feasibility studies, preparation of preliminary and final plans and designs, provision of technical services during the construction or installation phase, inspection and evaluation of engineering projects, and related services.",
+      "level": 2,
+      "parentCode": "33-21 00 00",
+      "children": [
+        "33-21 31 02",
+        "33-21 31 04",
+        "33-21 31 06",
+        "33-21 31 08",
+        "33-21 31 11",
+        "33-21 31 14",
+        "33-21 31 17",
+        "33-21 31 19",
+        "33-21 31 21",
+        "33-21 31 22",
+        "33-21 31 23",
+        "33-21 31 24",
+        "33-21 31 31",
+        "33-21 31 33",
+        "33-21 31 41",
+        "33-21 31 51",
+        "33-21 31 99"
+      ]
+    },
+    {
+      "code": "33-21 31 02",
+      "codeNormalized": "33-21-31-02",
+      "title": "Aerospace Engineering",
+      "definition": "Utilizing science and technology to create aircraft, components and support equipment, for full operation. Knowledge may also include measuring and improving components and systems, supervising the assembly of mechanical structures and developing repair procedures.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": []
+    },
+    {
+      "code": "33-21 31 04",
+      "codeNormalized": "33-21-31-04",
+      "title": "Agricultural Engineering",
+      "definition": "Engineering farm structures, mechanical power, electrification, soil and water conservation, and food engineering. Knowledge may also include planning sanitation, ventilation, and heating systems for agricultural buildings designing electric power systems for a rural regions, or designing efficient food plants and new machinery to preserve, package, and distribute foods.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": []
+    },
+    {
+      "code": "33-21 31 06",
+      "codeNormalized": "33-21-31-06",
+      "title": "Biomedical Engineering",
+      "definition": "Conducting research in order to create better medical products for general use, such as artificial organs or prosthetic limbs. May also include designing machines for everyday use, such as automatic insulin pumps and MRI machines.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": []
+    },
+    {
+      "code": "33-21 31 08",
+      "codeNormalized": "33-21-31-08",
+      "title": "Chemical Engineering",
+      "definition": "Production of chemicals, as well as designing, constructing, operating, and marketing of equipment that can reproduce on a large scale the processes or products developed by chemists.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": []
+    },
+    {
+      "code": "33-21 31 11",
+      "codeNormalized": "33-21-31-11",
+      "title": "Civil Engineering",
+      "definition": "Design, construction, and maintenance of the physical and naturally built environment, including works like roads, bridges, canals, dams, and buildings.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": [
+        "33-21 31 11 11"
+      ]
+    },
+    {
+      "code": "33-21 31 11 11",
+      "codeNormalized": "33-21-31-11-11",
+      "title": "Geotechnical Engineering",
+      "definition": "Design and engineering required to address the specific behaviors of earth materials and the behaviors of soils, rocks, faults, and bedrock on and below an area of interest.",
+      "level": 4,
+      "parentCode": "33-21 31 11",
+      "children": []
+    },
+    {
+      "code": "33-21 31 14",
+      "codeNormalized": "33-21-31-14",
+      "title": "Structural Engineering",
+      "definition": "Design of structures that can range from a house, school or shop, major schemes including hospitals, sports arenas, offshore oil rigs and bridges. Knowledge may also include investigating both the immediate loads and demands on the structure, as well as any likely future changes, and ensuring a structure is designed to withstand those loads.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": [
+        "33-21 31 14 11",
+        "33-21 31 14 21",
+        "33-21 31 14 31",
+        "33-21 31 14 41",
+        "33-21 31 14 51",
+        "33-21 31 14 54"
+      ]
+    },
+    {
+      "code": "33-21 31 14 11",
+      "codeNormalized": "33-21-31-14-11",
+      "title": "Foundation Engineering",
+      "definition": "Design of structures which support other structures, such as buildings, bridges, or transportation infrastructure.",
+      "level": 4,
+      "parentCode": "33-21 31 14",
+      "children": []
+    },
+    {
+      "code": "33-21 31 14 21",
+      "codeNormalized": "33-21-31-14-21",
+      "title": "High-rise Engineering",
+      "definition": "Design of structures with the specific intent of exceeding 25 stories in height.",
+      "level": 4,
+      "parentCode": "33-21 31 14",
+      "children": []
+    },
+    {
+      "code": "33-21 31 14 31",
+      "codeNormalized": "33-21-31-14-31",
+      "title": "Long-span Structure Engineering",
+      "definition": "Design of structures with the specific intent of spanning great distances well beyond the length allowable with traditional cantilevering.",
+      "level": 4,
+      "parentCode": "33-21 31 14",
+      "children": []
+    },
+    {
+      "code": "33-21 31 14 41",
+      "codeNormalized": "33-21-31-14-41",
+      "title": "Tensile Structure Engineering",
+      "definition": "Design of structures with the specific intent of spanning or covering an area with a taut membrane or cabling that maintains structural integrity as a result of tensioning.",
+      "level": 4,
+      "parentCode": "33-21 31 14",
+      "children": []
+    },
+    {
+      "code": "33-21 31 14 51",
+      "codeNormalized": "33-21-31-14-51",
+      "title": "Pneumatic Structure Engineering",
+      "definition": "Design of structures with the specific purpose or function of operating as a result of pneumatic controls and equipment.",
+      "level": 4,
+      "parentCode": "33-21 31 14",
+      "children": []
+    },
+    {
+      "code": "33-21 31 14 54",
+      "codeNormalized": "33-21-31-14-54",
+      "title": "Hydraulic Structure Engineering",
+      "definition": "Design of structures with the specific purpose or function of operating as a result of hydraulic controls and equipment.",
+      "level": 4,
+      "parentCode": "33-21 31 14",
+      "children": []
+    },
+    {
+      "code": "33-21 31 17",
+      "codeNormalized": "33-21-31-17",
+      "title": "Mechanical Engineering",
+      "definition": "Design and application of mechanical systems through application of the principles of physics and materials science.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": [
+        "33-21 31 17 11",
+        "33-21 31 17 21",
+        "33-21 31 17 31",
+        "33-21 31 17 33",
+        "33-21 31 17 34",
+        "33-21 31 17 37"
+      ]
+    },
+    {
+      "code": "33-21 31 17 11",
+      "codeNormalized": "33-21-31-17-11",
+      "title": "Plumbing Engineering",
+      "definition": "Design and application of fluid sciences in the development of liquid and waste removal and collection systems through the use of pipes, ditches, drains, traps, and other modern plumbing fixtures.",
+      "level": 4,
+      "parentCode": "33-21 31 17",
+      "children": []
+    },
+    {
+      "code": "33-21 31 17 21",
+      "codeNormalized": "33-21-31-17-21",
+      "title": "Fire Protection Engineering",
+      "definition": "Design and application of fire suppression and prevention systems.",
+      "level": 4,
+      "parentCode": "33-21 31 17",
+      "children": []
+    },
+    {
+      "code": "33-21 31 17 31",
+      "codeNormalized": "33-21-31-17-31",
+      "title": "Heating, Ventilation, and Air-Conditioning Engineering",
+      "definition": "Design and application of treated air systems.",
+      "level": 4,
+      "parentCode": "33-21 31 17",
+      "children": []
+    },
+    {
+      "code": "33-21 31 17 33",
+      "codeNormalized": "33-21-31-17-33",
+      "title": "Refrigeration Engineering",
+      "definition": "Design and application of chilling systems and the use of refrigerants in closed circuit systems.",
+      "level": 4,
+      "parentCode": "33-21 31 17",
+      "children": []
+    },
+    {
+      "code": "33-21 31 17 34",
+      "codeNormalized": "33-21-31-17-34",
+      "title": "Energy Monitoring and Controls Engineering",
+      "definition": "Design and application of systems for the collection and review of energy data including usage and distribution at both supply and use points.",
+      "level": 4,
+      "parentCode": "33-21 31 17",
+      "children": []
+    },
+    {
+      "code": "33-21 31 17 37",
+      "codeNormalized": "33-21-31-17-37",
+      "title": "Hydrological Engineering",
+      "definition": "Design and application of water driven and supported systems.",
+      "level": 4,
+      "parentCode": "33-21 31 17",
+      "children": []
+    },
+    {
+      "code": "33-21 31 19",
+      "codeNormalized": "33-21-31-19",
+      "title": "Mining and Geological Engineering",
+      "definition": "Design and application of underground spaces and access points through and below the earth's surface. May also address aspects of Including Mining Safety/Engineering",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": []
+    },
+    {
+      "code": "33-21 31 21",
+      "codeNormalized": "33-21-31-21",
+      "title": "Electrical Engineering",
+      "definition": "Design and application of electricity, typically for the purpose of transmitting energy or signals to, from and throughout a building or site.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": [
+        "33-21 31 21 11",
+        "33-21 31 21 21",
+        "33-21 31 21 31"
+      ]
+    },
+    {
+      "code": "33-21 31 21 11",
+      "codeNormalized": "33-21-31-21-11",
+      "title": "High Voltage Electrical Engineering",
+      "definition": "Design and application of electricity with a current exceeding 1000 Volts of AC or 1500 Volts of DC current.",
+      "level": 4,
+      "parentCode": "33-21 31 21",
+      "children": []
+    },
+    {
+      "code": "33-21 31 21 21",
+      "codeNormalized": "33-21-31-21-21",
+      "title": "Medium Voltage Electrical Engineering",
+      "definition": "Design and application of electricity with a current between 50-1000 Volts of AC or between 120-1500 Volts of DC current.",
+      "level": 4,
+      "parentCode": "33-21 31 21",
+      "children": []
+    },
+    {
+      "code": "33-21 31 21 31",
+      "codeNormalized": "33-21-31-21-31",
+      "title": "Low Voltage Electrical Engineering",
+      "definition": "Design and application of electricity with a current below 50 Volts of AC or 120 Volts of DC.",
+      "level": 4,
+      "parentCode": "33-21 31 21",
+      "children": []
+    },
+    {
+      "code": "33-21 31 22",
+      "codeNormalized": "33-21-31-22",
+      "title": "Electronics Engineering",
+      "definition": "Design and application of non-linear and active electrical components such as electron tubes and semiconductor devices (especially transistors, diodes, and integrated circuits) used to produce electronic circuits, devices and systems.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": []
+    },
+    {
+      "code": "33-21 31 23",
+      "codeNormalized": "33-21-31-23",
+      "title": "Computer Hardware Engineering",
+      "definition": "Design and development of computer systems from a collection of multiple parts and electronic hardware.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": []
+    },
+    {
+      "code": "33-21 31 24",
+      "codeNormalized": "33-21-31-24",
+      "title": "Process Engineering",
+      "definition": "Design, application, and control of chemical, physical, and biological processes through the aid of systematic computer-based methods.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": [
+        "33-21 31 24 11",
+        "33-21 31 24 21",
+        "33-21 31 24 31",
+        "33-21 31 24 41",
+        "33-21 31 24 51",
+        "33-21 31 24 61"
+      ]
+    },
+    {
+      "code": "33-21 31 24 11",
+      "codeNormalized": "33-21-31-24-11",
+      "title": "Piping Engineering",
+      "definition": "Design and application of utility piping systems, plumbing, HVAC, gas, ventilation, and other various services that require transport of gas, liquid or semi-solids through pipe.",
+      "level": 4,
+      "parentCode": "33-21 31 24",
+      "children": []
+    },
+    {
+      "code": "33-21 31 24 21",
+      "codeNormalized": "33-21-31-24-21",
+      "title": "Wind Engineering",
+      "definition": "Design and application of systems that utilize or capture the affects of wind in the development of either electric or kinetic power.",
+      "level": 4,
+      "parentCode": "33-21 31 24",
+      "children": []
+    },
+    {
+      "code": "33-21 31 24 31",
+      "codeNormalized": "33-21-31-24-31",
+      "title": "Co-Generation Engineering",
+      "definition": "Design and application of on-site power generation through repurposing energy (typically heat or cooling) loss for processes outside of initial production.",
+      "level": 4,
+      "parentCode": "33-21 31 24",
+      "children": []
+    },
+    {
+      "code": "33-21 31 24 41",
+      "codeNormalized": "33-21-31-24-41",
+      "title": "Nuclear Engineering",
+      "definition": "Design and application of systems used for the breakdown and combination of atomic and sub-atomic particles.",
+      "level": 4,
+      "parentCode": "33-21 31 24",
+      "children": []
+    },
+    {
+      "code": "33-21 31 24 51",
+      "codeNormalized": "33-21-31-24-51",
+      "title": "Sanitary Engineering",
+      "definition": "Design and application of systems for the separation and isolation of contaminants, primarily by providing the removal of and disposal of human waste.",
+      "level": 4,
+      "parentCode": "33-21 31 24",
+      "children": []
+    },
+    {
+      "code": "33-21 31 24 61",
+      "codeNormalized": "33-21-31-24-61",
+      "title": "Petroleum Engineering",
+      "definition": "Design and application of systems used for the collection, refinement, and use of petroleum based materials such as crude oil, coal, and tar.",
+      "level": 4,
+      "parentCode": "33-21 31 24",
+      "children": []
+    },
+    {
+      "code": "33-21 31 31",
+      "codeNormalized": "33-21-31-31",
+      "title": "Environmental Engineering",
+      "definition": "Design and application of science and engineering principles to improve the natural environment and improving the quality of water, air, and land. Typically this includes developing processes for mitigating waste water and air pollution and may include application of recycling, waste disposal, radiation remediation procedures.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": []
+    },
+    {
+      "code": "33-21 31 33",
+      "codeNormalized": "33-21-31-33",
+      "title": "Industrial Engineering",
+      "definition": "Optimization of complex processes and/or systems. Typically this includes addressing the development, improvement, and evaluation of integrated systems, as well as utilization of mathematical, physical, and social sciences together with the methods of engineering to specify, predict, and evaluate the results of such systems and processes. May also include engineering specifically to address issues of health and safety.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": []
+    },
+    {
+      "code": "33-21 31 41",
+      "codeNormalized": "33-21-31-41",
+      "title": "Marine Engineering",
+      "definition": "Design of water craft and water-born structures such as boats, ships, and oil rigs.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": []
+    },
+    {
+      "code": "33-21 31 51",
+      "codeNormalized": "33-21-31-51",
+      "title": "Materials Engineering",
+      "definition": "Study, design and production of materials through an understanding of its atomic and molecular scales and macroscopic properties.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": []
+    },
+    {
+      "code": "33-21 31 99",
+      "codeNormalized": "33-21-31-99",
+      "title": "Specialty Engineering",
+      "definition": "Design and application of specialized systems or specific areas of concern within a project that require additional expertise and/or experience.",
+      "level": 3,
+      "parentCode": "33-21 31 00",
+      "children": [
+        "33-21 31 99 11",
+        "33-21 31 99 14",
+        "33-21 31 99 21",
+        "33-21 31 99 31"
+      ]
+    },
+    {
+      "code": "33-21 31 99 11",
+      "codeNormalized": "33-21-31-99-11",
+      "title": "Acoustical/Emanations Shielding Engineering",
+      "definition": "Design and application of systems to isolate, dampen, or eliminate negative effects of ambient or incidental force, such as sound, light, or electromagnetic waves.",
+      "level": 4,
+      "parentCode": "33-21 31 99",
+      "children": []
+    },
+    {
+      "code": "33-21 31 99 14",
+      "codeNormalized": "33-21-31-99-14",
+      "title": "Antiterrorism/Physical Security Engineering",
+      "definition": "Design and application of systems to maintain a secure perimeter to a building, structure, or venue through the use of blockades, blast resistance, and other security systems.",
+      "level": 4,
+      "parentCode": "33-21 31 99",
+      "children": []
+    },
+    {
+      "code": "33-21 31 99 21",
+      "codeNormalized": "33-21-31-99-21",
+      "title": "Communications Engineering",
+      "definition": "Design and application of telecommunications equipment and facilities, such as complex electronic switching systems, copper telephone facilities, and fiber optics.",
+      "level": 4,
+      "parentCode": "33-21 31 99",
+      "children": [
+        "33-21 31 99 21 11",
+        "33-21 31 99 21 21",
+        "33-21 31 99 21 31"
+      ]
+    },
+    {
+      "code": "33-21 31 99 21 11",
+      "codeNormalized": "33-21-31-99-21-11",
+      "title": "Computer Network Engineering",
+      "definition": "Design and application of systems of connected computer terminals and information transfer points to facilitate intra- and inter-office communications.",
+      "level": 5,
+      "parentCode": "33-21 31 99 21",
+      "children": []
+    },
+    {
+      "code": "33-21 31 99 21 21",
+      "codeNormalized": "33-21-31-99-21-21",
+      "title": "Alarm and Detection Engineering",
+      "definition": "Design and application of monitoring and alert systems that can be activated automatically or manually for the purpose of drawing attention to something important or vital.",
+      "level": 5,
+      "parentCode": "33-21 31 99 21",
+      "children": []
+    },
+    {
+      "code": "33-21 31 99 21 31",
+      "codeNormalized": "33-21-31-99-21-31",
+      "title": "Audiovisual Engineering",
+      "definition": "Design and application of systems that can display and project recorded or live media.",
+      "level": 5,
+      "parentCode": "33-21 31 99 21",
+      "children": []
+    },
+    {
+      "code": "33-21 31 99 31",
+      "codeNormalized": "33-21-31-99-31",
+      "title": "Military Engineering",
+      "definition": "Design and application of military works, including offensive, defensive, and logistical structures, to shape the physical operating environment in war through fortifications, earthworks, and infrastructure.",
+      "level": 4,
+      "parentCode": "33-21 31 99",
+      "children": []
+    },
+    {
+      "code": "33-21 51 00",
+      "codeNormalized": "33-21-51-00",
+      "title": "Design Support",
+      "definition": "Execution of miscellaneous design activities that aid in both the development and final execution of a design or plan.",
+      "level": 2,
+      "parentCode": "33-21 00 00",
+      "children": [
+        "33-21 51 11",
+        "33-21 51 13",
+        "33-21 51 16",
+        "33-21 51 19"
+      ]
+    },
+    {
+      "code": "33-21 51 11",
+      "codeNormalized": "33-21-51-11",
+      "title": "Drafting",
+      "definition": "Drawing detailed layouts, plans, and illustrations of buildings, structures, systems, or components from engineering and architectural specifications.",
+      "level": 3,
+      "parentCode": "33-21 51 00",
+      "children": []
+    },
+    {
+      "code": "33-21 51 13",
+      "codeNormalized": "33-21-51-13",
+      "title": "Model Making",
+      "definition": "Creation of scale models of proposed construction projects that includes, but is not limited to, schools, shopping centers, housing developments, hospitals, bridges, and office buildings.",
+      "level": 3,
+      "parentCode": "33-21 51 00",
+      "children": []
+    },
+    {
+      "code": "33-21 51 16",
+      "codeNormalized": "33-21-51-16",
+      "title": "Printing",
+      "definition": "Prioritizing, organizing, planning, directing, staffing and controlling the operations of a printing shop. May also include preparing documents for desk top publishing and layouts using various software programs.",
+      "level": 3,
+      "parentCode": "33-21 51 00",
+      "children": []
+    },
+    {
+      "code": "33-21 51 19",
+      "codeNormalized": "33-21-51-19",
+      "title": "Photography/Videography",
+      "definition": "Recording site progress for builders, architects, and contractors by taking takes notes on what is being photographed and angle of view.",
+      "level": 3,
+      "parentCode": "33-21 51 00",
+      "children": [
+        "33-21 51 19 11",
+        "33-21 51 19 13"
+      ]
+    },
+    {
+      "code": "33-21 51 19 11",
+      "codeNormalized": "33-21-51-19-11",
+      "title": "Photography",
+      "definition": "Providing still, video, or digital photography services. May specialize in a particular field of photography, such as commercial and industrial photography, portrait photography, and special events photography.",
+      "level": 4,
+      "parentCode": "33-21 51 19",
+      "children": []
+    },
+    {
+      "code": "33-21 51 19 13",
+      "codeNormalized": "33-21-51-19-13",
+      "title": "Commercial Photography",
+      "definition": "Providing commercial photography services, generally for advertising agencies, publishers, and other business and industrial users.",
+      "level": 4,
+      "parentCode": "33-21 51 19",
+      "children": []
+    },
+    {
+      "code": "33-21 99 00",
+      "codeNormalized": "33-21-99-00",
+      "title": "Specialty Design",
+      "definition": "Development and execution of a design or plan specific to a select group of aspects within a building, site, or project.",
+      "level": 2,
+      "parentCode": "33-21 00 00",
+      "children": [
+        "33-21 99 10",
+        "33-21 99 11",
+        "33-21 99 14",
+        "33-21 99 15",
+        "33-21 99 22",
+        "33-21 99 24",
+        "33-21 99 25",
+        "33-21 99 26",
+        "33-21 99 28",
+        "33-21 99 29",
+        "33-21 99 31",
+        "33-21 99 45",
+        "33-21 99 46"
+      ]
+    },
+    {
+      "code": "33-21 99 10",
+      "codeNormalized": "33-21-99-10",
+      "title": "Building Envelope Design",
+      "definition": "Assessing building energy efficiency opportunities and developing specifications in the areas of heating, air conditioning, insulation, air sealing, glazing, appliances and other energy conservation applications. May also include collecting, analyzing and interpreting building efficiency data for use in recommending retrofits.",
+      "level": 3,
+      "parentCode": "33-21 99 00",
+      "children": []
+    },
+    {
+      "code": "33-21 99 11",
+      "codeNormalized": "33-21-99-11",
+      "title": "Fountain Design",
+      "definition": "Engineering and design of mechanically operated fountains types that are integrated in landscapes, and parks or are considered architectural accents.",
+      "level": 3,
+      "parentCode": "33-21 99 00",
+      "children": []
+    },
+    {
+      "code": "33-21 99 14",
+      "codeNormalized": "33-21-99-14",
+      "title": "Finish Hardware Design",
+      "definition": "Development of hardware pieces used to allow for or aid in the mechanical use of an item such as a door, drawer, or window.",
+      "level": 3,
+      "parentCode": "33-21 99 00",
+      "children": []
+    },
+    {
+      "code": "33-21 99 15",
+      "codeNormalized": "33-21-99-15",
+      "title": "Extraterrestrial Design",
+      "definition": "Process of addressing the specific parameters set forth when devising plans, programs, policies, buildings, or products to be used in extreme high altitudes or within the confines of space exploration.",
+      "level": 3,
+      "parentCode": "33-21 99 00",
+      "children": []
+    },
+    {
+      "code": "33-21 99 22",
+      "codeNormalized": "33-21-99-22",
+      "title": "Health Services Design",
+      "definition": "Process of addressing the specific parameters set forth when devising plans, programs, policies, buildings, or products to be used for medical procedures and health care.",
+      "level": 3,
+      "parentCode": "33-21 99 00",
+      "children": [
+        "33-21 99 22 11",
+        "33-21 99 22 21"
+      ]
+    },
+    {
+      "code": "33-21 99 22 11",
+      "codeNormalized": "33-21-99-22-11",
+      "title": "Hospital Design",
+      "definition": "Design and implementation of medical facilities including clinical laboratories, emergency rooms, surgery, food service and hospitality functions.",
+      "level": 4,
+      "parentCode": "33-21 99 22",
+      "children": []
+    },
+    {
+      "code": "33-21 99 22 21",
+      "codeNormalized": "33-21-99-22-21",
+      "title": "Nursing Home Design",
+      "definition": "Design and implementation of living facilities for individuals who require assisted living. May also include designing for ADA compatibility, space efficiency, and ventilation and IEQ measurement qualities.",
+      "level": 4,
+      "parentCode": "33-21 99 22",
+      "children": []
+    },
+    {
+      "code": "33-21 99 24",
+      "codeNormalized": "33-21-99-24",
+      "title": "Infrastructure Design",
+      "definition": "Design and implementation of very large scale projects often funded by large corporations or governments for the betterment of the general public such as bridges, roadways, parks, and energy distribution grids.",
+      "level": 3,
+      "parentCode": "33-21 99 00",
+      "children": []
+    },
+    {
+      "code": "33-21 99 25",
+      "codeNormalized": "33-21-99-25",
+      "title": "Irrigation Design",
+      "definition": "Planning, design, and direction of construction of irrigation projects for transporting and distributing water. May also include researching potential problems with soil drainage, conservation and climatic characteristics, water supply, return flow, and other factors affecting irrigation requirements.",
+      "level": 3,
+      "parentCode": "33-21 99 00",
+      "children": []
+    },
+    {
+      "code": "33-21 99 26",
+      "codeNormalized": "33-21-99-26",
+      "title": "Laboratory Design",
+      "definition": "Design of laboratory facilities that include wet and dry design. May also include coordinating the design with architectural and engineering systems, including safety requirements.",
+      "level": 3,
+      "parentCode": "33-21 99 00",
+      "children": []
+    },
+    {
+      "code": "33-21 99 28",
+      "codeNormalized": "33-21-99-28",
+      "title": "Lighting Design",
+      "definition": "Design and implementation of both architectural lighting, such as homes, businesses, or store displays, and theatrical or atmospheric lighting systems.",
+      "level": 3,
+      "parentCode": "33-21 99 00",
+      "children": []
+    },
+    {
+      "code": "33-21 99 29",
+      "codeNormalized": "33-21-99-29",
+      "title": "Marina Design",
+      "definition": "Design and implementation of protected water areas for the purpose of docking, berthing, repairing and launching of boats and other water craft.",
+      "level": 3,
+      "parentCode": "33-21 99 00",
+      "children": []
+    },
+    {
+      "code": "33-21 99 31",
+      "codeNormalized": "33-21-99-31",
+      "title": "Environmental Design",
+      "definition": "Process of addressing environmental parameters when devising plans, programs, policies, buildings, or products.",
+      "level": 3,
+      "parentCode": "33-21 99 00",
+      "children": [
+        "33-21 99 31 11",
+        "33-21 99 31 13"
+      ]
+    },
+    {
+      "code": "33-21 99 31 11",
+      "codeNormalized": "33-21-99-31-11",
+      "title": "Tree Preservation",
+      "definition": "Raising, maintaining and removing trees. May also include selecting the proper species of tree to plant based on climate and soil conditions, designing park layouts or planning new planting as well as outside, trimming and shaping trees.",
+      "level": 4,
+      "parentCode": "33-21 99 31",
+      "children": []
+    },
+    {
+      "code": "33-21 99 31 13",
+      "codeNormalized": "33-21-99-31-13",
+      "title": "Solar Design",
+      "definition": "Preparing technical drawings and specifications of electrical systems to ensure that installation and operations conform to standards and engineering requirements. May also include operating computer-assisted engineering or design software or equipment to perform engineering tasks, coordinating manufacturing, construction, installation, maintenance, support, documentation, or testing activities to ensure compliance with specifications, codes, or customer requirements.",
+      "level": 4,
+      "parentCode": "33-21 99 31",
+      "children": []
+    },
+    {
+      "code": "33-21 99 45",
+      "codeNormalized": "33-21-99-45",
+      "title": "Transportation Design",
+      "definition": "Design of highways, airports, railway and bus systems and general transportation systems. May also include supervising the construction or repair of transportation systems, and developing plans for new multilane highways to be built in places where only local roads exist.",
+      "level": 3,
+      "parentCode": "33-21 99 00",
+      "children": [
+        "33-21 99 45 11",
+        "33-21 99 45 21",
+        "33-21 99 45 31"
+      ]
+    },
+    {
+      "code": "33-21 99 45 11",
+      "codeNormalized": "33-21-99-45-11",
+      "title": "Air Transportation Design",
+      "definition": "Design of airports and other air traffic control facilities and systems including runways, hangers, and helipads. May also include designing for the existing landscape and legal boundaries, as well as removal of earthwork and material volume.",
+      "level": 4,
+      "parentCode": "33-21 99 45",
+      "children": []
+    },
+    {
+      "code": "33-21 99 45 21",
+      "codeNormalized": "33-21-99-45-21",
+      "title": "Roadway Transportation Design",
+      "definition": "Design of major road systems that includes highways, byways and service roads. May also include designing for the existing landscape and legal boundaries, as well as removal of earthwork and material volume.",
+      "level": 4,
+      "parentCode": "33-21 99 45",
+      "children": []
+    },
+    {
+      "code": "33-21 99 45 31",
+      "codeNormalized": "33-21-99-45-31",
+      "title": "Marine Transportation Design",
+      "definition": "Design of waterways and other water transportation systems that may affect or aid in water transportation such as canals, aqueducts, locks, dams, and levees. May also include designing for the existing landscape and legal boundaries, as well as removal of earthwork and material volume.",
+      "level": 4,
+      "parentCode": "33-21 99 45",
+      "children": []
+    },
+    {
+      "code": "33-21 99 46",
+      "codeNormalized": "33-21-99-46",
+      "title": "Vertical Conveyance Design",
+      "definition": "Design of vertical conveyance systems that service the warehouse and shipping facilities.",
+      "level": 3,
+      "parentCode": "33-21 99 00",
+      "children": []
+    },
+    {
+      "code": "33-23 00 00",
+      "codeNormalized": "33-23-00-00",
+      "title": "Investigation Disciplines",
+      "definition": "Research and analyzing of existing site conditions, and pre-design actions needed for programing, planning and design development.",
+      "level": 1,
+      "parentCode": null,
+      "children": [
+        "33-23 11 00",
+        "33-23 21 00",
+        "33-23 31 00",
+        "33-23 41 00",
+        "33-23 51 00"
+      ]
+    },
+    {
+      "code": "33-23 11 00",
+      "codeNormalized": "33-23-11-00",
+      "title": "Surveying",
+      "definition": "Gathering, interpreting, and mapping geophysical data. Establishments in this industry often specialize in locating and measuring the extent of subsurface resources, such as oil, gas, and minerals, but they may also conduct surveys for engineering purposes. May also use a variety of surveying techniques depending on the purpose of the survey, including magnetic surveys, gravity surveys, seismic surveys, or electrical and electromagnetic surveys.",
+      "level": 2,
+      "parentCode": "33-23 00 00",
+      "children": [
+        "33-23 11 11",
+        "33-23 11 21",
+        "33-23 11 31"
+      ]
+    },
+    {
+      "code": "33-23 11 11",
+      "codeNormalized": "33-23-11-11",
+      "title": "Cartography",
+      "definition": "Collection of geographic information and survey data to be used as information to prepare maps, charts, and drawings of large areas of the earth's surface. May also include designing maps coordinating the mapmaking process, and providing the details of natural and man-made structures.",
+      "level": 3,
+      "parentCode": "33-23 11 00",
+      "children": []
+    },
+    {
+      "code": "33-23 11 21",
+      "codeNormalized": "33-23-11-21",
+      "title": "Building Surveying",
+      "definition": "Providing professional advice on all aspects of property and construction. May also include surveying the design and development of new buildings as well as the restoration and maintenance of existing ones and advising on various aspects of buildings at different stages.",
+      "level": 3,
+      "parentCode": "33-23 11 00",
+      "children": []
+    },
+    {
+      "code": "33-23 11 31",
+      "codeNormalized": "33-23-11-31",
+      "title": "Site Surveying",
+      "definition": "Performing surveying and mapping services of the surface of the earth, including the sea floor. May also include surveying and mapping of areas above or below the surface of the earth, such as the creation of view easements or segregating rights in parcels of land by creating underground utility easements.",
+      "level": 3,
+      "parentCode": "33-23 11 00",
+      "children": []
+    },
+    {
+      "code": "33-23 21 00",
+      "codeNormalized": "33-23-21-00",
+      "title": "Environmental Investigation",
+      "definition": "Review and collection of information related to the environmental aspects of a site, project or building.",
+      "level": 2,
+      "parentCode": "33-23 00 00",
+      "children": [
+        "33-23 21 11",
+        "33-23 21 21",
+        "33-23 21 31"
+      ]
+    },
+    {
+      "code": "33-23 21 11",
+      "codeNormalized": "33-23-21-11",
+      "title": "Environmental Impact Investigation",
+      "definition": "Investigating accidents affecting the environment and investigating the adaptability of various animal and plant species to changed environmental conditions. May also include reviewing industrial practices to identify potential liabilities and environmental hazards.",
+      "level": 3,
+      "parentCode": "33-23 21 00",
+      "children": []
+    },
+    {
+      "code": "33-23 21 21",
+      "codeNormalized": "33-23-21-21",
+      "title": "Air Quality Evaluation Investigation",
+      "definition": "Evaluating and testing samples of indoor and outdoor air for quality. May also include measuring air pollution levels, testing for mold and other airborne toxins, and ensuring that government standards for air quality are being met.",
+      "level": 3,
+      "parentCode": "33-23 21 00",
+      "children": []
+    },
+    {
+      "code": "33-23 21 31",
+      "codeNormalized": "33-23-21-31",
+      "title": "Hazardous Materials Investigation",
+      "definition": "Investigating the possibility, and ways of removal or control of hazardous materials within a site, building or project.",
+      "level": 3,
+      "parentCode": "33-23 21 00",
+      "children": []
+    },
+    {
+      "code": "33-23 31 00",
+      "codeNormalized": "33-23-31-00",
+      "title": "Hydrological Investigation",
+      "definition": "Performing various duties in support of surface and ground water hydrology, instrumentation water quality monitoring, and other water resources studies. May also include the collection of hydrologic data and routine interpretation of data.",
+      "level": 2,
+      "parentCode": "33-23 00 00",
+      "children": []
+    },
+    {
+      "code": "33-23 41 00",
+      "codeNormalized": "33-23-41-00",
+      "title": "Geotechnical Investigation",
+      "definition": "Tracking and collecting data related to movements, compositions and use of earth materials such as soil, rock and groundwater.",
+      "level": 2,
+      "parentCode": "33-23 00 00",
+      "children": []
+    },
+    {
+      "code": "33-23 51 00",
+      "codeNormalized": "33-23-51-00",
+      "title": "Risk Assessment",
+      "definition": "Advising organizations on any potential risks to profitability of a company, identify and assess threats, and decide how to avoid, reduce or transfer risks.",
+      "level": 2,
+      "parentCode": "33-23 00 00",
+      "children": []
+    },
+    {
+      "code": "33-25 00 00",
+      "codeNormalized": "33-25-00-00",
+      "title": "Project Management Disciplines",
+      "definition": "Providing management consulting services (except administrative and general management consulting; human resources consulting; marketing consulting; or process, physical distribution, and logistics consulting).",
+      "level": 1,
+      "parentCode": null,
+      "children": [
+        "33-25 11 00",
+        "33-25 14 00",
+        "33-25 15 00",
+        "33-25 16 00",
+        "33-25 21 00",
+        "33-25 31 00",
+        "33-25 41 00",
+        "33-25 51 00",
+        "33-25 61 00"
+      ]
+    },
+    {
+      "code": "33-25 11 00",
+      "codeNormalized": "33-25-11-00",
+      "title": "Cost Estimation",
+      "definition": "Estimation of the cost of construction projects that includes, but is not limited to, material, labor, equipment, and location. The cost estimate is used to prepare an accurate bid price for the construction bidding process, as well as analyzing the potential for a project to make a profit.",
+      "level": 2,
+      "parentCode": "33-25 00 00",
+      "children": [
+        "33-25 11 11"
+      ]
+    },
+    {
+      "code": "33-25 11 11",
+      "codeNormalized": "33-25-11-11",
+      "title": "Value Engineering",
+      "definition": "Identification and elimination unnecessary cost related to a project, through an organized approach of researching low cost options. May also include, but is not limited to, cost analysis, estimation, life cycle costing, and forecasting expenditure flow.",
+      "level": 3,
+      "parentCode": "33-25 11 00",
+      "children": []
+    },
+    {
+      "code": "33-25 14 00",
+      "codeNormalized": "33-25-14-00",
+      "title": "Proposal Preparation",
+      "definition": "Negotiation of contracts, agreements and provisions, administering private and government funds and contracts, tracking proposals and writing proposals and other documentation. May also include ensuring that proposals in progress are in compliance with instructions, managing production and the distribution of all work documents.",
+      "level": 2,
+      "parentCode": "33-25 00 00",
+      "children": []
+    },
+    {
+      "code": "33-25 15 00",
+      "codeNormalized": "33-25-15-00",
+      "title": "Architectural and Engineering Management",
+      "definition": "Oversight, planning, coordination, and direction of architects and engineers on a project or in a firm.",
+      "level": 2,
+      "parentCode": "33-25 00 00",
+      "children": []
+    },
+    {
+      "code": "33-25 16 00",
+      "codeNormalized": "33-25-16-00",
+      "title": "Construction Management",
+      "definition": "Management of construction projects with use of modern management as well as an understanding of the design and construction process.",
+      "level": 2,
+      "parentCode": "33-25 00 00",
+      "children": [
+        "33-25 16 11",
+        "33-25 16 13"
+      ]
+    },
+    {
+      "code": "33-25 16 11",
+      "codeNormalized": "33-25-16-11",
+      "title": "General Contracting",
+      "definition": "Oversight of contract administration of construction projects with the support of subcontractors that perform specialty trades, while acting as a supervisory entity.",
+      "level": 3,
+      "parentCode": "33-25 16 00",
+      "children": []
+    },
+    {
+      "code": "33-25 16 13",
+      "codeNormalized": "33-25-16-13",
+      "title": "Subcontracting",
+      "definition": "Oversight the specialty trades needed to complete the basic structure (i.e., foundation, frame, and shell) of buildings.",
+      "level": 3,
+      "parentCode": "33-25 16 00",
+      "children": []
+    },
+    {
+      "code": "33-25 21 00",
+      "codeNormalized": "33-25-21-00",
+      "title": "Scheduling",
+      "definition": "Oversight and development of a complete timetable for a project or activity by reviewing current work and inquiring about possible work times from all parties involved.",
+      "level": 2,
+      "parentCode": "33-25 00 00",
+      "children": []
+    },
+    {
+      "code": "33-25 31 00",
+      "codeNormalized": "33-25-31-00",
+      "title": "Contract Administration",
+      "definition": "Oversight and coordination of all aspects of the final contract documents including with customers, vendors, partners, or employees, and may include negotiating terms and conditions of all contracts and ensuring compliance with those terms throughout project.",
+      "level": 2,
+      "parentCode": "33-25 00 00",
+      "children": []
+    },
+    {
+      "code": "33-25 41 00",
+      "codeNormalized": "33-25-41-00",
+      "title": "Procurement Administration",
+      "definition": "Process of acquiring or obtaining personnel, material, services, or property at the operational level, for example, purchasing, contracting, and negotiating directly with the source of supply.",
+      "level": 2,
+      "parentCode": "33-25 00 00",
+      "children": [
+        "33-25 41 14",
+        "33-25 41 17",
+        "33-25 41 21"
+      ]
+    },
+    {
+      "code": "33-25 41 14",
+      "codeNormalized": "33-25-41-14",
+      "title": "Product Sales",
+      "definition": "Oversight and coordination of any and all sales of a specific product or service.",
+      "level": 3,
+      "parentCode": "33-25 41 00",
+      "children": []
+    },
+    {
+      "code": "33-25 41 17",
+      "codeNormalized": "33-25-41-17",
+      "title": "Product Marketing",
+      "definition": "Oversight and coordination of any and all marketing of a specific product or service.",
+      "level": 3,
+      "parentCode": "33-25 41 00",
+      "children": []
+    },
+    {
+      "code": "33-25 41 21",
+      "codeNormalized": "33-25-41-21",
+      "title": "Product Purchasing",
+      "definition": "Oversight and coordination of any and all purchases of a specific product or service.",
+      "level": 3,
+      "parentCode": "33-25 41 00",
+      "children": []
+    },
+    {
+      "code": "33-25 51 00",
+      "codeNormalized": "33-25-51-00",
+      "title": "Quality Assurance",
+      "definition": "Oversight and coordination of all planning, implementation, and supervision of the project quality control plan. May also include working with employees as well as outside agencies or consultants involved in inspections and testing of construction practices.",
+      "level": 2,
+      "parentCode": "33-25 00 00",
+      "children": [
+        "33-25 51 11",
+        "33-25 51 13"
+      ]
+    },
+    {
+      "code": "33-25 51 11",
+      "codeNormalized": "33-25-51-11",
+      "title": "Construction Inspection",
+      "definition": "Providing building inspection services during the construction phase including site and current activities. May also include aspects of the building structure and component systems and prepare a report on the physical condition of the property, generally for buyers or others involved in real estate transactions.",
+      "level": 3,
+      "parentCode": "33-25 51 00",
+      "children": []
+    },
+    {
+      "code": "33-25 51 13",
+      "codeNormalized": "33-25-51-13",
+      "title": "Building Inspection",
+      "definition": "Providing building inspection services for completed work needed verification prior to progress or competition. May also evaluate all aspects of the building structure and component systems and prepare a report on the physical condition of the property, generally for buyers or others involved in real estate transactions.",
+      "level": 3,
+      "parentCode": "33-25 51 00",
+      "children": []
+    },
+    {
+      "code": "33-25 61 00",
+      "codeNormalized": "33-25-61-00",
+      "title": "Property, Real Estate, and Community Association Management",
+      "definition": "Oversight and coordination of management and sales of land and properties such as buildings and structures.",
+      "level": 2,
+      "parentCode": "33-25 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 00 00",
+      "codeNormalized": "33-41-00-00",
+      "title": "Construction Disciplines",
+      "definition": "Execution/construction of specific elements of a project's construction plans.",
+      "level": 1,
+      "parentCode": null,
+      "children": [
+        "33-41 01 00",
+        "33-41 03 00",
+        "33-41 06 00",
+        "33-41 09 00",
+        "33-41 10 00",
+        "33-41 21 00",
+        "33-41 23 00",
+        "33-41 24 00",
+        "33-41 30 00",
+        "33-41 31 00",
+        "33-41 33 00",
+        "33-41 40 00",
+        "33-41 43 00",
+        "33-41 46 00",
+        "33-41 51 00",
+        "33-41 53 00",
+        "33-41 54 00",
+        "33-41 56 00",
+        "33-41 60 00",
+        "33-41 63 00",
+        "33-41 64 00",
+        "33-41 71 00",
+        "33-41 73 00",
+        "33-41 76 00",
+        "33-41 79 00",
+        "33-41 81 00",
+        "33-41 83 00",
+        "33-41 86 00",
+        "33-41 91 00"
+      ]
+    },
+    {
+      "code": "33-41 01 00",
+      "codeNormalized": "33-41-01-00",
+      "title": "Material Moving Operations",
+      "definition": "Relocation and movement of materials, products, and assemblies. May include both to and from site, as well as on-site.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": [
+        "33-41 01 11",
+        "33-41 01 13",
+        "33-41 01 14",
+        "33-41 01 16",
+        "33-41 01 21",
+        "33-41 01 31"
+      ]
+    },
+    {
+      "code": "33-41 01 11",
+      "codeNormalized": "33-41-01-11",
+      "title": "Conveyor Tending and Operation",
+      "definition": "Transporting materials or products to and from stockpiles, processing stations, departments, or vehicles.",
+      "level": 3,
+      "parentCode": "33-41 01 00",
+      "children": []
+    },
+    {
+      "code": "33-41 01 13",
+      "codeNormalized": "33-41-01-13",
+      "title": "Crane and Tower Operation",
+      "definition": "Transporting material, such as machinery, equipment and other construction products directly on-site.",
+      "level": 3,
+      "parentCode": "33-41 01 00",
+      "children": []
+    },
+    {
+      "code": "33-41 01 14",
+      "codeNormalized": "33-41-01-14",
+      "title": "Hoist and Winch Operation",
+      "definition": "Operating compressed air, diesel, electric, gasoline, or steam-driven hoists or winches in order to control movement of cableways, cages, derricks, draglines, loaders, railcars, or skips.",
+      "level": 3,
+      "parentCode": "33-41 01 00",
+      "children": []
+    },
+    {
+      "code": "33-41 01 16",
+      "codeNormalized": "33-41-01-16",
+      "title": "Dredging, Excavating, and Loading Machine Operation",
+      "definition": "Extraction and transporting of soils and other materials from the earth's surface.",
+      "level": 3,
+      "parentCode": "33-41 01 00",
+      "children": []
+    },
+    {
+      "code": "33-41 01 21",
+      "codeNormalized": "33-41-01-21",
+      "title": "Industrial Truck and Tractor Operation",
+      "definition": "Moving materials around a warehouse, storage yard, factory, construction site, or similar location.",
+      "level": 3,
+      "parentCode": "33-41 01 00",
+      "children": []
+    },
+    {
+      "code": "33-41 01 31",
+      "codeNormalized": "33-41-01-31",
+      "title": "Laborers and Material Moving, Hand Operation",
+      "definition": "Moving materials with no or limited equipment such as a dolly or hand-truck.",
+      "level": 3,
+      "parentCode": "33-41 01 00",
+      "children": []
+    },
+    {
+      "code": "33-41 03 00",
+      "codeNormalized": "33-41-03-00",
+      "title": "Site Preparation",
+      "definition": "Site preparation activities, such as excavating and grading, demolition of buildings and other structures, and septic system installation. Earth moving and land clearing may be included in this industry.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": [
+        "33-41 03 11",
+        "33-41 03 21",
+        "33-41 03 31",
+        "33-41 03 41"
+      ]
+    },
+    {
+      "code": "33-41 03 11",
+      "codeNormalized": "33-41-03-11",
+      "title": "Remediation Services",
+      "definition": "Cleanup of contaminated buildings, mine sites, soil, or ground water. May also include integrated mine reclamation activities, including demolition, soil remediation, waste water treatment, hazardous material removal, contouring land, and revegetation; or asbestos, lead paint, and other toxic material abatement.",
+      "level": 3,
+      "parentCode": "33-41 03 00",
+      "children": [
+        "33-41 03 11 11"
+      ]
+    },
+    {
+      "code": "33-41 03 11 11",
+      "codeNormalized": "33-41-03-11-11",
+      "title": "Hazardous Material Abatement Services",
+      "definition": "Collecting and/or hauling of hazardous waste within a local area and/or operating hazardous waste transfer stations.",
+      "level": 4,
+      "parentCode": "33-41 03 11",
+      "children": []
+    },
+    {
+      "code": "33-41 03 21",
+      "codeNormalized": "33-41-03-21",
+      "title": "Demolition Services",
+      "definition": "Leveling and/or demolition of homes, buildings and bridges.",
+      "level": 3,
+      "parentCode": "33-41 03 00",
+      "children": []
+    },
+    {
+      "code": "33-41 03 31",
+      "codeNormalized": "33-41-03-31",
+      "title": "Fence Erection Services",
+      "definition": "Construction of temporary or permanent fences or other non-structure type barriers.",
+      "level": 3,
+      "parentCode": "33-41 03 00",
+      "children": []
+    },
+    {
+      "code": "33-41 03 41",
+      "codeNormalized": "33-41-03-41",
+      "title": "Foundation Preparation Services",
+      "definition": "Reviewing and collecting information about soil conditions prior to construction. May also include alteration of site conditions to allow for proper foundation construction.",
+      "level": 3,
+      "parentCode": "33-41 03 00",
+      "children": [
+        "33-41 03 41 11",
+        "33-41 03 41 21"
+      ]
+    },
+    {
+      "code": "33-41 03 41 11",
+      "codeNormalized": "33-41-03-41-11",
+      "title": "Hydrological Control Services",
+      "definition": "Preparation of a site's water conditions in order to allow for construction.",
+      "level": 4,
+      "parentCode": "33-41 03 41",
+      "children": []
+    },
+    {
+      "code": "33-41 03 41 21",
+      "codeNormalized": "33-41-03-41-21",
+      "title": "Seismic Control Services",
+      "definition": "Preparation of a site's soil conditions in order to allow for safe construction in seismic areas or areas prone to land movements such as land slides, avalanches, or sink holes.",
+      "level": 4,
+      "parentCode": "33-41 03 41",
+      "children": []
+    },
+    {
+      "code": "33-41 06 00",
+      "codeNormalized": "33-41-06-00",
+      "title": "Construction Labor, General",
+      "definition": "Execution of general construction tasks that require limited experience or skilled training.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": [
+        "33-41 06 11",
+        "33-41 06 13"
+      ]
+    },
+    {
+      "code": "33-41 06 11",
+      "codeNormalized": "33-41-06-11",
+      "title": "Help, General Construction",
+      "definition": "General, unskilled labor and miscellaneous construction tasks not specified in other construction disciplines.",
+      "level": 3,
+      "parentCode": "33-41 06 00",
+      "children": []
+    },
+    {
+      "code": "33-41 06 13",
+      "codeNormalized": "33-41-06-13",
+      "title": "Construction Equipment Operation",
+      "definition": "Operation and maintenance of general construction machinery not specified by another construction discipline.",
+      "level": 3,
+      "parentCode": "33-41 06 00",
+      "children": []
+    },
+    {
+      "code": "33-41 09 00",
+      "codeNormalized": "33-41-09-00",
+      "title": "Supply Services",
+      "definition": "Creation, collection, and distribution of goods and products.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": [
+        "33-41 09 11",
+        "33-41 09 21"
+      ]
+    },
+    {
+      "code": "33-41 09 11",
+      "codeNormalized": "33-41-09-11",
+      "title": "Fabrication Services",
+      "definition": "Creation of new products or specialized items for purchase or one-time use.",
+      "level": 3,
+      "parentCode": "33-41 09 00",
+      "children": []
+    },
+    {
+      "code": "33-41 09 21",
+      "codeNormalized": "33-41-09-21",
+      "title": "Manufacturing Services",
+      "definition": "Creation of products or items for purchase or mass production.",
+      "level": 3,
+      "parentCode": "33-41 09 00",
+      "children": []
+    },
+    {
+      "code": "33-41 10 00",
+      "codeNormalized": "33-41-10-00",
+      "title": "Carpentry",
+      "definition": "Assembly or preparation of a building, structure, or other building element (furniture, architectural details, etc.) with lumber, sheet goods or other wood products.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": [
+        "33-41 10 11",
+        "33-41 10 21"
+      ]
+    },
+    {
+      "code": "33-41 10 11",
+      "codeNormalized": "33-41-10-11",
+      "title": "Rough Carpentry Contracting",
+      "definition": "Assembly of wood framing, installation of rough doors, window frames, subflooring, fixtures or temporary supports in structures undergoing construction or repair.",
+      "level": 3,
+      "parentCode": "33-41 10 00",
+      "children": []
+    },
+    {
+      "code": "33-41 10 21",
+      "codeNormalized": "33-41-10-21",
+      "title": "Finished Carpentry Contracting",
+      "definition": "Assembly, installation, and finishing of cabinetry, furniture, trim, and detail items made of wood.",
+      "level": 3,
+      "parentCode": "33-41 10 00",
+      "children": []
+    },
+    {
+      "code": "33-41 21 00",
+      "codeNormalized": "33-41-21-00",
+      "title": "Iron Working",
+      "definition": "Erecting and assembling structural parts made from steel or precast concrete (e.g., steel beams, structural steel components, and similar products of precast concrete).",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": [
+        "33-41 21 11"
+      ]
+    },
+    {
+      "code": "33-41 21 11",
+      "codeNormalized": "33-41-21-11",
+      "title": "Reinforcing Iron and Rebar Fabrication Services",
+      "definition": "Assembling and installing other steel construction products (e.g., steel rods, bars, rebar, mesh, and cages) to reinforce poured-in-place concrete.",
+      "level": 3,
+      "parentCode": "33-41 21 00",
+      "children": []
+    },
+    {
+      "code": "33-41 23 00",
+      "codeNormalized": "33-41-23-00",
+      "title": "Boilermaker",
+      "definition": "Assembling, installing, and repairing boilers, vats, and other large vessels.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 24 00",
+      "codeNormalized": "33-41-24-00",
+      "title": "Sheet Metal Working",
+      "definition": "Installing assemblies, such as flashing, pipes, tubes, heating and air conditioning ducts. May also include fabrication of sheet metal using various tools and interpreting templates and drawings.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 30 00",
+      "codeNormalized": "33-41-30-00",
+      "title": "Masonry Contracting",
+      "definition": "Masonry work, stone setting, brick laying, and other stone work.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 31 00",
+      "codeNormalized": "33-41-31-00",
+      "title": "Concrete Contracting",
+      "definition": "Pouring and finishing of concrete foundations and structural elements. May also include performing grout and shotcrete work.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": [
+        "33-41 31 11"
+      ]
+    },
+    {
+      "code": "33-41 31 11",
+      "codeNormalized": "33-41-31-11",
+      "title": "Cement Finish Contracting",
+      "definition": "Finishing of concrete elements to specific requirements including texture, levelness and sealant requirements. May also include performing grout and shotcrete work.",
+      "level": 3,
+      "parentCode": "33-41 31 00",
+      "children": []
+    },
+    {
+      "code": "33-41 33 00",
+      "codeNormalized": "33-41-33-00",
+      "title": "Plaster Contracting",
+      "definition": "Application and repair of interior or exterior plaster, cement, stucco, or similar materials. May also include setting ornamental plaster.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 40 00",
+      "codeNormalized": "33-41-40-00",
+      "title": "Cladding Contracting",
+      "definition": "Installing siding of wood, aluminum, vinyl, or other exterior finish material (except brick, stone, stucco, or curtain wall). May also include installing gutters and downspouts.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 43 00",
+      "codeNormalized": "33-41-43-00",
+      "title": "Roofing Contracting",
+      "definition": "Repair and installation of roofing materials, including shingles, asphalt, and metal. May also include treating roofs (i.e., spraying, painting, or coating) and installing skylights.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 46 00",
+      "codeNormalized": "33-41-46-00",
+      "title": "Glazing Contracting",
+      "definition": "Installing glass panes in prepared openings (i.e., glazing work) and other glass work for buildings.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 51 00",
+      "codeNormalized": "33-41-51-00",
+      "title": "Paneling Contracting",
+      "definition": "Installing drywall, other wall boards, or other interior finish material (except brick or stone veneer, or tile). May also include installation of lath to receive plaster.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 53 00",
+      "codeNormalized": "33-41-53-00",
+      "title": "Flooring Contracting",
+      "definition": "Installation of resilient floor tile, carpeting, roll flooring, wood flooring, hard surfacing, and epoxy coating (Terrazzo).",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 54 00",
+      "codeNormalized": "33-41-54-00",
+      "title": "Tile Setting",
+      "definition": "Installation of ceramic, stone, metal, or glass tile products (for tile floors, also see Flooring).",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 56 00",
+      "codeNormalized": "33-41-56-00",
+      "title": "Painting Contracting",
+      "definition": "Interior or exterior painting and may also include interior wall covering such as wall paper.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 60 00",
+      "codeNormalized": "33-41-60-00",
+      "title": "Insulating Contracting",
+      "definition": "Installation of insulation in a variety of structures and surfaces to exclude or retain heat through batt and roll, blow-in, or spray-on insulation materials.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 63 00",
+      "codeNormalized": "33-41-63-00",
+      "title": "Plumbing Contracting",
+      "definition": "Installing and servicing plumbing, heating, and air-conditioning equipment.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 64 00",
+      "codeNormalized": "33-41-64-00",
+      "title": "Waste Management Services",
+      "definition": "Collection, treatment, and disposal of waste materials including local hauling of waste materials; operating materials recovery facilities (i.e., those that sort recyclable materials from the trash stream); providing remediation services (i.e., those that provide for the cleanup of contaminated buildings, mine sites, soil, or ground water); and providing septic pumping and other miscellaneous waste management services.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": [
+        "33-41 64 11",
+        "33-41 64 21",
+        "33-41 64 31"
+      ]
+    },
+    {
+      "code": "33-41 64 11",
+      "codeNormalized": "33-41-64-11",
+      "title": "Waste Collection Services",
+      "definition": "Collecting and/or hauling hazardous waste, nonhazardous waste, and/or recyclable materials within a local area; but may include operating hazardous or nonhazardous waste transfer stations.",
+      "level": 3,
+      "parentCode": "33-41 64 00",
+      "children": []
+    },
+    {
+      "code": "33-41 64 21",
+      "codeNormalized": "33-41-64-21",
+      "title": "Solid Waste Collection Services",
+      "definition": "Collecting and/or hauling nonhazardous solid waste (i.e., garbage) within a local area; operating nonhazardous solid waste transfer stations; or collecting and/or hauling mixed recyclable materials within a local area.",
+      "level": 3,
+      "parentCode": "33-41 64 00",
+      "children": []
+    },
+    {
+      "code": "33-41 64 31",
+      "codeNormalized": "33-41-64-31",
+      "title": "Septic Tank Services and Sewer Pipe Cleaning",
+      "definition": "Pumping (i.e., cleaning) septic tanks and cesspools, or renting and/or servicing portable toilets.",
+      "level": 3,
+      "parentCode": "33-41 64 00",
+      "children": []
+    },
+    {
+      "code": "33-41 71 00",
+      "codeNormalized": "33-41-71-00",
+      "title": "Refrigeration Contracting",
+      "definition": "Alteration and inspection of heating, ventilation, air-conditioning, and refrigeration installations to ensure proper functionality, conformance to safety laws and regulations, and installation to approved plans and specifications.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 73 00",
+      "codeNormalized": "33-41-73-00",
+      "title": "Heating, Ventilation, and Air-Conditioning Contracting",
+      "definition": "Installation of heating, ventilation, and air-conditioning systems.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 76 00",
+      "codeNormalized": "33-41-76-00",
+      "title": "Electrical Contracting",
+      "definition": "Installing and servicing electrical wiring and equipment.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": [
+        "33-41 76 11",
+        "33-41 76 21",
+        "33-41 76 31"
+      ]
+    },
+    {
+      "code": "33-41 76 11",
+      "codeNormalized": "33-41-76-11",
+      "title": "Low Voltage Electrical Contracting",
+      "definition": "Installation of low voltage wiring for monitoring and limited communication services.",
+      "level": 3,
+      "parentCode": "33-41 76 00",
+      "children": []
+    },
+    {
+      "code": "33-41 76 21",
+      "codeNormalized": "33-41-76-21",
+      "title": "Medium Voltage Electrical Contracting",
+      "definition": "Installation of medium (below 1000 volts) voltage wiring typically related to traditional interior and exterior power supply.",
+      "level": 3,
+      "parentCode": "33-41 76 00",
+      "children": []
+    },
+    {
+      "code": "33-41 76 31",
+      "codeNormalized": "33-41-76-31",
+      "title": "High Voltage Electrical Contracting",
+      "definition": "Installation of high (exceeding 1000 volts) voltage wiring typically related to power lines, service distribution lines and main terminal connections.",
+      "level": 3,
+      "parentCode": "33-41 76 00",
+      "children": []
+    },
+    {
+      "code": "33-41 79 00",
+      "codeNormalized": "33-41-79-00",
+      "title": "Control and Communication Services",
+      "definition": "Installation of communication systems, including safety systems, security monitoring systems, energy monitoring systems, life safety systems, fire systems, communications and telecommunications services, information technology service, and ZigBee service.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 81 00",
+      "codeNormalized": "33-41-81-00",
+      "title": "Environmental Energy Services",
+      "definition": "Installation and adjustment of alternative energy systems for on-site conditions.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": [
+        "33-41 81 11",
+        "33-41 81 21",
+        "33-41 81 31"
+      ]
+    },
+    {
+      "code": "33-41 81 11",
+      "codeNormalized": "33-41-81-11",
+      "title": "Geothermal Services",
+      "definition": "Installation of systems for harnessing the thermal capacity of the earth's surface for both heating and cooling systems. In some areas, service may also be used for generation of electricity.",
+      "level": 3,
+      "parentCode": "33-41 81 00",
+      "children": []
+    },
+    {
+      "code": "33-41 81 21",
+      "codeNormalized": "33-41-81-21",
+      "title": "Solar Photovoltaic Services",
+      "definition": "Installation of systems for harnessing solar energy to produce localized electricity.",
+      "level": 3,
+      "parentCode": "33-41 81 00",
+      "children": []
+    },
+    {
+      "code": "33-41 81 31",
+      "codeNormalized": "33-41-81-31",
+      "title": "Wind Turbine Services",
+      "definition": "Installation of systems for harnessing wind velocity to produce localized electricity.",
+      "level": 3,
+      "parentCode": "33-41 81 00",
+      "children": []
+    },
+    {
+      "code": "33-41 83 00",
+      "codeNormalized": "33-41-83-00",
+      "title": "Fire Protection Contracting",
+      "definition": "Installation of fire prevention or protection systems and/or materials.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 86 00",
+      "codeNormalized": "33-41-86-00",
+      "title": "Conveyance Contracting",
+      "definition": "Installation of mechanical moving systems such as elevators, escalators, and moving walkways.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": []
+    },
+    {
+      "code": "33-41 91 00",
+      "codeNormalized": "33-41-91-00",
+      "title": "Infrastructure Development",
+      "definition": "Construction of very large scale projects often funded by large corporations or governments for the betterment of the general public such as bridges, roadways, parks, and energy distribution grids.",
+      "level": 2,
+      "parentCode": "33-41 00 00",
+      "children": [
+        "33-41 91 11",
+        "33-41 91 21"
+      ]
+    },
+    {
+      "code": "33-41 91 11",
+      "codeNormalized": "33-41-91-11",
+      "title": "Paving Contracting",
+      "definition": "Creation of roadways with various materials including concrete, asphalt, or similar road surface material.",
+      "level": 3,
+      "parentCode": "33-41 91 00",
+      "children": []
+    },
+    {
+      "code": "33-41 91 21",
+      "codeNormalized": "33-41-91-21",
+      "title": "Rail-Track Laying Contracting",
+      "definition": "Creation of railways with carious methods, including traditional rails and sleepers, or modern day electric or electromagnetic rails.",
+      "level": 3,
+      "parentCode": "33-41 91 00",
+      "children": []
+    },
+    {
+      "code": "33-55 00 00",
+      "codeNormalized": "33-55-00-00",
+      "title": "Facility Use Disciplines",
+      "definition": "Continued maintenance, operation and use of a building, structure, or site following the completion of construction.",
+      "level": 1,
+      "parentCode": null,
+      "children": [
+        "33-55 14 00",
+        "33-55 21 00",
+        "33-55 24 00",
+        "33-55 36 00"
+      ]
+    },
+    {
+      "code": "33-55 14 00",
+      "codeNormalized": "33-55-14-00",
+      "title": "Real Estate",
+      "definition": "Buying selling or renting of property.",
+      "level": 2,
+      "parentCode": "33-55 00 00",
+      "children": [
+        "33-55 14 11",
+        "33-55 14 14",
+        "33-55 14 17"
+      ]
+    },
+    {
+      "code": "33-55 14 11",
+      "codeNormalized": "33-55-14-11",
+      "title": "Real Estate Sales",
+      "definition": "Helping clients buy, sell, and rent properties. May also include Real Estate Brokers, but brokers are licensed to manage their own real estate businesses. Sales agents must work with a broker.",
+      "level": 3,
+      "parentCode": "33-55 14 00",
+      "children": []
+    },
+    {
+      "code": "33-55 14 14",
+      "codeNormalized": "33-55-14-14",
+      "title": "Property Appraising",
+      "definition": "Estimation of value of real property (land and the buildings on the land) before it is sold, mortgaged, taxed, insured, or developed.",
+      "level": 3,
+      "parentCode": "33-55 14 00",
+      "children": []
+    },
+    {
+      "code": "33-55 14 17",
+      "codeNormalized": "33-55-14-17",
+      "title": "Leasing Services",
+      "definition": "Leasing or rental of a property.",
+      "level": 3,
+      "parentCode": "33-55 14 00",
+      "children": []
+    },
+    {
+      "code": "33-55 21 00",
+      "codeNormalized": "33-55-21-00",
+      "title": "Facility Owner",
+      "definition": "Ownership of property and facilitating all expenses associated with all aspects of procurement, design, construction, and facility use.",
+      "level": 2,
+      "parentCode": "33-55 00 00",
+      "children": []
+    },
+    {
+      "code": "33-55 24 00",
+      "codeNormalized": "33-55-24-00",
+      "title": "Facility Operations",
+      "definition": "Providing a combination of support services within a client's facilities, such as janitorial, maintenance, trash disposal, guard and security, mail routing, reception, laundry, and related services to support operations within facilities.",
+      "level": 2,
+      "parentCode": "33-55 00 00",
+      "children": [
+        "33-55 24 11",
+        "33-55 24 14",
+        "33-55 24 21",
+        "33-55 24 23"
+      ]
+    },
+    {
+      "code": "33-55 24 11",
+      "codeNormalized": "33-55-24-11",
+      "title": "Facility Space Planning",
+      "definition": "Planning and laying out of floor plans for optimal use of space and furniture for occupants.",
+      "level": 3,
+      "parentCode": "33-55 24 00",
+      "children": []
+    },
+    {
+      "code": "33-55 24 14",
+      "codeNormalized": "33-55-24-14",
+      "title": "Facility Management",
+      "definition": "Oversight of a facility's multiple employees and services to ensure a safe and functioning building.",
+      "level": 3,
+      "parentCode": "33-55 24 00",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21",
+      "codeNormalized": "33-55-24-21",
+      "title": "Facility Operation and Maintenance",
+      "definition": "Oversight and maintenance of all systems and services of a facility.",
+      "level": 3,
+      "parentCode": "33-55 24 00",
+      "children": [
+        "33-55 24 21 03",
+        "33-55 24 21 06",
+        "33-55 24 21 11",
+        "33-55 24 21 14",
+        "33-55 24 21 17",
+        "33-55 24 21 21",
+        "33-55 24 21 23",
+        "33-55 24 21 24",
+        "33-55 24 21 27",
+        "33-55 24 21 31",
+        "33-55 24 21 34",
+        "33-55 24 21 37",
+        "33-55 24 21 41",
+        "33-55 24 21 44",
+        "33-55 24 21 47",
+        "33-55 24 21 51",
+        "33-55 24 21 61",
+        "33-55 24 21 71"
+      ]
+    },
+    {
+      "code": "33-55 24 21 03",
+      "codeNormalized": "33-55-24-21-03",
+      "title": "Operation and Maintenance Supervision",
+      "definition": "Oversight of operations and maintenance tasks.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 06",
+      "codeNormalized": "33-55-24-21-06",
+      "title": "General Operation and Maintenance",
+      "definition": "General maintenance and operational tasks that do not require specific skills or training.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 11",
+      "codeNormalized": "33-55-24-21-11",
+      "title": "Plumbing Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with plumbing systems and services.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 14",
+      "codeNormalized": "33-55-24-21-14",
+      "title": "Fire Protection Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with fire protection and prevention systems and services.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 17",
+      "codeNormalized": "33-55-24-21-17",
+      "title": "Heating, Ventilation, and Air-Conditioning Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with HVAC systems and services.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 21",
+      "codeNormalized": "33-55-24-21-21",
+      "title": "Refrigeration Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with refrigeration systems and services.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 23",
+      "codeNormalized": "33-55-24-21-23",
+      "title": "Electrical Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with electrical systems and services.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 24",
+      "codeNormalized": "33-55-24-21-24",
+      "title": "Energy Monitoring and Controls Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with controls and monitoring systems and services.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 27",
+      "codeNormalized": "33-55-24-21-27",
+      "title": "Hydrological Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with building water and other hydrological systems and services.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 31",
+      "codeNormalized": "33-55-24-21-31",
+      "title": "Lightning Protection Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with weather protection systems and services specific to lightning and electrical storms.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 34",
+      "codeNormalized": "33-55-24-21-34",
+      "title": "Life Safety Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with life safety systems and services.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 37",
+      "codeNormalized": "33-55-24-21-37",
+      "title": "Radiation Protection Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with radioactive contamination and radiation protection systems and services.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 41",
+      "codeNormalized": "33-55-24-21-41",
+      "title": "Moisture Protection Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with weather protection systems and services specific to rain water and moisture.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 44",
+      "codeNormalized": "33-55-24-21-44",
+      "title": "Indoor Air Quality Evaluation",
+      "definition": "Maintenance and operational tasks associated with air-quality and purification systems and services.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 47",
+      "codeNormalized": "33-55-24-21-47",
+      "title": "Communications Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with data, video and audio communication systems and services.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": [
+        "33-55 24 21 47 11",
+        "33-55 24 21 47 14"
+      ]
+    },
+    {
+      "code": "33-55 24 21 47 11",
+      "codeNormalized": "33-55-24-21-47-11",
+      "title": "Telecommunications Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with telecommunication and auditory systems and services.",
+      "level": 5,
+      "parentCode": "33-55 24 21 47",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 47 14",
+      "codeNormalized": "33-55-24-21-47-14",
+      "title": "Information Technology Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with data transfer and communication systems and services.",
+      "level": 5,
+      "parentCode": "33-55 24 21 47",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 51",
+      "codeNormalized": "33-55-24-21-51",
+      "title": "Facility Shielding Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with atmospheric shielding and protection systems and services.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": [
+        "33-55 24 21 51 11"
+      ]
+    },
+    {
+      "code": "33-55 24 21 51 11",
+      "codeNormalized": "33-55-24-21-51-11",
+      "title": "Acoustic Shielding Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with acoustic dampening and control systems and services.",
+      "level": 5,
+      "parentCode": "33-55 24 21 51",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 61",
+      "codeNormalized": "33-55-24-21-61",
+      "title": "Industrial Machinery Operation and Maintenance",
+      "definition": "Maintenance and operational tasks associated with machinery, equipment, and other mechanical systems and services.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 21 71",
+      "codeNormalized": "33-55-24-21-71",
+      "title": "Home Appliance Installation and Maintenance",
+      "definition": "Maintenance and installation tasks associated with small appliances for personal or residential use.",
+      "level": 4,
+      "parentCode": "33-55 24 21",
+      "children": []
+    },
+    {
+      "code": "33-55 24 23",
+      "codeNormalized": "33-55-24-23",
+      "title": "Facility Support Services",
+      "definition": "General support needed to clean and maintain a facility as a result of daily use.",
+      "level": 3,
+      "parentCode": "33-55 24 00",
+      "children": [
+        "33-55 24 23 11",
+        "33-55 24 23 13",
+        "33-55 24 23 21",
+        "33-55 24 23 31",
+        "33-55 24 23 41"
+      ]
+    },
+    {
+      "code": "33-55 24 23 11",
+      "codeNormalized": "33-55-24-23-11",
+      "title": "Building Cleaning",
+      "definition": "Cleaning building interiors, interiors of transportation equipment (e.g., aircraft, rail cars, ships), and/or windows.",
+      "level": 4,
+      "parentCode": "33-55 24 23",
+      "children": []
+    },
+    {
+      "code": "33-55 24 23 13",
+      "codeNormalized": "33-55-24-23-13",
+      "title": "Carpet and Upholstery Cleaning",
+      "definition": "Cleaning and dyeing used rugs, carpets, and upholstery.",
+      "level": 4,
+      "parentCode": "33-55 24 23",
+      "children": []
+    },
+    {
+      "code": "33-55 24 23 21",
+      "codeNormalized": "33-55-24-23-21",
+      "title": "Grounds Maintenance Workers",
+      "definition": "Providing landscape care and maintenance services and/or installing trees, shrubs, plants, lawns, or gardens.",
+      "level": 4,
+      "parentCode": "33-55 24 23",
+      "children": []
+    },
+    {
+      "code": "33-55 24 23 31",
+      "codeNormalized": "33-55-24-23-31",
+      "title": "Pest Control",
+      "definition": "Exterminating and controlling birds, mosquitoes, rodents, termites, and other insects and pests (except for crop production and forestry production) by providing fumigation services or the use of mechanical traps, poisons or other means of deterrent.",
+      "level": 4,
+      "parentCode": "33-55 24 23",
+      "children": []
+    },
+    {
+      "code": "33-55 24 23 41",
+      "codeNormalized": "33-55-24-23-41",
+      "title": "Facility Security",
+      "definition": "Securing all points of entry or interest for a building, and providing continued surveillance of the surround grounds and facilities.",
+      "level": 4,
+      "parentCode": "33-55 24 23",
+      "children": []
+    },
+    {
+      "code": "33-55 36 00",
+      "codeNormalized": "33-55-36-00",
+      "title": "Facility Restoration Services",
+      "definition": "Cleaning, maintaining and repairing of damage to parts of building due to age, weather, or materials deterioration.",
+      "level": 2,
+      "parentCode": "33-55 00 00",
+      "children": [
+        "33-55 36 11",
+        "33-55 36 21",
+        "33-55 36 31"
+      ]
+    },
+    {
+      "code": "33-55 36 11",
+      "codeNormalized": "33-55-36-11",
+      "title": "Concrete Restoration Services",
+      "definition": "Cleaning, maintaining and repairing of damage to any concrete of building due to age, weather, or materials deterioration.",
+      "level": 3,
+      "parentCode": "33-55 36 00",
+      "children": []
+    },
+    {
+      "code": "33-55 36 21",
+      "codeNormalized": "33-55-36-21",
+      "title": "Masonry Restoration Services",
+      "definition": "Cleaning, maintaining and repairing of damage to any masonry of building due to age, weather, or materials deterioration.",
+      "level": 3,
+      "parentCode": "33-55 36 00",
+      "children": []
+    },
+    {
+      "code": "33-55 36 31",
+      "codeNormalized": "33-55-36-31",
+      "title": "Parking Restoration Services",
+      "definition": "Cleaning, maintaining and repairing of damage to parking or roadways to and from building due to age, weather, or materials deterioration.",
+      "level": 3,
+      "parentCode": "33-55 36 00",
+      "children": []
+    },
+    {
+      "code": "33-81 00 00",
+      "codeNormalized": "33-81-00-00",
+      "title": "Support Disciplines",
+      "definition": "Providing advice and assistance to businesses and other organizations on issues, such as strategic and organizational planning; financial planning and budgeting; marketing objectives and policies; human resource policies, practices, and planning; production scheduling; and control planning.",
+      "level": 1,
+      "parentCode": null,
+      "children": [
+        "33-81 11 00",
+        "33-81 21 00",
+        "33-81 31 00"
+      ]
+    },
+    {
+      "code": "33-81 11 00",
+      "codeNormalized": "33-81-11-00",
+      "title": "Legal Services",
+      "definition": "Providing review and interpretation of all legal matters associated with a buildings, structure, site, or service.",
+      "level": 2,
+      "parentCode": "33-81 00 00",
+      "children": [
+        "33-81 11 11",
+        "33-81 11 14",
+        "33-81 11 17",
+        "33-81 11 21",
+        "33-81 11 23"
+      ]
+    },
+    {
+      "code": "33-81 11 11",
+      "codeNormalized": "33-81-11-11",
+      "title": "Codes Consultation",
+      "definition": "Providing expertise and guidance on local, national, and international requirements developed for planning, building and construction practices.",
+      "level": 3,
+      "parentCode": "33-81 11 00",
+      "children": []
+    },
+    {
+      "code": "33-81 11 14",
+      "codeNormalized": "33-81-11-14",
+      "title": "Forensic Investigation",
+      "definition": "Providing analysis of physical evidence for use in future projects or in matters of legal dispute.",
+      "level": 3,
+      "parentCode": "33-81 11 00",
+      "children": []
+    },
+    {
+      "code": "33-81 11 17",
+      "codeNormalized": "33-81-11-17",
+      "title": "Permitting",
+      "definition": "Review and acceptance or denial of plans, designs, and requests based on set guidelines and codes of the governing jurisdiction.",
+      "level": 3,
+      "parentCode": "33-81 11 00",
+      "children": []
+    },
+    {
+      "code": "33-81 11 21",
+      "codeNormalized": "33-81-11-21",
+      "title": "Lawyer",
+      "definition": "Providing expertise in a range or in specific areas of law, such as criminal law, corporate law, family and estate law, patent law, real estate law, or tax law.",
+      "level": 3,
+      "parentCode": "33-81 11 00",
+      "children": []
+    },
+    {
+      "code": "33-81 11 23",
+      "codeNormalized": "33-81-11-23",
+      "title": "Notary",
+      "definition": "Drafting, approving, and executing legal documents, such as real estate transactions, wills, and contracts; and in receiving, indexing, and storing such documents.",
+      "level": 3,
+      "parentCode": "33-81 11 00",
+      "children": []
+    },
+    {
+      "code": "33-81 21 00",
+      "codeNormalized": "33-81-21-00",
+      "title": "Administrative and General Consulting",
+      "definition": "Providing operating advice and assistance to businesses and other organizations on administrative management issues, such as financial planning and budgeting, equity and asset management, records management, office planning, strategic and organizational planning, site selection, new business startup, and business process improvement.",
+      "level": 2,
+      "parentCode": "33-81 00 00",
+      "children": [
+        "33-81 21 11",
+        "33-81 21 21"
+      ]
+    },
+    {
+      "code": "33-81 21 11",
+      "codeNormalized": "33-81-21-11",
+      "title": "Public Relations",
+      "definition": "Designing and implementing public relations campaigns. These campaigns are designed to promote the interests and image of their clients through lobbying, political consulting, or public relations consulting.",
+      "level": 3,
+      "parentCode": "33-81 21 00",
+      "children": [
+        "33-81 21 11 11"
+      ]
+    },
+    {
+      "code": "33-81 21 11 11",
+      "codeNormalized": "33-81-21-11-11",
+      "title": "Translation and Interpretation Services",
+      "definition": "Translating written material and interpreting speech from one language to another, or in providing sign language services.",
+      "level": 4,
+      "parentCode": "33-81 21 11",
+      "children": []
+    },
+    {
+      "code": "33-81 21 21",
+      "codeNormalized": "33-81-21-21",
+      "title": "Operations Management",
+      "definition": "Overseeing daily operations and work taking place in a business, building, or event.",
+      "level": 3,
+      "parentCode": "33-81 21 00",
+      "children": [
+        "33-81 21 21 11",
+        "33-81 21 21 13"
+      ]
+    },
+    {
+      "code": "33-81 21 21 11",
+      "codeNormalized": "33-81-21-21-11",
+      "title": "Administrative Services Management",
+      "definition": "Supporting the day-to-day operations (e.g., general management, personnel administration, clerical activities, cleaning activities) and are often integral parts of the activities of establishments found in all sectors.",
+      "level": 4,
+      "parentCode": "33-81 21 21",
+      "children": []
+    },
+    {
+      "code": "33-81 21 21 13",
+      "codeNormalized": "33-81-21-21-13",
+      "title": "Computer and Information Systems Management",
+      "definition": "Overseeing the procurement, maintenance and replacement of computers, servers, and other information and communication technology.",
+      "level": 4,
+      "parentCode": "33-81 21 21",
+      "children": []
+    },
+    {
+      "code": "33-81 31 00",
+      "codeNormalized": "33-81-31-00",
+      "title": "Finance",
+      "definition": "Providing expertise and guidance on financial transactions and activities.",
+      "level": 2,
+      "parentCode": "33-81 00 00",
+      "children": [
+        "33-81 31 11",
+        "33-81 31 14",
+        "33-81 31 17",
+        "33-81 31 19",
+        "33-81 31 21",
+        "33-81 31 23",
+        "33-81 31 26"
+      ]
+    },
+    {
+      "code": "33-81 31 11",
+      "codeNormalized": "33-81-31-11",
+      "title": "Banking",
+      "definition": "Execution of financial transactions.",
+      "level": 3,
+      "parentCode": "33-81 31 00",
+      "children": []
+    },
+    {
+      "code": "33-81 31 14",
+      "codeNormalized": "33-81-31-14",
+      "title": "Accounting",
+      "definition": "Providing services, such as auditing of accounting records, designing accounting systems, preparing financial statements, developing budgets, preparing tax returns, processing payrolls, bookkeeping, and billing.",
+      "level": 3,
+      "parentCode": "33-81 31 00",
+      "children": []
+    },
+    {
+      "code": "33-81 31 17",
+      "codeNormalized": "33-81-31-17",
+      "title": "Insurance",
+      "definition": "Performing due diligence reviews for potential acquisitions, submitting quality control reports and responses to legal departments for projects reviewed, and conducting orientations and overview presentations for newly acquired profit centers.",
+      "level": 3,
+      "parentCode": "33-81 31 00",
+      "children": []
+    },
+    {
+      "code": "33-81 31 19",
+      "codeNormalized": "33-81-31-19",
+      "title": "Purchasing Management",
+      "definition": "Evaluating suppliers based on cost, quality, service, availability, reliability, and selection variety. May also include examining catalogs, commerce publications and directories in order to find the right suppliers and inspecting products and services to evaluate production and distribution abilities and consider all other aspects that may influence purchasing decisions.",
+      "level": 3,
+      "parentCode": "33-81 31 00",
+      "children": []
+    },
+    {
+      "code": "33-81 31 21",
+      "codeNormalized": "33-81-31-21",
+      "title": "Bonding",
+      "definition": "Overseeing and providing expertise in the transfer of money from lender to borrower and the creation of final certificate of indebtedness.",
+      "level": 3,
+      "parentCode": "33-81 31 00",
+      "children": []
+    },
+    {
+      "code": "33-81 31 23",
+      "codeNormalized": "33-81-31-23",
+      "title": "Compensation and Benefits Management",
+      "definition": "Collecting information on hours worked, pay rates, deductions, and other payroll-related data from their clients; and using that information to generate paychecks, payroll reports, and tax filings.",
+      "level": 3,
+      "parentCode": "33-81 31 00",
+      "children": []
+    },
+    {
+      "code": "33-81 31 26",
+      "codeNormalized": "33-81-31-26",
+      "title": "Human Resources Management",
+      "definition": "Creation and enforcement of human resource and personnel policies, practices, and procedures. May also include employee benefits planning, communication, and administration; or compensation systems planning and wage and salary administration.",
+      "level": 3,
+      "parentCode": "33-81 31 00",
+      "children": []
+    }
+  ]
+}
