@@ -14,6 +14,7 @@ import wbsRoutes from './routes/wbs';
 import cbsRoutes from './routes/cbs';
 import boqRoutes from './routes/boq';
 import setupRoutes from './routes/setup';
+import projectSetupRoutes from './routes/project-setup.routes';
 
 const PORT = parseInt(process.env.PORT || '3002');
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
@@ -347,6 +348,9 @@ app.use(wbsRoutes(prisma));
 app.use(cbsRoutes(prisma));
 app.use(boqRoutes(prisma));
 app.use(setupRoutes(prisma));
+
+// Project Setup extended routes (OBS, BOQ items, Documents, Cash Flow)
+app.use('/projects/:projectId', projectSetupRoutes);
 
 // ── Helpers ──
 function buildLocationTree(locations: any[]): any[] {
