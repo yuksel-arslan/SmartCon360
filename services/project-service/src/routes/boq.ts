@@ -149,9 +149,9 @@ export default function boqRoutes(prisma: PrismaClient) {
 
       // Update project setup
       await prisma.projectSetup.upsert({
-        where: { projectId: req.params.id },
+        where: { projectId: req.params.id as string },
         create: {
-          projectId: req.params.id,
+          projectId: req.params.id as string,
           boqUploaded: true,
           boqFileName: file.originalname,
           boqItemCount: validItems.length,

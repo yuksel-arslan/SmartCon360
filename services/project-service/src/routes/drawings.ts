@@ -42,7 +42,7 @@ export default function drawingRoutes(prisma: PrismaClient) {
   // POST /projects/:id/drawings — Upload drawings (multipart)
   router.post('/projects/:id/drawings', uploadDrawings.array('files', 50), async (req, res) => {
     try {
-      const projectId = req.params.id;
+      const projectId = req.params.id as string;
       const files = req.files as Express.Multer.File[];
 
       if (!files || files.length === 0) {
