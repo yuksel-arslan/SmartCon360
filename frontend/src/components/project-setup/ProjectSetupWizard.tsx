@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Loader2, Rocket, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 
-import { SETUP_STEPS, DEFAULT_WORKING_DAYS, isStepOptional, getStepValidation, getMissingRequiredSteps } from './types';
+import { SETUP_STEPS, DEFAULT_WORKING_DAYS, BUILDING_TYPES, isStepOptional, getStepValidation, getMissingRequiredSteps } from './types';
 import type { SetupState } from './types';
 
 import StepClassification from './steps/StepClassification';
@@ -104,7 +104,31 @@ export default function ProjectSetupWizard({ projectId }: Props) {
       });
       if (res.ok) {
         const json = await res.json();
-        setState((prev) => ({ ...prev, ...json.data }));
+        setState((prev) => {
+          const merged = { ...prev, ...json.data };
+
+          // Sync buildingType from projectType if buildingType is empty
+          // (projectType is stored in DB but buildingType is client-only state)
+          if (!merged.buildingType && merged.projectType) {
+            merged.buildingType = merged.projectType;
+            const bt = BUILDING_TYPES.find((b) => b.value === merged.projectType);
+            if (bt) {
+              merged.floorCount = merged.floorCount || bt.defaultFloors;
+              merged.basementCount = merged.basementCount || bt.defaultBasements;
+              merged.zonesPerFloor = merged.zonesPerFloor || bt.defaultZonesPerFloor;
+              merged.typicalFloorArea = merged.typicalFloorArea || bt.defaultFloorArea;
+              merged.structuralSystem = merged.structuralSystem || bt.defaultStructural;
+              merged.mepComplexity = merged.mepComplexity || bt.defaultMep;
+              merged.flowDirection = merged.flowDirection || bt.defaultFlowDirection;
+            }
+          }
+          // Default projectPhase if not set
+          if (!merged.projectPhase && merged.buildingType) {
+            merged.projectPhase = 'new_build';
+          }
+
+          return merged;
+        });
 
         const currentStepIndex = SETUP_STEPS.findIndex((s) => s.id === json.data.currentStep);
         if (currentStepIndex >= 0) setStep(currentStepIndex);
