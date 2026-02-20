@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ChevronRight, ChevronDown, MapPin, Building2, Layers, Grid3x3, Loader2, Check, Plus, Trash2 } from 'lucide-react';
-import { getTemplate, type LocationTemplate } from '@/lib/core/project-templates';
+import { getTemplate, generateLbsFromConfig, type LocationTemplate } from '@/lib/core/project-templates';
 import type { SetupStepProps } from '../types';
+import { BUILDING_TYPES } from '../types';
 
 const typeIcons: Record<string, typeof MapPin> = {
   site: MapPin,
@@ -219,9 +220,17 @@ export default function StepLBS({ projectId, state, onStateChange, authHeaders }
   const [applied, setApplied] = useState(false);
   const [error, setError] = useState('');
 
-  const template = getTemplate(state.projectType);
-  const templateLocations = template?.locations || [];
+  // Use dynamic LBS generation from floor configuration if available,
+  // otherwise fall back to static project type template
+  const hasDynamicConfig = !!(state.buildingType && (state.floorCount > 0 || state.buildingType === 'infrastructure'));
+  const dynamicLocations = hasDynamicConfig
+    ? generateLbsFromConfig(state.buildingType, state.floorCount, state.basementCount, state.zonesPerFloor)
+    : [];
+  const template = getTemplate(state.buildingType || state.projectType);
+  const templateLocations = hasDynamicConfig ? dynamicLocations : (template?.locations || []);
   const templateCounts = countTemplateLocations(templateLocations);
+
+  const buildingTypeLabel = BUILDING_TYPES.find((b) => b.value === state.buildingType)?.label || state.buildingType;
 
   const fetchLocations = useCallback(async () => {
     try {
@@ -355,7 +364,7 @@ export default function StepLBS({ projectId, state, onStateChange, authHeaders }
               </div>
 
               <div className="mb-2 text-[11px] font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
-                Template Preview ({template?.label})
+                Template Preview ({buildingTypeLabel || template?.label || 'Custom'})
               </div>
               <div
                 className="rounded-xl border p-3 max-h-[280px] overflow-auto mb-4"

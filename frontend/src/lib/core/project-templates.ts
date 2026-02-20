@@ -586,6 +586,125 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
   },
 ];
 
+// ── Dynamic LBS Generation from Floor Configuration ──
+
+/** Zone name patterns per building type */
+const ZONE_PATTERNS: Record<string, string[]> = {
+  hotel:        ['Wing A — Rooms', 'Wing B — Rooms', 'Corridor & Services', 'Amenity Zone', 'Back of House', 'Suite Wing', 'Service Zone', 'Pool Deck Zone'],
+  hospital:     ['Ward A — Patient Rooms', 'Ward B — Patient Rooms', 'Nurse Station & Support', 'Corridor & Services', 'Diagnostics Zone', 'Treatment Zone', 'Operating Zone', 'Recovery Zone'],
+  residential:  ['Unit A Side', 'Unit B Side', 'Corridor & Core', 'Amenity Zone', 'Service Area', 'Common Zone', 'Balcony Side', 'Utility Zone'],
+  commercial:   ['Open Plan Zone A', 'Open Plan Zone B', 'Core (Lifts/WC/Services)', 'Perimeter / Facade', 'Meeting Rooms', 'Server Room', 'Break Area', 'Reception Zone'],
+  industrial:   ['Bay A', 'Bay B', 'Bay C', 'Bay D', 'Process Zone', 'Utility Zone', 'Loading Zone', 'Storage Zone'],
+  infrastructure: ['Earthworks Zone', 'Structures Zone', 'Pavement Zone', 'Utilities Zone', 'Drainage Zone', 'Finishing Zone', 'Signage Zone', 'Landscaping Zone'],
+  educational:  ['Classroom Wing A', 'Classroom Wing B', 'Corridor & Common', 'Lab / Workshop', 'Admin Area', 'Library Zone', 'Auditorium Zone', 'Sports Zone'],
+  mixed_use:    ['Residential Wing', 'Commercial Wing', 'Core & Services', 'Retail Zone', 'Common Area', 'Office Zone', 'Amenity Zone', 'Parking Zone'],
+  data_center:  ['Server Hall A', 'Server Hall B', 'Power Room', 'Cooling Zone', 'Network Zone', 'Security Zone', 'UPS Room', 'Control Room'],
+};
+
+const BASEMENT_ZONES: Record<string, string[]> = {
+  hotel:       ['Parking Zone', 'MEP Plant Room', 'Storage & BOH'],
+  hospital:    ['Central Plant', 'Morgue & Pathology', 'Loading & Stores'],
+  residential: ['Parking Level', 'Storage & MEP', 'Fire Pump Room'],
+  commercial:  ['Parking', 'Building Services', 'Fire Pump Room'],
+  educational: ['Storage', 'MEP Room', 'Archive'],
+  mixed_use:   ['Parking Level', 'Building Services', 'Storage'],
+  data_center: ['Cable Routing', 'UPS / Battery Room', 'Generator Room'],
+};
+
+/**
+ * Generate a dynamic LBS template based on building type and floor configuration.
+ * Uses user-specified floor/basement/zone counts instead of hardcoded templates.
+ */
+export function generateLbsFromConfig(
+  buildingType: string,
+  floorCount: number,
+  basementCount: number,
+  zonesPerFloor: number,
+): LocationTemplate[] {
+  if (buildingType === 'infrastructure') {
+    // Infrastructure uses sections, not floors — keep original template
+    const tpl = PROJECT_TEMPLATES.find((t) => t.type === 'infrastructure');
+    return tpl?.locations || [];
+  }
+
+  const zoneNames = ZONE_PATTERNS[buildingType] || ZONE_PATTERNS.commercial;
+  const basementZones = BASEMENT_ZONES[buildingType] || BASEMENT_ZONES.commercial;
+
+  const buildingLabel: Record<string, string> = {
+    hotel: 'Main Building',
+    hospital: 'Hospital Building',
+    residential: 'Tower A',
+    commercial: 'Office Tower',
+    industrial: 'Industrial Facility',
+    educational: 'Campus Building',
+    mixed_use: 'Mixed-Use Tower',
+    data_center: 'Data Center Facility',
+  };
+
+  const children: LocationTemplate[] = [];
+
+  // Basements
+  if (basementCount > 0) {
+    for (let b = basementCount; b >= 1; b--) {
+      const basementChildren: LocationTemplate[] = basementZones
+        .slice(0, Math.max(2, zonesPerFloor))
+        .map((name) => ({ name, type: 'zone' as const }));
+      children.push({
+        name: basementCount === 1 ? 'Basement' : `Basement B${b}`,
+        type: 'floor',
+        children: basementChildren,
+      });
+    }
+  }
+
+  // Ground floor (always present if floorCount > 0)
+  if (floorCount > 0) {
+    const groundZones: LocationTemplate[] = zoneNames
+      .slice(0, zonesPerFloor)
+      .map((name) => ({ name, type: 'zone' as const }));
+    children.push({
+      name: 'Ground Floor',
+      type: 'floor',
+      children: groundZones,
+    });
+  }
+
+  // Typical floors (floorCount - 1 because ground is already counted, and last is roof)
+  const typicalFloors = Math.max(0, floorCount - 2);
+  if (typicalFloors > 0) {
+    const typicalZones: LocationTemplate[] = zoneNames
+      .slice(0, zonesPerFloor)
+      .map((name) => ({ name, type: 'zone' as const }));
+    children.push({
+      name: 'Typical Floor',
+      type: 'floor',
+      repeat: typicalFloors,
+      repeatLabel: 'Floor {n}',
+      children: typicalZones,
+    });
+  }
+
+  // Roof / top floor
+  if (floorCount >= 2) {
+    children.push({
+      name: 'Roof / Mechanical',
+      type: 'floor',
+      children: [
+        { name: 'Mechanical Penthouse', type: 'zone' },
+        ...(buildingType === 'hotel' ? [{ name: 'Pool Deck', type: 'zone' as const }] : []),
+      ],
+    });
+  }
+
+  return [
+    {
+      name: buildingLabel[buildingType] || 'Building',
+      type: 'building',
+      children,
+    },
+  ];
+}
+
 // ── Helpers ──
 
 export function getTemplate(type: string): ProjectTemplate | undefined {

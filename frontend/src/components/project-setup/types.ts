@@ -14,6 +14,11 @@ export interface SetupState {
   projectType: string;
   currency: string;
   projectName: string;
+  // Building config (set in Classification step)
+  buildingType: string;
+  floorCount: number;
+  basementCount: number;
+  zonesPerFloor: number;
   // LBS
   locationCount: number;
   zoneCount: number;
@@ -114,10 +119,13 @@ export function getStepValidation(
 ): { valid: boolean; message: string } {
   switch (stepId) {
     case 'classification':
-      return {
-        valid: !!state.classificationStandard,
-        message: 'Select a classification standard to continue.',
-      };
+      if (!state.classificationStandard) {
+        return { valid: false, message: 'Select a classification standard to continue.' };
+      }
+      if (!state.buildingType) {
+        return { valid: false, message: 'Select a building type to continue.' };
+      }
+      return { valid: true, message: '' };
     case 'drawings':
       return { valid: true, message: '' };
     case 'boq':
@@ -171,6 +179,30 @@ export function getMissingRequiredSteps(state: SetupState): string[] {
   }
   return missing;
 }
+
+// ── Building Types for Classification step ──
+
+export interface BuildingTypeOption {
+  value: string;
+  label: string;
+  icon: string;
+  description: string;
+  defaultFloors: number;
+  defaultBasements: number;
+  defaultZonesPerFloor: number;
+}
+
+export const BUILDING_TYPES: BuildingTypeOption[] = [
+  { value: 'hotel', label: 'Hotel / Resort', icon: '🏨', description: 'Guest rooms, lobbies, restaurants, back-of-house', defaultFloors: 10, defaultBasements: 1, defaultZonesPerFloor: 3 },
+  { value: 'hospital', label: 'Hospital / Healthcare', icon: '🏥', description: 'Patient rooms, OR suites, emergency, diagnostics', defaultFloors: 6, defaultBasements: 1, defaultZonesPerFloor: 4 },
+  { value: 'residential', label: 'Residential Tower', icon: '🏢', description: 'Apartments, condos, residential complexes', defaultFloors: 20, defaultBasements: 1, defaultZonesPerFloor: 3 },
+  { value: 'commercial', label: 'Commercial Office', icon: '🏛️', description: 'Office towers, business parks, co-working spaces', defaultFloors: 15, defaultBasements: 1, defaultZonesPerFloor: 4 },
+  { value: 'industrial', label: 'Industrial / Factory', icon: '🏭', description: 'Factories, warehouses, logistics centers', defaultFloors: 1, defaultBasements: 0, defaultZonesPerFloor: 4 },
+  { value: 'infrastructure', label: 'Infrastructure', icon: '🌉', description: 'Roads, bridges, tunnels, utilities', defaultFloors: 0, defaultBasements: 0, defaultZonesPerFloor: 3 },
+  { value: 'educational', label: 'Educational', icon: '🎓', description: 'Schools, universities, training facilities', defaultFloors: 4, defaultBasements: 1, defaultZonesPerFloor: 3 },
+  { value: 'mixed_use', label: 'Mixed Use', icon: '🏙️', description: 'Mixed residential, retail, and office', defaultFloors: 25, defaultBasements: 2, defaultZonesPerFloor: 4 },
+  { value: 'data_center', label: 'Data Center', icon: '🖥️', description: 'Server halls, power rooms, cooling systems', defaultFloors: 2, defaultBasements: 0, defaultZonesPerFloor: 4 },
+];
 
 export const DISCIPLINES = [
   { value: 'structural', label: 'Structural', color: '#6366F1' },
