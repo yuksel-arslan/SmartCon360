@@ -79,8 +79,12 @@ export async function getProgressByProject(
   page = 1,
   limit = 50
 ): Promise<{ data: ProgressUpdate[]; meta: { total: number; page: number; limit: number; totalPages: number } }> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (token) headers['Authorization'] = `Bearer ${token}`;
   const result = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/progress/project/${projectId}?page=${page}&limit=${limit}`
+    `${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/progress/project/${projectId}?page=${page}&limit=${limit}`,
+    { headers },
   );
   const json = await result.json();
   if (!result.ok) throw new Error(json.error?.message || `HTTP ${result.status}`);
@@ -149,8 +153,12 @@ export async function getPPCHistory(projectId: string): Promise<{
   data: PPCRecord[];
   meta: { count: number; averagePPC: number; latestPPC: number | null; trend: number; trendDirection: string };
 }> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (token) headers['Authorization'] = `Bearer ${token}`;
   const result = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/progress/ppc/history?projectId=${projectId}`
+    `${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/progress/ppc/history?projectId=${projectId}`,
+    { headers },
   );
   const json = await result.json();
   if (!result.ok) throw new Error(json.error?.message || `HTTP ${result.status}`);
@@ -161,8 +169,12 @@ export async function getCurrentPPC(projectId: string): Promise<{
   data: PPCRecord;
   meta: { previousWeekPPC: number | null; change: number; changeDirection: string };
 }> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (token) headers['Authorization'] = `Bearer ${token}`;
   const result = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/progress/ppc/current?projectId=${projectId}`
+    `${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/progress/ppc/current?projectId=${projectId}`,
+    { headers },
   );
   const json = await result.json();
   if (!result.ok) throw new Error(json.error?.message || `HTTP ${result.status}`);

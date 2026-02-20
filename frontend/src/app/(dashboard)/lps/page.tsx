@@ -17,6 +17,7 @@ import {
   getPPCByTrade,
   getVarianceAnalysis,
 } from '@/lib/stores/progress-store';
+import { listPlans, getPlan } from '@/lib/stores/takt-plans';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -1142,7 +1143,9 @@ function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color:
     ppcHistory.slice(-4).reduce((sum, w) => sum + w.ppc, 0) / 4,
   );
 
-  const bestTrade = tradePPC.reduce((a, b) => (a.ppc > b.ppc ? a : b));
+  const bestTrade = tradePPC.length > 0
+    ? tradePPC.reduce((a, b) => (a.ppc > b.ppc ? a : b))
+    : { trade: '-', color: 'var(--color-text-muted)', ppc: 0, committed: 0, completed: 0 };
   const topVariance = VARIANCE_DATA[0];
 
   return (
@@ -1344,6 +1347,28 @@ export default function LPSPage() {
     if (!activeProjectId) return;
     const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
     (async () => {
+      try {
+        // First try to load trades/zones from the takt plan (most reliable source)
+        const plans = await listPlans(activeProjectId);
+        if (plans.length > 0) {
+          const plan = await getPlan(activeProjectId, plans[0].id);
+          if (plan.wagons.length > 0) {
+            setTrades(plan.wagons.map((w) => ({
+              name: w.tradeName,
+              color: w.tradeColor || '#6366F1',
+            })));
+          }
+          if (plan.zones.length > 0) {
+            setZones(plan.zones.map((z, i) => ({
+              id: z.id,
+              name: z.name,
+              y_index: i,
+            })));
+          }
+          return;
+        }
+      } catch { /* takt plan not available, fall back to project data */ }
+
       try {
         const res = await fetch(`/api/v1/projects/${activeProjectId}`, { headers: authHeaders });
         if (!res.ok) return;

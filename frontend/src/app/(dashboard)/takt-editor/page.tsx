@@ -605,10 +605,13 @@ export default function TaktEditorPage() {
             }
 
             // Load real assignment statuses as cell overrides
+            // Map wagonId → tradeId since grid cells use tradeId as key
             if (plan.assignments.length > 0) {
+              const wagonToTradeId = new Map(plan.wagons.map((w) => [w.id, w.tradeId]));
               const overrides: Record<string, Partial<GridCell>> = {};
               for (const a of plan.assignments) {
-                const key = `${a.wagonId}::${a.zoneId}`;
+                const tradeId = wagonToTradeId.get(a.wagonId) || a.wagonId;
+                const key = `${tradeId}::${a.zoneId}`;
                 overrides[key] = {
                   status: (a.status as CellStatus) || 'planned',
                   notes: a.notes || '',
@@ -677,16 +680,20 @@ export default function TaktEditorPage() {
           bufferAfter: t.bufferAfter,
           crewSize: t.crewSize,
         })),
-        assignments: Array.from(cells.entries()).map(([, cell]) => ({
-          zoneId: cell.zoneId,
-          wagonId: cell.tradeId,
-          periodNumber: cell.periodNumber,
-          plannedStart: cell.plannedStart.toISOString(),
-          plannedEnd: cell.plannedEnd.toISOString(),
-          status: cell.status,
-          progressPct: cell.status === 'completed' ? 100 : cell.status === 'in_progress' ? 50 : 0,
-          notes: cell.notes || undefined,
-        })),
+        assignments: Array.from(cells.entries()).map(([, cell]) => {
+          const zone = zones.find((z) => z.id === cell.zoneId);
+          const trade = trades.find((t) => t.id === cell.tradeId);
+          return {
+            zoneSequence: zone?.sequence ?? 1,
+            wagonSequence: trade?.sequence ?? 1,
+            periodNumber: cell.periodNumber,
+            plannedStart: cell.plannedStart.toISOString(),
+            plannedEnd: cell.plannedEnd.toISOString(),
+            status: cell.status,
+            progressPct: cell.status === 'completed' ? 100 : cell.status === 'in_progress' ? 50 : 0,
+            notes: cell.notes || undefined,
+          };
+        }),
       };
 
       if (currentPlanId) {

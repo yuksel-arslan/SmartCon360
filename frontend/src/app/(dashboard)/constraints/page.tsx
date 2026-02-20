@@ -2,6 +2,8 @@
 
 import TopBar from '@/components/layout/TopBar';
 import { DEMO_CONSTRAINTS } from '@/lib/mockData';
+import { useProjectStore } from '@/stores/projectStore';
+import { useAuthStore } from '@/stores/authStore';
 import { AlertTriangle, Clock, CheckCircle2, Filter, RefreshCw, Loader2, Plus, X, Check } from 'lucide-react';
 import { useState, useEffect, useCallback, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -68,6 +70,8 @@ function computeDemoStats(): Stats {
 
 export default function ConstraintsPage() {
   const formId = useId();
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const token = useAuthStore((s) => s.token);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [constraints, setConstraints] = useState<ConstraintItem[]>(mapDemoToConstraints());
   const [stats, setStats] = useState<Stats>(computeDemoStats());
@@ -77,8 +81,14 @@ export default function ConstraintsPage() {
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [resolutionNotes, setResolutionNotes] = useState('');
 
+  const getAuthHeaders = useCallback((): HeadersInit => {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  }, [token]);
+
   const [newConstraint, setNewConstraint] = useState({
-    projectId: 'demo-project-001',
+    projectId: '',
     title: '',
     description: '',
     category: 'material',
@@ -92,14 +102,15 @@ export default function ConstraintsPage() {
   const fetchConstraints = useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const headers: HeadersInit = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const headers = getAuthHeaders();
+      const projectParam = activeProjectId ? `projectId=${activeProjectId}` : '';
+      const statusParam = filterStatus !== 'all' ? `status=${filterStatus}` : '';
+      const queryParams = [projectParam, statusParam].filter(Boolean).join('&');
+      const qs = queryParams ? `?${queryParams}` : '';
 
-      const qs = filterStatus === 'all' ? '' : `?status=${filterStatus}`;
       const [constraintsRes, statsRes] = await Promise.all([
         fetch(`/api/v1/constraints${qs}`, { headers }),
-        fetch('/api/v1/constraints/stats', { headers }),
+        fetch(`/api/v1/constraints/stats${activeProjectId ? `?projectId=${activeProjectId}` : ''}`, { headers }),
       ]);
 
       if (constraintsRes.ok && statsRes.ok) {
@@ -140,7 +151,7 @@ export default function ConstraintsPage() {
     } finally {
       setLoading(false);
     }
-  }, [filterStatus]);
+  }, [filterStatus, activeProjectId, getAuthHeaders]);
 
   useEffect(() => {
     fetchConstraints();
@@ -149,14 +160,15 @@ export default function ConstraintsPage() {
   const handleCreate = async () => {
     if (!newConstraint.title.trim()) return;
     try {
+      const payload = { ...newConstraint, projectId: activeProjectId || newConstraint.projectId };
       const res = await fetch('/api/v1/constraints', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newConstraint),
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         setShowAddForm(false);
-        setNewConstraint({ projectId: 'demo-project-001', title: '', description: '', category: 'material', priority: 'medium', zoneId: '', tradeId: '', assignedTo: '', dueDate: '' });
+        setNewConstraint({ projectId: '', title: '', description: '', category: 'material', priority: 'medium', zoneId: '', tradeId: '', assignedTo: '', dueDate: '' });
         fetchConstraints();
       }
     } catch {
@@ -180,7 +192,7 @@ export default function ConstraintsPage() {
     try {
       const res = await fetch(`/api/v1/constraints/${id}/resolve`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ resolutionNotes }),
       });
       if (res.ok) {
@@ -199,7 +211,7 @@ export default function ConstraintsPage() {
     try {
       await fetch(`/api/v1/constraints/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ status: newStatus }),
       });
       fetchConstraints();
