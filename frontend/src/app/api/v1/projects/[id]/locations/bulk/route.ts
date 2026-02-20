@@ -67,6 +67,7 @@ export async function POST(request: NextRequest, { params }: Params) {
           depth,
           areaSqm: input.areaSqm,
           sortOrder: count,
+          metadata: input.phase ? { phase: input.phase } : {},
         },
       });
 

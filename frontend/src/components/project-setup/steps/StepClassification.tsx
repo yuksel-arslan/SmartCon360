@@ -24,6 +24,7 @@ export default function StepClassification({ state, onStateChange }: SetupStepPr
       floorCount: bt?.defaultFloors || 0,
       basementCount: bt?.defaultBasements || 0,
       zonesPerFloor: bt?.defaultZonesPerFloor || 3,
+      structuralZonesPerFloor: bt?.defaultStructuralZonesPerFloor || 1,
       typicalFloorArea: bt?.defaultFloorArea || 0,
       structuralSystem: bt?.defaultStructural || '',
       mepComplexity: bt?.defaultMep || '',

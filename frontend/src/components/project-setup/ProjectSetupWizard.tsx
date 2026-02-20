@@ -43,6 +43,7 @@ const initialState: SetupState = {
   floorCount: 0,
   basementCount: 0,
   zonesPerFloor: 3,
+  structuralZonesPerFloor: 1,
   typicalFloorArea: 0,
   numberOfBuildings: 1,
   structuralSystem: '',

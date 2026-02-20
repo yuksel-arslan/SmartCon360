@@ -37,6 +37,7 @@ export const createLocationSchema = z.object({
   locationType: z.enum(['site', 'building', 'floor', 'zone', 'room', 'area']),
   areaSqm: z.number().optional(),
   sortOrder: z.number().int().optional(),
+  phase: z.enum(['structural', 'finishing']).optional(),  // Kaba İnşaat vs İnce İş
 });
 
 export const createTradeSchema = z.object({
