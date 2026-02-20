@@ -17,6 +17,7 @@ import {
 } from '@/lib/mockData';
 import type { FlowlineWagon } from '@/lib/mockData';
 import { useFlowlineStore } from '@/stores/flowlineStore';
+import { getFlowlineData, listPlans } from '@/lib/stores/takt-plans';
 import type { ViewMode, StatusFilter, SelectedSegment } from '@/stores/flowlineStore';
 import {
   Eye,
@@ -85,31 +86,53 @@ export default function FlowlinePage() {
 
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [flowlineData, setFlowlineData] = useState<FlowlineWagon[]>(DEMO_FLOWLINE);
+  const [zonesData, setZonesData] = useState(DEMO_ZONES);
+  const [todayX, setTodayX] = useState(DEMO_TODAY_X);
+  const [totalPeriods, setTotalPeriods] = useState(DEMO_TOTAL_PERIODS);
+
+  // ── Load flowline data from API ──────────────────────────
+
+  useEffect(() => {
+    const projectId = 'demo-project-001';
+    (async () => {
+      try {
+        const plans = await listPlans(projectId);
+        if (plans.length > 0) {
+          const data = await getFlowlineData(projectId, plans[0].id);
+          if (data && Array.isArray((data as Record<string, unknown>).wagons)) {
+            const apiData = data as { wagons: FlowlineWagon[]; zones: typeof DEMO_ZONES; todayX: number; totalPeriods: number };
+            setFlowlineData(apiData.wagons);
+            if (apiData.zones) setZonesData(apiData.zones);
+            if (apiData.todayX) setTodayX(apiData.todayX);
+            if (apiData.totalPeriods) setTotalPeriods(apiData.totalPeriods);
+          }
+        }
+        setConnected(true);
+      } catch {
+        // Fallback to demo data — API not available
+        setConnected(false);
+      }
+    })();
+  }, [setConnected]);
 
   // ── Initialize visible trades on mount ──────────────────────
 
   useEffect(() => {
     if (visibleTrades.size === 0) {
-      setAllTrades(DEMO_FLOWLINE.map((w) => w.trade_name));
+      setAllTrades(flowlineData.map((w) => w.trade_name));
     }
-  }, [visibleTrades.size, setAllTrades]);
-
-  // ── Simulate WebSocket connection ───────────────────────────
-
-  useEffect(() => {
-    const timer = setTimeout(() => setConnected(true), 1500);
-    return () => clearTimeout(timer);
-  }, [setConnected]);
+  }, [visibleTrades.size, setAllTrades, flowlineData]);
 
   // ── Filter wagons ─────────────────────────────────────────
 
-  const filteredWagons: FlowlineWagon[] = DEMO_FLOWLINE
+  const filteredWagons: FlowlineWagon[] = flowlineData
     .filter((w) => visibleTrades.has(w.trade_name))
     .map((wagon) => {
       if (statusFilter === 'all' && !zoneFilter) return wagon;
       const filteredSegs = wagon.segments.filter((seg) => {
         if (statusFilter !== 'all' && seg.status !== statusFilter) return false;
-        if (zoneFilter && DEMO_ZONES[seg.zone_index]?.id !== zoneFilter) return false;
+        if (zoneFilter && zonesData[seg.zone_index]?.id !== zoneFilter) return false;
         return true;
       });
       return { ...wagon, segments: filteredSegs };
@@ -157,7 +180,10 @@ export default function FlowlinePage() {
 
   // ── Stats computation ─────────────────────────────────────
 
-  const stats = DEMO_FLOWLINE_STATS;
+  const stats = {
+    ...DEMO_FLOWLINE_STATS,
+    totalDuration: totalPeriods,
+  };
 
   // ── Render ────────────────────────────────────────────────
 
@@ -343,7 +369,7 @@ export default function FlowlinePage() {
                       </span>
                       <button
                         onClick={() => {
-                          const allNames = DEMO_FLOWLINE.map((w) => w.trade_name);
+                          const allNames = flowlineData.map((w) => w.trade_name);
                           if (visibleTrades.size === allNames.length) {
                             setAllTrades([]);
                           } else {
@@ -353,11 +379,11 @@ export default function FlowlinePage() {
                         className="ml-auto text-[9px] font-normal px-1.5 py-0.5 rounded"
                         style={{ color: 'var(--color-accent)' }}
                       >
-                        {visibleTrades.size === DEMO_FLOWLINE.length ? 'Deselect All' : 'Select All'}
+                        {visibleTrades.size === flowlineData.length ? 'Deselect All' : 'Select All'}
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
-                      {DEMO_FLOWLINE.map((w) => {
+                      {flowlineData.map((w) => {
                         const active = visibleTrades.has(w.trade_name);
                         return (
                           <button
@@ -418,7 +444,7 @@ export default function FlowlinePage() {
                         }}
                       >
                         <option value="">All Zones</option>
-                        {DEMO_ZONES.map((z) => (
+                        {zonesData.map((z) => (
                           <option key={z.id} value={z.id}>{z.name}</option>
                         ))}
                       </select>
@@ -461,8 +487,8 @@ export default function FlowlinePage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-2 sm:gap-3">
             {[
               { label: 'Duration', value: `${stats.totalDuration}T`, icon: Clock, color: 'var(--color-accent)' },
-              { label: 'Trades', value: `${filteredWagons.length}/${DEMO_FLOWLINE.length}`, icon: Layers, color: 'var(--color-purple)' },
-              { label: 'Zones', value: DEMO_ZONES.length, icon: LayoutDashboard, color: 'var(--color-cyan)' },
+              { label: 'Trades', value: `${filteredWagons.length}/${flowlineData.length}`, icon: Layers, color: 'var(--color-purple)' },
+              { label: 'Zones', value: zonesData.length, icon: LayoutDashboard, color: 'var(--color-cyan)' },
               { label: 'Progress', value: `${stats.overallProgress}%`, icon: TrendingUp, color: 'var(--color-success)' },
               { label: 'PPC', value: `${stats.ppc}%`, icon: CheckCircle2, color: 'var(--color-success)' },
               { label: 'Stacking', value: stats.stackingConflicts, icon: AlertTriangle, color: stats.stackingConflicts > 0 ? 'var(--color-warning)' : 'var(--color-success)' },
@@ -527,7 +553,7 @@ export default function FlowlinePage() {
                     className="text-[10px] px-2 py-0.5 rounded-md font-normal"
                     style={{ background: 'rgba(232,115,26,0.12)', color: 'var(--color-accent)' }}
                   >
-                    {filteredWagons.length} of {DEMO_FLOWLINE.length} trades visible
+                    {filteredWagons.length} of {flowlineData.length} trades visible
                   </span>
                 </div>
               </div>
@@ -537,9 +563,9 @@ export default function FlowlinePage() {
                 <FlowlineChart
                   ref={chartRef}
                   wagons={filteredWagons}
-                  zones={DEMO_ZONES}
-                  todayX={DEMO_TODAY_X}
-                  totalPeriods={DEMO_TOTAL_PERIODS}
+                  zones={zonesData}
+                  todayX={todayX}
+                  totalPeriods={totalPeriods}
                   height={isFullscreen ? Math.max(600, window.innerHeight - 400) : chartHeight}
                   showCriticalPath={showCriticalPath}
                   showBuffers={showBuffers}
@@ -563,7 +589,7 @@ export default function FlowlinePage() {
                         >
                           Trade
                         </th>
-                        {DEMO_ZONES.map((z) => (
+                        {zonesData.map((z) => (
                           <th
                             key={z.id}
                             className="px-2 py-2 text-center font-normal"
@@ -624,7 +650,7 @@ export default function FlowlinePage() {
                         {wagon.trade_name}
                       </div>
                       <div className="flex-1 flex gap-0.5 h-6 rounded overflow-hidden" style={{ background: 'var(--color-bg)' }}>
-                        {Array.from({ length: DEMO_TOTAL_PERIODS }).map((_, p) => {
+                        {Array.from({ length: totalPeriods }).map((_, p) => {
                           const seg = wagon.segments.find((s) => s.x_start <= p && s.x_end > p);
                           const bg = seg
                             ? seg.status === 'completed' ? wagon.color
@@ -651,7 +677,7 @@ export default function FlowlinePage() {
                       <div
                         className="absolute top-0 h-full"
                         style={{
-                          left: `${(DEMO_TODAY_X / DEMO_TOTAL_PERIODS) * 100}%`,
+                          left: `${(todayX / totalPeriods) * 100}%`,
                           width: '2px',
                           background: 'var(--color-danger)',
                         }}
