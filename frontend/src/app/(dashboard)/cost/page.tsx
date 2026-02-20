@@ -12,6 +12,7 @@ import { ModulePageHeader } from '@/components/modules';
 import { UniclassBrowser } from '@/components/cost/UniclassBrowser';
 import { useCostStore } from '@/stores/costStore';
 import { useProjectStore } from '@/stores/projectStore';
+import { useAuthStore } from '@/stores/authStore';
 import type {
   WorkItem, UnitPriceAnalysis, QuantityTakeoff, Estimate,
   Budget, BudgetItem, PaymentCertificate, EvmSnapshot, CostRecord,
@@ -20,8 +21,7 @@ import type {
 
 type CostTab = 'overview' | 'library' | 'work-items' | 'unit-prices' | 'takeoffs' | 'estimates' | 'budgets' | 'payments' | 'evm';
 
-const PROJECT_ID = '00000000-0000-4000-a000-000000000001';
-const USER_ID = '00000000-0000-4000-a000-000000000099';
+// Removed hardcoded IDs — now uses activeProjectId from projectStore and user.id from authStore
 
 const tabs: { id: CostTab; label: string; icon: typeof DollarSign }[] = [
   { id: 'overview', label: 'Overview', icon: BarChart3 },
@@ -38,17 +38,20 @@ const tabs: { id: CostTab; label: string; icon: typeof DollarSign }[] = [
 export default function CostPage() {
   const [activeTab, setActiveTab] = useState<CostTab>('overview');
   const { activeProjectId } = useProjectStore();
+  const authUser = useAuthStore((s) => s.user);
   const { loading, error, initialized, fetchAll } = useCostStore();
 
-  const pid = activeProjectId || PROJECT_ID;
+  const pid = activeProjectId || '';
+  const userId = authUser?.id || '';
 
   const loadData = useCallback(async () => {
+    if (!pid) return;
     await fetchAll(pid);
   }, [pid, fetchAll]);
 
   useEffect(() => {
-    if (!initialized) loadData();
-  }, [initialized, loadData]);
+    if (pid && !initialized) loadData();
+  }, [pid, initialized, loadData]);
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-6">
@@ -100,6 +103,16 @@ export default function CostPage() {
       )}
     </div>
   );
+}
+
+// ============================================================================
+// PROJECT CONTEXT HOOK (shared across tab components)
+// ============================================================================
+
+function useProjectContext() {
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const authUser = useAuthStore((s) => s.user);
+  return { pid: activeProjectId || '', userId: authUser?.id || '' };
 }
 
 // ============================================================================
@@ -258,6 +271,7 @@ function OverviewTab() {
 // ============================================================================
 
 function LibraryTab() {
+  const { pid } = useProjectContext();
   const {
     catalogs, catalogItems, catalogItemsMeta,
     fetchCatalogs, createCatalog, deleteCatalog, uploadCatalogFile,
@@ -374,7 +388,7 @@ function LibraryTab() {
   const handleCopyToProject = async () => {
     if (!selectedCatalog || selectedItems.size === 0) return;
     setSaving(true);
-    const result = await copyToProject(selectedCatalog, Array.from(selectedItems), PROJECT_ID);
+    const result = await copyToProject(selectedCatalog, Array.from(selectedItems), pid);
     setSaving(false);
     if (result) {
       setCopyResult(result);
@@ -810,6 +824,7 @@ function CatalogListItem({ cat, isSelected, onSelect, onDelete, sourceLabel, sou
 // ============================================================================
 
 function WorkItemsTab() {
+  const { pid } = useProjectContext();
   const { workItems, addWorkItem, deleteWorkItem } = useCostStore();
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('all');
@@ -832,7 +847,7 @@ function WorkItemsTab() {
   const handleAdd = async () => {
     if (!code.trim() || !name.trim()) return;
     setSaving(true);
-    await addWorkItem({ projectId: PROJECT_ID, code: code.trim(), name: name.trim(), unit, category: cat, source, description: desc || undefined });
+    await addWorkItem({ projectId: pid, code: code.trim(), name: name.trim(), unit, category: cat, source, description: desc || undefined });
     setSaving(false);
     setCode(''); setName(''); setDesc('');
     setShowForm(false);
@@ -1124,6 +1139,7 @@ function UnitPricesTab() {
 // ============================================================================
 
 function TakeoffsTab() {
+  const { pid } = useProjectContext();
   const { quantityTakeoffs, workItems, addQuantityTakeoff, deleteQuantityTakeoff } = useCostStore();
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -1137,7 +1153,7 @@ function TakeoffsTab() {
     if (!fWorkItem || !fQty) return;
     setSaving(true);
     await addQuantityTakeoff({
-      projectId: PROJECT_ID,
+      projectId: pid,
       workItemId: fWorkItem,
       quantity: parseFloat(fQty),
       unit: fUnit,
@@ -1221,6 +1237,7 @@ function TakeoffsTab() {
 // ============================================================================
 
 function EstimatesTab() {
+  const { pid, userId } = useProjectContext();
   const { estimates, createEstimate, deleteEstimate } = useCostStore();
   const [showForm, setShowForm] = useState(false);
   const [formName, setFormName] = useState('');
@@ -1230,7 +1247,7 @@ function EstimatesTab() {
   const handleCreate = async () => {
     if (!formName.trim()) return;
     setSaving(true);
-    await createEstimate({ projectId: PROJECT_ID, name: formName.trim(), type: formType, createdBy: USER_ID });
+    await createEstimate({ projectId: pid, name: formName.trim(), type: formType, createdBy: userId });
     setSaving(false);
     setFormName('');
     setShowForm(false);
@@ -1296,6 +1313,7 @@ function EstimatesTab() {
 // ============================================================================
 
 function BudgetsTab() {
+  const { pid } = useProjectContext();
   const { budgets, selectedBudget, createBudget, fetchBudgetDetail } = useCostStore();
   const [showForm, setShowForm] = useState(false);
   const [fName, setFName] = useState('');
@@ -1310,7 +1328,7 @@ function BudgetsTab() {
   const handleCreate = async () => {
     if (!fName.trim() || !fAmount) return;
     setSaving(true);
-    await createBudget({ projectId: PROJECT_ID, name: fName.trim(), totalAmount: parseFloat(fAmount) });
+    await createBudget({ projectId: pid, name: fName.trim(), totalAmount: parseFloat(fAmount) });
     setSaving(false);
     setFName(''); setFAmount('');
     setShowForm(false);
@@ -1395,6 +1413,7 @@ function BudgetsTab() {
 // ============================================================================
 
 function PaymentsTab() {
+  const { pid, userId } = useProjectContext();
   const { payments, createPayment, submitPayment, approvePayment } = useCostStore();
   const [showForm, setShowForm] = useState(false);
   const [fStart, setFStart] = useState('');
@@ -1405,11 +1424,11 @@ function PaymentsTab() {
     if (!fStart || !fEnd) return;
     setSaving(true);
     await createPayment({
-      projectId: PROJECT_ID,
+      projectId: pid,
       periodNumber: payments.length + 1,
       periodStart: new Date(fStart).toISOString(),
       periodEnd: new Date(fEnd).toISOString(),
-      createdBy: USER_ID,
+      createdBy: userId,
       retentionPct: 5,
     });
     setSaving(false);
@@ -1504,7 +1523,7 @@ function PaymentsTab() {
                   <td className="px-3 py-3"><div className="flex items-center gap-1">{statusIcon(p.status)} <StatusBadge status={p.status} /></div></td>
                   <td className="px-3 py-3">
                     {p.status === 'draft' && <button onClick={() => submitPayment(p.id)} className="text-[10px] px-2 py-1 rounded" style={{ background: 'rgba(59,130,246,0.1)', color: 'rgb(59,130,246)' }}>Submit</button>}
-                    {p.status === 'submitted' && <button onClick={() => approvePayment(p.id, USER_ID)} className="text-[10px] px-2 py-1 rounded" style={{ background: 'rgba(34,197,94,0.1)', color: 'rgb(34,197,94)' }}>Approve</button>}
+                    {p.status === 'submitted' && <button onClick={() => approvePayment(p.id, userId)} className="text-[10px] px-2 py-1 rounded" style={{ background: 'rgba(34,197,94,0.1)', color: 'rgb(34,197,94)' }}>Approve</button>}
                   </td>
                 </tr>
               ))}
@@ -1524,6 +1543,7 @@ function PaymentsTab() {
 // ============================================================================
 
 function EvmTab() {
+  const { pid } = useProjectContext();
   const { evmSnapshots, createEvmSnapshot } = useCostStore();
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -1539,7 +1559,7 @@ function EvmTab() {
     if (!fDate || !fPV || !fEV || !fAC || !fBAC) return;
     setSaving(true);
     await createEvmSnapshot({
-      projectId: PROJECT_ID,
+      projectId: pid,
       snapshotDate: new Date(fDate).toISOString(),
       pv: parseFloat(fPV),
       ev: parseFloat(fEV),

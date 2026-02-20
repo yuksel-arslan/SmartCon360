@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public", "cost"]
+  schemas  = ["public", "cost", "quality", "safety", "resources"]
 }
 
 // ============================================================================
@@ -1114,4 +1114,305 @@ model ClassificationMapping {
   @@index([category], name: "idx_class_map_category")
   @@map("classification_mappings")
   @@schema("cost")
+}
+
+// ============================================================================
+// QUALITY MODULE (QualityGate)
+// ============================================================================
+
+model Inspection {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  locationId   String?  @map("location_id") @db.Uuid
+  tradeId      String?  @map("trade_id") @db.Uuid
+  title        String   @db.VarChar(255)
+  type         String   @db.VarChar(50) // routine, itp, final, pre-handover
+  status       String   @default("scheduled") @db.VarChar(30) // scheduled, in_progress, passed, failed, cancelled
+  scheduledDate DateTime? @map("scheduled_date") @db.Date
+  completedDate DateTime? @map("completed_date") @db.Date
+  inspectorId  String?  @map("inspector_id") @db.Uuid
+  result       String?  @db.VarChar(30) // pass, fail, conditional
+  score        Decimal? @db.Decimal(5, 2)
+  notes        String?
+  checklistData Json    @default("[]") @map("checklist_data")
+  createdBy    String   @map("created_by") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  ncrs Ncr[]
+
+  @@index([projectId])
+  @@index([status])
+  @@index([type])
+  @@map("inspections")
+  @@schema("quality")
+}
+
+model Ncr {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  inspectionId String?  @map("inspection_id") @db.Uuid
+  locationId   String?  @map("location_id") @db.Uuid
+  tradeId      String?  @map("trade_id") @db.Uuid
+  ncrNumber    String   @map("ncr_number") @db.VarChar(30)
+  title        String   @db.VarChar(255)
+  description  String?
+  severity     String   @default("minor") @db.VarChar(20) // minor, major, critical
+  category     String   @db.VarChar(50) // workmanship, material, design, documentation
+  status       String   @default("open") @db.VarChar(30) // open, in_review, corrective_action, verified, closed
+  assignedTo   String?  @map("assigned_to") @db.Uuid
+  rootCause    String?  @map("root_cause")
+  correctiveAction String? @map("corrective_action")
+  reworkCost   Decimal? @map("rework_cost") @db.Decimal(12, 2)
+  dueDate      DateTime? @map("due_date") @db.Date
+  closedDate   DateTime? @map("closed_date") @db.Date
+  createdBy    String   @map("created_by") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  inspection Inspection? @relation(fields: [inspectionId], references: [id])
+
+  @@unique([projectId, ncrNumber])
+  @@index([projectId])
+  @@index([status])
+  @@index([severity])
+  @@map("ncrs")
+  @@schema("quality")
+}
+
+model PunchItem {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId   String   @map("project_id") @db.Uuid
+  locationId  String?  @map("location_id") @db.Uuid
+  tradeId     String?  @map("trade_id") @db.Uuid
+  title       String   @db.VarChar(255)
+  description String?
+  category    String   @db.VarChar(50) // deficiency, incomplete, damage
+  priority    String   @default("medium") @db.VarChar(20) // low, medium, high, critical
+  status      String   @default("open") @db.VarChar(30) // open, in_progress, resolved, verified, closed
+  assignedTo  String?  @map("assigned_to") @db.Uuid
+  dueDate     DateTime? @map("due_date") @db.Date
+  closedDate  DateTime? @map("closed_date") @db.Date
+  createdBy   String   @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([projectId])
+  @@index([status])
+  @@map("punch_items")
+  @@schema("quality")
+}
+
+// ============================================================================
+// SAFETY MODULE (SafeZone)
+// ============================================================================
+
+model Incident {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  locationId    String?  @map("location_id") @db.Uuid
+  incidentNumber String  @map("incident_number") @db.VarChar(30)
+  title         String   @db.VarChar(255)
+  description   String?
+  type          String   @db.VarChar(50) // near_miss, first_aid, medical, lost_time, fatality
+  severity      String   @default("low") @db.VarChar(20) // low, medium, high, critical
+  status        String   @default("reported") @db.VarChar(30) // reported, investigating, corrective_action, closed
+  occurredAt    DateTime @map("occurred_at")
+  reportedBy    String   @map("reported_by") @db.Uuid
+  injuredPerson String?  @map("injured_person") @db.VarChar(255)
+  bodyPart      String?  @map("body_part") @db.VarChar(100)
+  rootCause     String?  @map("root_cause")
+  correctiveAction String? @map("corrective_action")
+  lostDays      Int      @default(0) @map("lost_days")
+  closedDate    DateTime? @map("closed_date") @db.Date
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, incidentNumber])
+  @@index([projectId])
+  @@index([status])
+  @@index([type])
+  @@map("incidents")
+  @@schema("safety")
+}
+
+model PermitToWork {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId   String   @map("project_id") @db.Uuid
+  locationId  String?  @map("location_id") @db.Uuid
+  permitNumber String  @map("permit_number") @db.VarChar(30)
+  title       String   @db.VarChar(255)
+  type        String   @db.VarChar(50) // hot_work, confined_space, working_at_height, excavation, electrical, general
+  status      String   @default("draft") @db.VarChar(30) // draft, pending_approval, approved, active, expired, cancelled
+  hazards     Json     @default("[]")
+  precautions Json     @default("[]")
+  requestedBy String   @map("requested_by") @db.Uuid
+  approvedBy  String?  @map("approved_by") @db.Uuid
+  validFrom   DateTime? @map("valid_from")
+  validTo     DateTime? @map("valid_to")
+  closedDate  DateTime? @map("closed_date") @db.Date
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, permitNumber])
+  @@index([projectId])
+  @@index([status])
+  @@map("permits_to_work")
+  @@schema("safety")
+}
+
+model SafetyObservation {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId   String   @map("project_id") @db.Uuid
+  locationId  String?  @map("location_id") @db.Uuid
+  title       String   @db.VarChar(255)
+  description String?
+  type        String   @db.VarChar(30) // positive, negative, suggestion
+  category    String   @db.VarChar(50) // ppe, housekeeping, fall_protection, electrical, scaffolding, excavation, other
+  severity    String?  @db.VarChar(20) // low, medium, high
+  status      String   @default("open") @db.VarChar(30) // open, in_progress, resolved, closed
+  observedBy  String   @map("observed_by") @db.Uuid
+  assignedTo  String?  @map("assigned_to") @db.Uuid
+  resolvedDate DateTime? @map("resolved_date") @db.Date
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([projectId])
+  @@index([status])
+  @@index([type])
+  @@map("safety_observations")
+  @@schema("safety")
+}
+
+model ToolboxTalk {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId   String   @map("project_id") @db.Uuid
+  title       String   @db.VarChar(255)
+  topic       String   @db.VarChar(100)
+  conductedBy String   @map("conducted_by") @db.Uuid
+  conductedAt DateTime @map("conducted_at")
+  attendeeCount Int    @default(0) @map("attendee_count")
+  duration    Int      @default(15) // minutes
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([projectId])
+  @@map("toolbox_talks")
+  @@schema("safety")
+}
+
+// ============================================================================
+// RESOURCES MODULE (CrewFlow)
+// ============================================================================
+
+model Crew {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  tradeId       String?  @map("trade_id") @db.Uuid
+  name          String   @db.VarChar(100)
+  code          String   @db.VarChar(20)
+  foremanName   String?  @map("foreman_name") @db.VarChar(100)
+  workerCount   Int      @default(0) @map("worker_count")
+  status        String   @default("active") @db.VarChar(20) // active, standby, mobilizing, demobilized
+  company       String?  @db.VarChar(255)
+  skillLevel    String?  @map("skill_level") @db.VarChar(20) // junior, intermediate, senior
+  utilization   Decimal  @default(0) @db.Decimal(5, 2)
+  dailyRate     Decimal? @map("daily_rate") @db.Decimal(10, 2)
+  currency      String   @default("USD") @db.VarChar(3)
+  locationId    String?  @map("location_id") @db.Uuid
+  startDate     DateTime? @map("start_date") @db.Date
+  endDate       DateTime? @map("end_date") @db.Date
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([status])
+  @@map("crews")
+  @@schema("resources")
+}
+
+model EquipmentItem {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  name          String   @db.VarChar(255)
+  code          String   @db.VarChar(30)
+  type          String   @db.VarChar(50) // crane, excavator, loader, truck, pump, generator, compressor, other
+  status        String   @default("operational") @db.VarChar(30) // operational, under_maintenance, idle, breakdown, demobilized
+  manufacturer  String?  @db.VarChar(100)
+  model         String?  @db.VarChar(100)
+  serialNumber  String?  @map("serial_number") @db.VarChar(100)
+  capacity      String?  @db.VarChar(50)
+  utilization   Decimal  @default(0) @db.Decimal(5, 2)
+  locationId    String?  @map("location_id") @db.Uuid
+  operatorName  String?  @map("operator_name") @db.VarChar(100)
+  dailyRate     Decimal? @map("daily_rate") @db.Decimal(10, 2)
+  currency      String   @default("USD") @db.VarChar(3)
+  lastInspection DateTime? @map("last_inspection") @db.Date
+  nextInspection DateTime? @map("next_inspection") @db.Date
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([status])
+  @@map("equipment_items")
+  @@schema("resources")
+}
+
+model MaterialItem {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  name          String   @db.VarChar(255)
+  code          String   @db.VarChar(30)
+  category      String   @db.VarChar(50) // concrete, steel, wood, insulation, plumbing, electrical, finishing, other
+  unit          String   @db.VarChar(20)
+  plannedQty    Decimal  @default(0) @map("planned_qty") @db.Decimal(12, 3)
+  receivedQty   Decimal  @default(0) @map("received_qty") @db.Decimal(12, 3)
+  consumedQty   Decimal  @default(0) @map("consumed_qty") @db.Decimal(12, 3)
+  wasteQty      Decimal  @default(0) @map("waste_qty") @db.Decimal(12, 3)
+  stockQty      Decimal  @default(0) @map("stock_qty") @db.Decimal(12, 3)
+  unitPrice     Decimal? @map("unit_price") @db.Decimal(10, 2)
+  currency      String   @default("USD") @db.VarChar(3)
+  supplier      String?  @db.VarChar(255)
+  status        String   @default("in_stock") @db.VarChar(30) // in_stock, low_stock, out_of_stock, ordered
+  reorderLevel  Decimal? @map("reorder_level") @db.Decimal(12, 3)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([category])
+  @@map("material_items")
+  @@schema("resources")
+}
+
+model Scaffold {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  locationId    String?  @map("location_id") @db.Uuid
+  tag           String   @db.VarChar(30)
+  type          String   @db.VarChar(50) // tube_coupler, frame, system, suspended, mobile
+  status        String   @default("erected") @db.VarChar(30) // planned, erected, in_use, inspection_due, dismantled
+  height        Decimal? @db.Decimal(6, 2) // meters
+  length        Decimal? @db.Decimal(6, 2)
+  width         Decimal? @db.Decimal(6, 2)
+  areaSqm       Decimal? @map("area_sqm") @db.Decimal(10, 2)
+  loadCapacity  Decimal? @map("load_capacity") @db.Decimal(8, 2) // kg/m2
+  erectedDate   DateTime? @map("erected_date") @db.Date
+  lastInspection DateTime? @map("last_inspection") @db.Date
+  nextInspection DateTime? @map("next_inspection") @db.Date
+  inspectionInterval Int @default(7) @map("inspection_interval") // days
+  dismantledDate DateTime? @map("dismantled_date") @db.Date
+  contractor    String?  @db.VarChar(255)
+  permitNumber  String?  @map("permit_number") @db.VarChar(30)
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, tag])
+  @@index([projectId])
+  @@index([status])
+  @@map("scaffolds")
+  @@schema("resources")
 }

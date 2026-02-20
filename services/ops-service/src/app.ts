@@ -21,6 +21,10 @@ import evmRouter from './modules/cost/routes/evm';
 import catalogRouter from './modules/cost/routes/catalog';
 import classificationMappingRouter from './modules/cost/routes/classification-mapping';
 
+// Quality & Safety module routes
+import qualityRouter from './modules/quality/routes';
+import safetyRouter from './modules/safety/routes';
+
 // Cost module middleware
 import { authenticate } from './modules/cost/middleware/auth';
 import { errorHandler } from './modules/cost/middleware/error-handler';
@@ -107,13 +111,15 @@ app.use('/cost/mappings', authenticate, classificationMappingRouter);
 // Each provides a health check endpoint.
 // ──────────────────────────────────────────────
 
-app.get('/quality/health', (_req: Request, res: Response) => {
-  res.json({ status: 'stub', module: 'quality' });
-});
+// ──────────────────────────────────────────────
+// QUALITY MODULE — Full routes (QualityGate)
+// ──────────────────────────────────────────────
+app.use('/quality', authenticate, qualityRouter);
 
-app.get('/safety/health', (_req: Request, res: Response) => {
-  res.json({ status: 'stub', module: 'safety' });
-});
+// ──────────────────────────────────────────────
+// SAFETY MODULE — Full routes (SafeZone)
+// ──────────────────────────────────────────────
+app.use('/safety', authenticate, safetyRouter);
 
 app.get('/claims/health', (_req: Request, res: Response) => {
   res.json({ status: 'stub', module: 'claims' });
