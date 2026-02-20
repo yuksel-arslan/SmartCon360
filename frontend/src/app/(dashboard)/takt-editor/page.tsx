@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TopBar from '@/components/layout/TopBar';
-import { generatePlan, savePlan, listPlans } from '@/lib/stores/takt-plans';
+import { generatePlan, savePlan, listPlans, getPlan } from '@/lib/stores/takt-plans';
 import api from '@/lib/api';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -98,7 +98,7 @@ interface HistoryState {
 
 // ── Initial Data ───────────────────────────────────────────────
 
-const PROJECT_START = new Date('2026-02-16');
+const DEFAULT_PROJECT_START = new Date('2026-02-16');
 
 // ── Status Helpers ─────────────────────────────────────────────
 
@@ -116,13 +116,7 @@ const STATUS_SYMBOLS: Record<CellStatus, string> = {
   delayed: '\u26A0',
 };
 
-function computeCellStatus(periodNumber: number, totalPeriods: number): CellStatus {
-  const progressFraction = 0.35;
-  const completedThreshold = Math.floor(totalPeriods * progressFraction);
-  const inProgressThreshold = completedThreshold + 2;
-
-  if (periodNumber <= completedThreshold) return 'completed';
-  if (periodNumber <= inProgressThreshold) return 'in_progress';
+function computeCellStatus(): CellStatus {
   return 'planned';
 }
 
@@ -133,6 +127,7 @@ function computeGrid(
   zones: Zone[],
   globalTaktTime: number,
   cellOverrides: Record<string, Partial<GridCell>>,
+  projectStart: Date,
 ): { cells: Map<string, GridCell>; assignments: Assignment[]; totalPeriods: number } {
   const zoneInputs: ZoneInput[] = zones.map((z) => ({
     id: z.id,
@@ -148,7 +143,7 @@ function computeGrid(
     bufferAfter: t.bufferAfter,
   }));
 
-  const assignments = generateTaktGrid(zoneInputs, wagonInputs, PROJECT_START, globalTaktTime);
+  const assignments = generateTaktGrid(zoneInputs, wagonInputs, projectStart, globalTaktTime);
   const totalPeriods = calculateTotalPeriods(zones.length, trades.length, trades.reduce((sum, t, i) => sum + (i < trades.length - 1 ? t.bufferAfter : 0), 0) / Math.max(trades.length - 1, 1));
 
   const maxPeriod = Math.max(...assignments.map((a) => a.periodNumber), 1);
@@ -165,7 +160,7 @@ function computeGrid(
       periodNumber: a.periodNumber,
       plannedStart: a.plannedStart,
       plannedEnd: a.plannedEnd,
-      status: override?.status ?? computeCellStatus(a.periodNumber, maxPeriod),
+      status: override?.status ?? computeCellStatus(),
       crewSize: override?.crewSize ?? trade?.crewSize ?? 5,
       notes: override?.notes ?? '',
     });
@@ -255,6 +250,7 @@ export default function TaktEditorPage() {
   const [globalTaktTime, setGlobalTaktTime] = useState(5);
   const [globalBuffer, setGlobalBuffer] = useState(1);
   const [cellOverrides, setCellOverrides] = useState<Record<string, Partial<GridCell>>>({});
+  const [projectStart, setProjectStart] = useState<Date>(DEFAULT_PROJECT_START);
 
   // ── UI State ──
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
@@ -345,8 +341,8 @@ export default function TaktEditorPage() {
 
   // ── Computed Grid ──
   const { cells, assignments, totalPeriods } = useMemo(
-    () => computeGrid(trades, zones, globalTaktTime, cellOverrides),
-    [trades, zones, globalTaktTime, cellOverrides],
+    () => computeGrid(trades, zones, globalTaktTime, cellOverrides, projectStart),
+    [trades, zones, globalTaktTime, cellOverrides, projectStart],
   );
 
   // ── Warnings ──
@@ -363,8 +359,8 @@ export default function TaktEditorPage() {
     const delayedCount = allCells.filter((c) => c.status === 'delayed').length;
     const totalCells = allCells.length;
 
-    const minStart = allCells.length > 0 ? new Date(Math.min(...allCells.map((c) => c.plannedStart.getTime()))) : PROJECT_START;
-    const maxEnd = allCells.length > 0 ? new Date(Math.max(...allCells.map((c) => c.plannedEnd.getTime()))) : PROJECT_START;
+    const minStart = allCells.length > 0 ? new Date(Math.min(...allCells.map((c) => c.plannedStart.getTime()))) : projectStart;
+    const maxEnd = allCells.length > 0 ? new Date(Math.max(...allCells.map((c) => c.plannedEnd.getTime()))) : projectStart;
 
     const diffMs = maxEnd.getTime() - minStart.getTime();
     const totalDurationDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
@@ -389,7 +385,7 @@ export default function TaktEditorPage() {
       delayedCount,
       totalCells,
     };
-  }, [cells, warnings, trades, zones, totalPeriods]);
+  }, [cells, warnings, trades, zones, totalPeriods, projectStart]);
 
   // ── Selected Cell Data ──
   const selectedCellData = useMemo(() => {
@@ -573,7 +569,65 @@ export default function TaktEditorPage() {
         if (!res.ok) return;
         const { data } = await res.json();
 
-        // Build zones from project locations (type=zone)
+        // Use project's planned start date
+        if (data.plannedStart) {
+          setProjectStart(new Date(data.plannedStart));
+        }
+
+        // Check for existing takt plan first — it has the real data
+        const plans = await listPlans(activeProjectId);
+        if (plans.length > 0) {
+          setCurrentPlanId(plans[0].id);
+          try {
+            const plan = await getPlan(activeProjectId, plans[0].id);
+
+            // Load zones from plan
+            if (plan.zones.length > 0) {
+              setZones(plan.zones.map((z) => ({
+                id: z.id,
+                name: z.name,
+                sequence: z.sequence,
+              })));
+            }
+
+            // Load trades (wagons) from plan with real crew sizes & buffers
+            if (plan.wagons.length > 0) {
+              setTrades(plan.wagons.map((w) => ({
+                id: w.tradeId,
+                name: w.tradeName,
+                color: w.tradeColor || '#6366F1',
+                sequence: w.sequence,
+                taktTime: w.durationDays,
+                bufferAfter: w.bufferAfter,
+                crewSize: w.crewSize || 5,
+                notes: '',
+              })));
+            }
+
+            // Load real assignment statuses as cell overrides
+            if (plan.assignments.length > 0) {
+              const overrides: Record<string, Partial<GridCell>> = {};
+              for (const a of plan.assignments) {
+                const key = `${a.wagonId}::${a.zoneId}`;
+                overrides[key] = {
+                  status: (a.status as CellStatus) || 'planned',
+                  notes: a.notes || '',
+                };
+              }
+              setCellOverrides(overrides);
+            }
+
+            // Use plan's takt time and buffer
+            setGlobalTaktTime(plan.taktTime);
+            setGlobalBuffer(plan.bufferSize);
+            if (plan.startDate) {
+              setProjectStart(new Date(plan.startDate));
+            }
+            return; // Plan data loaded, skip project fallback
+          } catch { /* plan detail fetch failed, fall back to project data */ }
+        }
+
+        // Fallback: build zones from project locations (no takt plan yet)
         const projectLocations = (data.locations || []).filter((l: { locationType: string }) => l.locationType === 'zone');
         if (projectLocations.length > 0) {
           setZones(projectLocations.map((l: { id: string; name: string; sortOrder: number }, i: number) => ({
@@ -583,7 +637,7 @@ export default function TaktEditorPage() {
           })));
         }
 
-        // Build trades from project trades
+        // Fallback: build trades from project trades
         const projectTrades = data.trades || [];
         if (projectTrades.length > 0) {
           setTrades(projectTrades.map((t: { id: string; name: string; color: string; sortOrder: number }, i: number) => ({
@@ -598,12 +652,6 @@ export default function TaktEditorPage() {
           })));
           setGlobalTaktTime(data.defaultTaktTime || 5);
         }
-
-        // Check for existing takt plan
-        const plans = await listPlans(activeProjectId);
-        if (plans.length > 0) {
-          setCurrentPlanId(plans[0].id);
-        }
       } catch { /* project data not available */ }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -617,7 +665,7 @@ export default function TaktEditorPage() {
         taktTime: globalTaktTime,
         bufferType: 'fixed',
         bufferSize: globalBuffer,
-        startDate: PROJECT_START.toISOString(),
+        startDate: projectStart.toISOString(),
         zones: zones.map((z) => ({ id: z.id, name: z.name, code: z.id, sequence: z.sequence })),
         wagons: trades.map((t) => ({
           tradeId: t.id,
@@ -653,7 +701,7 @@ export default function TaktEditorPage() {
     } finally {
       setIsSaving(false);
     }
-  }, [projectId, currentPlanId, globalTaktTime, globalBuffer, zones, trades, cells]);
+  }, [projectId, currentPlanId, globalTaktTime, globalBuffer, zones, trades, cells, projectStart]);
 
   // ── Simulate ──
   const handleSimulate = useCallback(async () => {
@@ -669,7 +717,7 @@ export default function TaktEditorPage() {
           buffer_after: t.bufferAfter,
         })),
         takt_time: globalTaktTime,
-        start_date: PROJECT_START.toISOString().split('T')[0],
+        start_date: projectStart.toISOString().split('T')[0],
       };
       await api<Record<string, unknown>>('/takt/compute/validate', {
         method: 'POST',
@@ -680,7 +728,7 @@ export default function TaktEditorPage() {
     } finally {
       setIsSimulating(false);
     }
-  }, [zones, trades, globalTaktTime]);
+  }, [zones, trades, globalTaktTime, projectStart]);
 
   // ── Global Takt Time Change ──
   const handleGlobalTaktChange = useCallback((val: number) => {
