@@ -18,6 +18,8 @@ import {
 import type { FlowlineWagon } from '@/lib/mockData';
 import { listPlans, getFlowlineData } from '@/lib/stores/takt-plans';
 import { getCurrentPPC } from '@/lib/stores/progress-store';
+import { useProjectStore } from '@/stores/projectStore';
+import { useAuthStore } from '@/stores/authStore';
 
 const constraintColors: Record<string, string> = {
   critical: 'var(--color-danger)',
@@ -51,21 +53,62 @@ interface ConstraintData {
 }
 
 export default function DashboardPage() {
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const activeProject = useProjectStore((s) => s.getActiveProject());
+  const projects = useProjectStore((s) => s.projects);
+  const token = useAuthStore((s) => s.token);
+
   const [kpis, setKpis] = useState<DashboardKPIs>({
     ...DEMO_KPIS,
-    crr: 78,
+    crr: 0,
+    ppc: 0,
+    ppcTrend: 0,
+    openConstraints: 0,
+    criticalConstraints: 0,
+    aiScore: 0,
+    activeProjects: 0,
+    totalTrades: 0,
+    totalZones: 0,
+    taktPeriod: 0,
+    totalPeriods: 0,
   });
-  const [flowlineWagons, setFlowlineWagons] = useState<FlowlineWagon[]>(DEMO_FLOWLINE);
-  const [zones, setZones] = useState(DEMO_ZONES);
-  const [todayX, setTodayX] = useState(DEMO_TODAY_X);
-  const [totalPeriods, setTotalPeriods] = useState(DEMO_TOTAL_PERIODS);
-  const [openConstraints, setOpenConstraints] = useState<ConstraintData[]>(
-    DEMO_CONSTRAINTS.filter((c) => c.status === 'open')
-  );
+  const [flowlineWagons, setFlowlineWagons] = useState<FlowlineWagon[]>([]);
+  const [zones, setZones] = useState<typeof DEMO_ZONES>([]);
+  const [todayX, setTodayX] = useState(0);
+  const [totalPeriods, setTotalPeriods] = useState(0);
+  const [openConstraints, setOpenConstraints] = useState<ConstraintData[]>([]);
   const [activities] = useState(DEMO_ACTIVITIES);
 
+  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
   useEffect(() => {
-    const projectId = 'demo-project-001';
+    if (!activeProjectId) return;
+    const projectId = activeProjectId;
+
+    // Fetch project details (real zones & trades count)
+    (async () => {
+      try {
+        const res = await fetch(`/api/v1/projects/${projectId}`, { headers: authHeaders });
+        if (res.ok) {
+          const { data } = await res.json();
+          const zoneLocations = (data.locations || []).filter((l: { locationType: string }) => l.locationType === 'zone');
+          const tradesList = data.trades || [];
+          setKpis((prev) => ({
+            ...prev,
+            totalZones: zoneLocations.length,
+            totalTrades: tradesList.length,
+            activeProjects: projects.filter((p) => p.status === 'active').length,
+          }));
+          if (zoneLocations.length > 0) {
+            setZones(zoneLocations.map((z: { id: string; name: string }, i: number) => ({
+              id: z.id,
+              name: z.name,
+              y_index: i,
+            })));
+          }
+        }
+      } catch { /* no project data yet */ }
+    })();
 
     // Fetch PPC data
     (async () => {
@@ -76,7 +119,7 @@ export default function DashboardPage() {
           ppc: ppcResult.data.ppcPercent,
           ppcTrend: ppcResult.meta.change,
         }));
-      } catch { /* fallback to demo */ }
+      } catch { /* no PPC data yet */ }
     })();
 
     // Fetch flowline data
@@ -99,44 +142,53 @@ export default function DashboardPage() {
             totalZones: apiData.zones?.length || prev.totalZones,
           }));
         }
-      } catch { /* fallback to demo */ }
+      } catch { /* no flowline data yet */ }
     })();
 
     // Fetch constraint stats
     (async () => {
       try {
         const [constraintsRes, statsRes] = await Promise.all([
-          fetch('/api/v1/constraints?status=open'),
-          fetch('/api/v1/constraints/stats'),
+          fetch(`/api/v1/constraints?projectId=${projectId}&status=open`, { headers: authHeaders }),
+          fetch(`/api/v1/constraints/stats?projectId=${projectId}`, { headers: authHeaders }),
         ]);
         if (constraintsRes.ok) {
           const { data } = await constraintsRes.json();
-          setOpenConstraints(data.map((c: Record<string, string>) => ({
-            id: c.id,
-            title: c.title,
-            priority: c.priority,
-            trade: c.tradeId || '',
-            zone: c.zoneId || '',
-            dueDate: c.dueDate?.split('T')[0] || '',
-            status: c.status,
-          })));
+          if (Array.isArray(data)) {
+            setOpenConstraints(data.map((c: Record<string, string>) => ({
+              id: c.id,
+              title: c.title,
+              priority: c.priority,
+              trade: c.tradeId || '',
+              zone: c.zoneId || '',
+              dueDate: c.dueDate?.split('T')[0] || '',
+              status: c.status,
+            })));
+          }
         }
         if (statsRes.ok) {
           const { data: stats } = await statsRes.json();
-          setKpis((prev) => ({
-            ...prev,
-            openConstraints: stats.open,
-            criticalConstraints: stats.critical || 0,
-            crr: stats.crr,
-          }));
+          if (stats) {
+            setKpis((prev) => ({
+              ...prev,
+              openConstraints: stats.open || 0,
+              criticalConstraints: stats.critical || 0,
+              crr: stats.crr || 0,
+            }));
+          }
         }
-      } catch { /* fallback to demo */ }
+      } catch { /* no constraints yet */ }
     })();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeProjectId]);
+
+  const projectName = activeProject?.name || 'Dashboard';
+  const hasFlowline = flowlineWagons.length > 0;
+  const hasConstraints = openConstraints.length > 0;
 
   return (
     <>
-      <TopBar title="Dashboard" />
+      <TopBar title={projectName} />
       <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
 
         {/* KPI Row */}
@@ -144,27 +196,27 @@ export default function DashboardPage() {
           <MetricCard
             label="PPC"
             value={`${kpis.ppc}%`}
-            sub={`${kpis.ppcTrend >= 0 ? '+' : ''}${kpis.ppcTrend}% from last week`}
+            sub={kpis.ppc > 0 ? `${kpis.ppcTrend >= 0 ? '+' : ''}${kpis.ppcTrend}% from last week` : 'No data yet'}
             icon={CheckCircle}
             color="var(--color-success)"
           />
           <MetricCard
             label="Takt Progress"
-            value={`T${kpis.taktPeriod}`}
-            sub={`of ${kpis.totalPeriods} periods`}
+            value={kpis.taktPeriod > 0 ? `T${kpis.taktPeriod}` : '—'}
+            sub={kpis.totalPeriods > 0 ? `of ${kpis.totalPeriods} periods` : 'Generate a takt plan'}
             icon={Activity}
             color="var(--color-accent)"
           />
           <MetricCard
             label="Open Constraints"
             value={`${kpis.openConstraints}`}
-            sub={`${kpis.criticalConstraints} critical`}
+            sub={kpis.openConstraints > 0 ? `${kpis.criticalConstraints} critical` : 'No constraints'}
             icon={AlertTriangle}
             color="var(--color-danger)"
           />
           <MetricCard
             label="AI Score"
-            value={`${kpis.aiScore}`}
+            value={kpis.aiScore > 0 ? `${kpis.aiScore}` : '—'}
             sub="Project health index"
             icon={Zap}
             color="var(--color-accent-light)"
@@ -176,20 +228,34 @@ export default function DashboardPage() {
 
           {/* Flowline Chart */}
           <Card className="lg:col-span-2" padding="lg">
-            <SectionHeader icon={GitBranch} title="Flowline Overview" href="/flowline" />
-            <div className="flex flex-wrap gap-3 mb-4">
-              {flowlineWagons.map((w) => (
-                <LegendDot key={w.trade_name} label={w.trade_name} color={w.color} />
-              ))}
-            </div>
-            <FlowlineChart
-              wagons={flowlineWagons}
-              zones={zones}
-              todayX={todayX}
-              totalPeriods={totalPeriods}
-              height={220}
-              mini
-            />
+            <SectionHeader icon={GitBranch} title="Flowline Overview" href="/planning" />
+            {hasFlowline ? (
+              <>
+                <div className="flex flex-wrap gap-3 mb-4">
+                  {flowlineWagons.map((w) => (
+                    <LegendDot key={w.trade_name} label={w.trade_name} color={w.color} />
+                  ))}
+                </div>
+                <FlowlineChart
+                  wagons={flowlineWagons}
+                  zones={zones}
+                  todayX={todayX}
+                  totalPeriods={totalPeriods}
+                  height={220}
+                  mini
+                />
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12">
+                <GitBranch size={32} style={{ color: 'var(--color-text-muted)' }} strokeWidth={1} />
+                <p className="text-[13px] mt-3 mb-1 font-medium" style={{ color: 'var(--color-text)' }}>
+                  No flowline data yet
+                </p>
+                <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                  Go to TaktFlow Planning to generate your first takt plan
+                </p>
+              </div>
+            )}
           </Card>
 
           {/* AI Concierge */}
@@ -203,27 +269,31 @@ export default function DashboardPage() {
               </div>
               <div>
                 <div className="text-[13px] font-semibold" style={{ color: 'var(--color-text)' }}>AI Concierge</div>
-                <div className="text-[10px] flex items-center gap-1.5" style={{ color: 'var(--color-success)' }}>
-                  <div className="w-1 h-1 rounded-full" style={{ background: 'var(--color-success)' }} /> Online
+                <div className="text-[10px] flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                  <div className="w-1 h-1 rounded-full" style={{ background: 'var(--color-text-muted)' }} /> Standby
                 </div>
               </div>
             </div>
             <div className="flex-1 p-4 space-y-3 overflow-auto">
               <ConciergeMessage
-                type="Insight"
+                type="Info"
                 color="var(--color-accent)"
-                message="Structure trade is 2 days ahead of schedule. Consider pulling MEP Rough forward to utilize the buffer."
+                message={`Project "${projectName}" is active with ${kpis.totalZones} zones and ${kpis.totalTrades} trades configured.`}
               />
-              <ConciergeMessage
-                type="Warning"
-                color="var(--color-warning)"
-                message="MEP material delivery delay may impact Zone E by T8. Recommend early procurement action."
-              />
-              <ConciergeMessage
-                type="Recommendation"
-                color="var(--color-success)"
-                message="PPC trending upward for 3 consecutive weeks. Current team productivity is above benchmark."
-              />
+              {kpis.openConstraints > 0 && (
+                <ConciergeMessage
+                  type="Warning"
+                  color="var(--color-warning)"
+                  message={`${kpis.openConstraints} open constraint${kpis.openConstraints > 1 ? 's' : ''} detected. ${kpis.criticalConstraints > 0 ? `${kpis.criticalConstraints} critical — review recommended.` : ''}`}
+                />
+              )}
+              {!hasFlowline && (
+                <ConciergeMessage
+                  type="Recommendation"
+                  color="var(--color-success)"
+                  message="Next step: Navigate to TaktFlow Planning to generate your takt plan and flowline schedule."
+                />
+              )}
             </div>
             <div className="p-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
               <div
@@ -256,19 +326,28 @@ export default function DashboardPage() {
           {/* Constraints */}
           <Card padding="lg">
             <SectionHeader icon={Target} title="Open Constraints" href="/constraints" />
-            <div className="space-y-1">
-              {openConstraints.map((c) => (
-                <ConstraintRow
-                  key={c.id}
-                  title={c.title}
-                  priority={c.priority}
-                  priorityColor={constraintColors[c.priority]}
-                  trade={c.trade}
-                  zone={c.zone}
-                  dueDate={c.dueDate}
-                />
-              ))}
-            </div>
+            {hasConstraints ? (
+              <div className="space-y-1">
+                {openConstraints.map((c) => (
+                  <ConstraintRow
+                    key={c.id}
+                    title={c.title}
+                    priority={c.priority}
+                    priorityColor={constraintColors[c.priority]}
+                    trade={c.trade}
+                    zone={c.zone}
+                    dueDate={c.dueDate}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8">
+                <Target size={24} style={{ color: 'var(--color-text-muted)' }} strokeWidth={1} />
+                <p className="text-[12px] mt-2" style={{ color: 'var(--color-text-muted)' }}>
+                  No open constraints
+                </p>
+              </div>
+            )}
             <div className="mt-5 pt-4 border-t" style={{ borderColor: 'var(--color-border-subtle)' }}>
               <ProgressBar value={kpis.crr} color="var(--color-success)" showLabel label="Constraint Removal Rate" />
             </div>
