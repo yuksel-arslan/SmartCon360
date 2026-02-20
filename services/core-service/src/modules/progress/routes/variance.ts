@@ -3,18 +3,15 @@ import { getProjectPPCRecords, getProjectCommitments } from '../store';
 
 const router = Router();
 
-// GET /progress/variance/history — Variance trend (failed commitments over time)
-router.get('/progress/variance/history', (req: Request, res: Response) => {
+// GET /progress/variance/history — Variance trend
+router.get('/progress/variance/history', async (req: Request, res: Response) => {
   const projectId = req.query.projectId as string;
   if (!projectId) {
     res.status(400).json({ error: { code: 'VALIDATION', message: 'projectId query parameter is required' } });
     return;
   }
 
-  const records = getProjectPPCRecords(projectId);
-  const sorted = [...records].sort((a, b) =>
-    new Date(a.weekStart).getTime() - new Date(b.weekStart).getTime()
-  );
+  const sorted = await getProjectPPCRecords(projectId);
 
   const varianceHistory = sorted.map(r => ({
     weekStart: r.weekStart,
@@ -27,7 +24,6 @@ router.get('/progress/variance/history', (req: Request, res: Response) => {
     topReasons: r.topVarianceReasons,
   }));
 
-  // Aggregate totals
   const totalFailed = varianceHistory.reduce((sum, v) => sum + v.totalFailed, 0);
   const totalCommitted = varianceHistory.reduce((sum, v) => sum + v.totalCommitted, 0);
 
@@ -45,25 +41,22 @@ router.get('/progress/variance/history', (req: Request, res: Response) => {
 });
 
 // GET /progress/variance/reasons — Top variance reasons aggregated
-router.get('/progress/variance/reasons', (req: Request, res: Response) => {
+router.get('/progress/variance/reasons', async (req: Request, res: Response) => {
   const projectId = req.query.projectId as string;
   if (!projectId) {
     res.status(400).json({ error: { code: 'VALIDATION', message: 'projectId query parameter is required' } });
     return;
   }
 
-  // Aggregate from commitments directly for most accurate data
-  const commitments = getProjectCommitments(projectId);
+  const commitments = await getProjectCommitments(projectId);
   const failedWithReason = commitments.filter(c => c.committed && !c.completed && c.varianceReason);
 
-  // By reason
   const reasonCounts = new Map<string, { category: string; count: number }>();
   for (const c of failedWithReason) {
     if (c.varianceReason) {
-      const key = c.varianceReason;
-      const existing = reasonCounts.get(key) || { category: c.varianceCategory || 'unknown', count: 0 };
+      const existing = reasonCounts.get(c.varianceReason) || { category: c.varianceCategory || 'unknown', count: 0 };
       existing.count += 1;
-      reasonCounts.set(key, existing);
+      reasonCounts.set(c.varianceReason, existing);
     }
   }
 
@@ -71,7 +64,6 @@ router.get('/progress/variance/reasons', (req: Request, res: Response) => {
     .map(([reason, data]) => ({ reason, category: data.category, count: data.count }))
     .sort((a, b) => b.count - a.count);
 
-  // By category
   const categoryCounts = new Map<string, number>();
   for (const c of failedWithReason) {
     const cat = c.varianceCategory || 'unknown';
@@ -89,14 +81,8 @@ router.get('/progress/variance/reasons', (req: Request, res: Response) => {
     .sort((a, b) => b.count - a.count);
 
   res.json({
-    data: {
-      topReasons,
-      byCategory,
-    },
-    meta: {
-      totalVariances: failedWithReason.length,
-      totalCategories: byCategory.length,
-    },
+    data: { topReasons, byCategory },
+    meta: { totalVariances: failedWithReason.length, totalCategories: byCategory.length },
   });
 });
 

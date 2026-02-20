@@ -1,7 +1,7 @@
 'use client';
 
 import TopBar from '@/components/layout/TopBar';
-import { useState, useMemo, useCallback, useId } from 'react';
+import { useState, useMemo, useCallback, useId, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar, ClipboardList, BarChart3, ChevronLeft, ChevronRight,
@@ -10,6 +10,14 @@ import {
   ArrowUpRight, ArrowDownRight, Award, AlertCircle, X,
 } from 'lucide-react';
 import { DEMO_TRADES, DEMO_ZONES } from '@/lib/mockData';
+import {
+  getWeeklyCommitments,
+  createWeeklyCommitment,
+  updateCommitment as updateCommitmentAPI,
+  getPPCHistory,
+  getPPCByTrade,
+  getVarianceAnalysis,
+} from '@/lib/stores/progress-store';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -658,7 +666,7 @@ function WeeklyWorkPlanTab() {
     );
   };
 
-  const addCommitment = () => {
+  const addCommitment = async () => {
     if (!newCommitment.description.trim() || !newCommitment.committedBy.trim()) return;
     const trade = TRADES.find((t) => t.name === newCommitment.trade);
     const c: Commitment = {
@@ -674,6 +682,26 @@ function WeeklyWorkPlanTab() {
     setCommitments((prev) => [...prev, c]);
     setShowAddForm(false);
     setNewCommitment({ trade: TRADES[0].name, zone: ZONES[0].name.split(' — ')[1] || ZONES[0].name, description: '', committedBy: '' });
+
+    // Persist to API
+    try {
+      const today = new Date();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - today.getDay() + 1);
+      const friday = new Date(monday);
+      friday.setDate(monday.getDate() + 4);
+      await createWeeklyCommitment({
+        projectId: 'demo-project-001',
+        weekStart: monday.toISOString().split('T')[0],
+        weekEnd: friday.toISOString().split('T')[0],
+        tradeId: trade?.name || c.trade,
+        tradeName: c.trade,
+        zoneId: c.zone,
+        zoneName: c.zone,
+        description: c.description,
+        committed: true,
+      });
+    } catch { /* API unavailable — local state updated */ }
   };
 
   return (
@@ -1092,8 +1120,38 @@ function VarianceParetoChart({ data }: { data: typeof VARIANCE_DATA }) {
 }
 
 function PPCDashboardTab() {
-  const ppcHistory = useMemo(() => generatePPCHistory(), []);
-  const tradePPC = useMemo(() => generateTradePPC(), []);
+  const [ppcHistory, setPpcHistory] = useState<WeeklyPPC[]>(generatePPCHistory);
+  const [tradePPC, setTradePPC] = useState<TradePPC[]>(generateTradePPC);
+
+  useEffect(() => {
+    const projectId = 'demo-project-001';
+    (async () => {
+      try {
+        const result = await getPPCHistory(projectId);
+        if (result.data.length > 0) {
+          setPpcHistory(result.data.map((r, i) => ({
+            weekLabel: `W${i + 1}`,
+            weekId: r.id,
+            ppc: r.ppcPercent,
+            committed: r.totalCommitted,
+            completed: r.totalCompleted,
+          })));
+        }
+      } catch { /* fallback to generated data */ }
+      try {
+        const tradeData = await getPPCByTrade(projectId);
+        if (tradeData.byTrade && tradeData.byTrade.length > 0) {
+          setTradePPC(tradeData.byTrade.map((t) => ({
+            trade: t.tradeName,
+            color: TRADES.find((tr) => tr.name === t.tradeName)?.color || '#94A3B8',
+            ppc: t.ppc,
+            committed: t.committed,
+            completed: t.completed,
+          })));
+        }
+      } catch { /* fallback to generated data */ }
+    })();
+  }, []);
 
   const currentPPC = ppcHistory[ppcHistory.length - 1].ppc;
   const prevPPC = ppcHistory[ppcHistory.length - 2].ppc;

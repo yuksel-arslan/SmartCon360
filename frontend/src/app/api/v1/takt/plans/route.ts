@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
-import { savePlan } from '@/lib/stores/takt-plans';
+import { forwardRequest } from '@/lib/backend-proxy';
 import {
   generateTaktGrid,
   detectTradeStacking,
@@ -102,7 +102,9 @@ export async function POST(request: NextRequest) {
       tradeStackingWarnings: stacking,
     };
 
-    savePlan(planId, plan);
+    // Persist to core-service
+    const auth = request.headers.get('authorization');
+    await forwardRequest(`/projects/${req.projectId}/takt-plans`, 'POST', plan, auth);
 
     return NextResponse.json({ data: plan, error: null }, { status: 201 });
   } catch (err) {

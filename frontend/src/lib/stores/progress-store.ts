@@ -1,6 +1,11 @@
-/* In-memory progress data store — Phase 2 */
+/**
+ * Progress Store — API-backed
+ * All operations go through the core-service REST API (progress-service routes).
+ */
 
-import { v4 as uuidv4 } from 'uuid';
+import api from '../api';
+
+// ── Types ────────────────────────────────────────────────
 
 export interface ProgressUpdate {
   id: string;
@@ -12,8 +17,11 @@ export interface ProgressUpdate {
   percentComplete: number;
   previousPercent: number;
   status: string;
-  notes?: string;
+  notes: string | null;
+  photoUrls: string[];
   reportedAt: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface WeeklyCommitment {
@@ -28,8 +36,10 @@ export interface WeeklyCommitment {
   description: string;
   committed: boolean;
   completed: boolean;
-  varianceReason?: string;
-  varianceCategory?: string;
+  varianceReason: string | null;
+  varianceCategory: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PPCRecord {
@@ -42,187 +52,135 @@ export interface PPCRecord {
   ppcPercent: number;
   byTrade: { tradeId: string; tradeName: string; committed: number; completed: number; ppc: number }[];
   topVarianceReasons: { reason: string; category: string; count: number }[];
+  createdAt: string;
 }
 
-// ── In-Memory Stores ──
-const progressUpdates: Map<string, ProgressUpdate[]> = new Map();
-const weeklyCommitments: Map<string, WeeklyCommitment[]> = new Map();
-const ppcRecords: Map<string, PPCRecord[]> = new Map();
+// ── Progress Updates ─────────────────────────────────────
 
-// ── Initialize Demo Data ──
-const DEMO_PROJECT_ID = 'demo-project-001';
-
-function initDemoData() {
-  // PPC History (12 weeks)
-  const ppcHistory: PPCRecord[] = [];
-  const ppcValues = [62, 68, 71, 74, 78, 80, 82, 85, 87, 89, 91, 93];
-  const trades = [
-    { id: 't1', name: 'Structure' },
-    { id: 't2', name: 'MEP Rough-in' },
-    { id: 't3', name: 'Drywall' },
-    { id: 't4', name: 'MEP Finish' },
-    { id: 't5', name: 'Painting' },
-    { id: 't6', name: 'Flooring' },
-    { id: 't7', name: 'Final Fix' },
-  ];
-
-  for (let w = 0; w < 12; w++) {
-    const weekStart = new Date(2026, 0, 5 + w * 7);
-    const weekEnd = new Date(2026, 0, 9 + w * 7);
-    const ppc = ppcValues[w];
-    const committed = 28;
-    const completed = Math.round((ppc / 100) * committed);
-
-    ppcHistory.push({
-      id: uuidv4(),
-      projectId: DEMO_PROJECT_ID,
-      weekStart: weekStart.toISOString().split('T')[0],
-      weekEnd: weekEnd.toISOString().split('T')[0],
-      totalCommitted: committed,
-      totalCompleted: completed,
-      ppcPercent: ppc,
-      byTrade: trades.map((t) => {
-        const tc = Math.round(committed / trades.length);
-        const tradePpc = Math.min(100, ppc + Math.floor(Math.random() * 15) - 7);
-        return {
-          tradeId: t.id,
-          tradeName: t.name,
-          committed: tc,
-          completed: Math.round((tradePpc / 100) * tc),
-          ppc: tradePpc,
-        };
-      }),
-      topVarianceReasons: [
-        { reason: 'Material delivery delay', category: 'Material', count: 3 },
-        { reason: 'Crew shortage', category: 'Labor', count: 2 },
-        { reason: 'Drawing revision pending', category: 'Design', count: 1 },
-      ],
-    });
-  }
-  ppcRecords.set(DEMO_PROJECT_ID, ppcHistory);
-
-  // Current week commitments
-  const currentCommitments: WeeklyCommitment[] = [];
-  const zoneNames = ['Ground Floor', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor', '5th Floor'];
-  let commitIdx = 0;
-  for (const trade of trades) {
-    for (let z = 0; z < 4; z++) {
-      const isCompleted = commitIdx < 26;
-      const isFailed = commitIdx >= 26 && commitIdx < 28;
-      currentCommitments.push({
-        id: uuidv4(),
-        projectId: DEMO_PROJECT_ID,
-        weekStart: '2026-03-23',
-        weekEnd: '2026-03-27',
-        tradeId: trade.id,
-        tradeName: trade.name,
-        zoneId: `z${z + 1}`,
-        zoneName: zoneNames[z],
-        description: `${trade.name} work in ${zoneNames[z]}`,
-        committed: true,
-        completed: isCompleted,
-        varianceReason: isFailed ? (commitIdx === 26 ? 'Material not on site' : 'Crew shortage') : undefined,
-        varianceCategory: isFailed ? (commitIdx === 26 ? 'Material' : 'Labor') : undefined,
-      });
-      commitIdx++;
-      if (commitIdx >= 28) break;
-    }
-    if (commitIdx >= 28) break;
-  }
-  weeklyCommitments.set(`${DEMO_PROJECT_ID}:2026-03-23`, currentCommitments);
+export async function submitProgressUpdate(data: {
+  projectId: string;
+  assignmentId: string;
+  zoneId: string;
+  tradeId: string;
+  reportedBy: string;
+  percentComplete: number;
+  status?: string;
+  notes?: string;
+  photoUrls?: string[];
+}): Promise<ProgressUpdate> {
+  return api<ProgressUpdate>('/progress/update', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 }
 
-initDemoData();
-
-// ── Accessors ──
-export function getProgressUpdates(projectId: string): ProgressUpdate[] {
-  return progressUpdates.get(projectId) || [];
+export async function getProgressByProject(
+  projectId: string,
+  page = 1,
+  limit = 50
+): Promise<{ data: ProgressUpdate[]; meta: { total: number; page: number; limit: number; totalPages: number } }> {
+  const result = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/progress/project/${projectId}?page=${page}&limit=${limit}`
+  );
+  const json = await result.json();
+  if (!result.ok) throw new Error(json.error?.message || `HTTP ${result.status}`);
+  return { data: json.data, meta: json.meta };
 }
 
-export function addProgressUpdate(update: ProgressUpdate): void {
-  const existing = progressUpdates.get(update.projectId) || [];
-  existing.push(update);
-  progressUpdates.set(update.projectId, existing);
+export async function getProgressByAssignment(assignmentId: string, projectId?: string): Promise<ProgressUpdate[]> {
+  const qs = projectId ? `?projectId=${projectId}` : '';
+  return api<ProgressUpdate[]>(`/progress/assignment/${assignmentId}${qs}`);
 }
 
-export function getWeeklyCommitments(projectId: string, weekStart: string): WeeklyCommitment[] {
-  return weeklyCommitments.get(`${projectId}:${weekStart}`) || [];
+export async function getProgressByZone(zoneId: string, projectId?: string): Promise<ProgressUpdate[]> {
+  const qs = projectId ? `?projectId=${projectId}` : '';
+  return api<ProgressUpdate[]>(`/progress/zone/${zoneId}${qs}`);
 }
 
-export function addWeeklyCommitment(c: WeeklyCommitment): void {
-  const key = `${c.projectId}:${c.weekStart}`;
-  const existing = weeklyCommitments.get(key) || [];
-  existing.push(c);
-  weeklyCommitments.set(key, existing);
+export async function getProgressByTrade(tradeId: string, projectId?: string): Promise<ProgressUpdate[]> {
+  const qs = projectId ? `?projectId=${projectId}` : '';
+  return api<ProgressUpdate[]>(`/progress/trade/${tradeId}${qs}`);
 }
 
-export function updateCommitment(id: string, updates: Partial<WeeklyCommitment>): WeeklyCommitment | null {
-  for (const [, comms] of weeklyCommitments) {
-    const idx = comms.findIndex((c) => c.id === id);
-    if (idx !== -1) {
-      comms[idx] = { ...comms[idx], ...updates };
-      return comms[idx];
-    }
-  }
-  return null;
+// ── Weekly Commitments ───────────────────────────────────
+
+export async function getWeeklyCommitments(projectId: string, weekStart?: string): Promise<WeeklyCommitment[]> {
+  const qs = weekStart ? `?weekStart=${weekStart}` : '';
+  return api<WeeklyCommitment[]>(`/progress/commitments?projectId=${projectId}${qs ? `&weekStart=${weekStart}` : ''}`);
 }
 
-export function getPPCHistory(projectId: string): PPCRecord[] {
-  return ppcRecords.get(projectId) || [];
+export async function createWeeklyCommitment(data: {
+  projectId: string;
+  weekStart: string;
+  weekEnd: string;
+  tradeId: string;
+  tradeName: string;
+  zoneId: string;
+  zoneName: string;
+  description: string;
+  committed?: boolean;
+}): Promise<WeeklyCommitment> {
+  return api<WeeklyCommitment>('/progress/commitments', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 }
 
-export function getCurrentPPC(projectId: string): PPCRecord | null {
-  const history = ppcRecords.get(projectId) || [];
-  return history.length > 0 ? history[history.length - 1] : null;
+export async function updateCommitment(
+  id: string,
+  updates: { completed?: boolean; varianceReason?: string | null; varianceCategory?: string | null }
+): Promise<WeeklyCommitment> {
+  return api<WeeklyCommitment>(`/progress/commitments/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  });
 }
 
-export function addPPCRecord(record: PPCRecord): void {
-  const existing = ppcRecords.get(record.projectId) || [];
-  existing.push(record);
-  ppcRecords.set(record.projectId, existing);
+// ── PPC ──────────────────────────────────────────────────
+
+export async function calculatePPC(projectId: string, weekStart: string, weekEnd: string): Promise<PPCRecord> {
+  return api<PPCRecord>('/progress/ppc/calculate', {
+    method: 'POST',
+    body: JSON.stringify({ projectId, weekStart, weekEnd }),
+  });
 }
 
-export function calculatePPC(projectId: string, weekStart: string, weekEnd: string): PPCRecord {
-  const commitments = getWeeklyCommitments(projectId, weekStart);
-  const totalCommitted = commitments.filter((c) => c.committed).length;
-  const totalCompleted = commitments.filter((c) => c.completed).length;
-  const ppc = totalCommitted > 0 ? Math.round((totalCompleted / totalCommitted) * 100) : 0;
+export async function getPPCHistory(projectId: string): Promise<{
+  data: PPCRecord[];
+  meta: { count: number; averagePPC: number; latestPPC: number | null; trend: number; trendDirection: string };
+}> {
+  const result = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/progress/ppc/history?projectId=${projectId}`
+  );
+  const json = await result.json();
+  if (!result.ok) throw new Error(json.error?.message || `HTTP ${result.status}`);
+  return { data: json.data, meta: json.meta };
+}
 
-  const byTradeMap = new Map<string, { tradeId: string; tradeName: string; committed: number; completed: number }>();
-  for (const c of commitments) {
-    const entry = byTradeMap.get(c.tradeId) || { tradeId: c.tradeId, tradeName: c.tradeName, committed: 0, completed: 0 };
-    if (c.committed) entry.committed++;
-    if (c.completed) entry.completed++;
-    byTradeMap.set(c.tradeId, entry);
-  }
+export async function getCurrentPPC(projectId: string): Promise<{
+  data: PPCRecord;
+  meta: { previousWeekPPC: number | null; change: number; changeDirection: string };
+}> {
+  const result = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/progress/ppc/current?projectId=${projectId}`
+  );
+  const json = await result.json();
+  if (!result.ok) throw new Error(json.error?.message || `HTTP ${result.status}`);
+  return { data: json.data, meta: json.meta };
+}
 
-  const byTrade = Array.from(byTradeMap.values()).map((e) => ({
-    ...e,
-    ppc: e.committed > 0 ? Math.round((e.completed / e.committed) * 100) : 0,
-  }));
+export async function getPPCByTrade(
+  projectId: string,
+  weekStart?: string
+): Promise<{ weekStart: string; weekEnd: string; overallPPC: number; byTrade: PPCRecord['byTrade'] }> {
+  const qs = weekStart ? `&weekStart=${weekStart}` : '';
+  return api<{ weekStart: string; weekEnd: string; overallPPC: number; byTrade: PPCRecord['byTrade'] }>(
+    `/progress/ppc/by-trade?projectId=${projectId}${qs}`
+  );
+}
 
-  const varianceCounts = new Map<string, { reason: string; category: string; count: number }>();
-  for (const c of commitments) {
-    if (c.varianceReason && !c.completed) {
-      const key = c.varianceCategory || 'Other';
-      const entry = varianceCounts.get(key) || { reason: c.varianceReason, category: key, count: 0 };
-      entry.count++;
-      varianceCounts.set(key, entry);
-    }
-  }
+// ── Variance ─────────────────────────────────────────────
 
-  const record: PPCRecord = {
-    id: uuidv4(),
-    projectId,
-    weekStart,
-    weekEnd,
-    totalCommitted,
-    totalCompleted,
-    ppcPercent: ppc,
-    byTrade,
-    topVarianceReasons: Array.from(varianceCounts.values()).sort((a, b) => b.count - a.count),
-  };
-
-  addPPCRecord(record);
-  return record;
+export async function getVarianceAnalysis(projectId: string): Promise<Record<string, unknown>> {
+  return api<Record<string, unknown>>(`/progress/variance/analysis?projectId=${projectId}`);
 }

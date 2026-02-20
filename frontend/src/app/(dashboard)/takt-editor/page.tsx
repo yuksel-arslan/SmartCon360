@@ -4,6 +4,8 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TopBar from '@/components/layout/TopBar';
 import { DEMO_ZONES, DEMO_TRADES } from '@/lib/mockData';
+import { generatePlan, savePlan, getPlan, listPlans } from '@/lib/stores/takt-plans';
+import api from '@/lib/api';
 import {
   calculateTotalPeriods,
   generateTaktGrid,
@@ -573,20 +575,81 @@ export default function TaktEditorPage() {
   }, [newZoneName, zones, pushHistory]);
 
   // ── Save ──
+  const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
+  const [projectId] = useState('demo-project-001');
+
   const handleSave = useCallback(async () => {
     setIsSaving(true);
-    // Simulate save to API
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setLastSaved(new Date());
-    setIsSaving(false);
-  }, []);
+    try {
+      const planData = {
+        name: 'Takt Plan',
+        taktTime: globalTaktTime,
+        bufferType: 'fixed',
+        bufferSize: globalBuffer,
+        startDate: PROJECT_START.toISOString(),
+        zones: zones.map((z) => ({ id: z.id, name: z.name, code: z.id, sequence: z.sequence })),
+        wagons: trades.map((t) => ({
+          tradeId: t.id,
+          tradeName: t.name,
+          tradeCode: t.id,
+          tradeColor: t.color,
+          sequence: t.sequence,
+          durationDays: t.taktTime,
+          bufferAfter: t.bufferAfter,
+          crewSize: t.crewSize,
+        })),
+        assignments: Array.from(cells.entries()).map(([, cell]) => ({
+          zoneId: cell.zoneId,
+          wagonId: cell.tradeId,
+          periodNumber: cell.periodNumber,
+          plannedStart: cell.plannedStart.toISOString(),
+          plannedEnd: cell.plannedEnd.toISOString(),
+          status: cell.status,
+          progressPct: cell.status === 'completed' ? 100 : cell.status === 'in_progress' ? 50 : 0,
+          notes: cell.notes || undefined,
+        })),
+      };
+
+      if (currentPlanId) {
+        await savePlan(projectId, currentPlanId, planData);
+      } else {
+        const created = await generatePlan(projectId);
+        setCurrentPlanId(created.id);
+      }
+      setLastSaved(new Date());
+    } catch (err) {
+      console.error('Save failed:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [projectId, currentPlanId, globalTaktTime, globalBuffer, zones, trades, cells]);
 
   // ── Simulate ──
   const handleSimulate = useCallback(async () => {
     setIsSimulating(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsSimulating(false);
-  }, []);
+    try {
+      const payload = {
+        zones: zones.map((z) => ({ id: z.id, name: z.name, sequence: z.sequence })),
+        wagons: trades.map((t) => ({
+          id: t.id,
+          trade_id: t.id,
+          sequence: t.sequence,
+          duration_days: t.taktTime,
+          buffer_after: t.bufferAfter,
+        })),
+        takt_time: globalTaktTime,
+        start_date: PROJECT_START.toISOString().split('T')[0],
+      };
+      await api<Record<string, unknown>>('/takt/compute/validate', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.error('Simulation failed:', err);
+    } finally {
+      setIsSimulating(false);
+    }
+  }, [zones, trades, globalTaktTime]);
 
   // ── Global Takt Time Change ──
   const handleGlobalTaktChange = useCallback((val: number) => {

@@ -1,25 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
-import { getPlan } from '@/lib/stores/takt-plans';
+import { forwardRequest } from '@/lib/backend-proxy';
 
 type Params = { params: Promise<{ planId: string }> };
 
-// POST /api/v1/takt/plans/:planId/activate
+// POST /api/v1/takt/plans/:planId/activate — proxy to core-service
 export async function POST(request: NextRequest, { params }: Params) {
   try {
     requireAuth(request);
     const { planId } = await params;
-    const plan = getPlan(planId);
-
-    if (!plan) {
-      return NextResponse.json(
-        { data: null, error: { code: 'NOT_FOUND', message: 'Plan not found' } },
-        { status: 404 }
-      );
-    }
-
-    plan.status = 'active';
-    return NextResponse.json({ data: plan, error: null });
+    const auth = request.headers.get('authorization');
+    const res = await forwardRequest(`/takt/plans/${planId}/activate`, 'POST', undefined, auth);
+    const json = await res.json();
+    return NextResponse.json(json, { status: res.status });
   } catch (err) {
     if (isAuthError(err)) return unauthorizedResponse();
     return NextResponse.json(
