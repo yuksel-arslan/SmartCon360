@@ -47,6 +47,9 @@ interface ProjectState {
   /** Add a project to the local list (after creation) */
   addProject: (project: Project) => void;
 
+  /** Update a single project's status locally */
+  updateProjectStatus: (projectId: string, status: string) => void;
+
   /** Clear project state (on logout) */
   clear: () => void;
 }
@@ -141,6 +144,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   getActiveProject: () => {
     const { projects, activeProjectId } = get();
     return projects.find((p) => p.id === activeProjectId) || null;
+  },
+
+  updateProjectStatus: (projectId, status) => {
+    set((state) => ({
+      projects: state.projects.map((p) =>
+        p.id === projectId ? { ...p, status } : p
+      ),
+    }));
   },
 
   addProject: (project) => {

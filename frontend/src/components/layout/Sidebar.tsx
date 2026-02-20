@@ -201,9 +201,10 @@ export default function Sidebar() {
                         onClick={() => {
                           setActiveProject(project.id);
                           setProjectDropdownOpen(false);
-                          // Redirect to setup if project setup is not finalized
                           if (needsSetup) {
                             router.push(`/projects/${project.id}/setup`);
+                          } else {
+                            router.push('/dashboard');
                           }
                         }}
                         className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors"

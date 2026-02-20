@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Loader2, Rocket, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useProjectStore } from '@/stores/projectStore';
 
 import { SETUP_STEPS, DEFAULT_WORKING_DAYS, BUILDING_TYPES, isStepOptional, getStepValidation, getMissingRequiredSteps } from './types';
 import type { SetupState } from './types';
@@ -84,6 +85,7 @@ interface Props {
 export default function ProjectSetupWizard({ projectId }: Props) {
   const router = useRouter();
   const token = useAuthStore((s) => s.token);
+  const updateProjectStatus = useProjectStore((s) => s.updateProjectStatus);
   const [step, setStep] = useState(0);
   const [state, setState] = useState<SetupState>(initialState);
   const [loading, setLoading] = useState(true);
@@ -241,6 +243,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
         throw new Error(err.error?.message || err.error || 'Finalization failed');
       }
 
+      updateProjectStatus(projectId, 'active');
       router.push('/dashboard');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unknown error');
