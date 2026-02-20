@@ -20,6 +20,7 @@ import boqRoutes from './modules/project/routes/boq';
 import setupRoutes from './modules/project/routes/setup';
 import projectSetupRoutes from './modules/project/routes/project-setup.routes';
 import classificationRoutes from './modules/project/routes/classification';
+import planRoutes from './modules/project/routes/plan';
 
 // Constraint module
 import constraintsRouter from './modules/constraint/routes/constraints';
@@ -405,6 +406,7 @@ app.use(wbsRoutes(prisma));
 app.use(cbsRoutes(prisma));
 app.use(boqRoutes(prisma));
 app.use(setupRoutes(prisma));
+app.use(planRoutes(prisma));
 app.use('/projects/:projectId', projectSetupRoutes);
 
 // ══════════════════════════════════════
