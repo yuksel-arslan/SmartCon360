@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
+import { getUserId, requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { createConstraintSchema } from '@/lib/validators/constraint';
 import { errorResponse } from '@/lib/errors';
 
 // GET /api/v1/constraints — List constraints (filterable)
 export async function GET(request: NextRequest) {
   try {
-    const userId = requireAuth(request);
+    const userId = getUserId(request);
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
     const status = searchParams.get('status');
@@ -16,10 +16,8 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    // Must belong to a project the user owns
-    const where: Record<string, unknown> = {
-      project: { ownerId: userId },
-    };
+    const where: Record<string, unknown> = {};
+    if (userId) where.project = { ownerId: userId };
     if (projectId) where.projectId = projectId;
     if (status && status !== 'all') where.status = status;
     if (category) where.category = category;

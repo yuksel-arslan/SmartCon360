@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
-import { forwardRequest } from '@/lib/backend-proxy';
+import { safeForward } from '@/lib/backend-proxy';
 import {
   generateTaktGrid,
   detectTradeStacking,
@@ -13,20 +12,19 @@ import {
 // Accepts either a planId (to fetch from core-service) or inline zones/wagons
 export async function POST(request: NextRequest) {
   try {
-    requireAuth(request);
     const body = await request.json();
 
     // If planId provided, fetch from core-service
     if (body.planId) {
       const auth = request.headers.get('authorization');
-      const res = await forwardRequest(`/takt/plans/${body.planId}`, 'GET', undefined, auth);
-      if (!res.ok) {
+      const result = await safeForward(`/takt/plans/${body.planId}`, 'GET', undefined, auth);
+      if (!result.ok) {
         return NextResponse.json(
           { data: null, error: { code: 'NOT_FOUND', message: 'Plan not found' } },
           { status: 404 }
         );
       }
-      const { data: plan } = await res.json();
+      const { data: plan } = (result.data as { data: Record<string, unknown> });
 
       const zones = (plan.zones as Record<string, unknown>[]).map((z) => ({
         id: z.id as string,
@@ -87,7 +85,6 @@ export async function POST(request: NextRequest) {
       error: null,
     });
   } catch (err) {
-    if (isAuthError(err)) return unauthorizedResponse();
     return errorResponse(err);
   }
 }
