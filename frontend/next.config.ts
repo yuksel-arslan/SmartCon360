@@ -14,12 +14,16 @@ const nextConfig: NextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   async rewrites() {
-    return [
-      {
-        source: '/api/v1/:path*',
-        destination: `${API_GATEWAY_URL}/api/v1/:path*`,
-      },
-    ];
+    // Use 'fallback' so that App Router API routes (e.g. /api/v1/projects/[id]/wbs/generate)
+    // are served by Next.js first. Only unmatched routes fall through to the API Gateway.
+    return {
+      fallback: [
+        {
+          source: '/api/v1/:path*',
+          destination: `${API_GATEWAY_URL}/api/v1/:path*`,
+        },
+      ],
+    };
   },
 };
 export default nextConfig;
