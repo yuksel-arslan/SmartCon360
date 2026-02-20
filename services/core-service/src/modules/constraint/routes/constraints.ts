@@ -22,7 +22,7 @@ const router = Router();
  * GET /constraints
  * List constraints with optional filters
  */
-router.get('/', (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
   const validation = validateRequest(ListConstraintsQuerySchema, req.query);
   if (!validation.success) {
     return res.status(400).json({ error: validation.error });
@@ -30,7 +30,7 @@ router.get('/', (req: Request, res: Response) => {
 
   const { page, limit, overdue, ...filters } = validation.data;
 
-  const allConstraints = listConstraints({
+  const allConstraints = await listConstraints({
     ...filters,
     overdue: overdue === 'true',
   });
@@ -54,13 +54,13 @@ router.get('/', (req: Request, res: Response) => {
  * POST /constraints
  * Create a new constraint
  */
-router.post('/', (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   const validation = validateRequest(CreateConstraintSchema, req.body);
   if (!validation.success) {
     return res.status(400).json({ error: validation.error });
   }
 
-  const constraint = createConstraint({
+  const constraint = await createConstraint({
     ...validation.data,
     status: 'open',
     dueDate: validation.data.dueDate ? new Date(validation.data.dueDate) : undefined,
@@ -73,9 +73,9 @@ router.post('/', (req: Request, res: Response) => {
  * GET /constraints/stats
  * Get constraint statistics
  */
-router.get('/stats', (req: Request, res: Response) => {
+router.get('/stats', async (req: Request, res: Response) => {
   const projectId = req.query.projectId as string | undefined;
-  const stats = getConstraintStats(projectId);
+  const stats = await getConstraintStats(projectId);
   return res.json({ data: stats });
 });
 
@@ -83,10 +83,10 @@ router.get('/stats', (req: Request, res: Response) => {
  * GET /constraints/crr
  * Get Constraint Removal Rate data
  */
-router.get('/crr', (req: Request, res: Response) => {
+router.get('/crr', async (req: Request, res: Response) => {
   const projectId = req.query.projectId as string | undefined;
   const weeks = req.query.weeks ? parseInt(req.query.weeks as string, 10) : 6;
-  const crr = getCRR(projectId, weeks);
+  const crr = await getCRR(projectId, weeks);
   return res.json({ data: crr });
 });
 
@@ -94,16 +94,16 @@ router.get('/crr', (req: Request, res: Response) => {
  * GET /constraints/lookahead
  * Get constraints in lookahead window (next 6 weeks)
  */
-router.get('/lookahead', (req: Request, res: Response) => {
+router.get('/lookahead', async (req: Request, res: Response) => {
   const projectId = req.query.projectId as string | undefined;
-  const allConstraints = listConstraints({ projectId, status: 'open' });
+  const allConstraints = await listConstraints({ projectId, status: 'open' });
 
   const now = new Date();
   const sixWeeksFromNow = new Date(now);
-  sixWeeksFromNow.setDate(sixWeeksFromNow.getDate() + 42); // 6 weeks = 42 days
+  sixWeeksFromNow.setDate(sixWeeksFromNow.getDate() + 42);
 
   const lookaheadConstraints = allConstraints.filter((c) => {
-    if (!c.dueDate) return true; // Include constraints without due date
+    if (!c.dueDate) return true;
     return c.dueDate >= now && c.dueDate <= sixWeeksFromNow;
   });
 
@@ -114,8 +114,8 @@ router.get('/lookahead', (req: Request, res: Response) => {
  * GET /constraints/by-zone/:zoneId
  * Get constraints for a specific zone
  */
-router.get('/by-zone/:zoneId', (req: Request, res: Response) => {
-  const constraints = listConstraints({ zoneId: req.params.zoneId });
+router.get('/by-zone/:zoneId', async (req: Request, res: Response) => {
+  const constraints = await listConstraints({ zoneId: req.params.zoneId });
   return res.json({ data: constraints });
 });
 
@@ -123,8 +123,8 @@ router.get('/by-zone/:zoneId', (req: Request, res: Response) => {
  * GET /constraints/by-trade/:tradeId
  * Get constraints for a specific trade
  */
-router.get('/by-trade/:tradeId', (req: Request, res: Response) => {
-  const constraints = listConstraints({ tradeId: req.params.tradeId });
+router.get('/by-trade/:tradeId', async (req: Request, res: Response) => {
+  const constraints = await listConstraints({ tradeId: req.params.tradeId });
   return res.json({ data: constraints });
 });
 
@@ -132,8 +132,8 @@ router.get('/by-trade/:tradeId', (req: Request, res: Response) => {
  * GET /constraints/:id
  * Get a specific constraint by ID
  */
-router.get('/:id', (req: Request, res: Response) => {
-  const constraint = getConstraintById(req.params.id);
+router.get('/:id', async (req: Request, res: Response) => {
+  const constraint = await getConstraintById(req.params.id);
   if (!constraint) {
     return res.status(404).json({ error: 'Constraint not found' });
   }
@@ -144,18 +144,18 @@ router.get('/:id', (req: Request, res: Response) => {
  * PATCH /constraints/:id
  * Update a constraint
  */
-router.patch('/:id', (req: Request, res: Response) => {
+router.patch('/:id', async (req: Request, res: Response) => {
   const validation = validateRequest(UpdateConstraintSchema, req.body);
   if (!validation.success) {
     return res.status(400).json({ error: validation.error });
   }
 
-  const updates: any = { ...validation.data };
+  const updates: Record<string, unknown> = { ...validation.data };
   if (validation.data.dueDate) {
     updates.dueDate = new Date(validation.data.dueDate);
   }
 
-  const updated = updateConstraint(req.params.id, updates);
+  const updated = await updateConstraint(req.params.id, updates as Partial<import('../types').Constraint>);
   if (!updated) {
     return res.status(404).json({ error: 'Constraint not found' });
   }
@@ -167,13 +167,13 @@ router.patch('/:id', (req: Request, res: Response) => {
  * PATCH /constraints/:id/resolve
  * Mark constraint as resolved
  */
-router.patch('/:id/resolve', (req: Request, res: Response) => {
+router.patch('/:id/resolve', async (req: Request, res: Response) => {
   const validation = validateRequest(ResolveConstraintSchema, req.body);
   if (!validation.success) {
     return res.status(400).json({ error: validation.error });
   }
 
-  const updated = updateConstraint(req.params.id, {
+  const updated = await updateConstraint(req.params.id, {
     status: 'resolved',
     resolvedDate: new Date(),
     resolutionNotes: validation.data.resolutionNotes,
@@ -190,8 +190,8 @@ router.patch('/:id/resolve', (req: Request, res: Response) => {
  * DELETE /constraints/:id
  * Delete a constraint
  */
-router.delete('/:id', (req: Request, res: Response) => {
-  const success = deleteConstraint(req.params.id);
+router.delete('/:id', async (req: Request, res: Response) => {
+  const success = await deleteConstraint(req.params.id);
   if (!success) {
     return res.status(404).json({ error: 'Constraint not found' });
   }

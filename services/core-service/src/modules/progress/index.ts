@@ -2,13 +2,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import pino from 'pino';
-import {
-  progressUpdates,
-  weeklyCommitments,
-  ppcRecords,
-  dailyLogs,
-  nowISO,
-} from './store';
+import { nowISO } from './store';
 
 // ── Logger ──────────────────────────────────────────────
 export const logger = pino({ transport: { target: 'pino-pretty' } });
@@ -28,12 +22,7 @@ app.get('/health', (_req: Request, res: Response) => {
       status: 'ok',
       service: 'progress-service',
       timestamp: nowISO(),
-      storage: {
-        progressUpdates: Array.from(progressUpdates.values()).reduce((sum, arr) => sum + arr.length, 0),
-        weeklyCommitments: Array.from(weeklyCommitments.values()).reduce((sum, arr) => sum + arr.length, 0),
-        ppcRecords: Array.from(ppcRecords.values()).reduce((sum, arr) => sum + arr.length, 0),
-        dailyLogs: Array.from(dailyLogs.values()).reduce((sum, arr) => sum + arr.length, 0),
-      },
+      storage: 'postgresql',
     },
   });
 });
@@ -62,31 +51,9 @@ app.use((err: Error, _req: Request, res: Response, _next: express.NextFunction) 
   });
 });
 
-// ── Seed Demo Data & Start Server ───────────────────────
-import { seedDemoData } from './seed';
-seedDemoData();
-
+// ── Start Server ────────────────────────────────────────
 app.listen(PORT, () => {
-  logger.info(`progress-service running on port ${PORT}`);
-  logger.info('Demo project ID: 00000000-0000-0000-0000-000000000001');
-  logger.info('Endpoints:');
-  logger.info('  POST   /progress/update');
-  logger.info('  GET    /progress/assignment/:assignmentId');
-  logger.info('  GET    /progress/zone/:zoneId');
-  logger.info('  GET    /progress/trade/:tradeId');
-  logger.info('  GET    /progress/project/:projectId');
-  logger.info('  POST   /progress/commitments');
-  logger.info('  POST   /progress/commitments/bulk');
-  logger.info('  GET    /progress/commitments?projectId=&weekStart=');
-  logger.info('  PATCH  /progress/commitments/:id');
-  logger.info('  POST   /progress/ppc/calculate');
-  logger.info('  GET    /progress/ppc/history?projectId=');
-  logger.info('  GET    /progress/ppc/current?projectId=');
-  logger.info('  GET    /progress/ppc/by-trade?projectId=&weekStart=');
-  logger.info('  GET    /progress/variance/history?projectId=');
-  logger.info('  GET    /progress/variance/reasons?projectId=');
-  logger.info('  POST   /progress/daily-log');
-  logger.info('  GET    /progress/daily-log/:projectId/:date');
+  logger.info(`progress-service running on port ${PORT} (PostgreSQL)`);
 });
 
 export default app;
