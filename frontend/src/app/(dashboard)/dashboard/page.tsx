@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import TopBar from '@/components/layout/TopBar';
 import FlowlineChart from '@/components/charts/FlowlineChart';
 import {
@@ -14,6 +15,9 @@ import {
   DEMO_FLOWLINE, DEMO_ZONES, DEMO_TODAY_X, DEMO_TOTAL_PERIODS,
   DEMO_KPIS, DEMO_ACTIVITIES, DEMO_CONSTRAINTS,
 } from '@/lib/mockData';
+import type { FlowlineWagon } from '@/lib/mockData';
+import { listPlans, getFlowlineData } from '@/lib/stores/takt-plans';
+import { getCurrentPPC } from '@/lib/stores/progress-store';
 
 const constraintColors: Record<string, string> = {
   critical: 'var(--color-danger)',
@@ -22,60 +26,167 @@ const constraintColors: Record<string, string> = {
   low: 'var(--color-text-muted)',
 };
 
+interface DashboardKPIs {
+  ppc: number;
+  ppcTrend: number;
+  taktPeriod: number;
+  totalPeriods: number;
+  openConstraints: number;
+  criticalConstraints: number;
+  aiScore: number;
+  activeProjects: number;
+  totalTrades: number;
+  totalZones: number;
+  crr: number;
+}
+
+interface ConstraintData {
+  id: string;
+  title: string;
+  priority: string;
+  trade: string;
+  zone: string;
+  dueDate: string;
+  status: string;
+}
+
 export default function DashboardPage() {
+  const [kpis, setKpis] = useState<DashboardKPIs>({
+    ...DEMO_KPIS,
+    crr: 78,
+  });
+  const [flowlineWagons, setFlowlineWagons] = useState<FlowlineWagon[]>(DEMO_FLOWLINE);
+  const [zones, setZones] = useState(DEMO_ZONES);
+  const [todayX, setTodayX] = useState(DEMO_TODAY_X);
+  const [totalPeriods, setTotalPeriods] = useState(DEMO_TOTAL_PERIODS);
+  const [openConstraints, setOpenConstraints] = useState<ConstraintData[]>(
+    DEMO_CONSTRAINTS.filter((c) => c.status === 'open')
+  );
+  const [activities] = useState(DEMO_ACTIVITIES);
+
+  useEffect(() => {
+    const projectId = 'demo-project-001';
+
+    // Fetch PPC data
+    (async () => {
+      try {
+        const ppcResult = await getCurrentPPC(projectId);
+        setKpis((prev) => ({
+          ...prev,
+          ppc: ppcResult.data.ppcPercent,
+          ppcTrend: ppcResult.meta.change,
+        }));
+      } catch { /* fallback to demo */ }
+    })();
+
+    // Fetch flowline data
+    (async () => {
+      try {
+        const plans = await listPlans(projectId);
+        if (plans.length > 0) {
+          const data = await getFlowlineData(projectId, plans[0].id);
+          const apiData = data as { wagons?: FlowlineWagon[]; zones?: typeof DEMO_ZONES; todayX?: number; totalPeriods?: number };
+          if (apiData.wagons) setFlowlineWagons(apiData.wagons);
+          if (apiData.zones) setZones(apiData.zones);
+          if (apiData.todayX) setTodayX(apiData.todayX);
+          if (apiData.totalPeriods) {
+            setTotalPeriods(apiData.totalPeriods);
+            setKpis((prev) => ({ ...prev, totalPeriods: apiData.totalPeriods! }));
+          }
+          setKpis((prev) => ({
+            ...prev,
+            totalTrades: apiData.wagons?.length || prev.totalTrades,
+            totalZones: apiData.zones?.length || prev.totalZones,
+          }));
+        }
+      } catch { /* fallback to demo */ }
+    })();
+
+    // Fetch constraint stats
+    (async () => {
+      try {
+        const [constraintsRes, statsRes] = await Promise.all([
+          fetch('/api/v1/constraints?status=open'),
+          fetch('/api/v1/constraints/stats'),
+        ]);
+        if (constraintsRes.ok) {
+          const { data } = await constraintsRes.json();
+          setOpenConstraints(data.map((c: Record<string, string>) => ({
+            id: c.id,
+            title: c.title,
+            priority: c.priority,
+            trade: c.tradeId || '',
+            zone: c.zoneId || '',
+            dueDate: c.dueDate?.split('T')[0] || '',
+            status: c.status,
+          })));
+        }
+        if (statsRes.ok) {
+          const { data: stats } = await statsRes.json();
+          setKpis((prev) => ({
+            ...prev,
+            openConstraints: stats.open,
+            criticalConstraints: stats.critical || 0,
+            crr: stats.crr,
+          }));
+        }
+      } catch { /* fallback to demo */ }
+    })();
+  }, []);
+
   return (
     <>
       <TopBar title="Dashboard" />
       <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
 
-        {/* ── KPI Row ─────────────────────────────────────── */}
+        {/* KPI Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <MetricCard
             label="PPC"
-            value={`${DEMO_KPIS.ppc}%`}
-            sub={`+${DEMO_KPIS.ppcTrend}% from last week`}
+            value={`${kpis.ppc}%`}
+            sub={`${kpis.ppcTrend >= 0 ? '+' : ''}${kpis.ppcTrend}% from last week`}
             icon={CheckCircle}
             color="var(--color-success)"
           />
           <MetricCard
             label="Takt Progress"
-            value={`T${DEMO_KPIS.taktPeriod}`}
-            sub={`of ${DEMO_KPIS.totalPeriods} periods`}
+            value={`T${kpis.taktPeriod}`}
+            sub={`of ${kpis.totalPeriods} periods`}
             icon={Activity}
             color="var(--color-accent)"
           />
           <MetricCard
             label="Open Constraints"
-            value={`${DEMO_KPIS.openConstraints}`}
-            sub={`${DEMO_KPIS.criticalConstraints} critical`}
+            value={`${kpis.openConstraints}`}
+            sub={`${kpis.criticalConstraints} critical`}
             icon={AlertTriangle}
             color="var(--color-danger)"
           />
           <MetricCard
             label="AI Score"
-            value={`${DEMO_KPIS.aiScore}`}
+            value={`${kpis.aiScore}`}
             sub="Project health index"
             icon={Zap}
             color="var(--color-accent-light)"
           />
         </div>
 
-        {/* ── Main Content ────────────────────────────────── */}
+        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5">
 
           {/* Flowline Chart */}
           <Card className="lg:col-span-2" padding="lg">
             <SectionHeader icon={GitBranch} title="Flowline Overview" href="/flowline" />
             <div className="flex flex-wrap gap-3 mb-4">
-              {DEMO_FLOWLINE.map((w) => (
+              {flowlineWagons.map((w) => (
                 <LegendDot key={w.trade_name} label={w.trade_name} color={w.color} />
               ))}
             </div>
             <FlowlineChart
-              wagons={DEMO_FLOWLINE}
-              zones={DEMO_ZONES}
-              todayX={DEMO_TODAY_X}
-              totalPeriods={DEMO_TOTAL_PERIODS}
+              wagons={flowlineWagons}
+              zones={zones}
+              todayX={todayX}
+              totalPeriods={totalPeriods}
               height={220}
               mini
             />
@@ -129,14 +240,14 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* ── Bottom Row ──────────────────────────────────── */}
+        {/* Bottom Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
 
           {/* Recent Activity */}
           <Card padding="lg">
             <SectionHeader icon={Clock} title="Recent Activity" />
             <div className="divide-y" style={{ borderColor: 'var(--color-border-subtle)' }}>
-              {DEMO_ACTIVITIES.slice(0, 5).map((act) => (
+              {activities.slice(0, 5).map((act) => (
                 <ActivityItem key={act.id} message={act.message} time={act.time} color={act.color} />
               ))}
             </div>
@@ -146,7 +257,7 @@ export default function DashboardPage() {
           <Card padding="lg">
             <SectionHeader icon={Target} title="Open Constraints" href="/constraints" />
             <div className="space-y-1">
-              {DEMO_CONSTRAINTS.filter((c) => c.status === 'open').map((c) => (
+              {openConstraints.map((c) => (
                 <ConstraintRow
                   key={c.id}
                   title={c.title}
@@ -159,18 +270,18 @@ export default function DashboardPage() {
               ))}
             </div>
             <div className="mt-5 pt-4 border-t" style={{ borderColor: 'var(--color-border-subtle)' }}>
-              <ProgressBar value={78} color="var(--color-success)" showLabel label="Constraint Removal Rate" />
+              <ProgressBar value={kpis.crr} color="var(--color-success)" showLabel label="Constraint Removal Rate" />
             </div>
           </Card>
         </div>
 
-        {/* ── Stats Bar ───────────────────────────────────── */}
+        {/* Stats Bar */}
         <Card padding="lg">
           <div className="flex flex-wrap items-center justify-between gap-6">
-            <StatPill label="Active Projects" value={DEMO_KPIS.activeProjects} icon={TrendingUp} />
-            <StatPill label="Total Trades" value={DEMO_KPIS.totalTrades} icon={Activity} />
-            <StatPill label="Takt Zones" value={DEMO_KPIS.totalZones} icon={GitBranch} />
-            <StatPill label="CRR" value="78%" icon={Target} />
+            <StatPill label="Active Projects" value={kpis.activeProjects} icon={TrendingUp} />
+            <StatPill label="Total Trades" value={kpis.totalTrades} icon={Activity} />
+            <StatPill label="Takt Zones" value={kpis.totalZones} icon={GitBranch} />
+            <StatPill label="CRR" value={`${kpis.crr}%`} icon={Target} />
           </div>
         </Card>
       </div>
