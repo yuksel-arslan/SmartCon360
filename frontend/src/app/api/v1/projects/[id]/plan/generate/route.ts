@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { errorResponse, AppError } from '@/lib/errors';
-import { savePlan } from '@/lib/stores/takt-plans';
+import { forwardRequest } from '@/lib/backend-proxy';
 import {
   generateTaktGrid,
   calculateTotalPeriods,
@@ -161,7 +161,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     };
 
-    savePlan(planId, plan);
+    // Persist to core-service
+    const auth = request.headers.get('authorization');
+    await forwardRequest(`/projects/${projectId}/takt-plans`, 'POST', plan, auth);
 
     return NextResponse.json({ data: plan, error: null }, { status: 201 });
   } catch (err) {

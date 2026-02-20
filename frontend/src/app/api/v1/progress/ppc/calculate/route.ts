@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { calculatePPC } from '@/lib/stores/progress-store';
+import { forwardRequest } from '@/lib/backend-proxy';
 import { errorResponse } from '@/lib/errors';
 
-// POST /api/v1/progress/ppc/calculate
+// POST /api/v1/progress/ppc/calculate — proxy to core-service
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, weekStart, weekEnd } = body;
-
-    if (!projectId || !weekStart || !weekEnd) {
-      return NextResponse.json(
-        { data: null, error: { code: 'VALIDATION_ERROR', message: 'projectId, weekStart, and weekEnd are required' } },
-        { status: 400 }
-      );
-    }
-
-    const record = calculatePPC(projectId, weekStart, weekEnd);
-    return NextResponse.json({ data: record, error: null });
+    const auth = request.headers.get('authorization');
+    const res = await forwardRequest('/progress/ppc/calculate', 'POST', body, auth);
+    const json = await res.json();
+    return NextResponse.json(json, { status: res.status });
   } catch (err) {
     return errorResponse(err);
   }

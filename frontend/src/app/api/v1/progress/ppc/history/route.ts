@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPPCHistory } from '@/lib/stores/progress-store';
+import { forwardRequest } from '@/lib/backend-proxy';
 import { errorResponse } from '@/lib/errors';
 
-// GET /api/v1/progress/ppc/history?projectId=xxx
+// GET /api/v1/progress/ppc/history — proxy to core-service
 export async function GET(request: NextRequest) {
   try {
-    const projectId = new URL(request.url).searchParams.get('projectId') || 'demo-project-001';
-    return NextResponse.json({ data: getPPCHistory(projectId), error: null });
+    const qs = new URL(request.url).search;
+    const auth = request.headers.get('authorization');
+    const res = await forwardRequest(`/progress/ppc/history${qs}`, 'GET', undefined, auth);
+    const json = await res.json();
+    return NextResponse.json(json, { status: res.status });
   } catch (err) {
     return errorResponse(err);
   }
