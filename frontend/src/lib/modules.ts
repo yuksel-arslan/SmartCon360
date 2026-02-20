@@ -158,12 +158,7 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
     svgIcon: '/icons/modules/qualitygate.svg',
     color: '#10B981',
     features: ['NCR Management', 'Inspection Checklists', 'ITP Tracking', 'Punch Lists', 'FTR Analytics', 'Photo Documentation'],
-    kpis: [
-      { label: 'FTR Rate', value: '94.2%' },
-      { label: 'Open NCRs', value: '12' },
-      { label: 'COPQ', value: '$45,200' },
-      { label: 'Inspections Today', value: '8' },
-    ],
+    kpis: [], // KPIs loaded from API via qualityStore
   },
   safety: {
     id: 'safety',
@@ -175,12 +170,7 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
     svgIcon: '/icons/modules/safezone.svg',
     color: '#EF4444',
     features: ['Risk Matrix', 'Incident Reporting', 'Permit to Work', 'JSA', 'Toolbox Talks', 'Safety Observations'],
-    kpis: [
-      { label: 'LTIR', value: '0.42' },
-      { label: 'Days Without Incident', value: '28' },
-      { label: 'Open PTWs', value: '5' },
-      { label: 'Toolbox Talks', value: '142' },
-    ],
+    kpis: [], // KPIs loaded from API via safetyStore
   },
   vision: {
     id: 'vision',
@@ -192,12 +182,7 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
     svgIcon: '/icons/modules/visionai.svg',
     color: '#8B5CF6',
     features: ['Photo Analysis', 'Progress Detection', 'Defect Identification', 'Time-Lapse', 'AI Comparison', 'Report Generation'],
-    kpis: [
-      { label: 'Photos Analyzed', value: '1,247' },
-      { label: 'Progress Accuracy', value: '96.8%' },
-      { label: 'Defects Found', value: '23' },
-      { label: 'Active Cameras', value: '12' },
-    ],
+    kpis: [], // VisionAI — Layer 2 feature, KPIs will come from vision-service
   },
 
   // ── Cost & Resources ─────────────────────
@@ -211,12 +196,7 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
     svgIcon: '/icons/modules/costpilot.svg',
     color: '#F59E0B',
     features: ['Work Items', 'Unit Prices', 'Metraj', 'Estimates', 'Budgets', 'Hakedis', 'EVM'],
-    kpis: [
-      { label: 'CPI', value: '1.03' },
-      { label: 'SPI', value: '0.97' },
-      { label: 'Budget Variance', value: '-2.1%' },
-      { label: 'EAC', value: '48.2M' },
-    ],
+    kpis: [], // KPIs loaded from API via costStore
   },
   resources: {
     id: 'resources',
@@ -240,12 +220,7 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
     svgIcon: '/icons/modules/crewflow.svg',
     color: '#3B82F6',
     features: ['Crew Planning', 'Trade Allocation', 'Labor Tracking', 'Utilization Reports', 'Shift Management', 'Skill Matrix'],
-    kpis: [
-      { label: 'Active Crews', value: '24' },
-      { label: 'Utilization', value: '87%' },
-      { label: 'Headcount', value: '186' },
-      { label: 'Trades Active', value: '7' },
-    ],
+    kpis: [], // KPIs loaded from API via resourceStore
   },
   material: {
     id: 'material',
@@ -257,12 +232,7 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
     svgIcon: '/icons/modules/crewflow.svg',
     color: '#3B82F6',
     features: ['Inventory Tracking', 'Consumption Analysis', 'Waste Monitoring', 'Delivery Scheduling', 'Stock Alerts', 'Material Testing'],
-    kpis: [
-      { label: 'Material Orders', value: '34' },
-      { label: 'In Stock Items', value: '128' },
-      { label: 'Waste Rate', value: '4.2%' },
-      { label: 'Pending Deliveries', value: '12' },
-    ],
+    kpis: [], // KPIs loaded from API via resourceStore
   },
   equipment: {
     id: 'equipment',
@@ -274,12 +244,7 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
     svgIcon: '/icons/modules/crewflow.svg',
     color: '#3B82F6',
     features: ['Fleet Management', 'Maintenance Schedule', 'Utilization Tracking', 'Fuel Monitoring', 'Operator Assignment', 'Inspection Log'],
-    kpis: [
-      { label: 'Total Equipment', value: '42' },
-      { label: 'Utilization', value: '78%' },
-      { label: 'Under Maintenance', value: '3' },
-      { label: 'Fuel Cost (MTD)', value: '$18.5K' },
-    ],
+    kpis: [], // KPIs loaded from API via resourceStore
   },
   scaffoldings: {
     id: 'scaffoldings',
@@ -291,12 +256,7 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
     svgIcon: '/icons/modules/crewflow.svg',
     color: '#3B82F6',
     features: ['Scaffold Register', 'Erection Tracking', 'Inspection Schedule', 'Load Calculation', 'Permit Management', 'Dismantling Log'],
-    kpis: [
-      { label: 'Active Scaffolds', value: '18' },
-      { label: 'Inspections Due', value: '5' },
-      { label: 'Total Area (m²)', value: '3,420' },
-      { label: 'Avg Utilization', value: '82%' },
-    ],
+    kpis: [], // KPIs loaded from API via resourceStore
   },
 
   // ── Supply & Risk ────────────────────────
