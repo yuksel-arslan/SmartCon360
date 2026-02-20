@@ -28,6 +28,8 @@ export const updateProjectSchema = z.object({
   country: z.string().optional(),
   budget: z.number().optional(),
   currency: z.string().max(3).optional(),
+  settings: z.record(z.any()).optional(),
+  workingDays: z.array(z.string()).optional(),
 });
 
 export const createLocationSchema = z.object({
