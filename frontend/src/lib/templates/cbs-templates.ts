@@ -2,7 +2,7 @@
  * CBS (Cost Breakdown Structure) Templates
  *
  * CBS is linked to WBS and provides cost categorization.
- * Default: Uniclass 2015 Ss (Systems) table
+ * Supported: Uniclass 2015 Ss (Systems), OmniClass Table 33 (Disciplines), Custom
  *
  * CBS nodes map to CostPilot budget items for cost tracking.
  */
@@ -210,6 +210,102 @@ const UNICLASS_SS_BASE: CbsTemplateNode[] = [
 ];
 
 // ============================================================================
+// OMNICLASS TABLE 33 — Disciplines-based CBS (level 1-2)
+// ============================================================================
+
+const OMNICLASS_CBS_BASE: CbsTemplateNode[] = [
+  {
+    code: '33-11 00 00',
+    name: 'Planning Disciplines',
+    children: [
+      { code: '33-11 11 00', name: 'Regional Planning' },
+      { code: '33-11 21 00', name: 'Development Planning' },
+      { code: '33-11 31 00', name: 'Rural Planning' },
+      { code: '33-11 41 00', name: 'Urban Planning' },
+      { code: '33-11 44 00', name: 'Transportation Planning' },
+      { code: '33-11 51 00', name: 'Environmental Planning' },
+      { code: '33-11 61 00', name: 'Facility Conservation Planning' },
+    ],
+  },
+  {
+    code: '33-21 00 00',
+    name: 'Design Disciplines',
+    children: [
+      { code: '33-21 11 00', name: 'Architecture' },
+      { code: '33-21 21 00', name: 'Landscape Architecture' },
+      { code: '33-21 23 00', name: 'Interior Design' },
+      { code: '33-21 25 00', name: 'Specifying' },
+      { code: '33-21 31 00', name: 'Engineering' },
+      { code: '33-21 51 00', name: 'Design Support' },
+    ],
+  },
+  {
+    code: '33-23 00 00',
+    name: 'Investigation Disciplines',
+    children: [
+      { code: '33-23 11 00', name: 'Surveying' },
+      { code: '33-23 21 00', name: 'Environmental Investigation' },
+      { code: '33-23 41 00', name: 'Geotechnical Investigation' },
+      { code: '33-23 51 00', name: 'Risk Assessment' },
+    ],
+  },
+  {
+    code: '33-25 00 00',
+    name: 'Project Management Disciplines',
+    children: [
+      { code: '33-25 11 00', name: 'Cost Estimation' },
+      { code: '33-25 16 00', name: 'Construction Management' },
+      { code: '33-25 21 00', name: 'Scheduling' },
+      { code: '33-25 31 00', name: 'Contract Administration' },
+      { code: '33-25 41 00', name: 'Procurement Administration' },
+      { code: '33-25 51 00', name: 'Quality Assurance' },
+    ],
+  },
+  {
+    code: '33-41 00 00',
+    name: 'Construction Disciplines',
+    children: [
+      { code: '33-41 03 00', name: 'Site Preparation' },
+      { code: '33-41 10 00', name: 'Carpentry' },
+      { code: '33-41 21 00', name: 'Iron Working' },
+      { code: '33-41 24 00', name: 'Sheet Metal Working' },
+      { code: '33-41 30 00', name: 'Masonry Contracting' },
+      { code: '33-41 31 00', name: 'Concrete Contracting' },
+      { code: '33-41 40 00', name: 'Cladding Contracting' },
+      { code: '33-41 43 00', name: 'Roofing Contracting' },
+      { code: '33-41 46 00', name: 'Glazing Contracting' },
+      { code: '33-41 53 00', name: 'Flooring Contracting' },
+      { code: '33-41 56 00', name: 'Painting Contracting' },
+      { code: '33-41 60 00', name: 'Insulating Contracting' },
+      { code: '33-41 63 00', name: 'Plumbing Contracting' },
+      { code: '33-41 73 00', name: 'HVAC Contracting' },
+      { code: '33-41 76 00', name: 'Electrical Contracting' },
+      { code: '33-41 83 00', name: 'Fire Protection Contracting' },
+      { code: '33-41 86 00', name: 'Conveyance Contracting' },
+      { code: '33-41 91 00', name: 'Infrastructure Development' },
+    ],
+  },
+  {
+    code: '33-55 00 00',
+    name: 'Facility Use Disciplines',
+    children: [
+      { code: '33-55 21 00', name: 'Facility Owner' },
+      { code: '33-55 24 00', name: 'Facility Operations' },
+      { code: '33-55 36 00', name: 'Facility Restoration Services' },
+    ],
+  },
+  {
+    code: '33-81 00 00',
+    name: 'Support Disciplines',
+    children: [
+      { code: '33-81 11 00', name: 'Legal Services' },
+      { code: '33-81 21 00', name: 'Administrative and General Consulting' },
+      { code: '33-81 31 00', name: 'Finance' },
+    ],
+  },
+];
+
+// ============================================================================
 // PUBLIC API
 // ============================================================================
 
@@ -224,6 +320,11 @@ const CBS_STANDARD_MAP: Record<string, { label: string; description: string; nod
     label: 'Uniclass 2015 Ss',
     description: 'Uniclass 2015 Systems table for cost breakdown',
     nodes: UNICLASS_SS_BASE,
+  },
+  omniclass_33: {
+    label: 'OmniClass Table 33',
+    description: 'OmniClass Table 33 Disciplines for cost breakdown',
+    nodes: OMNICLASS_CBS_BASE,
   },
 };
 
