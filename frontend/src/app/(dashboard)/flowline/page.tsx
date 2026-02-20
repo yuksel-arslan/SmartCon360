@@ -1,23 +1,14 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TopBar from '@/components/layout/TopBar';
 import FlowlineChart from '@/components/charts/FlowlineChart';
 import type { FlowlineChartHandle } from '@/components/charts/FlowlineChart';
-import {
-  DEMO_FLOWLINE,
-  DEMO_ZONES,
-  DEMO_TODAY_X,
-  DEMO_TOTAL_PERIODS,
-  DEMO_BUFFERS,
-  DEMO_SIMULATION_FLOWLINE,
-  DEMO_FLOWLINE_STATS,
-  DEMO_TRADES,
-} from '@/lib/mockData';
 import type { FlowlineWagon } from '@/lib/mockData';
 import { useFlowlineStore } from '@/stores/flowlineStore';
 import { getFlowlineData, listPlans } from '@/lib/stores/takt-plans';
+import { useProjectStore } from '@/stores/projectStore';
 import type { ViewMode, StatusFilter, SelectedSegment } from '@/stores/flowlineStore';
 import {
   Eye,
@@ -84,24 +75,28 @@ export default function FlowlinePage() {
     showProgress, toggleProgress,
   } = useFlowlineStore();
 
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const activeProject = useProjectStore((s) => s.getActiveProject());
+
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
-  const [flowlineData, setFlowlineData] = useState<FlowlineWagon[]>(DEMO_FLOWLINE);
-  const [zonesData, setZonesData] = useState(DEMO_ZONES);
-  const [todayX, setTodayX] = useState(DEMO_TODAY_X);
-  const [totalPeriods, setTotalPeriods] = useState(DEMO_TOTAL_PERIODS);
+  const [flowlineData, setFlowlineData] = useState<FlowlineWagon[]>([]);
+  const [zonesData, setZonesData] = useState<{ id: string; name: string; y_index: number }[]>([]);
+  const [todayX, setTodayX] = useState(0);
+  const [totalPeriods, setTotalPeriods] = useState(0);
 
   // ── Load flowline data from API ──────────────────────────
 
   useEffect(() => {
-    const projectId = 'demo-project-001';
+    if (!activeProjectId) return;
+    const projectId = activeProjectId;
     (async () => {
       try {
         const plans = await listPlans(projectId);
         if (plans.length > 0) {
           const data = await getFlowlineData(projectId, plans[0].id);
           if (data && Array.isArray((data as Record<string, unknown>).wagons)) {
-            const apiData = data as { wagons: FlowlineWagon[]; zones: typeof DEMO_ZONES; todayX: number; totalPeriods: number };
+            const apiData = data as { wagons: FlowlineWagon[]; zones: { id: string; name: string; y_index: number }[]; todayX: number; totalPeriods: number };
             setFlowlineData(apiData.wagons);
             if (apiData.zones) setZonesData(apiData.zones);
             if (apiData.todayX) setTodayX(apiData.todayX);
@@ -110,11 +105,10 @@ export default function FlowlinePage() {
         }
         setConnected(true);
       } catch {
-        // Fallback to demo data — API not available
         setConnected(false);
       }
     })();
-  }, [setConnected]);
+  }, [activeProjectId, setConnected]);
 
   // ── Initialize visible trades on mount ──────────────────────
 
@@ -180,10 +174,28 @@ export default function FlowlinePage() {
 
   // ── Stats computation ─────────────────────────────────────
 
-  const stats = {
-    ...DEMO_FLOWLINE_STATS,
-    totalDuration: totalPeriods,
-  };
+  const stats = useMemo(() => {
+    let completedSegs = 0;
+    let totalSegs = 0;
+    let stackingConflicts = 0;
+    flowlineData.forEach((w) => {
+      w.segments.forEach((s) => {
+        totalSegs++;
+        if (s.status === 'completed') completedSegs++;
+      });
+    });
+    const overallProgress = totalSegs > 0 ? Math.round((completedSegs / totalSegs) * 100) : 0;
+    return {
+      totalDuration: totalPeriods,
+      stackingConflicts,
+      bufferHealthy: 0,
+      bufferWarning: 0,
+      bufferCritical: 0,
+      overallProgress,
+      ppc: 0,
+      criticalPathLength: 0,
+    };
+  }, [flowlineData, totalPeriods]);
 
   // ── Render ────────────────────────────────────────────────
 
@@ -531,7 +543,7 @@ export default function FlowlinePage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                 <div>
                   <h2 className="text-sm sm:text-base font-medium" style={{ fontFamily: 'var(--font-display)' }}>
-                    Hotel Sapphire — Location-Time Chart
+                    {activeProject?.name || 'Project'} — Location-Time Chart
                   </h2>
                   <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                     {viewMode === 'flowline' && 'Scroll to zoom, drag to pan, double-click to reset. Click a segment for details.'}
@@ -570,8 +582,8 @@ export default function FlowlinePage() {
                   showCriticalPath={showCriticalPath}
                   showBuffers={showBuffers}
                   showProgress={showProgress}
-                  buffers={DEMO_BUFFERS}
-                  comparisonWagons={comparisonMode ? DEMO_SIMULATION_FLOWLINE.filter((w) => visibleTrades.has(w.trade_name)) : null}
+                  buffers={[]}
+                  comparisonWagons={null}
                   selectedSegment={selectedSegment}
                   onSegmentSelect={setSelectedSegment}
                 />

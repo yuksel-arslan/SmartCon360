@@ -3,9 +3,10 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TopBar from '@/components/layout/TopBar';
-import { DEMO_ZONES, DEMO_TRADES } from '@/lib/mockData';
-import { generatePlan, savePlan, getPlan, listPlans } from '@/lib/stores/takt-plans';
+import { generatePlan, savePlan, listPlans } from '@/lib/stores/takt-plans';
 import api from '@/lib/api';
+import { useProjectStore } from '@/stores/projectStore';
+import { useAuthStore } from '@/stores/authStore';
 import {
   calculateTotalPeriods,
   generateTaktGrid,
@@ -98,27 +99,6 @@ interface HistoryState {
 // ── Initial Data ───────────────────────────────────────────────
 
 const PROJECT_START = new Date('2026-02-16');
-
-function buildInitialTrades(): TradeRow[] {
-  return DEMO_TRADES.map((t, i) => ({
-    id: `trade-${i}`,
-    name: t.name,
-    color: t.color,
-    sequence: i + 1,
-    taktTime: 5,
-    bufferAfter: i < DEMO_TRADES.length - 1 ? 1 : 0,
-    crewSize: Math.floor(Math.random() * 6) + 4,
-    notes: '',
-  }));
-}
-
-function buildInitialZones(): Zone[] {
-  return DEMO_ZONES.map((z, i) => ({
-    id: z.id,
-    name: z.name,
-    sequence: i + 1,
-  }));
-}
 
 // ── Status Helpers ─────────────────────────────────────────────
 
@@ -265,9 +245,13 @@ function formatDateFull(d: Date): string {
 // ── Main Component ─────────────────────────────────────────────
 
 export default function TaktEditorPage() {
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const activeProject = useProjectStore((s) => s.getActiveProject());
+  const token = useAuthStore((s) => s.token);
+
   // ── Core State ──
-  const [trades, setTrades] = useState<TradeRow[]>(buildInitialTrades);
-  const [zones, setZones] = useState<Zone[]>(buildInitialZones);
+  const [trades, setTrades] = useState<TradeRow[]>([]);
+  const [zones, setZones] = useState<Zone[]>([]);
   const [globalTaktTime, setGlobalTaktTime] = useState(5);
   const [globalBuffer, setGlobalBuffer] = useState(1);
   const [cellOverrides, setCellOverrides] = useState<Record<string, Partial<GridCell>>>({});
@@ -576,7 +560,54 @@ export default function TaktEditorPage() {
 
   // ── Save ──
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
-  const [projectId] = useState('demo-project-001');
+  const projectId = activeProjectId || '';
+
+  // ── Load project zones & trades from API ──
+  useEffect(() => {
+    if (!activeProjectId) return;
+    const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/v1/projects/${activeProjectId}`, { headers: authHeaders });
+        if (!res.ok) return;
+        const { data } = await res.json();
+
+        // Build zones from project locations (type=zone)
+        const projectLocations = (data.locations || []).filter((l: { locationType: string }) => l.locationType === 'zone');
+        if (projectLocations.length > 0) {
+          setZones(projectLocations.map((l: { id: string; name: string; sortOrder: number }, i: number) => ({
+            id: l.id,
+            name: l.name,
+            sequence: l.sortOrder || i + 1,
+          })));
+        }
+
+        // Build trades from project trades
+        const projectTrades = data.trades || [];
+        if (projectTrades.length > 0) {
+          setTrades(projectTrades.map((t: { id: string; name: string; color: string; sortOrder: number }, i: number) => ({
+            id: t.id,
+            name: t.name,
+            color: t.color || '#6366F1',
+            sequence: t.sortOrder || i + 1,
+            taktTime: data.defaultTaktTime || 5,
+            bufferAfter: i < projectTrades.length - 1 ? 1 : 0,
+            crewSize: 5,
+            notes: '',
+          })));
+          setGlobalTaktTime(data.defaultTaktTime || 5);
+        }
+
+        // Check for existing takt plan
+        const plans = await listPlans(activeProjectId);
+        if (plans.length > 0) {
+          setCurrentPlanId(plans[0].id);
+        }
+      } catch { /* project data not available */ }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeProjectId]);
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
