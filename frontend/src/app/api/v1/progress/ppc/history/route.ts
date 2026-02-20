@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { forwardRequest } from '@/lib/backend-proxy';
-import { errorResponse } from '@/lib/errors';
+import { safeForward } from '@/lib/backend-proxy';
 
 // GET /api/v1/progress/ppc/history — proxy to core-service
 export async function GET(request: NextRequest) {
-  try {
-    const qs = new URL(request.url).search;
-    const auth = request.headers.get('authorization');
-    const res = await forwardRequest(`/progress/ppc/history${qs}`, 'GET', undefined, auth);
-    const json = await res.json();
-    return NextResponse.json(json, { status: res.status });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const qs = new URL(request.url).search;
+  const auth = request.headers.get('authorization');
+  const result = await safeForward(`/progress/ppc/history${qs}`, 'GET', undefined, auth);
+  return NextResponse.json(result.data, { status: result.status });
 }

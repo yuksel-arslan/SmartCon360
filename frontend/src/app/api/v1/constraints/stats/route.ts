@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
+import { getUserId, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
 
 // GET /api/v1/constraints/stats — Constraint statistics + CRR
 export async function GET(request: NextRequest) {
   try {
-    const userId = requireAuth(request);
+    const userId = getUserId(request);
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
 
-    const where: Record<string, unknown> = {
-      project: { ownerId: userId },
-    };
+    const where: Record<string, unknown> = {};
+    if (userId) where.project = { ownerId: userId };
     if (projectId) where.projectId = projectId;
 
     const [total, open, inProgress, resolved] = await Promise.all([
