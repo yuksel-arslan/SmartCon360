@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
-import { forwardRequest } from '@/lib/backend-proxy';
+import { prisma } from '@/lib/prisma';
 import {
   generateTaktGrid,
   detectTradeStacking,
@@ -102,9 +102,47 @@ export async function POST(request: NextRequest) {
       tradeStackingWarnings: stacking,
     };
 
-    // Persist to core-service
-    const auth = request.headers.get('authorization');
-    await forwardRequest(`/projects/${req.projectId}/takt-plans`, 'POST', plan, auth);
+    // Persist to database via Prisma
+    await prisma.$transaction(async (tx) => {
+      await tx.taktPlan.create({
+        data: {
+          id: plan.id,
+          projectId: plan.projectId,
+          name: plan.name,
+          version: plan.version,
+          status: plan.status,
+          taktTime: plan.taktTime,
+          startDate: new Date(plan.startDate),
+          endDate: new Date(plan.endDate),
+          bufferType: plan.bufferType,
+          bufferSize: plan.bufferSize,
+          generatedBy: plan.generatedBy,
+          totalPeriods: plan.totalPeriods,
+        },
+      });
+      if (plan.zones.length) {
+        await tx.taktZone.createMany({
+          data: plan.zones.map((z: { id: string; name: string; code: string; sequence: number }) => ({
+            id: z.id, planId: plan.id, name: z.name, code: z.code, sequence: z.sequence,
+          })),
+        });
+      }
+      if (plan.wagons.length) {
+        await tx.taktWagon.createMany({
+          data: plan.wagons.map((w: { id: string; tradeId: string; sequence: number; durationDays: number; bufferAfter: number }) => ({
+            id: w.id, planId: plan.id, tradeId: w.tradeId, sequence: w.sequence, durationDays: w.durationDays, bufferAfter: w.bufferAfter,
+          })),
+        });
+      }
+      if (plan.assignments.length) {
+        await tx.taktAssignment.createMany({
+          data: plan.assignments.map((a: { id: string; zoneId: string; wagonId: string; periodNumber: number; plannedStart: string; plannedEnd: string; status: string; progressPct: number }) => ({
+            id: a.id, planId: plan.id, zoneId: a.zoneId, wagonId: a.wagonId, periodNumber: a.periodNumber,
+            plannedStart: new Date(a.plannedStart), plannedEnd: new Date(a.plannedEnd), status: a.status, progressPct: a.progressPct,
+          })),
+        });
+      }
+    });
 
     return NextResponse.json({ data: plan, error: null }, { status: 201 });
   } catch (err) {

@@ -116,6 +116,7 @@ model Project {
   wbsNodes     WbsNode[]
   cbsNodes     CbsNode[]
   projectSetup ProjectSetup?
+  taktPlans    TaktPlan[]
 
   @@index([ownerId])
   @@index([status])
@@ -337,4 +338,93 @@ model Constraint {
   @@index([status])
   @@index([category])
   @@map("constraints")
+}
+
+// ══════════════════════════════════════
+// TAKTFLOW MODELS (Planning & Scheduling)
+// ══════════════════════════════════════
+
+model TaktPlan {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String    @map("project_id") @db.Uuid
+  name         String    @db.VarChar(255)
+  version      Int       @default(1)
+  status       String    @default("draft") @db.VarChar(20)
+  taktTime     Int       @map("takt_time")
+  startDate    DateTime  @map("start_date") @db.Date
+  endDate      DateTime? @map("end_date") @db.Date
+  bufferType   String    @default("time") @map("buffer_type") @db.VarChar(20)
+  bufferSize   Int       @default(0) @map("buffer_size")
+  generatedBy  String    @default("manual") @map("generated_by") @db.VarChar(20)
+  totalPeriods Int?      @map("total_periods")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  zones       TaktZone[]
+  wagons      TaktWagon[]
+  assignments TaktAssignment[]
+
+  @@index([projectId])
+  @@map("takt_plans")
+}
+
+model TaktZone {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId     String  @map("plan_id") @db.Uuid
+  locationId String? @map("location_id") @db.Uuid
+  name       String  @db.VarChar(255)
+  code       String  @db.VarChar(50)
+  sequence   Int
+
+  plan        TaktPlan         @relation(fields: [planId], references: [id], onDelete: Cascade)
+  assignments TaktAssignment[]
+
+  @@unique([planId, sequence])
+  @@index([planId])
+  @@map("takt_zones")
+}
+
+model TaktWagon {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId       String @map("plan_id") @db.Uuid
+  tradeId      String @map("trade_id") @db.Uuid
+  sequence     Int
+  durationDays Int    @map("duration_days")
+  bufferAfter  Int    @default(0) @map("buffer_after")
+  crewSize     Int?   @map("crew_size")
+
+  plan        TaktPlan         @relation(fields: [planId], references: [id], onDelete: Cascade)
+  assignments TaktAssignment[]
+
+  @@unique([planId, sequence])
+  @@index([planId])
+  @@map("takt_wagons")
+}
+
+model TaktAssignment {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId       String    @map("plan_id") @db.Uuid
+  zoneId       String    @map("zone_id") @db.Uuid
+  wagonId      String    @map("wagon_id") @db.Uuid
+  periodNumber Int       @map("period_number")
+  plannedStart DateTime  @map("planned_start") @db.Date
+  plannedEnd   DateTime  @map("planned_end") @db.Date
+  actualStart  DateTime? @map("actual_start") @db.Date
+  actualEnd    DateTime? @map("actual_end") @db.Date
+  status       String    @default("planned") @db.VarChar(20)
+  progressPct  Float     @default(0) @map("progress_pct")
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  plan  TaktPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  zone  TaktZone  @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  wagon TaktWagon @relation(fields: [wagonId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, zoneId, wagonId])
+  @@index([planId])
+  @@index([zoneId])
+  @@index([wagonId])
+  @@map("takt_assignments")
 }
