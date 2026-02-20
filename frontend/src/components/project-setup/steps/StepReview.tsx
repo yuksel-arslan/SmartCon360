@@ -1,8 +1,8 @@
 'use client';
 
 import type { SetupStepProps } from '../types';
-import { getMissingRequiredSteps } from '../types';
-import { Check, X, FileText, FolderTree, DollarSign, Wrench, Image, MapPin, Clock, AlertTriangle } from 'lucide-react';
+import { getMissingRequiredSteps, BUILDING_TYPES } from '../types';
+import { Check, X, FileText, FolderTree, DollarSign, Wrench, Image, MapPin, Clock, AlertTriangle, Building2 } from 'lucide-react';
 
 export default function StepReview({ state }: SetupStepProps) {
   const standardLabel: Record<string, string> = {
@@ -11,12 +11,24 @@ export default function StepReview({ state }: SetupStepProps) {
     custom: 'Custom',
   };
 
+  const buildingTypeObj = BUILDING_TYPES.find((b) => b.value === state.buildingType);
+  const buildingTypeLabel = buildingTypeObj ? `${buildingTypeObj.icon} ${buildingTypeObj.label}` : state.buildingType || 'Not selected';
+  const floorSummary = state.buildingType && state.buildingType !== 'infrastructure'
+    ? `${state.floorCount} floor${state.floorCount !== 1 ? 's' : ''}${state.basementCount > 0 ? ` + ${state.basementCount} basement${state.basementCount !== 1 ? 's' : ''}` : ''}, ${state.zonesPerFloor} zone${state.zonesPerFloor !== 1 ? 's' : ''}/floor`
+    : state.buildingType === 'infrastructure' ? 'Linear sections' : '';
+
   const sections = [
     {
       icon: <FolderTree size={16} />,
       label: 'Classification Standard',
       value: standardLabel[state.classificationStandard] || state.classificationStandard,
       done: true,
+    },
+    {
+      icon: <Building2 size={16} />,
+      label: 'Building Type & Configuration',
+      value: `${buildingTypeLabel}${floorSummary ? ` — ${floorSummary}` : ''}`,
+      done: !!state.buildingType,
     },
     {
       icon: <Image size={16} />,
@@ -94,7 +106,9 @@ export default function StepReview({ state }: SetupStepProps) {
           {state.projectName}
         </h3>
         <div className="flex items-center gap-3 text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
-          <span className="capitalize">{state.projectType}</span>
+          <span>{buildingTypeObj ? `${buildingTypeObj.icon} ${buildingTypeObj.label}` : (state.projectType || 'No type')}</span>
+          <span>·</span>
+          <span>{standardLabel[state.classificationStandard] || state.classificationStandard}</span>
           <span>·</span>
           <span>{state.currency}</span>
         </div>
