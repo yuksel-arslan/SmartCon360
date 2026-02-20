@@ -5,7 +5,7 @@ import type { SetupStepProps, SubTradeTemplate } from '../types';
 import { DISCIPLINES } from '../types';
 import { Check, Loader2, Users } from 'lucide-react';
 
-export default function StepTrades({ projectId, state, onStateChange, onComplete, authHeaders }: SetupStepProps) {
+export default function StepTrades({ projectId, state, onStateChange, onComplete, authFetch }: SetupStepProps) {
   const [trades, setTrades] = useState<(SubTradeTemplate & { enabled: boolean })[]>([]);
   const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -18,9 +18,7 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
   const fetchTradeTemplates = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/setup/trade-templates`, {
-        headers: { ...authHeaders },
-      });
+      const res = await authFetch(`/api/v1/projects/${projectId}/setup/trade-templates`);
       if (res.ok) {
         const json = await res.json();
         setTrades((json.data.trades || []).map((t: SubTradeTemplate) => ({ ...t, enabled: true })));
@@ -57,9 +55,9 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
     setError('');
 
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/setup/apply-trades`, {
+      const res = await authFetch(`/api/v1/projects/${projectId}/setup/apply-trades`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           selectedDisciplines: Array.from(selectedDisciplines),
           selectedTradeCodes: enabledTrades.map((t) => t.code),

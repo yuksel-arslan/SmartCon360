@@ -84,6 +84,7 @@ interface Props {
 export default function ProjectSetupWizard({ projectId }: Props) {
   const router = useRouter();
   const token = useAuthStore((s) => s.token);
+  const { getAuthHeader, refreshAccessToken } = useAuthStore();
   const [step, setStep] = useState(0);
   const [state, setState] = useState<SetupState>(initialState);
   const [loading, setLoading] = useState(true);
@@ -97,12 +98,30 @@ export default function ProjectSetupWizard({ projectId }: Props) {
     [token],
   );
 
+  // Fetch wrapper that auto-refreshes JWT on 401
+  const authFetch = useCallback(
+    async (url: string, opts?: RequestInit): Promise<Response> => {
+      const buildHeaders = (): Record<string, string> => ({
+        ...(opts?.headers as Record<string, string> | undefined),
+        ...getAuthHeader() as Record<string, string>,
+      });
+
+      const res = await fetch(url, { ...opts, headers: buildHeaders() });
+      if (res.status === 401) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          return fetch(url, { ...opts, headers: buildHeaders() });
+        }
+      }
+      return res;
+    },
+    [getAuthHeader, refreshAccessToken],
+  );
+
   // Fetch setup state from server
   const fetchState = useCallback(async () => {
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/setup`, {
-        headers: { ...authHeaders },
-      });
+      const res = await authFetch(`/api/v1/projects/${projectId}/setup`);
       if (res.ok) {
         const json = await res.json();
         setState((prev) => ({ ...prev, ...json.data }));
@@ -115,7 +134,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [projectId, authHeaders]);
+  }, [projectId, authFetch]);
 
   useEffect(() => {
     fetchState();
@@ -155,9 +174,9 @@ export default function ProjectSetupWizard({ projectId }: Props) {
       // Persist to server (best-effort)
       const nextStepId = SETUP_STEPS[stepIndex + 1]?.id || stepDef.id;
       try {
-        await fetch(`/api/v1/projects/${projectId}/setup/complete-step`, {
+        await authFetch(`/api/v1/projects/${projectId}/setup/complete-step`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeaders },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ step: stepDef.id, nextStep: nextStepId }),
         });
       } catch {
@@ -166,7 +185,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
 
       return true;
     },
-    [state, projectId, authHeaders],
+    [state, projectId, authFetch],
   );
 
   const next = async () => {
@@ -207,9 +226,9 @@ export default function ProjectSetupWizard({ projectId }: Props) {
     setError('');
 
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/setup/finalize`, {
+      const res = await authFetch(`/api/v1/projects/${projectId}/setup/finalize`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers: { 'Content-Type': 'application/json' },
       });
 
       if (!res.ok) {
@@ -320,6 +339,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
               }));
             }}
             authHeaders={authHeaders}
+            authFetch={authFetch}
           />
         </div>
       </div>

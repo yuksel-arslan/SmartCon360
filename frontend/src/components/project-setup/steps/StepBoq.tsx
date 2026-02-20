@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { SetupStepProps, BoqItem } from '../types';
 import { Upload, FileSpreadsheet, Check, X, AlertCircle, Loader2 } from 'lucide-react';
 
-export default function StepBoq({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
+export default function StepBoq({ projectId, state, onStateChange, authFetch }: SetupStepProps) {
   const [boqItems, setBoqItems] = useState<BoqItem[]>([]);
   const [uploading, setUploading] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -22,9 +22,8 @@ export default function StepBoq({ projectId, state, onStateChange, authHeaders }
       const formData = new FormData();
       formData.append('file', files[0]);
 
-      const res = await fetch(`/api/v1/projects/${projectId}/boq/upload`, {
+      const res = await authFetch(`/api/v1/projects/${projectId}/boq/upload`, {
         method: 'POST',
-        headers: { ...authHeaders },
         body: formData,
       });
 
@@ -54,9 +53,9 @@ export default function StepBoq({ projectId, state, onStateChange, authHeaders }
 
     try {
       const validItems = boqItems.filter((i) => i.isValid);
-      const res = await fetch(`/api/v1/projects/${projectId}/boq/confirm`, {
+      const res = await authFetch(`/api/v1/projects/${projectId}/boq/confirm`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: validItems, currency: state.currency }),
       });
 

@@ -229,7 +229,7 @@ function flattenLocations(
   return result;
 }
 
-export default function StepLBS({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
+export default function StepLBS({ projectId, state, onStateChange, authFetch }: SetupStepProps) {
   const [existingLocations, setExistingLocations] = useState<LocationNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
@@ -250,9 +250,7 @@ export default function StepLBS({ projectId, state, onStateChange, authHeaders }
 
   const fetchLocations = useCallback(async () => {
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/locations`, {
-        headers: { ...authHeaders },
-      });
+      const res = await authFetch(`/api/v1/projects/${projectId}/locations`);
       if (res.ok) {
         const json = await res.json();
         const locs = json.data || [];
@@ -268,7 +266,7 @@ export default function StepLBS({ projectId, state, onStateChange, authHeaders }
     } finally {
       setLoading(false);
     }
-  }, [projectId, authHeaders]);
+  }, [projectId, authFetch]);
 
   useEffect(() => {
     fetchLocations();
@@ -280,9 +278,9 @@ export default function StepLBS({ projectId, state, onStateChange, authHeaders }
 
     try {
       const flatLocs = flattenLocations(templateLocations);
-      const res = await fetch(`/api/v1/projects/${projectId}/locations/bulk`, {
+      const res = await authFetch(`/api/v1/projects/${projectId}/locations/bulk`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ locations: flatLocs }),
       });
 

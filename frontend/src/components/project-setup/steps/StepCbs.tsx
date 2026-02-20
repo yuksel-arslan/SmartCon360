@@ -13,7 +13,7 @@ interface CbsNode {
   children: CbsNode[];
 }
 
-export default function StepCbs({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
+export default function StepCbs({ projectId, state, onStateChange, authFetch }: SetupStepProps) {
   const [cbsTree, setCbsTree] = useState<CbsNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -24,9 +24,7 @@ export default function StepCbs({ projectId, state, onStateChange, authHeaders }
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/cbs`, {
-        headers: { ...authHeaders },
-      });
+      const res = await authFetch(`/api/v1/projects/${projectId}/cbs`);
       if (res.ok) {
         const json = await res.json();
         const tree: CbsNode[] = json.data || [];
@@ -45,7 +43,7 @@ export default function StepCbs({ projectId, state, onStateChange, authHeaders }
       setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, authHeaders]);
+  }, [projectId, authFetch]);
 
   // Always load existing CBS on mount
   useEffect(() => {
@@ -57,9 +55,9 @@ export default function StepCbs({ projectId, state, onStateChange, authHeaders }
     setError('');
 
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/cbs/generate`, {
+      const res = await authFetch(`/api/v1/projects/${projectId}/cbs/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
 

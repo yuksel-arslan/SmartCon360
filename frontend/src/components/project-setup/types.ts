@@ -67,12 +67,15 @@ export interface SetupStepDef {
   description: string;
 }
 
+export type AuthFetch = (url: string, opts?: RequestInit) => Promise<Response>;
+
 export interface SetupStepProps {
   projectId: string;
   state: SetupState;
   onStateChange: (updates: Partial<SetupState>) => void;
   onComplete: () => void;
   authHeaders: Record<string, string>;
+  authFetch: AuthFetch;
 }
 
 export interface WbsStandard {
