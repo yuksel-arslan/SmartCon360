@@ -4,12 +4,18 @@ interface FetchOptions extends RequestInit {
   token?: string;
 }
 
+function getStoredToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('token');
+}
+
 export async function api<T>(path: string, options: FetchOptions = {}): Promise<T> {
   const { token, ...fetchOptions } = options;
+  const authToken = token || getStoredToken();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
     ...(fetchOptions.headers as Record<string, string> || {}),
   };
 

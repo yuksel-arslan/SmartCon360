@@ -94,12 +94,52 @@ export default function FlowlinePage() {
       try {
         const plans = await listPlans(projectId);
         if (plans.length > 0) {
-          const data = await getFlowlineData(projectId, plans[0].id);
-          if (data && Array.isArray((data as Record<string, unknown>).wagons)) {
-            const apiData = data as { wagons: FlowlineWagon[]; zones: { id: string; name: string; y_index: number }[]; todayX: number; totalPeriods: number };
-            setFlowlineData(apiData.wagons);
-            if (apiData.zones) setZonesData(apiData.zones);
-            if (apiData.todayX) setTodayX(apiData.todayX);
+          const raw = await getFlowlineData(projectId, plans[0].id);
+          if (raw && Array.isArray((raw as Record<string, unknown>).wagons)) {
+            const apiData = raw as {
+              wagons: {
+                tradeName: string; tradeColor: string; durationDays: number; bufferAfter: number;
+                segments: {
+                  zoneSequence: number; periodNumber: number; plannedStart: string; plannedEnd: string;
+                  actualStart?: string | null; actualEnd?: string | null;
+                  status: 'completed' | 'in_progress' | 'planned' | 'delayed'; progressPct: number;
+                }[];
+              }[];
+              zones: { id: string; name: string; code: string; sequence: number }[];
+              todayX: number; totalPeriods: number;
+            };
+
+            // Transform API wagons → FlowlineWagon format expected by FlowlineChart
+            const wagons: FlowlineWagon[] = apiData.wagons.map((w) => ({
+              trade_name: w.tradeName,
+              color: w.tradeColor,
+              segments: w.segments.map((s) => ({
+                zone_index: (s.zoneSequence || 1) - 1,
+                x_start: s.periodNumber - 1,
+                x_end: s.periodNumber,
+                y: (s.zoneSequence || 1) - 1,
+                status: s.status,
+                percentComplete: s.progressPct || 0,
+                isCriticalPath: false,
+                plannedStart: s.plannedStart,
+                plannedEnd: s.plannedEnd,
+                actualStart: s.actualStart || undefined,
+                actualEnd: s.actualEnd || undefined,
+                crew: undefined,
+                tasks: [],
+              })),
+            }));
+
+            // Transform API zones → { id, name, y_index }
+            const zones = apiData.zones.map((z) => ({
+              id: z.id,
+              name: z.name,
+              y_index: (z.sequence || 1) - 1,
+            }));
+
+            setFlowlineData(wagons);
+            setZonesData(zones);
+            if (apiData.todayX !== undefined) setTodayX(apiData.todayX);
             if (apiData.totalPeriods) setTotalPeriods(apiData.totalPeriods);
           }
         }
