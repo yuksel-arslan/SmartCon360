@@ -17,7 +17,7 @@ export default function StepClassification({ state, onStateChange }: SetupStepPr
 
   const handleBuildingTypeChange = (value: string) => {
     const bt = BUILDING_TYPES.find((b) => b.value === value);
-    onStateChange({
+    const updates: Partial<typeof state> = {
       buildingType: value,
       projectType: value,
       // Pre-populate scope defaults from building type
@@ -28,7 +28,12 @@ export default function StepClassification({ state, onStateChange }: SetupStepPr
       structuralSystem: bt?.defaultStructural || '',
       mepComplexity: bt?.defaultMep || '',
       flowDirection: bt?.defaultFlowDirection || 'bottom_up',
-    });
+    };
+    // Auto-default project phase to 'new_build' if not yet selected
+    if (!state.projectPhase) {
+      updates.projectPhase = 'new_build';
+    }
+    onStateChange(updates);
   };
 
   return (
