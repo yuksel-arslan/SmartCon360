@@ -77,6 +77,18 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
         throw new Error(err.error?.message || 'Failed to save takt configuration');
       }
 
+      // Persist taktPlanGenerated flag to ProjectSetup table
+      const setupRes = await fetch(`/api/v1/projects/${projectId}/setup`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({ taktPlanGenerated: true }),
+      });
+
+      if (!setupRes.ok) {
+        const err = await setupRes.json().catch(() => ({}));
+        throw new Error(err.error?.message || 'Failed to update setup state');
+      }
+
       setSaved(true);
       onStateChange({ taktPlanGenerated: true });
 
