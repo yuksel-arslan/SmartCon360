@@ -10,21 +10,25 @@ import {
   calculateRecommendedTakt,
   calculateRecommendedBuffer,
 } from '../types';
-import { Layers, Minus, Plus, Building, Zap, ArrowUpDown, FileText, MapPin, Calculator } from 'lucide-react';
+import { Layers, Minus, Plus, Building, Zap, ArrowUpDown, FileText, MapPin, Calculator, Grid3x3 } from 'lucide-react';
 
 export default function StepBuildingConfig({ state, onStateChange }: SetupStepProps) {
   const floorCount = state.floorCount || 0;
   const basementCount = state.basementCount || 0;
   const zonesPerFloor = state.zonesPerFloor || 3;
+  const structuralZonesPerFloor = state.structuralZonesPerFloor || 1;
   const typicalFloorArea = state.typicalFloorArea || 0;
   const isInfra = state.buildingType === 'infrastructure';
 
-  const adjustValue = (field: 'floorCount' | 'basementCount' | 'zonesPerFloor' | 'numberOfBuildings', delta: number) => {
+  type AdjustableField = 'floorCount' | 'basementCount' | 'zonesPerFloor' | 'structuralZonesPerFloor' | 'numberOfBuildings';
+
+  const adjustValue = (field: AdjustableField, delta: number) => {
     const current = field === 'floorCount' ? floorCount
       : field === 'basementCount' ? basementCount
       : field === 'numberOfBuildings' ? (state.numberOfBuildings || 1)
+      : field === 'structuralZonesPerFloor' ? structuralZonesPerFloor
       : zonesPerFloor;
-    const min = field === 'zonesPerFloor' ? 1 : field === 'numberOfBuildings' ? 1 : 0;
+    const min = (field === 'zonesPerFloor' || field === 'structuralZonesPerFloor') ? 1 : field === 'numberOfBuildings' ? 1 : 0;
     const max = field === 'floorCount' ? 200 : field === 'basementCount' ? 10 : field === 'numberOfBuildings' ? 20 : 8;
     const next = Math.max(min, Math.min(max, current + delta));
     onStateChange({ [field]: next });
@@ -33,9 +37,12 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
   // Calculate takt recommendation preview
   const taktRec = calculateRecommendedTakt(state);
   const bufferRec = calculateRecommendedBuffer(state);
-  const zoneArea = typicalFloorArea > 0 && zonesPerFloor > 0 ? Math.round(typicalFloorArea / zonesPerFloor) : 0;
-  const totalZones = isInfra ? 0 : (floorCount + basementCount) * zonesPerFloor;
-  const gfa = typicalFloorArea > 0 ? typicalFloorArea * (floorCount + basementCount) : 0;
+  const finishingZoneArea = typicalFloorArea > 0 && zonesPerFloor > 0 ? Math.round(typicalFloorArea / zonesPerFloor) : 0;
+  const structuralZoneArea = typicalFloorArea > 0 && structuralZonesPerFloor > 0 ? Math.round(typicalFloorArea / structuralZonesPerFloor) : 0;
+  const totalFloors = floorCount + basementCount;
+  const totalStructuralZones = isInfra ? 0 : totalFloors * structuralZonesPerFloor;
+  const totalFinishingZones = isInfra ? 0 : totalFloors * zonesPerFloor;
+  const gfa = typicalFloorArea > 0 ? typicalFloorArea * totalFloors : 0;
 
   return (
     <div>
@@ -59,7 +66,7 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
             </h3>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {/* Above ground floors */}
             <NumberStepper
               label="Above Ground"
@@ -75,14 +82,6 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
               min={0} max={10}
               onChange={(v) => onStateChange({ basementCount: v })}
               onStep={(d) => adjustValue('basementCount', d)}
-            />
-            {/* Zones per floor */}
-            <NumberStepper
-              label="Zones / Floor"
-              value={zonesPerFloor}
-              min={1} max={8}
-              onChange={(v) => onStateChange({ zonesPerFloor: v })}
-              onStep={(d) => adjustValue('zonesPerFloor', d)}
             />
             {/* Typical floor area */}
             <div
@@ -110,13 +109,85 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
             </div>
           </div>
 
+          {/* ── Zone Configuration: Kaba İnşaat vs İnce İş ── */}
+          <div
+            className="mt-4 rounded-xl border p-4"
+            style={{
+              background: 'linear-gradient(135deg, rgba(99,102,241,0.04), rgba(16,185,129,0.04))',
+              borderColor: 'var(--color-border)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Grid3x3 size={14} style={{ color: 'var(--color-purple)' }} />
+              <span className="text-[12px] font-semibold" style={{ color: 'var(--color-text)' }}>
+                Takt Zone Configuration
+              </span>
+            </div>
+            <p className="text-[10px] mb-3" style={{ color: 'var(--color-text-muted)' }}>
+              Structural (Kaba İnşaat) uses larger zones (typically full floor), while finishing (İnce İş) uses finer subdivisions per floor.
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              {/* Structural zones (Kaba İnşaat) */}
+              <div
+                className="rounded-lg border p-3"
+                style={{ background: 'var(--color-bg-card)', borderColor: 'rgba(99,102,241,0.3)' }}
+              >
+                <div className="flex items-center gap-1.5 mb-2">
+                  <div className="w-2 h-2 rounded-full" style={{ background: '#6366F1' }} />
+                  <label className="text-[10px] font-semibold uppercase" style={{ color: '#6366F1' }}>
+                    Kaba İnşaat (Structural)
+                  </label>
+                </div>
+                <NumberStepper
+                  label="Zones / Floor"
+                  value={structuralZonesPerFloor}
+                  min={1} max={4}
+                  onChange={(v) => onStateChange({ structuralZonesPerFloor: v })}
+                  onStep={(d) => adjustValue('structuralZonesPerFloor', d)}
+                />
+                {structuralZoneArea > 0 && (
+                  <div className="mt-1.5 text-[10px] text-center" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    {structuralZoneArea.toLocaleString()} m² / zone
+                  </div>
+                )}
+              </div>
+
+              {/* Finishing zones (İnce İş) */}
+              <div
+                className="rounded-lg border p-3"
+                style={{ background: 'var(--color-bg-card)', borderColor: 'rgba(16,185,129,0.3)' }}
+              >
+                <div className="flex items-center gap-1.5 mb-2">
+                  <div className="w-2 h-2 rounded-full" style={{ background: '#10B981' }} />
+                  <label className="text-[10px] font-semibold uppercase" style={{ color: '#10B981' }}>
+                    İnce İş (Finishing)
+                  </label>
+                </div>
+                <NumberStepper
+                  label="Zones / Floor"
+                  value={zonesPerFloor}
+                  min={1} max={8}
+                  onChange={(v) => onStateChange({ zonesPerFloor: v })}
+                  onStep={(d) => adjustValue('zonesPerFloor', d)}
+                />
+                {finishingZoneArea > 0 && (
+                  <div className="mt-1.5 text-[10px] text-center" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    {finishingZoneArea.toLocaleString()} m² / zone
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Quick stats */}
           {floorCount > 0 && (
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
               {[
-                { label: 'Total Zones', value: totalZones, color: 'var(--color-success)' },
-                { label: 'Zone Area', value: zoneArea > 0 ? `${zoneArea} m²` : '—', color: 'var(--color-cyan)' },
+                { label: 'Structural Zones', value: totalStructuralZones, color: '#6366F1' },
+                { label: 'Finishing Zones', value: totalFinishingZones, color: '#10B981' },
                 { label: 'GFA', value: gfa > 0 ? `${gfa.toLocaleString()} m²` : '—', color: 'var(--color-accent)' },
+                { label: 'Total Floors', value: totalFloors, color: 'var(--color-cyan)' },
               ].map((s) => (
                 <div
                   key={s.label}

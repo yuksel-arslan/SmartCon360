@@ -138,6 +138,17 @@ function TemplateLocationNode({
         <span className="text-[10px] uppercase" style={{ color: 'var(--color-text-muted)' }}>
           {location.type}
         </span>
+        {location.type === 'zone' && location.phase && (
+          <span
+            className="text-[8px] font-semibold uppercase px-1.5 py-0.5 rounded-full"
+            style={{
+              background: location.phase === 'structural' ? 'rgba(99,102,241,0.12)' : 'rgba(16,185,129,0.12)',
+              color: location.phase === 'structural' ? '#6366F1' : '#10B981',
+            }}
+          >
+            {location.phase === 'structural' ? 'Kaba' : 'İnce'}
+          </span>
+        )}
         {location.areaSqm && (
           <span className="text-[10px] ml-auto" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
             {location.areaSqm.toLocaleString()} m&sup2;
@@ -160,14 +171,18 @@ function TemplateLocationNode({
   );
 }
 
-function countTemplateLocations(locs: LocationTemplate[]): { zones: number; floors: number; total: number } {
-  let zones = 0, floors = 0, total = 0;
+function countTemplateLocations(locs: LocationTemplate[]): { zones: number; structuralZones: number; finishingZones: number; floors: number; total: number } {
+  let zones = 0, structuralZones = 0, finishingZones = 0, floors = 0, total = 0;
 
   function walk(items: LocationTemplate[]) {
     for (const loc of items) {
       const count = loc.repeat && loc.repeat > 1 ? loc.repeat : 1;
       total += count;
-      if (loc.type === 'zone') zones += count;
+      if (loc.type === 'zone') {
+        zones += count;
+        if (loc.phase === 'structural') structuralZones += count;
+        else finishingZones += count;
+      }
       if (loc.type === 'floor') floors += count;
       if (loc.children) {
         for (let i = 0; i < count; i++) walk(loc.children);
@@ -176,13 +191,13 @@ function countTemplateLocations(locs: LocationTemplate[]): { zones: number; floo
   }
 
   walk(locs);
-  return { zones, floors, total };
+  return { zones, structuralZones, finishingZones, floors, total };
 }
 
 function flattenLocations(
   templates: LocationTemplate[],
   parentName?: string,
-): { name: string; locationType: string; parentName?: string; areaSqm?: number; sortOrder: number }[] {
+): { name: string; locationType: string; parentName?: string; areaSqm?: number; phase?: string; sortOrder: number }[] {
   const result: ReturnType<typeof flattenLocations> = [];
   let sortOrder = 0;
 
@@ -201,6 +216,7 @@ function flattenLocations(
         locationType: loc.type,
         parentName,
         areaSqm: loc.areaSqm,
+        phase: loc.phase,
         sortOrder: sortOrder++,
       });
 
@@ -224,7 +240,7 @@ export default function StepLBS({ projectId, state, onStateChange, authHeaders }
   // otherwise fall back to static project type template
   const hasDynamicConfig = !!(state.buildingType && (state.floorCount > 0 || state.buildingType === 'infrastructure'));
   const dynamicLocations = hasDynamicConfig
-    ? generateLbsFromConfig(state.buildingType, state.floorCount, state.basementCount, state.zonesPerFloor)
+    ? generateLbsFromConfig(state.buildingType, state.floorCount, state.basementCount, state.zonesPerFloor, state.structuralZonesPerFloor || 1)
     : [];
   const template = getTemplate(state.buildingType || state.projectType);
   const templateLocations = hasDynamicConfig ? dynamicLocations : (template?.locations || []);
@@ -345,7 +361,8 @@ export default function StepLBS({ projectId, state, onStateChange, authHeaders }
               <div className="flex gap-3 mb-4">
                 {[
                   { label: 'Floors', value: templateCounts.floors, color: 'var(--color-cyan)' },
-                  { label: 'Zones', value: templateCounts.zones, color: 'var(--color-success)' },
+                  { label: 'Kaba Zones', value: templateCounts.structuralZones, color: '#6366F1' },
+                  { label: 'İnce Zones', value: templateCounts.finishingZones, color: '#10B981' },
                   { label: 'Total', value: templateCounts.total, color: 'var(--color-accent)' },
                 ].map((s) => (
                   <div

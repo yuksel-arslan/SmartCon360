@@ -14,6 +14,7 @@
 export interface LocationTemplate {
   name: string;
   type: 'site' | 'building' | 'floor' | 'zone' | 'room' | 'area';
+  phase?: 'structural' | 'finishing'; // construction phase — structural (Kaba İnşaat) or finishing (İnce İş)
   repeat?: number; // e.g. repeat: 20 for 20 typical floors
   repeatLabel?: string; // e.g. "Floor {n}" — {n} replaced with number
   areaSqm?: number;
@@ -588,7 +589,25 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
 
 // ── Dynamic LBS Generation from Floor Configuration ──
 
-/** Zone name patterns per building type */
+/**
+ * Structural zone name patterns per building type (Kaba İnşaat).
+ * Structural zones are typically larger — often the entire floor is one zone.
+ * For multi-zone structural work (e.g., large footprint industrial), zones
+ * represent pour sections or erection sequences.
+ */
+const STRUCTURAL_ZONE_PATTERNS: Record<string, string[]> = {
+  hotel:        ['Full Slab', 'Slab Section A', 'Slab Section B', 'Core & Shear Wall'],
+  hospital:     ['Full Slab', 'Wing A Slab', 'Wing B Slab', 'Core Structure'],
+  residential:  ['Full Slab', 'Tower Slab A', 'Tower Slab B', 'Core & Walls'],
+  commercial:   ['Full Slab', 'Slab Section A', 'Slab Section B', 'Core Structure'],
+  industrial:   ['Bay A Structure', 'Bay B Structure', 'Bay C Structure', 'Bay D Structure'],
+  infrastructure: ['Section A', 'Section B', 'Section C', 'Section D'],
+  educational:  ['Full Slab', 'Wing A Slab', 'Wing B Slab', 'Core & Stairs'],
+  mixed_use:    ['Full Slab', 'Tower A Slab', 'Tower B Slab', 'Podium Slab'],
+  data_center:  ['Hall A Slab', 'Hall B Slab', 'Service Core', 'Power Block'],
+};
+
+/** Finishing zone name patterns per building type (İnce İş) */
 const ZONE_PATTERNS: Record<string, string[]> = {
   hotel:        ['Wing A — Rooms', 'Wing B — Rooms', 'Corridor & Services', 'Amenity Zone', 'Back of House', 'Suite Wing', 'Service Zone', 'Pool Deck Zone'],
   hospital:     ['Ward A — Patient Rooms', 'Ward B — Patient Rooms', 'Nurse Station & Support', 'Corridor & Services', 'Diagnostics Zone', 'Treatment Zone', 'Operating Zone', 'Recovery Zone'],
@@ -614,12 +633,17 @@ const BASEMENT_ZONES: Record<string, string[]> = {
 /**
  * Generate a dynamic LBS template based on building type and floor configuration.
  * Uses user-specified floor/basement/zone counts instead of hardcoded templates.
+ *
+ * Creates dual-phase zones per floor:
+ * - Structural zones (Kaba İnşaat): larger zones for formwork/concrete/steel work
+ * - Finishing zones (İnce İş): finer subdivisions for MEP, architectural, and finishing trades
  */
 export function generateLbsFromConfig(
   buildingType: string,
   floorCount: number,
   basementCount: number,
   zonesPerFloor: number,
+  structuralZonesPerFloor: number = 1,
 ): LocationTemplate[] {
   if (buildingType === 'infrastructure') {
     // Infrastructure uses sections, not floors — keep original template
@@ -627,7 +651,8 @@ export function generateLbsFromConfig(
     return tpl?.locations || [];
   }
 
-  const zoneNames = ZONE_PATTERNS[buildingType] || ZONE_PATTERNS.commercial;
+  const finishingZoneNames = ZONE_PATTERNS[buildingType] || ZONE_PATTERNS.commercial;
+  const structuralZoneNames = STRUCTURAL_ZONE_PATTERNS[buildingType] || STRUCTURAL_ZONE_PATTERNS.commercial;
   const basementZones = BASEMENT_ZONES[buildingType] || BASEMENT_ZONES.commercial;
 
   const buildingLabel: Record<string, string> = {
@@ -641,14 +666,35 @@ export function generateLbsFromConfig(
     data_center: 'Data Center Facility',
   };
 
+  /** Build zone children for a floor with both structural and finishing phases */
+  function buildFloorZones(structCount: number, finishCount: number): LocationTemplate[] {
+    const zones: LocationTemplate[] = [];
+
+    // Structural zones (Kaba İnşaat)
+    const sNames = structuralZoneNames.slice(0, structCount);
+    for (const name of sNames) {
+      zones.push({ name, type: 'zone', phase: 'structural' });
+    }
+
+    // Finishing zones (İnce İş)
+    const fNames = finishingZoneNames.slice(0, finishCount);
+    for (const name of fNames) {
+      zones.push({ name, type: 'zone', phase: 'finishing' });
+    }
+
+    return zones;
+  }
+
   const children: LocationTemplate[] = [];
 
-  // Basements
+  // Basements — structural zones only (no finishing in basements typically)
   if (basementCount > 0) {
     for (let b = basementCount; b >= 1; b--) {
       const basementChildren: LocationTemplate[] = basementZones
         .slice(0, Math.max(2, zonesPerFloor))
-        .map((name) => ({ name, type: 'zone' as const }));
+        .map((name) => ({ name, type: 'zone' as const, phase: 'finishing' as const }));
+      // Add a single structural zone for basement slab
+      basementChildren.unshift({ name: 'Basement Slab', type: 'zone', phase: 'structural' });
       children.push({
         name: basementCount === 1 ? 'Basement' : `Basement B${b}`,
         type: 'floor',
@@ -659,28 +705,22 @@ export function generateLbsFromConfig(
 
   // Ground floor (always present if floorCount > 0)
   if (floorCount > 0) {
-    const groundZones: LocationTemplate[] = zoneNames
-      .slice(0, zonesPerFloor)
-      .map((name) => ({ name, type: 'zone' as const }));
     children.push({
       name: 'Ground Floor',
       type: 'floor',
-      children: groundZones,
+      children: buildFloorZones(structuralZonesPerFloor, zonesPerFloor),
     });
   }
 
   // Typical floors (floorCount - 1 because ground is already counted, and last is roof)
   const typicalFloors = Math.max(0, floorCount - 2);
   if (typicalFloors > 0) {
-    const typicalZones: LocationTemplate[] = zoneNames
-      .slice(0, zonesPerFloor)
-      .map((name) => ({ name, type: 'zone' as const }));
     children.push({
       name: 'Typical Floor',
       type: 'floor',
       repeat: typicalFloors,
       repeatLabel: 'Floor {n}',
-      children: typicalZones,
+      children: buildFloorZones(structuralZonesPerFloor, zonesPerFloor),
     });
   }
 
@@ -690,8 +730,9 @@ export function generateLbsFromConfig(
       name: 'Roof / Mechanical',
       type: 'floor',
       children: [
-        { name: 'Mechanical Penthouse', type: 'zone' },
-        ...(buildingType === 'hotel' ? [{ name: 'Pool Deck', type: 'zone' as const }] : []),
+        { name: 'Roof Slab', type: 'zone', phase: 'structural' },
+        { name: 'Mechanical Penthouse', type: 'zone', phase: 'finishing' },
+        ...(buildingType === 'hotel' ? [{ name: 'Pool Deck', type: 'zone' as const, phase: 'finishing' as const }] : []),
       ],
     });
   }
