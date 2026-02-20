@@ -9,6 +9,7 @@ import { SETUP_STEPS, DEFAULT_WORKING_DAYS, isStepOptional, getStepValidation, g
 import type { SetupState } from './types';
 
 import StepClassification from './steps/StepClassification';
+import StepBuildingConfig from './steps/StepBuildingConfig';
 import StepDrawings from './steps/StepDrawings';
 import StepBoq from './steps/StepBoq';
 import StepWbs from './steps/StepWbs';
@@ -20,6 +21,7 @@ import StepReview from './steps/StepReview';
 
 const STEP_COMPONENTS = [
   StepClassification,
+  StepBuildingConfig,
   StepDrawings,
   StepBoq,
   StepWbs,
@@ -33,30 +35,45 @@ const STEP_COMPONENTS = [
 const initialState: SetupState = {
   currentStep: 'classification',
   completedSteps: [],
+  // Step 1: Classification
   classificationStandard: 'uniclass',
+  buildingType: '',
+  projectPhase: '',
+  // Step 2: Building Config
+  floorCount: 0,
+  basementCount: 0,
+  zonesPerFloor: 3,
+  typicalFloorArea: 0,
+  numberOfBuildings: 1,
+  structuralSystem: '',
+  mepComplexity: '',
+  flowDirection: 'bottom_up',
+  deliveryMethod: '',
+  siteCondition: '',
+  // Documents
   boqUploaded: false,
   boqFileName: null,
   boqItemCount: 0,
   drawingCount: 0,
+  // WBS & CBS
   wbsGenerated: false,
   wbsNodeCount: 0,
   cbsGenerated: false,
   cbsNodeCount: 0,
-  taktPlanGenerated: false,
-  projectType: '',
-  currency: 'USD',
-  projectName: '',
-  buildingType: '',
-  floorCount: 0,
-  basementCount: 0,
-  zonesPerFloor: 3,
+  // LBS
   locationCount: 0,
   zoneCount: 0,
   lbsConfigured: false,
+  // Takt Config
   defaultTaktTime: 5,
   bufferSize: 1,
   workingDays: [...DEFAULT_WORKING_DAYS],
   tradeCount: 0,
+  taktPlanGenerated: false,
+  // Legacy
+  projectType: '',
+  currency: 'USD',
+  projectName: '',
 };
 
 interface Props {

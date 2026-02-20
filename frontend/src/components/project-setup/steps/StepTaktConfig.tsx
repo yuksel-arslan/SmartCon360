@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Info, Loader2, Check } from 'lucide-react';
+import { Info, Loader2, Check, Sparkles } from 'lucide-react';
 import { getTemplate } from '@/lib/core/project-templates';
 import type { SetupStepProps } from '../types';
-import { DEFAULT_WORKING_DAYS } from '../types';
+import { DEFAULT_WORKING_DAYS, calculateRecommendedTakt, calculateRecommendedBuffer } from '../types';
 
 const ALL_DAYS = [
   { key: 'mon', label: 'Mon' },
@@ -17,9 +17,14 @@ const ALL_DAYS = [
 ];
 
 export default function StepTaktConfig({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
-  const template = getTemplate(state.projectType);
+  const template = getTemplate(state.buildingType || state.projectType);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(state.taktPlanGenerated);
+
+  // AI takt recommendation based on building config parameters
+  const taktRec = calculateRecommendedTakt(state);
+  const bufferRec = calculateRecommendedBuffer(state);
+  const hasRecommendation = !!(state.structuralSystem && state.mepComplexity);
 
   // Initialize from state or template defaults
   const defaultTaktTime = state.defaultTaktTime || template?.defaultTaktTime || 5;
@@ -100,6 +105,62 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
       </p>
 
       <div className="space-y-6">
+        {/* AI Recommendation Banner */}
+        {hasRecommendation && (
+          <div
+            className="rounded-xl border p-4"
+            style={{
+              background: 'linear-gradient(135deg, rgba(232,115,26,0.06), rgba(139,92,246,0.06))',
+              borderColor: 'rgba(232,115,26,0.3)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles size={14} style={{ color: 'var(--color-accent)' }} />
+              <span className="text-[12px] font-semibold" style={{ color: 'var(--color-text)' }}>
+                AI Recommendation
+              </span>
+              <span className="text-[9px] px-2 py-0.5 rounded-full ml-auto" style={{ background: 'rgba(232,115,26,0.12)', color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }}>
+                {taktRec.reasoning}
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-1 grid grid-cols-3 gap-3">
+                <div className="text-center">
+                  <div className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-accent)' }}>
+                    {taktRec.recommended}d
+                  </div>
+                  <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-muted)' }}>Takt</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-success)' }}>
+                    {taktRec.range[0]}–{taktRec.range[1]}d
+                  </div>
+                  <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-muted)' }}>Range</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-purple)' }}>
+                    {bufferRec}
+                  </div>
+                  <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-muted)' }}>Buffer</div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  onStateChange({
+                    defaultTaktTime: taktRec.recommended,
+                    bufferSize: bufferRec,
+                  });
+                  setSaved(false);
+                }}
+                className="flex-shrink-0 px-4 py-2 rounded-lg text-[11px] font-medium text-white"
+                style={{ background: 'var(--color-accent)' }}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Takt Time Slider */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -123,11 +184,15 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
           />
           <div className="flex justify-between text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
             <span>1 day</span>
-            {template && (
+            {hasRecommendation ? (
+              <span style={{ color: 'var(--color-success)' }}>
+                Recommended: {taktRec.range[0]}-{taktRec.range[1]} days
+              </span>
+            ) : template ? (
               <span style={{ color: 'var(--color-success)' }}>
                 Recommended: {template.recommendedTaktRange[0]}-{template.recommendedTaktRange[1]} days
               </span>
-            )}
+            ) : null}
             <span>14 days</span>
           </div>
         </div>
