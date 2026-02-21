@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { updateProjectSchema } from '@/lib/validators/project';
@@ -41,16 +42,35 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     requireAuth(request);
     const { id } = await params;
     const body = await request.json();
-    const input = updateProjectSchema.parse(body);
+    const { settings: inputSettings, ...rest } = updateProjectSchema.parse(body);
 
-    const project = await prisma.project.update({
-      where: { id },
-      data: {
-        ...input,
-        ...(input.plannedStart && { plannedStart: new Date(input.plannedStart) }),
-        ...(input.plannedFinish && { plannedFinish: new Date(input.plannedFinish) }),
-      },
-    });
+    // Build update data explicitly to satisfy Prisma's strict types
+    const data: Prisma.ProjectUpdateInput = {};
+
+    if (rest.name !== undefined) data.name = rest.name;
+    if (rest.description !== undefined) data.description = rest.description;
+    if (rest.status !== undefined) data.status = rest.status;
+    if (rest.defaultTaktTime !== undefined) data.defaultTaktTime = rest.defaultTaktTime;
+    if (rest.address !== undefined) data.address = rest.address;
+    if (rest.city !== undefined) data.city = rest.city;
+    if (rest.country !== undefined) data.country = rest.country;
+    if (rest.budget !== undefined) data.budget = rest.budget;
+    if (rest.currency !== undefined) data.currency = rest.currency;
+    if (rest.workingDays !== undefined) data.workingDays = rest.workingDays;
+    if (rest.plannedStart) data.plannedStart = new Date(rest.plannedStart);
+    if (rest.plannedFinish) data.plannedFinish = new Date(rest.plannedFinish);
+
+    // Merge settings with existing project settings instead of overwriting
+    if (inputSettings) {
+      const existing = await prisma.project.findUnique({
+        where: { id },
+        select: { settings: true },
+      });
+      const existingSettings = (existing?.settings as Record<string, unknown>) ?? {};
+      data.settings = { ...existingSettings, ...inputSettings } as Prisma.InputJsonValue;
+    }
+
+    const project = await prisma.project.update({ where: { id }, data });
 
     return NextResponse.json({ data: project, error: null });
   } catch (err) {
