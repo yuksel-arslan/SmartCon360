@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { updateProjectSchema } from '@/lib/validators/project';
@@ -56,7 +57,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       where: { id },
       data: {
         ...rest,
-        ...(mergedSettings && { settings: mergedSettings }),
+        ...(mergedSettings && { settings: mergedSettings as Prisma.InputJsonValue }),
         ...(plannedStart && { plannedStart: new Date(plannedStart) }),
         ...(plannedFinish && { plannedFinish: new Date(plannedFinish) }),
       },
