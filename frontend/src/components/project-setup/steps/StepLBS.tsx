@@ -142,11 +142,15 @@ function TemplateLocationNode({
           <span
             className="text-[8px] font-semibold uppercase px-1.5 py-0.5 rounded-full"
             style={{
-              background: location.phase === 'structural' ? 'rgba(99,102,241,0.12)' : 'rgba(16,185,129,0.12)',
-              color: location.phase === 'structural' ? '#6366F1' : '#10B981',
+              background: location.phase === 'substructure' ? 'rgba(146,64,14,0.12)'
+                : location.phase === 'structural' ? 'rgba(99,102,241,0.12)'
+                : 'rgba(16,185,129,0.12)',
+              color: location.phase === 'substructure' ? '#92400E'
+                : location.phase === 'structural' ? '#6366F1'
+                : '#10B981',
             }}
           >
-            {location.phase === 'structural' ? 'Shell' : 'Fit-Out'}
+            {location.phase === 'substructure' ? 'Substructure' : location.phase === 'structural' ? 'Shell' : 'Fit-Out'}
           </span>
         )}
         {location.areaSqm && (
@@ -171,8 +175,8 @@ function TemplateLocationNode({
   );
 }
 
-function countTemplateLocations(locs: LocationTemplate[]): { zones: number; structuralZones: number; finishingZones: number; floors: number; total: number } {
-  let zones = 0, structuralZones = 0, finishingZones = 0, floors = 0, total = 0;
+function countTemplateLocations(locs: LocationTemplate[]): { zones: number; substructureZones: number; structuralZones: number; finishingZones: number; floors: number; total: number } {
+  let zones = 0, substructureZones = 0, structuralZones = 0, finishingZones = 0, floors = 0, total = 0;
 
   function walk(items: LocationTemplate[]) {
     for (const loc of items) {
@@ -180,7 +184,8 @@ function countTemplateLocations(locs: LocationTemplate[]): { zones: number; stru
       total += count;
       if (loc.type === 'zone') {
         zones += count;
-        if (loc.phase === 'structural') structuralZones += count;
+        if (loc.phase === 'substructure') substructureZones += count;
+        else if (loc.phase === 'structural') structuralZones += count;
         else finishingZones += count;
       }
       if (loc.type === 'floor') floors += count;
@@ -191,7 +196,7 @@ function countTemplateLocations(locs: LocationTemplate[]): { zones: number; stru
   }
 
   walk(locs);
-  return { zones, structuralZones, finishingZones, floors, total };
+  return { zones, substructureZones, structuralZones, finishingZones, floors, total };
 }
 
 function flattenLocations(
@@ -361,6 +366,7 @@ export default function StepLBS({ projectId, state, onStateChange, authHeaders }
               <div className="flex gap-3 mb-4">
                 {[
                   { label: 'Floors', value: templateCounts.floors, color: 'var(--color-cyan)' },
+                  { label: 'Substructure', value: templateCounts.substructureZones, color: '#92400E' },
                   { label: 'Shell Zones', value: templateCounts.structuralZones, color: '#6366F1' },
                   { label: 'Fit-Out Zones', value: templateCounts.finishingZones, color: '#10B981' },
                   { label: 'Total', value: templateCounts.total, color: 'var(--color-accent)' },

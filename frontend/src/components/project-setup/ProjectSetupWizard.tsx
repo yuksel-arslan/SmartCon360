@@ -52,6 +52,9 @@ const initialState: SetupState = {
   flowDirection: 'bottom_up',
   deliveryMethod: '',
   siteCondition: '',
+  foundationType: '',
+  groundCondition: '',
+  groundImprovement: [],
   // Documents
   boqUploaded: false,
   boqFileName: null,
