@@ -3,6 +3,7 @@
 import { prisma } from '../utils/prisma';
 import { NotFoundError } from '../utils/errors';
 import { calculateEVM, type EVMMetrics } from '../utils/evm-calculator';
+import { getCostPolicies } from '../utils/policy-client';
 
 export class EvmService {
   /**
@@ -42,9 +43,21 @@ export class EvmService {
   }
 
   /**
-   * Calculate EVM automatically from project data
+   * Calculate EVM automatically from project data.
+   * Checks contract policy — EVM may be disabled for certain commercial models
+   * (e.g., build_share, revenue_share where traditional EVM is not applicable).
    */
   async calculateFromProject(projectId: string, snapshotDate: Date | string) {
+    // Check if EVM is enabled by contract policy
+    const policies = await getCostPolicies(projectId);
+    if (!policies.evmEnabled) {
+      return {
+        disabled: true,
+        reason: 'EVM is not applicable for this contract model. Use progress-based tracking instead.',
+        progressMeasurement: policies.progressMeasurement,
+      };
+    }
+
     // Get budget (BAC)
     const budget = await prisma.budget.findFirst({
       where: { projectId, status: 'active' },

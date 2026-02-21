@@ -3,6 +3,7 @@
 import { Router } from 'express';
 import { evmService } from '../services/evm.service';
 import { createEvmSnapshotSchema } from '../schemas';
+import { getCostPolicies } from '../utils/policy-client';
 
 const router = Router();
 
@@ -46,12 +47,24 @@ router.post('/calculate/:projectId', async (req, res, next) => {
 
 /**
  * GET /api/v1/cost/evm/project/:projectId/latest
- * Get latest EVM snapshot
+ * Get latest EVM snapshot (respects contract policy)
  */
 router.get('/project/:projectId/latest', async (req, res, next) => {
   try {
+    const policies = await getCostPolicies(req.params.projectId);
+    if (!policies.evmEnabled) {
+      return res.json({
+        data: null,
+        meta: {
+          evmEnabled: false,
+          reason: 'EVM is not applicable for this contract model.',
+          progressMeasurement: policies.progressMeasurement,
+        },
+        error: null,
+      });
+    }
     const snapshot = await evmService.getLatest(req.params.projectId);
-    res.json({ data: snapshot });
+    res.json({ data: snapshot, meta: { evmEnabled: true } });
   } catch (error) {
     next(error);
   }
