@@ -112,6 +112,8 @@ model Project {
   workingDays     Json      @default("[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"]") @map("working_days")
   budget          Decimal?  @db.Decimal(15, 2)
   currency        String    @default("USD") @db.VarChar(3)
+  deliveryModel   String?   @map("delivery_model") @db.VarChar(30)
+  commercialModel String?   @map("commercial_model") @db.VarChar(30)
   ownerId         String    @map("owner_id") @db.Uuid
   settings        Json      @default("{}")
   createdAt       DateTime  @default(now()) @map("created_at")
@@ -130,6 +132,7 @@ model Project {
   cashFlowPeriods  CashFlowPeriod[]
   taktPlans        TaktPlan[]
   constraints      Constraint[]
+  contractProfile  ContractProfile?
 
   @@index([ownerId])
   @@index([status])
@@ -692,6 +695,55 @@ model Constraint {
   @@index([category])
   @@index([dueDate])
   @@map("constraints")
+  @@schema("public")
+}
+
+// ============================================================================
+// CONTRACT PROFILE & POLICIES (Contract-Driven Architecture)
+// ============================================================================
+
+model ContractProfile {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String   @unique @map("project_id") @db.Uuid
+  deliveryModel   String   @map("delivery_model") @db.VarChar(30)
+  commercialModel String   @map("commercial_model") @db.VarChar(30)
+  retentionPct    Decimal  @default(10) @map("retention_pct") @db.Decimal(5, 2)
+  advancePct      Decimal  @default(0) @map("advance_pct") @db.Decimal(5, 2)
+  paymentTermDays Int      @default(30) @map("payment_term_days")
+  priceEscalation Boolean  @default(false) @map("price_escalation")
+  escalationIndex String?  @map("escalation_index") @db.VarChar(50)
+  contractForm    String?  @map("contract_form") @db.VarChar(30)
+  defectsLiabilityMonths Int @default(12) @map("defects_liability_months")
+  metadata        Json     @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  project  Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  policies ContractPolicy[]
+
+  @@index([deliveryModel])
+  @@index([commercialModel])
+  @@map("contract_profiles")
+  @@schema("public")
+}
+
+model ContractPolicy {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId       String   @map("profile_id") @db.Uuid
+  module          String   @db.VarChar(30)
+  policyKey       String   @map("policy_key") @db.VarChar(100)
+  policyValue     String   @map("policy_value") @db.VarChar(500)
+  description     String?
+  isOverridden    Boolean  @default(false) @map("is_overridden")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  profile ContractProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, module, policyKey])
+  @@index([profileId])
+  @@index([module])
+  @@map("contract_policies")
   @@schema("public")
 }
 

@@ -6,6 +6,7 @@ import { getAvailableStandards } from '../templates/wbs-templates';
 import { CBS_STANDARDS, getDefaultCbsStandard } from '../templates/cbs-templates';
 import { notifyHubSetupComplete } from '../utils/service-client';
 import { classificationService } from '../services/classification.service';
+import { upsertContractProfile, DELIVERY_MODELS, COMMERCIAL_MODELS, type DeliveryModel, type CommercialModel } from '../services/policy-resolver.service';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -31,7 +32,7 @@ export default function setupRoutes(prisma: PrismaClient) {
         prisma.projectSetup.findUnique({ where: { projectId } }),
         prisma.project.findUnique({
           where: { id: projectId },
-          select: { projectType: true, currency: true, name: true },
+          select: { projectType: true, currency: true, name: true, deliveryModel: true, commercialModel: true },
         }),
         prisma.drawing.count({ where: { projectId } }),
         prisma.wbsNode.count({ where: { projectId, isActive: true } }),
@@ -62,6 +63,8 @@ export default function setupRoutes(prisma: PrismaClient) {
           projectType: project?.projectType,
           currency: project?.currency,
           projectName: project?.name,
+          deliveryMethod: project?.deliveryModel || '',
+          contractPricingModel: project?.commercialModel || '',
           steps: SETUP_STEPS,
           wbsStandards: getAvailableStandards(),
           cbsStandards: CBS_STANDARDS,
@@ -78,7 +81,8 @@ export default function setupRoutes(prisma: PrismaClient) {
   router.patch('/projects/:id/setup', async (req, res) => {
     try {
       const projectId = req.params.id;
-      const { currentStep, completedSteps, classificationStandard, taktPlanGenerated } = req.body;
+      const { currentStep, completedSteps, classificationStandard, taktPlanGenerated,
+              deliveryMethod, contractPricingModel } = req.body;
 
       const setup = await prisma.projectSetup.upsert({
         where: { projectId },
@@ -96,6 +100,17 @@ export default function setupRoutes(prisma: PrismaClient) {
           ...(taktPlanGenerated !== undefined && { taktPlanGenerated }),
         },
       });
+
+      // Persist delivery/commercial model to Project table
+      if (deliveryMethod || contractPricingModel) {
+        const projectUpdate: Record<string, string> = {};
+        if (deliveryMethod) projectUpdate.deliveryModel = deliveryMethod;
+        if (contractPricingModel) projectUpdate.commercialModel = contractPricingModel;
+        await prisma.project.update({
+          where: { id: projectId },
+          data: projectUpdate,
+        });
+      }
 
       res.json({ data: setup, error: null });
     } catch (err: any) {
@@ -390,13 +405,14 @@ export default function setupRoutes(prisma: PrismaClient) {
     try {
       const projectId = req.params.id;
 
-      const [project, setup, wbsNodes, cbsNodes, trades, drawings] = await Promise.all([
-        prisma.project.findUnique({ where: { id: projectId }, select: { projectType: true, currency: true, name: true, code: true } }),
+      const [project, setup, wbsNodes, cbsNodes, trades, drawings, contractProfile] = await Promise.all([
+        prisma.project.findUnique({ where: { id: projectId }, select: { projectType: true, currency: true, name: true, code: true, deliveryModel: true, commercialModel: true } }),
         prisma.projectSetup.findUnique({ where: { projectId } }),
         prisma.wbsNode.findMany({ where: { projectId, isActive: true }, orderBy: [{ level: 'asc' }, { sortOrder: 'asc' }] }),
         prisma.cbsNode.findMany({ where: { projectId, isActive: true }, orderBy: [{ level: 'asc' }, { sortOrder: 'asc' }], include: { wbsNode: { select: { id: true, code: true, name: true } } } }),
         prisma.trade.findMany({ where: { projectId, isActive: true }, orderBy: { sortOrder: 'asc' } }),
         prisma.drawing.findMany({ where: { projectId }, select: { id: true, discipline: true, drawingNo: true, title: true, fileType: true } }),
+        prisma.contractProfile.findUnique({ where: { projectId }, include: { policies: true } }),
       ]);
 
       res.json({
@@ -412,6 +428,14 @@ export default function setupRoutes(prisma: PrismaClient) {
           cbs: { nodes: cbsNodes, count: cbsNodes.length },
           trades: { items: trades, count: trades.length },
           drawings: { items: drawings, count: drawings.length },
+          contractProfile: contractProfile ? {
+            deliveryModel: contractProfile.deliveryModel,
+            commercialModel: contractProfile.commercialModel,
+            retentionPct: contractProfile.retentionPct,
+            policies: contractProfile.policies.map(p => ({
+              module: p.module, policyKey: p.policyKey, policyValue: p.policyValue,
+            })),
+          } : null,
         },
         error: null,
       });
@@ -464,6 +488,27 @@ export default function setupRoutes(prisma: PrismaClient) {
         data: { status: 'active' },
       });
 
+      // Auto-generate contract profile if delivery/commercial model is set
+      const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { deliveryModel: true, commercialModel: true },
+      });
+
+      let contractProfileResult = null;
+      if (project?.deliveryModel && project?.commercialModel &&
+          DELIVERY_MODELS.includes(project.deliveryModel as DeliveryModel) &&
+          COMMERCIAL_MODELS.includes(project.commercialModel as CommercialModel)) {
+        try {
+          contractProfileResult = await upsertContractProfile(projectId, {
+            deliveryModel: project.deliveryModel as DeliveryModel,
+            commercialModel: project.commercialModel as CommercialModel,
+          });
+          logger.info({ projectId, ...contractProfileResult }, 'Contract profile generated on setup finalize');
+        } catch (err) {
+          logger.warn(err, 'Contract profile generation failed (non-blocking)');
+        }
+      }
+
       const summary = {
         drawings: drawingCount,
         wbsNodes: wbsCount,
@@ -471,6 +516,7 @@ export default function setupRoutes(prisma: PrismaClient) {
         trades: tradeCount,
         boqUploaded: setup?.boqUploaded || false,
         standard: setup?.classificationStandard || 'uniclass',
+        contractProfile: contractProfileResult,
       };
 
       // Notify hub-service about setup completion (best-effort)

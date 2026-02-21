@@ -15,6 +15,7 @@ import cbsRoutes from './routes/cbs';
 import boqRoutes from './routes/boq';
 import setupRoutes from './routes/setup';
 import projectSetupRoutes from './routes/project-setup.routes';
+import contractProfileRoutes from './routes/contract-profile';
 
 const PORT = parseInt(process.env.PORT || '3002');
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
@@ -47,6 +48,8 @@ const createProjectSchema = z.object({
   budget: z.number().optional(),
   currency: z.string().max(3).default('USD'),
   classificationStandard: z.string().max(30).default('uniclass'),
+  deliveryModel: z.string().max(30).optional(),
+  commercialModel: z.string().max(30).optional(),
 });
 
 const createLocationSchema = z.object({
@@ -113,11 +116,14 @@ app.post('/projects', async (req, res) => {
     const input = createProjectSchema.parse(req.body);
     const ownerId = (req as any).userId || req.body.ownerId;
 
+    const { deliveryModel, commercialModel, ...projectInput } = input;
     const project = await prisma.project.create({
       data: {
-        ...input,
-        plannedStart: input.plannedStart ? new Date(input.plannedStart) : undefined,
-        plannedFinish: input.plannedFinish ? new Date(input.plannedFinish) : undefined,
+        ...projectInput,
+        plannedStart: projectInput.plannedStart ? new Date(projectInput.plannedStart) : undefined,
+        plannedFinish: projectInput.plannedFinish ? new Date(projectInput.plannedFinish) : undefined,
+        deliveryModel: deliveryModel || undefined,
+        commercialModel: commercialModel || undefined,
         ownerId,
       },
     });
@@ -376,6 +382,7 @@ app.use(wbsRoutes(prisma));
 app.use(cbsRoutes(prisma));
 app.use(boqRoutes(prisma));
 app.use(setupRoutes(prisma));
+app.use(contractProfileRoutes(prisma));
 
 // Project Setup extended routes (OBS, BOQ items, Documents, Cash Flow)
 app.use('/projects/:projectId', projectSetupRoutes);
