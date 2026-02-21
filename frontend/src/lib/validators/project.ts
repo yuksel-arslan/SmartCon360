@@ -60,4 +60,6 @@ export const updateTradeSchema = z.object({
   predecessorTradeIds: z.array(z.string().uuid()).optional(),
   companyName: z.string().optional(),
   contactEmail: z.string().email().optional(),
+  contractType: z.enum(['labor_only', 'supply_and_fix', 'supply_install']).optional(),
+  subcontractorGroup: z.string().max(100).nullable().optional(),
 });
