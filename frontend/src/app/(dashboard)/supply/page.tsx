@@ -46,13 +46,13 @@ const TABS = ['Overview', 'Suppliers', 'Purchase Orders', 'Deliveries'] as const
 type Tab = (typeof TABS)[number];
 
 export default function SupplyPage() {
-  const { activeProject } = useProjectStore();
+  const { activeProjectId } = useProjectStore();
   const store = useSupplyStore();
   const [tab, setTab] = useState<Tab>('Overview');
 
   useEffect(() => {
-    if (activeProject?.id) store.fetchAll(activeProject.id);
-  }, [activeProject?.id]);
+    if (activeProjectId) store.fetchAll(activeProjectId);
+  }, [activeProjectId]);
 
   /* ─── Overview ─── */
   function Overview() {
@@ -95,7 +95,7 @@ export default function SupplyPage() {
     );
 
     const startNew = () => {
-      setForm({ projectId: activeProject?.id, category: 'materials', status: 'active' });
+      setForm({ projectId: activeProjectId, category: 'materials', status: 'active' });
       setEditId(null);
       setShowForm(true);
     };
@@ -106,7 +106,7 @@ export default function SupplyPage() {
       if (editId) await store.updateSupplier(editId, form);
       else await store.createSupplier(form);
       setShowForm(false);
-      if (activeProject?.id) store.fetchAll(activeProject.id);
+      if (activeProjectId) store.fetchAll(activeProjectId);
     };
 
     return (
@@ -192,7 +192,7 @@ export default function SupplyPage() {
     );
 
     const startNew = () => {
-      setForm({ projectId: activeProject?.id, category: 'materials', priority: 'medium', totalAmount: 0, createdBy: '00000000-0000-0000-0000-000000000000' });
+      setForm({ projectId: activeProjectId, category: 'materials', priority: 'medium', totalAmount: 0, createdBy: '00000000-0000-0000-0000-000000000000' });
       setEditId(null);
       setShowForm(true);
     };
@@ -203,7 +203,7 @@ export default function SupplyPage() {
       if (editId) await store.updatePO(editId, form);
       else await store.createPO(form);
       setShowForm(false);
-      if (activeProject?.id) store.fetchAll(activeProject.id);
+      if (activeProjectId) store.fetchAll(activeProjectId);
     };
 
     return (
@@ -292,7 +292,7 @@ export default function SupplyPage() {
     );
 
     const startNew = () => {
-      setForm({ projectId: activeProject?.id, scheduledDate: new Date().toISOString().slice(0, 10) });
+      setForm({ projectId: activeProjectId, scheduledDate: new Date().toISOString().slice(0, 10) });
       setEditId(null);
       setShowForm(true);
     };
@@ -303,7 +303,7 @@ export default function SupplyPage() {
       if (editId) await store.updateDelivery(editId, form);
       else await store.createDelivery(form);
       setShowForm(false);
-      if (activeProject?.id) store.fetchAll(activeProject.id);
+      if (activeProjectId) store.fetchAll(activeProjectId);
     };
 
     return (

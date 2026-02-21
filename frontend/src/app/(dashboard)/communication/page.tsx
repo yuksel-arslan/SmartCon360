@@ -51,13 +51,13 @@ const TABS = ['Overview', 'RFIs', 'Transmittals', 'Meeting Minutes'] as const;
 type Tab = (typeof TABS)[number];
 
 export default function CommunicationPage() {
-  const { activeProject } = useProjectStore();
+  const { activeProjectId } = useProjectStore();
   const store = useCommStore();
   const [tab, setTab] = useState<Tab>('Overview');
 
   useEffect(() => {
-    if (activeProject?.id) store.fetchAll(activeProject.id);
-  }, [activeProject?.id]);
+    if (activeProjectId) store.fetchAll(activeProjectId);
+  }, [activeProjectId]);
 
   /* ─── Overview ─── */
   function Overview() {
@@ -105,7 +105,7 @@ export default function CommunicationPage() {
     );
 
     const startNew = () => {
-      setForm({ projectId: activeProject?.id, discipline: 'architectural', priority: 'medium', createdBy: '00000000-0000-0000-0000-000000000000' });
+      setForm({ projectId: activeProjectId, discipline: 'architectural', priority: 'medium', createdBy: '00000000-0000-0000-0000-000000000000' });
       setEditId(null);
       setShowForm(true);
     };
@@ -120,7 +120,7 @@ export default function CommunicationPage() {
       if (editId) await store.updateRfi(editId, form);
       else await store.createRfi(form);
       setShowForm(false);
-      if (activeProject?.id) store.fetchAll(activeProject.id);
+      if (activeProjectId) store.fetchAll(activeProjectId);
     };
 
     return (
@@ -226,7 +226,7 @@ export default function CommunicationPage() {
     );
 
     const startNew = () => {
-      setForm({ projectId: activeProject?.id, type: 'for_information', priority: 'medium', fromCompany: '', toCompany: '', createdBy: '00000000-0000-0000-0000-000000000000' });
+      setForm({ projectId: activeProjectId, type: 'for_information', priority: 'medium', fromCompany: '', toCompany: '', createdBy: '00000000-0000-0000-0000-000000000000' });
       setEditId(null);
       setShowForm(true);
     };
@@ -241,7 +241,7 @@ export default function CommunicationPage() {
       if (editId) await store.updateTransmittal(editId, form);
       else await store.createTransmittal(form);
       setShowForm(false);
-      if (activeProject?.id) store.fetchAll(activeProject.id);
+      if (activeProjectId) store.fetchAll(activeProjectId);
     };
 
     return (
@@ -347,7 +347,7 @@ export default function CommunicationPage() {
     );
 
     const startNew = () => {
-      setForm({ projectId: activeProject?.id, type: 'progress', date: new Date().toISOString().slice(0, 10), conductedBy: '00000000-0000-0000-0000-000000000000' });
+      setForm({ projectId: activeProjectId, type: 'progress', date: new Date().toISOString().slice(0, 10), conductedBy: '00000000-0000-0000-0000-000000000000' });
       setEditId(null);
       setShowForm(true);
     };
@@ -362,7 +362,7 @@ export default function CommunicationPage() {
       if (editId) await store.updateMeeting(editId, form);
       else await store.createMeeting(form);
       setShowForm(false);
-      if (activeProject?.id) store.fetchAll(activeProject.id);
+      if (activeProjectId) store.fetchAll(activeProjectId);
     };
 
     return (

@@ -45,13 +45,13 @@ const TABS = ['Overview', 'Stakeholder Register', 'Engagement Actions', 'Influen
 type Tab = (typeof TABS)[number];
 
 export default function StakeholdersPage() {
-  const { activeProject } = useProjectStore();
+  const { activeProjectId } = useProjectStore();
   const store = useStakeholderStore();
   const [tab, setTab] = useState<Tab>('Overview');
 
   useEffect(() => {
-    if (activeProject?.id) store.fetchAll(activeProject.id);
-  }, [activeProject?.id]);
+    if (activeProjectId) store.fetchAll(activeProjectId);
+  }, [activeProjectId]);
 
   function Overview() {
     const s = store.summary;
@@ -97,9 +97,9 @@ export default function StakeholdersPage() {
     const [editId, setEditId] = useState<string | null>(null);
     const [form, setForm] = useState<Partial<Stakeholder>>({});
     const filtered = useMemo(() => store.stakeholders.filter((s) => s.name.toLowerCase().includes(search.toLowerCase()) || s.code.toLowerCase().includes(search.toLowerCase())), [store.stakeholders, search]);
-    const startNew = () => { setForm({ projectId: activeProject?.id, role: 'contractor', category: 'internal', influence: 3, interest: 3, engagement: 'inform', status: 'active' }); setEditId(null); setShowForm(true); };
+    const startNew = () => { setForm({ projectId: activeProjectId, role: 'contractor', category: 'internal', influence: 3, interest: 3, engagement: 'inform', status: 'active' }); setEditId(null); setShowForm(true); };
     const startEdit = (s: Stakeholder) => { setForm(s); setEditId(s.id); setShowForm(true); };
-    const save = async () => { if (editId) await store.updateStakeholder(editId, form); else await store.createStakeholder(form); setShowForm(false); if (activeProject?.id) store.fetchAll(activeProject.id); };
+    const save = async () => { if (editId) await store.updateStakeholder(editId, form); else await store.createStakeholder(form); setShowForm(false); if (activeProjectId) store.fetchAll(activeProjectId); };
 
     return (
       <div className="space-y-4">
@@ -161,9 +161,9 @@ export default function StakeholdersPage() {
     const [editId, setEditId] = useState<string | null>(null);
     const [form, setForm] = useState<Partial<EngagementAction>>({});
     const filtered = useMemo(() => store.actions.filter((a) => a.actionNumber.toLowerCase().includes(search.toLowerCase()) || a.title.toLowerCase().includes(search.toLowerCase())), [store.actions, search]);
-    const startNew = () => { setForm({ projectId: activeProject?.id, type: 'meeting', priority: 'medium' }); setEditId(null); setShowForm(true); };
+    const startNew = () => { setForm({ projectId: activeProjectId, type: 'meeting', priority: 'medium' }); setEditId(null); setShowForm(true); };
     const startEdit = (a: EngagementAction) => { setForm(a); setEditId(a.id); setShowForm(true); };
-    const save = async () => { if (editId) await store.updateAction(editId, form); else await store.createAction(form); setShowForm(false); if (activeProject?.id) store.fetchAll(activeProject.id); };
+    const save = async () => { if (editId) await store.updateAction(editId, form); else await store.createAction(form); setShowForm(false); if (activeProjectId) store.fetchAll(activeProjectId); };
 
     return (
       <div className="space-y-4">

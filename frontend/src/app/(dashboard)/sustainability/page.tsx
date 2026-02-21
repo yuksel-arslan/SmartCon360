@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { ModulePageHeader, ContractPolicyBanner } from '@/components/modules';
+import { useProjectStore } from '@/stores/projectStore';
 import { useSustainabilityStore, CarbonRecord, WasteRecord, Certification } from '@/stores/sustainabilityStore';
-
-const PROJECT_ID = typeof window !== 'undefined' ? localStorage.getItem('currentProjectId') || 'demo-project' : 'demo-project';
 
 type Tab = 'overview' | 'carbon' | 'waste' | 'certifications';
 
@@ -29,6 +28,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 export default function SustainabilityPage() {
+  const { activeProjectId } = useProjectStore();
   const { summary, carbonRecords, wasteRecords, certifications, loading, fetchAll, createCarbon, updateCarbon, deleteCarbon, createWaste, updateWaste, deleteWaste, createCertification, updateCertification, deleteCertification } = useSustainabilityStore();
   const [tab, setTab] = useState<Tab>('overview');
   const [search, setSearch] = useState('');
@@ -48,7 +48,7 @@ export default function SustainabilityPage() {
   const [editCert, setEditCert] = useState<Certification | null>(null);
   const [certForm, setCertForm] = useState({ scheme: 'LEED', targetLevel: '', currentStatus: 'registered', totalCredits: 0, earnedCredits: 0, pendingCredits: 0, assessorName: '', notes: '' });
 
-  useEffect(() => { fetchAll(PROJECT_ID); }, [fetchAll]);
+  useEffect(() => { if (activeProjectId) fetchAll(activeProjectId); }, [activeProjectId, fetchAll]);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'overview', label: 'Overview' },
@@ -69,7 +69,7 @@ export default function SustainabilityPage() {
     setShowCarbonForm(true);
   };
   const saveCarbonRecord = async () => {
-    const payload = { ...carbonForm, projectId: PROJECT_ID, date: new Date().toISOString(), recordedBy: 'current-user' };
+    const payload = { ...carbonForm, projectId: activeProjectId, date: new Date().toISOString(), recordedBy: 'current-user' };
     if (editCarbon) { await updateCarbon(editCarbon.id, payload); } else { await createCarbon(payload); }
     setShowCarbonForm(false);
   };
@@ -86,7 +86,7 @@ export default function SustainabilityPage() {
     setShowWasteForm(true);
   };
   const saveWasteRecord = async () => {
-    const payload = { ...wasteForm, projectId: PROJECT_ID, date: new Date().toISOString(), recordedBy: 'current-user' };
+    const payload = { ...wasteForm, projectId: activeProjectId, date: new Date().toISOString(), recordedBy: 'current-user' };
     if (editWaste) { await updateWaste(editWaste.id, payload); } else { await createWaste(payload); }
     setShowWasteForm(false);
   };
@@ -103,7 +103,7 @@ export default function SustainabilityPage() {
     setShowCertForm(true);
   };
   const saveCertRecord = async () => {
-    const payload = { ...certForm, projectId: PROJECT_ID };
+    const payload = { ...certForm, projectId: activeProjectId };
     if (editCert) { await updateCertification(editCert.id, payload); } else { await createCertification(payload); }
     setShowCertForm(false);
   };
