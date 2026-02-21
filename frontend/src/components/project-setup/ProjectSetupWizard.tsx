@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Check, Loader2, Rocket, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Loader2, Rocket, AlertTriangle, Save, Pencil } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjectStore } from '@/stores/projectStore';
 
@@ -88,13 +88,19 @@ interface Props {
 export default function ProjectSetupWizard({ projectId }: Props) {
   const router = useRouter();
   const token = useAuthStore((s) => s.token);
-  const updateProjectStatus = useProjectStore((s) => s.updateProjectStatus);
+  const { updateProjectStatus, projects } = useProjectStore();
   const [step, setStep] = useState(0);
   const [state, setState] = useState<SetupState>(initialState);
   const [loading, setLoading] = useState(true);
   const [finalizing, setFinalizing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [validationError, setValidationError] = useState('');
+
+  // Detect edit mode: project is already active (finalized)
+  const project = projects.find((p) => p.id === projectId);
+  const isEditMode = project?.status === 'active';
 
   // Stable auth headers — only changes when token changes (prevents infinite re-renders)
   const authHeaders = useMemo(
@@ -213,14 +219,46 @@ export default function ProjectSetupWizard({ projectId }: Props) {
     }
   };
 
-  // Navigate to a specific step (only allowed for completed or current steps)
+  // Navigate to a specific step
+  // In edit mode: all steps are freely navigable
+  // In setup mode: only completed or current steps
   const goToStep = (index: number) => {
     if (index === step) return;
-    // Can only go back to already-completed steps, or forward to the next step
+    if (isEditMode) {
+      setStep(index);
+      return;
+    }
     const stepDef = SETUP_STEPS[index];
     const isCompleted = state.completedSteps.includes(stepDef.id) || index < step;
     if (isCompleted || index === step) {
       setStep(index);
+    }
+  };
+
+  // Save changes (edit mode) — persist current setup state without re-finalization
+  const handleSaveChanges = async () => {
+    setSaving(true);
+    setSaved(false);
+    setError('');
+
+    try {
+      await fetch(`/api/v1/projects/${projectId}/setup`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({
+          currentStep: SETUP_STEPS[step].id,
+          completedSteps: state.completedSteps,
+          classificationStandard: state.classificationStandard,
+          taktPlanGenerated: state.taktPlanGenerated,
+        }),
+      });
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save changes');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -274,6 +312,21 @@ export default function ProjectSetupWizard({ projectId }: Props) {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
+      {/* Edit mode banner */}
+      {isEditMode && (
+        <div
+          className="flex items-center gap-2 px-6 py-2 text-[12px] font-medium border-b"
+          style={{
+            background: 'rgba(99,102,241,0.08)',
+            color: '#6366F1',
+            borderColor: 'var(--color-border)',
+          }}
+        >
+          <Pencil size={13} />
+          Edit Mode — Changes apply to phases not yet started. Navigate freely between steps.
+        </div>
+      )}
+
       {/* Stepper */}
       <div className="flex items-center gap-1 px-6 py-3 border-b flex-shrink-0 overflow-x-auto" style={{ borderColor: 'var(--color-border)' }}>
         {SETUP_STEPS.map((s, i) => {
@@ -282,25 +335,31 @@ export default function ProjectSetupWizard({ projectId }: Props) {
           const stepValid = getStepValidation(s.id, state).valid;
           const optional = isStepOptional(s.id);
           const showDone = (isCompleted || (stepValid && i < step)) && !isCurrent;
+          // In edit mode: all steps are clickable
+          const isClickable = isEditMode || showDone || isCurrent;
           return (
             <div key={s.id} className="flex items-center gap-1 flex-shrink-0">
               <button
                 onClick={() => goToStep(i)}
-                disabled={!showDone && !isCurrent}
+                disabled={!isClickable}
                 className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
                 style={{
                   background: isCurrent
                     ? 'rgba(232,115,26,0.12)'
                     : showDone
                       ? 'rgba(16,185,129,0.1)'
-                      : 'transparent',
+                      : isEditMode
+                        ? 'rgba(99,102,241,0.04)'
+                        : 'transparent',
                   color: isCurrent
                     ? 'var(--color-accent)'
                     : showDone
                       ? 'var(--color-success)'
-                      : 'var(--color-text-muted)',
-                  cursor: showDone || isCurrent ? 'pointer' : 'not-allowed',
-                  opacity: !showDone && !isCurrent ? 0.5 : 1,
+                      : isEditMode
+                        ? 'var(--color-text)'
+                        : 'var(--color-text-muted)',
+                  cursor: isClickable ? 'pointer' : 'not-allowed',
+                  opacity: isClickable ? 1 : 0.5,
                 }}
               >
                 <div
@@ -384,15 +443,38 @@ export default function ProjectSetupWizard({ projectId }: Props) {
       <div className="border-t px-6 py-3 flex-shrink-0" style={{ borderColor: 'var(--color-border)' }}>
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <button
-            onClick={step === 0 ? () => router.push('/projects') : back}
+            onClick={step === 0
+              ? () => router.push(isEditMode ? '/dashboard' : '/projects')
+              : back}
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[12px] font-semibold transition-colors hover:opacity-80"
             style={{ color: 'var(--color-text-secondary)' }}
           >
             <ArrowLeft size={14} />
-            {step === 0 ? 'Back to Projects' : 'Back'}
+            {step === 0 ? (isEditMode ? 'Back to Dashboard' : 'Back to Projects') : 'Back'}
           </button>
 
           <div className="flex items-center gap-2">
+            {/* Edit mode: Save Changes button (always visible) */}
+            {isEditMode && (
+              <button
+                onClick={handleSaveChanges}
+                disabled={saving}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[12px] font-medium transition-all hover:opacity-90 disabled:opacity-50"
+                style={{
+                  background: saved ? 'rgba(16,185,129,0.12)' : 'rgba(99,102,241,0.12)',
+                  color: saved ? 'var(--color-success)' : '#6366F1',
+                }}
+              >
+                {saving ? (
+                  <><Loader2 size={14} className="animate-spin" /> Saving...</>
+                ) : saved ? (
+                  <><Check size={14} /> Saved</>
+                ) : (
+                  <><Save size={14} /> Save Changes</>
+                )}
+              </button>
+            )}
+
             {/* Skip button for optional steps — only when step not completed */}
             {isCurrentOptional && !currentValidation.valid && (
               <button
@@ -405,25 +487,35 @@ export default function ProjectSetupWizard({ projectId }: Props) {
             )}
 
             {isLast ? (
-              <button
-                onClick={handleFinalize}
-                disabled={finalizing}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))' }}
-              >
-                {finalizing ? (
-                  <><Loader2 size={14} className="animate-spin" /> Finalizing...</>
-                ) : (
-                  <><Rocket size={14} /> Finalize Setup</>
-                )}
-              </button>
+              isEditMode ? (
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-medium text-white transition-all hover:opacity-90"
+                  style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))' }}
+                >
+                  <Check size={14} /> Done
+                </button>
+              ) : (
+                <button
+                  onClick={handleFinalize}
+                  disabled={finalizing}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))' }}
+                >
+                  {finalizing ? (
+                    <><Loader2 size={14} className="animate-spin" /> Finalizing...</>
+                  ) : (
+                    <><Rocket size={14} /> Finalize Setup</>
+                  )}
+                </button>
+              )
             ) : (
               <button
                 onClick={next}
-                disabled={!canProceed && !isCurrentOptional}
+                disabled={!isEditMode && !canProceed && !isCurrentOptional}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-medium text-white transition-all hover:opacity-90 disabled:opacity-40"
                 style={{
-                  background: canProceed
+                  background: (isEditMode || canProceed)
                     ? 'var(--color-accent)'
                     : 'var(--color-text-muted)',
                 }}
