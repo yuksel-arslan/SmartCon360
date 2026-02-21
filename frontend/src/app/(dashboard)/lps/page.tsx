@@ -201,7 +201,12 @@ function SectionTitle({ children, icon: Icon }: { children: React.ReactNode; ico
 
 // ─── Tab: Lookahead ─────────────────────────────────────────────────────────
 
-function LookaheadTab({ trades, zones }: { trades: { name: string; color: string }[]; zones: { id: string; name: string; y_index: number }[] }) {
+function LookaheadTab({ trades, zones, projectId, planAssignments }: {
+  trades: { name: string; color: string }[];
+  zones: { id: string; name: string; y_index: number }[];
+  projectId: string | null;
+  planAssignments: { trade: string; zone: string; plannedStart: string; plannedEnd: string; status: string; periodNumber: number }[];
+}) {
   const [tasks, setTasks] = useState<LookaheadTask[]>([]);
   const [weekOffset, setWeekOffset] = useState(0);
   const [tradeFilter, setTradeFilter] = useState<string>('all');
@@ -212,32 +217,67 @@ function LookaheadTab({ trades, zones }: { trades: { name: string; color: string
   const [newTaskStatus, setNewTaskStatus] = useState<MakeReadyStatus>('can_do');
   const formId = useId();
 
-  // Generate tasks when trades/zones are loaded
+  // Build lookahead from real takt plan assignments, fallback to trade templates
   useEffect(() => {
     if (trades.length === 0 || zones.length === 0) return;
     setNewTaskZone(zones[0].name);
+
+    // If we have real plan assignments, distribute them into 6-week lookahead windows
+    if (planAssignments.length > 0) {
+      const today = new Date();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - today.getDay() + 1 + weekOffset * 7);
+
+      const generated: LookaheadTask[] = [];
+      let id = 1;
+      for (const a of planAssignments) {
+        const startDate = new Date(a.plannedStart);
+        // Calculate which week index (0-5) this assignment falls into
+        const diffDays = Math.floor((startDate.getTime() - monday.getTime()) / (1000 * 60 * 60 * 24));
+        const weekIdx = Math.floor(diffDays / 7);
+        if (weekIdx < 0 || weekIdx > 5) continue; // Outside 6-week window
+
+        const status: MakeReadyStatus = a.status === 'completed' ? 'can_do'
+          : a.status === 'in_progress' ? 'in_progress'
+          : a.status === 'delayed' ? 'constraint'
+          : 'can_do';
+
+        generated.push({
+          id: `lt-${id++}`,
+          trade: a.trade,
+          zone: a.zone,
+          description: `T${a.periodNumber} — ${a.zone.split(' — ')[1] || a.zone} (${a.plannedStart} to ${a.plannedEnd})`,
+          weekIndex: weekIdx,
+          status,
+          constraintNote: status === 'constraint' ? 'Predecessor' : undefined,
+        });
+      }
+      if (generated.length > 0) {
+        setTasks(generated);
+        return;
+      }
+    }
+
+    // Fallback: generate tasks from trade templates
     const generated: LookaheadTask[] = [];
     let id = 1;
     trades.forEach((trade) => {
       const templates = TASK_TEMPLATES[trade.name] || ['General work'];
       zones.slice(0, 4).forEach((zone, zIdx) => {
-        const weekIdx = Math.min(zIdx + Math.floor(Math.random() * 2), 5);
+        const weekIdx = Math.min(zIdx, 5);
         const taskIdx = id % templates.length;
-        const statuses: MakeReadyStatus[] = ['can_do', 'can_do', 'can_do', 'in_progress', 'constraint'];
-        const status = statuses[Math.floor(Math.random() * statuses.length)];
         generated.push({
           id: `lt-${id++}`,
           trade: trade.name,
           zone: zone.name,
           description: `${templates[taskIdx]} — ${zone.name.split(' — ')[1] || zone.name}`,
           weekIndex: weekIdx,
-          status,
-          constraintNote: status === 'constraint' ? VARIANCE_CATEGORIES[Math.floor(Math.random() * VARIANCE_CATEGORIES.length)] : undefined,
+          status: 'can_do' as MakeReadyStatus,
         });
       });
     });
     setTasks(generated);
-  }, [trades, zones]);
+  }, [trades, zones, planAssignments, weekOffset]);
 
   const weeks = useMemo(() => generateWeekDates(weekOffset), [weekOffset]);
 
@@ -605,6 +645,35 @@ function WeeklyWorkPlanTab({ trades, zones, projectId }: { trades: { name: strin
       zone: prev.zone || (zones[0].name.split(' — ')[1] || zones[0].name),
     }));
   }, [trades, zones]);
+
+  // Load existing commitments from API
+  useEffect(() => {
+    if (!projectId) return;
+    (async () => {
+      try {
+        const data = await getWeeklyCommitments(projectId);
+        if (data && data.length > 0) {
+          const loaded: Commitment[] = data.map((c) => {
+            const trade = trades.find((t) => t.name === c.tradeName);
+            return {
+              id: c.id,
+              trade: c.tradeName,
+              tradeColor: trade?.color || '#94A3B8',
+              zone: c.zoneName,
+              description: c.description,
+              committedBy: 'Team',
+              status: c.completed ? 'completed' as CommitmentStatus : c.committed ? 'committed' as CommitmentStatus : 'committed' as CommitmentStatus,
+              varianceReason: c.varianceCategory as VarianceCategory | undefined,
+              weekId: `w-api-${c.weekStart}`,
+            };
+          });
+          setCommitments((prev) => [...prev, ...loaded]);
+        }
+      } catch { /* API unavailable — use local state */ }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
   const formId = useId();
 
   const ppcHistory = useMemo(() => generatePPCHistory(), []);
@@ -1102,6 +1171,7 @@ function VarianceParetoChart({ data }: { data: typeof VARIANCE_DATA }) {
 function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color: string }[]; projectId: string | null }) {
   const [ppcHistory, setPpcHistory] = useState<WeeklyPPC[]>(generatePPCHistory);
   const [tradePPC, setTradePPC] = useState<TradePPC[]>([]);
+  const [varianceData, setVarianceData] = useState<{ category: VarianceCategory; count: number; pct: number }[]>(VARIANCE_DATA);
 
   useEffect(() => {
     if (!projectId) return;
@@ -1130,23 +1200,34 @@ function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color:
           })));
         }
       } catch { /* no trade PPC data yet */ }
+      try {
+        const varianceResult = await getVarianceAnalysis(projectId);
+        const reasons = varianceResult as { categories?: { category: string; count: number; pct: number }[] };
+        if (reasons.categories && reasons.categories.length > 0) {
+          setVarianceData(reasons.categories.map((c) => ({
+            category: c.category as VarianceCategory,
+            count: c.count,
+            pct: c.pct,
+          })));
+        }
+      } catch { /* no variance data yet — keep defaults */ }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
   const currentPPC = ppcHistory[ppcHistory.length - 1].ppc;
-  const prevPPC = ppcHistory[ppcHistory.length - 2].ppc;
+  const prevPPC = ppcHistory.length > 1 ? ppcHistory[ppcHistory.length - 2].ppc : currentPPC;
   const ppcDelta = currentPPC - prevPPC;
   const isImproving = ppcDelta >= 0;
 
   const avgPPC4Weeks = Math.round(
-    ppcHistory.slice(-4).reduce((sum, w) => sum + w.ppc, 0) / 4,
+    ppcHistory.slice(-4).reduce((sum, w) => sum + w.ppc, 0) / Math.min(4, ppcHistory.length),
   );
 
   const bestTrade = tradePPC.length > 0
     ? tradePPC.reduce((a, b) => (a.ppc > b.ppc ? a : b))
     : { trade: '-', color: 'var(--color-text-muted)', ppc: 0, committed: 0, completed: 0 };
-  const topVariance = VARIANCE_DATA[0];
+  const topVariance = varianceData[0] || VARIANCE_DATA[0];
 
   return (
     <div className="space-y-4">
@@ -1286,7 +1367,7 @@ function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color:
         <p className="text-[10px] mb-3" style={{ color: 'var(--color-text-muted)' }}>
           Root cause distribution of failed commitments across all weeks. Focus improvement efforts on the top categories.
         </p>
-        <VarianceParetoChart data={VARIANCE_DATA} />
+        <VarianceParetoChart data={varianceData} />
       </Card>
 
       {/* Detailed PPC table */}
@@ -1342,6 +1423,7 @@ export default function LPSPage() {
   const token = useAuthStore((s) => s.token);
   const [trades, setTrades] = useState<{ name: string; color: string }[]>([]);
   const [zones, setZones] = useState<{ id: string; name: string; y_index: number }[]>([]);
+  const [planAssignments, setPlanAssignments] = useState<{ trade: string; zone: string; plannedStart: string; plannedEnd: string; status: string; periodNumber: number }[]>([]);
 
   useEffect(() => {
     if (!activeProjectId) return;
@@ -1365,6 +1447,23 @@ export default function LPSPage() {
               y_index: i,
             })));
           }
+          // Build assignment list for Lookahead tab from real plan data
+          if (plan.assignments.length > 0) {
+            const wagonMap = new Map(plan.wagons.map((w) => [w.id, w]));
+            const zoneMap = new Map(plan.zones.map((z) => [z.id, z]));
+            setPlanAssignments(plan.assignments.map((a) => {
+              const wagon = wagonMap.get(a.wagonId);
+              const zone = zoneMap.get(a.zoneId);
+              return {
+                trade: wagon?.tradeName || 'Unknown',
+                zone: zone?.name || 'Unknown',
+                plannedStart: a.plannedStart,
+                plannedEnd: a.plannedEnd,
+                status: a.status,
+                periodNumber: a.periodNumber,
+              };
+            }));
+          }
           return;
         }
       } catch { /* takt plan not available, fall back to project data */ }
@@ -1377,8 +1476,9 @@ export default function LPSPage() {
           name: t.name,
           color: t.color || '#6366F1',
         }));
+        const taktLocTypes = ['zone', 'sector', 'grid'];
         const projectZones = (data.locations || [])
-          .filter((l: { locationType: string }) => l.locationType === 'zone')
+          .filter((l: { locationType: string }) => taktLocTypes.includes(l.locationType))
           .map((l: { id: string; name: string }, i: number) => ({
             id: l.id,
             name: l.name,
@@ -1449,7 +1549,7 @@ export default function LPSPage() {
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.2 }}
           >
-            {activeTab === 'lookahead' && <LookaheadTab trades={trades} zones={zones} />}
+            {activeTab === 'lookahead' && <LookaheadTab trades={trades} zones={zones} projectId={activeProjectId} planAssignments={planAssignments} />}
             {activeTab === 'weekly' && <WeeklyWorkPlanTab trades={trades} zones={zones} projectId={activeProjectId} />}
             {activeTab === 'ppc' && <PPCDashboardTab trades={trades} projectId={activeProjectId} />}
           </motion.div>

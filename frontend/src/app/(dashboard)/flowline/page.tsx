@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import TopBar from '@/components/layout/TopBar';
 import FlowlineChart from '@/components/charts/FlowlineChart';
 import type { FlowlineChartHandle } from '@/components/charts/FlowlineChart';
-import type { FlowlineWagon } from '@/lib/mockData';
+import type { FlowlineWagon, FlowlineSegment } from '@/lib/mockData';
 import { useFlowlineStore } from '@/stores/flowlineStore';
 import { getFlowlineData, listPlans } from '@/lib/stores/takt-plans';
 import { useProjectStore } from '@/stores/projectStore';
@@ -163,8 +163,15 @@ export default function FlowlinePage() {
           const raw = await getFlowlineData(projectId, plans[0].id);
           if (raw && Array.isArray((raw as Record<string, unknown>).wagons)) {
             const apiData = raw as {
-              wagons: { tradeName: string; tradeColor: string; segments: { zoneSequence?: number; periodNumber: number; status: string; progressPct?: number; plannedStart: string; plannedEnd: string; actualStart?: string; actualEnd?: string }[] }[];
-              zones: { id: string; name: string; sequence?: number }[];
+              wagons: {
+                tradeName: string; tradeColor: string; durationDays: number; bufferAfter: number;
+                segments: {
+                  zoneSequence: number; periodNumber: number; plannedStart: string; plannedEnd: string;
+                  actualStart?: string | null; actualEnd?: string | null;
+                  status: 'completed' | 'in_progress' | 'planned' | 'delayed'; progressPct: number;
+                }[];
+              }[];
+              zones: { id: string; name: string; code: string; sequence: number }[];
               todayX?: number;
               totalPeriods?: number;
             };
@@ -187,6 +194,15 @@ export default function FlowlinePage() {
                 tasks: [],
               })),
             })));
+            if (apiData.zones?.length) {
+              setZonesData(apiData.zones.map((z) => ({
+                id: z.id,
+                name: z.name,
+                y_index: (z.sequence || 1) - 1,
+              })));
+            }
+            if (apiData.todayX !== undefined) setTodayX(apiData.todayX);
+            if (apiData.totalPeriods) setTotalPeriods(apiData.totalPeriods);
           }
         }
       } catch { /* silent reload */ }
