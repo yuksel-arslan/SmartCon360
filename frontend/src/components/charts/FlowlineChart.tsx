@@ -211,8 +211,8 @@ const FlowlineChart = forwardRef<FlowlineChartHandle, FlowlineChartProps>(
 
       // ── Scales ────────────────────────────────────────────────
 
-      const xScale = d3.scaleLinear().domain([0, totalPeriods]).range([0, innerWidth]);
-      const yScale = d3.scaleLinear().domain([0, zones.length - 1]).range([0, innerHeight]);
+      const xScale = d3.scaleLinear().domain([0, Math.max(1, totalPeriods || 1)]).range([0, innerWidth]);
+      const yScale = d3.scaleLinear().domain([0, Math.max(1, zones.length - 1)]).range([0, innerHeight]);
 
       // ── Read CSS variables ────────────────────────────────────
 
@@ -341,10 +341,14 @@ const FlowlineChart = forwardRef<FlowlineChartHandle, FlowlineChartProps>(
             .y((d) => yScale(d.y))
             .curve(d3.curveMonotoneY);
 
-          const points = wagon.segments.map((seg) => ({
-            x: (seg.x_start + seg.x_end) / 2,
-            y: seg.y,
-          }));
+          const points = wagon.segments
+            .filter((seg) => Number.isFinite(seg.x_start) && Number.isFinite(seg.x_end) && Number.isFinite(seg.y))
+            .map((seg) => ({
+              x: (seg.x_start + seg.x_end) / 2,
+              y: seg.y,
+            }));
+
+          if (points.length === 0) return;
 
           compGroup.append('path')
             .datum(points)
@@ -369,10 +373,14 @@ const FlowlineChart = forwardRef<FlowlineChartHandle, FlowlineChartProps>(
           .y((d) => yScale(d.y))
           .curve(d3.curveMonotoneY);
 
-        const points = wagon.segments.map((seg) => ({
-          x: (seg.x_start + seg.x_end) / 2,
-          y: seg.y,
-        }));
+        const points = wagon.segments
+          .filter((seg) => Number.isFinite(seg.x_start) && Number.isFinite(seg.x_end) && Number.isFinite(seg.y))
+          .map((seg) => ({
+            x: (seg.x_start + seg.x_end) / 2,
+            y: seg.y,
+          }));
+
+        if (points.length === 0) return;
 
         const isSelected = selectedSegment?.tradeName === wagon.trade_name;
         const hasSelection = selectedSegment !== null;

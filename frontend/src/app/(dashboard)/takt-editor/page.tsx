@@ -140,6 +140,15 @@ function computeCellStatus(): CellStatus {
 
 // ── Grid Computation ───────────────────────────────────────────
 
+/**
+ * Compute takt grid with phase-zone matching.
+ *
+ * Takt Planning methodology: each trade (wagon) only flows through
+ * zones that match its phase group. Substructure trades go through
+ * sector/grid zones only, shell trades through floor zones, etc.
+ *
+ * The grid is computed per plan group (filtered externally via planGroup state).
+ */
 function computeGrid(
   trades: TradeRow[],
   zones: Zone[],
@@ -147,24 +156,28 @@ function computeGrid(
   cellOverrides: Record<string, Partial<GridCell>>,
   projectStart: Date,
 ): { cells: Map<string, GridCell>; assignments: Assignment[]; totalPeriods: number } {
-  const zoneInputs: ZoneInput[] = zones.map((z) => ({
+  // Build sequential zone inputs (already filtered by planGroup externally)
+  const zoneInputs: ZoneInput[] = zones.map((z, i) => ({
     id: z.id,
     name: z.name,
-    sequence: z.sequence,
+    sequence: i + 1,
   }));
 
-  const wagonInputs: WagonInput[] = trades.map((t) => ({
+  // Build wagon inputs (already filtered by planGroup externally)
+  // Buffer only between wagons in the same takt train, not the last one
+  const wagonInputs: WagonInput[] = trades.map((t, i) => ({
     id: t.id,
     tradeId: t.id,
-    sequence: t.sequence,
+    sequence: i + 1,
     durationDays: t.taktTime || globalTaktTime,
-    bufferAfter: t.bufferAfter,
+    bufferAfter: i < trades.length - 1 ? t.bufferAfter : 0,
   }));
 
   const assignments = generateTaktGrid(zoneInputs, wagonInputs, projectStart, globalTaktTime);
-  const totalPeriods = calculateTotalPeriods(zones.length, trades.length, trades.reduce((sum, t, i) => sum + (i < trades.length - 1 ? t.bufferAfter : 0), 0) / Math.max(trades.length - 1, 1));
 
-  const maxPeriod = Math.max(...assignments.map((a) => a.periodNumber), 1);
+  const maxPeriod = assignments.length > 0
+    ? Math.max(...assignments.map((a) => a.periodNumber), 1)
+    : 0;
 
   const cells = new Map<string, GridCell>();
   for (const a of assignments) {
@@ -357,10 +370,31 @@ export default function TaktEditorPage() {
     setHistoryIndex((i) => i + 1);
   }, [canRedo, history, historyIndex]);
 
-  // ── Computed Grid ──
+  // ── Filtered & sorted trades/zones by plan group (OmniClass aligned) ──
+  // Must be computed before grid so the grid only contains trades/zones for the active plan group
+  const filteredTrades = useMemo(() => {
+    return trades.filter((t) => phaseMatchesGroup(t.taktPhase, planGroup));
+  }, [trades, planGroup]);
+
+  const filteredZones = useMemo(() => {
+    return zones.filter((z) => z.group === null || z.group === planGroup);
+  }, [zones, planGroup]);
+
+  const sortedTrades = useMemo(
+    () => [...filteredTrades].sort((a, b) => a.sequence - b.sequence),
+    [filteredTrades],
+  );
+
+  const sortedZones = useMemo(
+    () => [...filteredZones].sort((a, b) => a.sequence - b.sequence),
+    [filteredZones],
+  );
+
+  // ── Computed Grid (uses filtered trades/zones per active plan group) ──
+  // Each plan group tab computes its own takt train independently
   const { cells, assignments, totalPeriods } = useMemo(
-    () => computeGrid(trades, zones, globalTaktTime, cellOverrides, projectStart),
-    [trades, zones, globalTaktTime, cellOverrides, projectStart],
+    () => computeGrid(sortedTrades, sortedZones, globalTaktTime, cellOverrides, projectStart),
+    [sortedTrades, sortedZones, globalTaktTime, cellOverrides, projectStart],
   );
 
   // ── Period Grid (Zone x Period orientation) ──
@@ -368,7 +402,7 @@ export default function TaktEditorPage() {
     const grid = new Map<string, GridCell & { trade: TradeRow }>();
     for (const a of assignments) {
       const key = `${a.zoneId}::${a.periodNumber}`;
-      const trade = trades.find((t) => t.id === a.wagonId);
+      const trade = sortedTrades.find((t) => t.id === a.wagonId);
       if (!trade) continue;
       const cellKey = `${a.wagonId}::${a.zoneId}`;
       const override = cellOverrides[cellKey];
@@ -385,7 +419,7 @@ export default function TaktEditorPage() {
       });
     }
     return grid;
-  }, [assignments, trades, cellOverrides]);
+  }, [assignments, sortedTrades, cellOverrides]);
 
   const periods = useMemo(
     () => Array.from({ length: totalPeriods }, (_, i) => i + 1),
@@ -822,25 +856,6 @@ export default function TaktEditorPage() {
     );
   }, [pushHistory]);
 
-  // ── Filtered & sorted trades/zones by plan group (OmniClass aligned) ──
-  const filteredTrades = useMemo(() => {
-    return trades.filter((t) => phaseMatchesGroup(t.taktPhase, planGroup));
-  }, [trades, planGroup]);
-
-  const filteredZones = useMemo(() => {
-    return zones.filter((z) => z.group === null || z.group === planGroup);
-  }, [zones, planGroup]);
-
-  const sortedTrades = useMemo(
-    () => [...filteredTrades].sort((a, b) => a.sequence - b.sequence),
-    [filteredTrades],
-  );
-
-  const sortedZones = useMemo(
-    () => [...filteredZones].sort((a, b) => a.sequence - b.sequence),
-    [filteredZones],
-  );
-
   // ── Keyboard shortcuts ──
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -1025,15 +1040,18 @@ export default function TaktEditorPage() {
           </div>
 
 
-          {/* ── Wagon Train ─────────────────────────────────── */}
+          {/* ── Takt Train (Vagon Dizisi) ───────────────────── */}
           <div
             className="px-4 py-2.5 border-b flex-shrink-0"
             style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
           >
             <div className="flex items-center gap-2 mb-2">
-              <Layers size={12} style={{ color: 'var(--color-accent)' }} />
+              <Layers size={12} style={{ color: TAKT_PLAN_GROUPS.find((g) => g.id === planGroup)?.color || 'var(--color-accent)' }} />
               <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
-                Wagon Train — Trade Sequence
+                Takt Train — {TAKT_PLAN_GROUPS.find((g) => g.id === planGroup)?.label || 'Wagons'}
+              </span>
+              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: 'var(--color-bg-input)', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                {sortedTrades.length} wagon{sortedTrades.length !== 1 ? 's' : ''} → {sortedZones.length} zone{sortedZones.length !== 1 ? 's' : ''}
               </span>
             </div>
             <div className="flex items-center gap-1 overflow-x-auto pb-1">
@@ -1056,13 +1074,15 @@ export default function TaktEditorPage() {
                     }}
                   >
                     <GripVertical size={10} style={{ color: `${trade.color}80` }} />
-                    <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: trade.color }} />
+                    <span className="text-[8px] font-bold w-4 h-4 rounded flex items-center justify-center flex-shrink-0" style={{ background: trade.color, color: 'white', fontFamily: 'var(--font-mono)' }}>
+                      {i + 1}
+                    </span>
                     <div className="flex flex-col">
                       <span className="text-[10px] font-semibold whitespace-nowrap leading-tight" style={{ color: 'var(--color-text)' }}>
                         {trade.name}
                       </span>
                       <span className="text-[7px] font-medium uppercase leading-tight" style={{ color: TAKT_PHASE_MAP.get(trade.taktPhase)?.color || 'var(--color-text-muted)' }}>
-                        {TAKT_PHASE_MAP.get(trade.taktPhase)?.shortLabel || trade.taktPhase}
+                        Wagon {i + 1} · {TAKT_PHASE_MAP.get(trade.taktPhase)?.shortLabel || trade.taktPhase}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 ml-1">
@@ -1093,7 +1113,7 @@ export default function TaktEditorPage() {
             </div>
           </div>
 
-          {/* ── Takt Grid (Zone x Period) ────────────────────── */}
+          {/* ── Takt Grid — Wagons flowing through Zones per Takt Period ── */}
           <div className="flex-1 overflow-auto">
             <div className="p-3 sm:p-4 md:p-6 lg:p-8">
               {/* Empty state for plan group with no trades or zones */}
@@ -1206,8 +1226,13 @@ export default function TaktEditorPage() {
                                   whileHover={{ scale: 1.04 }}
                                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                                 >
-                                  <div className="text-[9px] font-bold truncate" style={{ color: cell.trade.color }}>
-                                    {cell.trade.name.length > 8 ? cell.trade.name.substring(0, 8) + '\u2026' : cell.trade.name}
+                                  <div className="flex items-center gap-0.5">
+                                    <span className="text-[7px] font-bold w-3 h-3 rounded flex items-center justify-center flex-shrink-0" style={{ background: cell.trade.color, color: 'white', fontFamily: 'var(--font-mono)' }}>
+                                      {sortedTrades.findIndex((t) => t.id === cell.trade.id) + 1}
+                                    </span>
+                                    <span className="text-[9px] font-bold truncate" style={{ color: cell.trade.color }}>
+                                      {cell.trade.name.length > 6 ? cell.trade.name.substring(0, 6) + '\u2026' : cell.trade.name}
+                                    </span>
                                   </div>
                                   <div className="flex items-center justify-center gap-0.5 mt-0.5">
                                     <statusCfg.icon size={8} style={{ color: statusCfg.text }} />
@@ -1351,11 +1376,11 @@ export default function TaktEditorPage() {
 
                 {/* Panel Body */}
                 <div className="flex-1 p-4 space-y-4 overflow-auto">
-                  {/* Trade & OmniClass Phase */}
+                  {/* Wagon & OmniClass Phase */}
                   <div className="space-y-3">
                     <div>
                       <label className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
-                        Trade (Wagon)
+                        Wagon #{sortedTrades.findIndex((t) => t.id === selectedCellData.trade.id) + 1}
                       </label>
                       <div className="flex items-center gap-2 mt-1">
                         <div className="w-4 h-4 rounded" style={{ background: selectedCellData.trade.color }} />
@@ -1461,7 +1486,7 @@ export default function TaktEditorPage() {
                     </div>
                   </div>
 
-                  {/* Predecessors & Successors */}
+                  {/* Predecessor & Successor Wagons */}
                   <div className="space-y-2">
                     <label className="text-[9px] font-semibold uppercase tracking-wider block" style={{ color: 'var(--color-text-muted)' }}>
                       Sequence

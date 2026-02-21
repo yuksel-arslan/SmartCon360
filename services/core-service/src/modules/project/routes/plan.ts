@@ -2,14 +2,32 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import {
   generateTaktGrid,
-  calculateTotalPeriods,
   addWorkingDays,
   type ZoneInput,
   type WagonInput,
+  type Assignment,
 } from '../utils/takt-calculator';
 import { validatePlan, type TradeInfo } from '../utils/warning-detector';
+import {
+  classifyTradePhase,
+  classifyLocationPhase,
+  getPhaseGroup,
+  type TaktPlanGroup,
+} from '../utils/work-phase-classification';
 
 const router = Router();
+
+/**
+ * Classify a location into a TaktPlanGroup based on its type and metadata.
+ */
+function classifyZoneGroup(
+  locationType: string,
+  metadata: Record<string, unknown> | null,
+): TaktPlanGroup {
+  if (locationType === 'sector' || locationType === 'grid') return 'substructure';
+  const fromMeta = classifyLocationPhase(metadata);
+  return fromMeta ?? 'shell';
+}
 
 export default function planRoutes(prisma: PrismaClient) {
   /**
@@ -17,7 +35,14 @@ export default function planRoutes(prisma: PrismaClient) {
    *
    * AI-1 Core: Auto-generate a takt plan from project's locations and trades.
    * Layer 1 — template-based, no AI API dependency.
-   * Now persists to PostgreSQL via Prisma.
+   *
+   * Generates THREE separate takt trains per OmniClass Table 21:
+   *   1. Substructure (21-01): sector/grid zones × substructure trades
+   *   2. Shell & Core (21-02): floor zones × shell trades
+   *   3. Fit-Out (21-03): floor zones × fitout trades
+   *
+   * Buffer is applied between wagons WITHIN each takt train.
+   * Reads buffer size from project's Takt Config settings.
    */
   router.post('/projects/:id/plan/generate', async (req, res) => {
     try {
@@ -40,12 +65,13 @@ export default function planRoutes(prisma: PrismaClient) {
         });
       }
 
-      // 2. Extract takt zones (only zone-type locations)
-      const zoneLocations = project.locations.filter((l) => l.locationType === 'zone');
+      // 2. Extract takt zones (zone, sector, and grid-type locations)
+      const taktLocationTypes = ['zone', 'sector', 'grid'];
+      const zoneLocations = project.locations.filter((l) => taktLocationTypes.includes(l.locationType));
       if (zoneLocations.length === 0) {
         return res.status(400).json({
           data: null,
-          error: { code: 'NO_ZONES', message: 'No zones defined. Add zone-type locations first.' },
+          error: { code: 'NO_ZONES', message: 'No zones defined. Add zone, sector, or grid-type locations first.' },
         });
       }
       if (project.trades.length === 0) {
@@ -58,34 +84,82 @@ export default function planRoutes(prisma: PrismaClient) {
       const taktTime = project.defaultTaktTime;
       const startDate = project.plannedStart || new Date();
 
-      const workingDayNames = (project.workingDays as string[]) || ['mon', 'tue', 'wed', 'thu', 'fri'];
+      // Read buffer size from Takt Config (project settings), fall back to 1
+      const projectSettings = (project.settings as Record<string, unknown>) || {};
+      const taktConfig = (projectSettings.taktConfig as Record<string, unknown>) || {};
+      const bufferSize = typeof taktConfig.bufferSize === 'number' ? taktConfig.bufferSize : 1;
+
+      // Parse working days from taktConfig or project
+      const configWorkingDays = taktConfig.workingDays as string[] | undefined;
+      const workingDayNames = configWorkingDays || (project.workingDays as string[]) || ['mon', 'tue', 'wed', 'thu', 'fri'];
       const dayMap: Record<string, number> = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
       const workingDays = workingDayNames.map((d) => dayMap[d]).filter((d) => d !== undefined);
 
-      // 3. Build zone inputs
-      const zones: ZoneInput[] = zoneLocations.map((loc, i) => ({
-        id: loc.id,
-        name: loc.name,
-        sequence: i + 1,
-        areaSqm: loc.areaSqm ? Number(loc.areaSqm) : undefined,
-      }));
+      // 3. Classify zones and trades by phase group (OmniClass Table 21)
+      const zoneGroupMap = new Map<string, TaktPlanGroup>();
+      for (const loc of zoneLocations) {
+        const group = classifyZoneGroup(loc.locationType, loc.metadata as Record<string, unknown> | null);
+        zoneGroupMap.set(loc.id, group);
+      }
 
-      // 4. Build wagon inputs
-      const bufferSize = 1;
-      const wagonInputs: WagonInput[] = project.trades.map((trade, i) => ({
-        id: trade.id, // use trade.id as temporary wagon id for calculation
-        tradeId: trade.id,
-        sequence: i + 1,
-        durationDays: taktTime,
-        bufferAfter: i < project.trades.length - 1 ? bufferSize : 0,
-      }));
+      const tradeGroupMap = new Map<string, TaktPlanGroup>();
+      for (const trade of project.trades) {
+        const phase = classifyTradePhase(trade.discipline, trade.name);
+        const group = getPhaseGroup(phase);
+        tradeGroupMap.set(trade.id, group);
+      }
 
-      // 5. Generate takt grid
-      const calcAssignments = generateTaktGrid(zones, wagonInputs, new Date(startDate), taktTime, workingDays);
-      const totalPeriods = calculateTotalPeriods(zones.length, wagonInputs.length, bufferSize);
-      const endDate = addWorkingDays(new Date(startDate), totalPeriods * taktTime, workingDays);
+      // 4. Generate takt grid PER GROUP — each group is a separate takt train
+      const groups: TaktPlanGroup[] = ['substructure', 'shell', 'fitout'];
 
-      // 6. Run warning detection (AI-3 Core)
+      const allZoneInputs: (ZoneInput & { group: TaktPlanGroup })[] = [];
+      const allWagonInputs: (WagonInput & { group: TaktPlanGroup })[] = [];
+      const allAssignments: Assignment[] = [];
+      let maxEndDate = new Date(startDate);
+
+      for (const group of groups) {
+        const groupZones = zoneLocations.filter((loc) => zoneGroupMap.get(loc.id) === group);
+        if (groupZones.length === 0) continue;
+
+        const groupTrades = project.trades.filter((t) => tradeGroupMap.get(t.id) === group);
+        if (groupTrades.length === 0) continue;
+
+        const zoneInputs: ZoneInput[] = groupZones.map((loc, i) => ({
+          id: loc.id,
+          name: loc.name,
+          sequence: i + 1,
+          areaSqm: loc.areaSqm ? Number(loc.areaSqm) : undefined,
+        }));
+
+        const wagonInputs: WagonInput[] = groupTrades.map((trade, i) => ({
+          id: trade.id,
+          tradeId: trade.id,
+          sequence: i + 1,
+          durationDays: taktTime,
+          bufferAfter: i < groupTrades.length - 1 ? bufferSize : 0,
+        }));
+
+        const groupAssignments = generateTaktGrid(zoneInputs, wagonInputs, new Date(startDate), taktTime, workingDays);
+
+        allZoneInputs.push(...zoneInputs.map((z) => ({ ...z, group })));
+        allWagonInputs.push(...wagonInputs.map((w) => ({ ...w, group })));
+        allAssignments.push(...groupAssignments);
+
+        for (const a of groupAssignments) {
+          if (a.plannedEnd > maxEndDate) maxEndDate = a.plannedEnd;
+        }
+      }
+
+      if (allAssignments.length === 0) {
+        return res.status(400).json({
+          data: null,
+          error: { code: 'NO_MATCHES', message: 'No matching trade-zone pairs found. Ensure trades and zones have compatible phase groups.' },
+        });
+      }
+
+      const totalPeriods = Math.max(...allAssignments.map((a) => a.periodNumber), 1);
+
+      // 5. Run warning detection (AI-3 Core) per group
       const tradeInfos: TradeInfo[] = project.trades.map((t) => ({
         id: t.id,
         code: t.code,
@@ -104,11 +178,25 @@ export default function planRoutes(prisma: PrismaClient) {
         }
       }
 
-      const warnings = validatePlan(zones, wagonInputs, new Date(startDate), taktTime, tradeInfos, workingDays);
+      const allWarnings = {
+        stackingConflicts: [] as ReturnType<typeof validatePlan>['stackingConflicts'],
+        predecessorViolations: [] as ReturnType<typeof validatePlan>['predecessorViolations'],
+        bufferWarnings: [] as ReturnType<typeof validatePlan>['bufferWarnings'],
+      };
+      for (const group of groups) {
+        const gZones = allZoneInputs.filter((z) => z.group === group);
+        const gWagons = allWagonInputs.filter((w) => w.group === group);
+        const gTradeInfos = tradeInfos.filter((ti) => tradeGroupMap.get(ti.id) === group);
+        if (gZones.length > 0 && gWagons.length > 0) {
+          const w = validatePlan(gZones, gWagons, new Date(startDate), taktTime, gTradeInfos, workingDays);
+          allWarnings.stackingConflicts.push(...w.stackingConflicts);
+          allWarnings.predecessorViolations.push(...w.predecessorViolations);
+          allWarnings.bufferWarnings.push(...w.bufferWarnings);
+        }
+      }
 
-      // 7. Persist to PostgreSQL using Prisma transaction
+      // 6. Persist to PostgreSQL using Prisma transaction
       const plan = await prisma.$transaction(async (tx) => {
-        // Create plan
         const taktPlan = await tx.taktPlan.create({
           data: {
             projectId,
@@ -117,7 +205,7 @@ export default function planRoutes(prisma: PrismaClient) {
             status: 'draft',
             taktTime,
             startDate: new Date(startDate),
-            endDate,
+            endDate: maxEndDate,
             bufferType: 'time',
             bufferSize,
             generatedBy: 'template',
@@ -125,24 +213,22 @@ export default function planRoutes(prisma: PrismaClient) {
           },
         });
 
-        // Create zones
         const dbZones = await Promise.all(
-          zones.map((z) =>
+          allZoneInputs.map((z, i) =>
             tx.taktZone.create({
               data: {
                 planId: taktPlan.id,
                 locationId: z.id,
                 name: z.name,
-                code: `Z${String.fromCharCode(64 + z.sequence)}`,
+                code: `Z${String.fromCharCode(64 + ((i % 26) + 1))}${i >= 26 ? String(Math.floor(i / 26)) : ''}`,
                 sequence: z.sequence,
               },
             })
           )
         );
 
-        // Create wagons
         const dbWagons = await Promise.all(
-          wagonInputs.map((w) =>
+          allWagonInputs.map((w) =>
             tx.taktWagon.create({
               data: {
                 planId: taktPlan.id,
@@ -156,13 +242,11 @@ export default function planRoutes(prisma: PrismaClient) {
           )
         );
 
-        // Map old IDs to new DB IDs
-        const zoneIdMap = new Map(zones.map((z, i) => [z.id, dbZones[i].id]));
-        const wagonIdMap = new Map(wagonInputs.map((w, i) => [w.id, dbWagons[i].id]));
+        const zoneIdMap = new Map(allZoneInputs.map((z, i) => [z.id, dbZones[i].id]));
+        const wagonIdMap = new Map(allWagonInputs.map((w, i) => [w.id, dbWagons[i].id]));
 
-        // Create assignments
         const dbAssignments = await Promise.all(
-          calcAssignments.map((a) =>
+          allAssignments.map((a) =>
             tx.taktAssignment.create({
               data: {
                 planId: taktPlan.id,
@@ -187,10 +271,10 @@ export default function planRoutes(prisma: PrismaClient) {
           }),
           assignments: dbAssignments,
           warnings: {
-            stackingConflicts: warnings.stackingConflicts,
-            predecessorViolations: warnings.predecessorViolations,
-            bufferWarnings: warnings.bufferWarnings,
-            totalIssues: warnings.stackingConflicts.length + warnings.predecessorViolations.length + warnings.bufferWarnings.length,
+            stackingConflicts: allWarnings.stackingConflicts,
+            predecessorViolations: allWarnings.predecessorViolations,
+            bufferWarnings: allWarnings.bufferWarnings,
+            totalIssues: allWarnings.stackingConflicts.length + allWarnings.predecessorViolations.length + allWarnings.bufferWarnings.length,
           },
         };
       });
