@@ -19,6 +19,7 @@ import {
 } from '@/lib/stores/progress-store';
 import { listPlans, getPlan } from '@/lib/stores/takt-plans';
 import { useProjectStore } from '@/stores/projectStore';
+import { useTaktPlanStore } from '@/stores/taktPlanStore';
 import { useAuthStore } from '@/stores/authStore';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -1458,15 +1459,16 @@ export default function LPSPage() {
   const [zones, setZones] = useState<{ id: string; name: string; y_index: number }[]>([]);
   const [planAssignments, setPlanAssignments] = useState<{ trade: string; zone: string; plannedStart: string; plannedEnd: string; status: string; periodNumber: number }[]>([]);
 
+  const { loadActivePlan, activePlan: sharedPlan } = useTaktPlanStore();
+
   useEffect(() => {
     if (!activeProjectId) return;
     const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
     (async () => {
       try {
-        // First try to load trades/zones from the takt plan (most reliable source)
-        const plans = await listPlans(activeProjectId);
-        if (plans.length > 0) {
-          const plan = await getPlan(activeProjectId, plans[0].id);
+        // Use shared store to load the takt plan (cached if already loaded)
+        const plan = await loadActivePlan(activeProjectId);
+        if (plan) {
           if (plan.wagons.length > 0) {
             setTrades(plan.wagons.map((w) => ({
               name: w.tradeName,
@@ -1522,7 +1524,41 @@ export default function LPSPage() {
       } catch { /* not available yet */ }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeProjectId]);
+  }, [activeProjectId, loadActivePlan]);
+
+  // ── Sync from shared store when plan is updated by other pages ──
+  useEffect(() => {
+    if (!sharedPlan) return;
+    if (sharedPlan.wagons.length > 0) {
+      setTrades(sharedPlan.wagons.map((w) => ({
+        name: w.tradeName,
+        color: w.tradeColor || '#6366F1',
+      })));
+    }
+    if (sharedPlan.zones.length > 0) {
+      setZones(sharedPlan.zones.map((z, i) => ({
+        id: z.id,
+        name: z.name,
+        y_index: i,
+      })));
+    }
+    if (sharedPlan.assignments.length > 0) {
+      const wagonMap = new Map(sharedPlan.wagons.map((w) => [w.id, w]));
+      const zoneMap = new Map(sharedPlan.zones.map((z) => [z.id, z]));
+      setPlanAssignments(sharedPlan.assignments.map((a) => {
+        const wagon = wagonMap.get(a.wagonId);
+        const zone = zoneMap.get(a.zoneId);
+        return {
+          trade: wagon?.tradeName || 'Unknown',
+          zone: zone?.name || 'Unknown',
+          plannedStart: a.plannedStart,
+          plannedEnd: a.plannedEnd,
+          status: a.status,
+          periodNumber: a.periodNumber,
+        };
+      }));
+    }
+  }, [sharedPlan]);
 
   return (
     <>

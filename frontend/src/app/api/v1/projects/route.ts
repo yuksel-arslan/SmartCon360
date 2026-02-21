@@ -20,13 +20,18 @@ export async function GET(request: NextRequest) {
     });
     const isAdmin = !!adminRole;
 
-    // Admin sees all; others see owned + member projects
-    const where = isAdmin
-      ? {}
+    // Admin sees all; others see owned + member projects. Always exclude archived.
+    const where: Prisma.ProjectWhereInput = isAdmin
+      ? { status: { not: 'archived' } }
       : {
-          OR: [
-            { ownerId: userId },
-            { members: { some: { userId } } },
+          AND: [
+            { status: { not: 'archived' } },
+            {
+              OR: [
+                { ownerId: userId },
+                { members: { some: { userId } } },
+              ],
+            },
           ],
         };
 

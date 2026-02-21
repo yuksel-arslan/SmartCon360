@@ -16,9 +16,9 @@ import {
   DEMO_KPIS, DEMO_ACTIVITIES, DEMO_CONSTRAINTS,
 } from '@/lib/mockData';
 import type { FlowlineWagon } from '@/lib/mockData';
-import { listPlans, getFlowlineData } from '@/lib/stores/takt-plans';
 import { getCurrentPPC } from '@/lib/stores/progress-store';
 import { useProjectStore } from '@/stores/projectStore';
+import { useTaktPlanStore } from '@/stores/taktPlanStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useHubStore } from '@/stores/hubStore';
 
@@ -84,6 +84,7 @@ export default function DashboardPage() {
   const [activities] = useState(DEMO_ACTIVITIES);
 
   const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+  const { loadFlowlineData: loadFlowline, flowlineData: sharedFlowline } = useTaktPlanStore();
 
   useEffect(() => {
     if (!activeProjectId) return;
@@ -126,15 +127,35 @@ export default function DashboardPage() {
       } catch { /* no PPC data yet */ }
     })();
 
-    // Fetch flowline data
+    // Fetch flowline data via shared store (cached if another page already loaded it)
     (async () => {
       try {
-        const plans = await listPlans(projectId);
-        if (plans.length > 0) {
-          const data = await getFlowlineData(projectId, plans[0].id);
-          const apiData = data as { wagons?: FlowlineWagon[]; zones?: typeof DEMO_ZONES; todayX?: number; totalPeriods?: number };
-          if (apiData.wagons) setFlowlineWagons(apiData.wagons);
-          if (apiData.zones) setZones(apiData.zones);
+        const apiData = await loadFlowline(projectId);
+        if (apiData) {
+          if (apiData.wagons) {
+            // Dashboard uses FlowlineWagon type from mockData — transform API data
+            const wagons: FlowlineWagon[] = apiData.wagons.map((w) => ({
+              trade_name: w.tradeName,
+              color: w.tradeColor,
+              segments: w.segments.map((s) => ({
+                zone_index: (s.zoneSequence || 1) - 1,
+                x_start: s.periodNumber - 1,
+                x_end: (s.periodNumber - 1) + w.durationDays,
+                y: (s.zoneSequence || 1) - 1,
+                status: s.status as 'completed' | 'in_progress' | 'planned' | 'delayed',
+                percentComplete: s.progressPct || 0,
+                isCriticalPath: false,
+                plannedStart: s.plannedStart,
+                plannedEnd: s.plannedEnd,
+                actualStart: s.actualStart || undefined,
+                actualEnd: s.actualEnd || undefined,
+                crew: undefined,
+                tasks: [],
+              })),
+            }));
+            setFlowlineWagons(wagons);
+          }
+          if (apiData.zones) setZones(apiData.zones.map((z) => ({ id: z.id, name: z.name, y_index: z.y_index })));
           if (apiData.todayX) setTodayX(apiData.todayX);
           if (apiData.totalPeriods) {
             setTotalPeriods(apiData.totalPeriods);

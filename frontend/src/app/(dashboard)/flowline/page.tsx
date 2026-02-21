@@ -7,7 +7,7 @@ import FlowlineChart from '@/components/charts/FlowlineChart';
 import type { FlowlineChartHandle } from '@/components/charts/FlowlineChart';
 import type { FlowlineWagon, FlowlineSegment } from '@/lib/mockData';
 import { useFlowlineStore } from '@/stores/flowlineStore';
-import { getFlowlineData, listPlans } from '@/lib/stores/takt-plans';
+import { useTaktPlanStore } from '@/stores/taktPlanStore';
 import { useProjectStore } from '@/stores/projectStore';
 import { useRealtimeFlowline } from '@/hooks/useRealtimeFlowline';
 import type { ViewMode, StatusFilter, SelectedSegment } from '@/stores/flowlineStore';
@@ -78,6 +78,7 @@ export default function FlowlinePage() {
 
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
   const activeProject = useProjectStore((s) => s.getActiveProject());
+  const { loadFlowlineData: loadFlowline, flowlineData: sharedFlowline, invalidate: invalidateStore } = useTaktPlanStore();
 
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
@@ -86,128 +87,74 @@ export default function FlowlinePage() {
   const [todayX, setTodayX] = useState(0);
   const [totalPeriods, setTotalPeriods] = useState(0);
 
-  // ── Load flowline data from API ──────────────────────────
+  // ── Helper: transform shared store data → FlowlineWagon format ──
+  const applyFlowlineData = useCallback((apiData: NonNullable<typeof sharedFlowline>) => {
+    // periodNumber is day-based (1-indexed), x_end = x_start + durationDays
+    const wagons: FlowlineWagon[] = apiData.wagons.map((w) => ({
+      trade_name: w.tradeName,
+      color: w.tradeColor,
+      segments: w.segments.map((s) => ({
+        zone_index: (s.zoneSequence || 1) - 1,
+        x_start: s.periodNumber - 1,
+        x_end: (s.periodNumber - 1) + w.durationDays,
+        y: (s.zoneSequence || 1) - 1,
+        status: s.status as FlowlineSegment['status'],
+        percentComplete: s.progressPct || 0,
+        isCriticalPath: false,
+        plannedStart: s.plannedStart,
+        plannedEnd: s.plannedEnd,
+        actualStart: s.actualStart || undefined,
+        actualEnd: s.actualEnd || undefined,
+        crew: undefined,
+        tasks: [],
+      })),
+    }));
+
+    const zones = apiData.zones.map((z) => ({
+      id: z.id,
+      name: z.name,
+      y_index: z.y_index,
+    }));
+
+    setFlowlineData(wagons);
+    setZonesData(zones);
+    if (apiData.todayX !== undefined) setTodayX(apiData.todayX);
+    if (apiData.totalPeriods) setTotalPeriods(apiData.totalPeriods);
+  }, []);
+
+  // ── Load flowline data from shared store ──────────────────────────
 
   useEffect(() => {
     if (!activeProjectId) return;
-    const projectId = activeProjectId;
     (async () => {
       try {
-        const plans = await listPlans(projectId);
-        if (plans.length > 0) {
-          const raw = await getFlowlineData(projectId, plans[0].id);
-          if (raw && Array.isArray((raw as Record<string, unknown>).wagons)) {
-            const apiData = raw as {
-              wagons: {
-                tradeName: string; tradeColor: string; durationDays: number; bufferAfter: number;
-                segments: {
-                  zoneSequence: number; periodNumber: number; plannedStart: string; plannedEnd: string;
-                  actualStart?: string | null; actualEnd?: string | null;
-                  status: 'completed' | 'in_progress' | 'planned' | 'delayed'; progressPct: number;
-                }[];
-              }[];
-              zones: { id: string; name: string; code: string; sequence: number }[];
-              todayX: number; totalPeriods: number;
-            };
-
-            // Transform API wagons → FlowlineWagon format expected by FlowlineChart
-            const wagons: FlowlineWagon[] = apiData.wagons.map((w) => ({
-              trade_name: w.tradeName,
-              color: w.tradeColor,
-              segments: w.segments.map((s) => ({
-                zone_index: (s.zoneSequence || 1) - 1,
-                x_start: s.periodNumber - 1,
-                x_end: s.periodNumber,
-                y: (s.zoneSequence || 1) - 1,
-                status: s.status,
-                percentComplete: s.progressPct || 0,
-                isCriticalPath: false,
-                plannedStart: s.plannedStart,
-                plannedEnd: s.plannedEnd,
-                actualStart: s.actualStart || undefined,
-                actualEnd: s.actualEnd || undefined,
-                crew: undefined,
-                tasks: [],
-              })),
-            }));
-
-            // Transform API zones → { id, name, y_index }
-            const zones = apiData.zones.map((z) => ({
-              id: z.id,
-              name: z.name,
-              y_index: (z.sequence || 1) - 1,
-            }));
-
-            setFlowlineData(wagons);
-            setZonesData(zones);
-            if (apiData.todayX !== undefined) setTodayX(apiData.todayX);
-            if (apiData.totalPeriods) setTotalPeriods(apiData.totalPeriods);
-          }
-        }
+        const data = await loadFlowline(activeProjectId);
+        if (data) applyFlowlineData(data);
         setConnected(true);
       } catch {
         setConnected(false);
       }
     })();
-  }, [activeProjectId, setConnected]);
+  }, [activeProjectId, setConnected, loadFlowline, applyFlowlineData]);
+
+  // ── Sync from shared store when it updates ────────────────────────
+
+  useEffect(() => {
+    if (sharedFlowline && sharedFlowline.planId) {
+      applyFlowlineData(sharedFlowline);
+    }
+  }, [sharedFlowline, applyFlowlineData]);
 
   // ── Real-time updates via WebSocket ────────────────────────
 
   const reloadFlowline = useCallback(() => {
     if (!activeProjectId) return;
-    const projectId = activeProjectId;
     (async () => {
       try {
-        const plans = await listPlans(projectId);
-        if (plans.length > 0) {
-          const raw = await getFlowlineData(projectId, plans[0].id);
-          if (raw && Array.isArray((raw as Record<string, unknown>).wagons)) {
-            const apiData = raw as {
-              wagons: {
-                tradeName: string; tradeColor: string; durationDays: number; bufferAfter: number;
-                segments: {
-                  zoneSequence: number; periodNumber: number; plannedStart: string; plannedEnd: string;
-                  actualStart?: string | null; actualEnd?: string | null;
-                  status: 'completed' | 'in_progress' | 'planned' | 'delayed'; progressPct: number;
-                }[];
-              }[];
-              zones: { id: string; name: string; code: string; sequence: number }[];
-              todayX?: number;
-              totalPeriods?: number;
-            };
-            setFlowlineData(apiData.wagons.map((w) => ({
-              trade_name: w.tradeName,
-              color: w.tradeColor,
-              segments: w.segments.map((s) => ({
-                zone_index: (s.zoneSequence || 1) - 1,
-                x_start: s.periodNumber - 1,
-                x_end: s.periodNumber,
-                y: (s.zoneSequence || 1) - 1,
-                status: s.status,
-                percentComplete: s.progressPct || 0,
-                isCriticalPath: false,
-                plannedStart: s.plannedStart,
-                plannedEnd: s.plannedEnd,
-                actualStart: s.actualStart || undefined,
-                actualEnd: s.actualEnd || undefined,
-                crew: undefined,
-                tasks: [],
-              })),
-            })));
-            if (apiData.zones?.length) {
-              setZonesData(apiData.zones.map((z) => ({
-                id: z.id,
-                name: z.name,
-                y_index: (z.sequence || 1) - 1,
-              })));
-            }
-            if (apiData.todayX !== undefined) setTodayX(apiData.todayX);
-            if (apiData.totalPeriods) setTotalPeriods(apiData.totalPeriods);
-          }
-        }
+        await invalidateStore();
       } catch { /* silent reload */ }
     })();
-  }, [activeProjectId]);
+  }, [activeProjectId, invalidateStore]);
 
   useRealtimeFlowline({
     projectId: activeProjectId,
