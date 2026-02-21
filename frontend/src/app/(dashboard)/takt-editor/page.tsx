@@ -7,6 +7,7 @@ import { generatePlan, savePlan, listPlans, getPlan } from '@/lib/stores/takt-pl
 import api from '@/lib/api';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAuthStore } from '@/stores/authStore';
+import { ContractPolicyBanner } from '@/components/modules';
 import {
   calculateTotalPeriods,
   generateTaktGrid,
@@ -849,6 +850,12 @@ export default function TaktEditorPage() {
   return (
     <>
       <TopBar title="Takt Editor" />
+      <div className="px-4 pt-2">
+        <ContractPolicyBanner
+          module="takt_flow"
+          policyLabels={{ 'progress.unit': 'Progress Unit', 'design.concurrent': 'Fast-Track' }}
+        />
+      </div>
       <div className="flex-1 flex overflow-hidden">
         {/* Main content area */}
         <div className="flex-1 flex flex-col overflow-hidden">

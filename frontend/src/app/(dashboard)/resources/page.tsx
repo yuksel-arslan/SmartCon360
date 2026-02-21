@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import TopBar from '@/components/layout/TopBar';
-import { ModulePageHeader } from '@/components/modules';
+import { ModulePageHeader, ContractPolicyBanner } from '@/components/modules';
 import { MODULE_REGISTRY } from '@/lib/modules';
 import { Users, TrendingUp, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { useResourceStore } from '@/stores/resourceStore';
@@ -31,6 +31,10 @@ export default function ResourcesPage() {
       <TopBar title="ResourceFlow" />
       <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 space-y-4">
         <ModulePageHeader moduleId="resources" />
+        <ContractPolicyBanner
+          module="crew_flow"
+          policyLabels={{ 'labor.tracking': 'Labor Tracking' }}
+        />
 
         {error && (
           <div className="rounded-lg px-4 py-3 flex items-center gap-3 text-[12px]"

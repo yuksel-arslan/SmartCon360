@@ -4,6 +4,7 @@ from ..models.schemas import (
     CreatePlanRequest, TaktPlanResponse, TaktPlanStatus
 )
 from ..core.calculator import calculate_total_periods, calculate_end_date
+from ..core.policy_client import get_takt_policies
 import uuid
 from datetime import date
 
@@ -98,3 +99,14 @@ async def delete_plan(plan_id: str):
     if plan_id not in plans_store:
         raise HTTPException(status_code=404, detail="Plan not found")
     del plans_store[plan_id]
+
+
+@router.get("/policies/{project_id}")
+async def get_plan_policies(project_id: str):
+    """Get contract-driven TaktFlow policies for a project.
+
+    Returns progress tracking unit and design concurrency settings
+    based on the project's contract profile.
+    """
+    policies = await get_takt_policies(project_id)
+    return {"data": policies.to_dict()}
