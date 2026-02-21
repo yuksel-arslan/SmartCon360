@@ -190,11 +190,36 @@ export default function ProjectSetupWizard({ projectId }: Props) {
       // Persist to server (best-effort)
       const nextStepId = SETUP_STEPS[stepIndex + 1]?.id || stepDef.id;
       try {
-        await fetch(`/api/v1/projects/${projectId}/setup/complete-step`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeaders },
-          body: JSON.stringify({ step: stepDef.id, nextStep: nextStepId }),
-        });
+        await Promise.all([
+          fetch(`/api/v1/projects/${projectId}/setup/complete-step`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...authHeaders },
+            body: JSON.stringify({ step: stepDef.id, nextStep: nextStepId }),
+          }),
+          // Persist setup configuration (so it survives page refresh / edit mode re-entry)
+          fetch(`/api/v1/projects/${projectId}/setup`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', ...authHeaders },
+            body: JSON.stringify({
+              buildingType: state.buildingType,
+              projectPhase: state.projectPhase,
+              floorCount: state.floorCount,
+              basementCount: state.basementCount,
+              zonesPerFloor: state.zonesPerFloor,
+              structuralZonesPerFloor: state.structuralZonesPerFloor,
+              typicalFloorArea: state.typicalFloorArea,
+              numberOfBuildings: state.numberOfBuildings,
+              structuralSystem: state.structuralSystem,
+              mepComplexity: state.mepComplexity,
+              flowDirection: state.flowDirection,
+              deliveryMethod: state.deliveryMethod,
+              siteCondition: state.siteCondition,
+              foundationType: state.foundationType,
+              groundCondition: state.groundCondition,
+              groundImprovement: state.groundImprovement,
+            }),
+          }),
+        ]);
       } catch {
         // best-effort
       }
@@ -235,7 +260,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
     }
   };
 
-  // Save changes (edit mode) — persist current setup state without re-finalization
+  // Save changes (edit mode) — persist full setup config without re-finalization
   const handleSaveChanges = async () => {
     setSaving(true);
     setSaved(false);
@@ -246,10 +271,28 @@ export default function ProjectSetupWizard({ projectId }: Props) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
+          // Navigation state
           currentStep: SETUP_STEPS[step].id,
           completedSteps: state.completedSteps,
           classificationStandard: state.classificationStandard,
           taktPlanGenerated: state.taktPlanGenerated,
+          // Full setup configuration (persisted in Project.settings.setupConfig)
+          buildingType: state.buildingType,
+          projectPhase: state.projectPhase,
+          floorCount: state.floorCount,
+          basementCount: state.basementCount,
+          zonesPerFloor: state.zonesPerFloor,
+          structuralZonesPerFloor: state.structuralZonesPerFloor,
+          typicalFloorArea: state.typicalFloorArea,
+          numberOfBuildings: state.numberOfBuildings,
+          structuralSystem: state.structuralSystem,
+          mepComplexity: state.mepComplexity,
+          flowDirection: state.flowDirection,
+          deliveryMethod: state.deliveryMethod,
+          siteCondition: state.siteCondition,
+          foundationType: state.foundationType,
+          groundCondition: state.groundCondition,
+          groundImprovement: state.groundImprovement,
         }),
       });
 

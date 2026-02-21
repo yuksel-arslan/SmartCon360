@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { errorResponse } from '@/lib/errors';
 
 type Params = { params: Promise<{ id: string }> };
+
+// Setup configuration keys persisted in Project.settings.setupConfig
+const SETUP_CONFIG_KEYS = [
+  'buildingType', 'projectPhase', 'classificationStandard',
+  'floorCount', 'basementCount', 'zonesPerFloor', 'structuralZonesPerFloor',
+  'typicalFloorArea', 'numberOfBuildings',
+  'structuralSystem', 'mepComplexity', 'flowDirection', 'deliveryMethod', 'siteCondition',
+  'foundationType', 'groundCondition', 'groundImprovement',
+] as const;
 
 // GET /api/v1/projects/:id/setup — Get setup state
 export async function GET(request: NextRequest, { params }: Params) {
@@ -15,7 +25,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     const [project, locationCount, zoneCount, tradeCount] = await Promise.all([
       prisma.project.findUnique({
         where: { id: projectId },
-        select: { projectType: true, currency: true, name: true, defaultTaktTime: true, settings: true },
+        select: { projectType: true, currency: true, name: true, defaultTaktTime: true, settings: true, status: true },
       }),
       prisma.location.count({ where: { projectId, isActive: true } }),
       prisma.location.count({ where: { projectId, isActive: true, locationType: 'zone' } }),
@@ -35,6 +45,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 
     const settings = (project?.settings as Record<string, unknown>) || {};
     const taktConfig = (settings.taktConfig as Record<string, unknown>) || {};
+    const setupConfig = (settings.setupConfig as Record<string, unknown>) || {};
 
     const state = setup || {
       currentStep: 'classification',
@@ -54,6 +65,8 @@ export async function GET(request: NextRequest, { params }: Params) {
     return NextResponse.json({
       data: {
         ...state,
+        // Merge persisted setup configuration
+        ...setupConfig,
         drawingCount,
         wbsNodeCount: wbsCount,
         cbsNodeCount: cbsCount,
@@ -83,8 +96,11 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   try {
     requireAuth(request);
     const { id: projectId } = await params;
-    const { currentStep, completedSteps, classificationStandard, taktPlanGenerated } = await request.json();
+    const body = await request.json();
 
+    const { currentStep, completedSteps, classificationStandard, taktPlanGenerated } = body;
+
+    // Update ProjectSetup navigation state
     const setup = await prisma.projectSetup.upsert({
       where: { projectId },
       create: {
@@ -101,6 +117,33 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         ...(taktPlanGenerated !== undefined && { taktPlanGenerated }),
       },
     });
+
+    // Persist setup configuration in Project.settings.setupConfig
+    const configUpdates: Record<string, unknown> = {};
+    for (const key of SETUP_CONFIG_KEYS) {
+      if (body[key] !== undefined) {
+        configUpdates[key] = body[key];
+      }
+    }
+
+    if (Object.keys(configUpdates).length > 0) {
+      const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { settings: true },
+      });
+      const settings = (project?.settings as Record<string, unknown>) || {};
+      const existingConfig = (settings.setupConfig as Record<string, unknown>) || {};
+
+      const mergedSettings = {
+        ...settings,
+        setupConfig: { ...existingConfig, ...configUpdates },
+      } as Prisma.InputJsonValue;
+
+      await prisma.project.update({
+        where: { id: projectId },
+        data: { settings: mergedSettings },
+      });
+    }
 
     return NextResponse.json({ data: setup, error: null });
   } catch (err) {
