@@ -9,8 +9,10 @@ import {
   MEP_COMPLEXITY_LEVELS,
   FLOW_DIRECTIONS,
   DELIVERY_METHODS,
+  CONTRACT_PRICING_MODELS,
   SITE_CONDITIONS,
   calculateRecommendedTakt,
+  getModuleBehavior,
 } from '../types';
 import { Check, X, FileText, FolderTree, DollarSign, Wrench, Image, MapPin, Clock, AlertTriangle, Building2, Layers, Zap, ArrowUpDown } from 'lucide-react';
 
@@ -28,7 +30,9 @@ export default function StepReview({ state }: SetupStepProps) {
   const mepObj = MEP_COMPLEXITY_LEVELS.find((m) => m.value === state.mepComplexity);
   const flowObj = FLOW_DIRECTIONS.find((f) => f.value === state.flowDirection);
   const deliveryObj = DELIVERY_METHODS.find((d) => d.value === state.deliveryMethod);
+  const pricingObj = CONTRACT_PRICING_MODELS.find((p) => p.value === state.contractPricingModel);
   const siteObj = SITE_CONDITIONS.find((s) => s.value === state.siteCondition);
+  const moduleBehavior = state.contractPricingModel ? getModuleBehavior(state.contractPricingModel) : null;
 
   const buildingLabel = buildingTypeObj ? `${buildingTypeObj.icon} ${buildingTypeObj.label}` : state.buildingType || 'Not selected';
   const isInfra = state.buildingType === 'infrastructure';
@@ -158,6 +162,7 @@ export default function StepReview({ state }: SetupStepProps) {
             structObj && { label: 'Structure', value: `${structObj.icon} ${structObj.label}` },
             mepObj && { label: 'MEP', value: mepObj.label },
             deliveryObj && { label: 'Delivery', value: deliveryObj.label },
+            pricingObj && { label: 'Pricing', value: pricingObj.label },
             siteObj && { label: 'Site', value: siteObj.label },
           ].filter(Boolean).map((item) => (
             <div
@@ -252,6 +257,38 @@ export default function StepReview({ state }: SetupStepProps) {
         );
       })()}
 
+      {/* Contract-driven module behavior */}
+      {moduleBehavior && pricingObj && (
+        <div
+          className="mt-6 rounded-lg px-4 py-3 text-[12px]"
+          style={{ background: 'rgba(99,102,241,0.06)', borderLeft: '3px solid #6366F1' }}
+        >
+          <strong style={{ color: '#6366F1' }}>Contract-Driven Module Behavior — {pricingObj.label}</strong>
+          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="rounded px-2 py-1.5" style={{ background: 'var(--color-bg-input)' }}>
+              <span className="font-semibold" style={{ color: 'var(--color-text-muted)' }}>CostPilot: </span>
+              <span style={{ color: 'var(--color-text)' }}>
+                {moduleBehavior.costPilot.evmEnabled ? 'EVM enabled' : 'EVM N/A'} · {moduleBehavior.costPilot.paymentLabel}
+              </span>
+            </div>
+            <div className="rounded px-2 py-1.5" style={{ background: 'var(--color-bg-input)' }}>
+              <span className="font-semibold" style={{ color: 'var(--color-text-muted)' }}>TaktFlow: </span>
+              <span style={{ color: 'var(--color-text)' }}>Progress by {moduleBehavior.taktFlow.progressUnit}</span>
+            </div>
+            <div className="rounded px-2 py-1.5" style={{ background: 'var(--color-bg-input)' }}>
+              <span className="font-semibold" style={{ color: 'var(--color-text-muted)' }}>ClaimShield: </span>
+              <span style={{ color: 'var(--color-text)' }}>{moduleBehavior.claimShield.changeOrderType}</span>
+            </div>
+            <div className="rounded px-2 py-1.5" style={{ background: 'var(--color-bg-input)' }}>
+              <span className="font-semibold" style={{ color: 'var(--color-text-muted)' }}>SupplyChain: </span>
+              <span style={{ color: 'var(--color-text)' }}>
+                {moduleBehavior.supplyChain.materialProcurement} procurement{moduleBehavior.supplyChain.mrpEnabled ? ' · MRP on' : ''}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Integration info */}
       {getMissingRequiredSteps(state).length === 0 && (
         <div
@@ -267,6 +304,7 @@ export default function StepReview({ state }: SetupStepProps) {
             <li>• Discipline trades will flow through zones with {state.defaultTaktTime}-day takt rhythm</li>
             {structObj && <li>• Structural system ({structObj.label}) configured for trade sequencing</li>}
             {mepObj && mepObj.taktMultiplier > 1.0 && <li>• MEP complexity ({mepObj.label}) factored into takt duration — ×{mepObj.taktMultiplier} multiplier</li>}
+            {pricingObj && <li>• Contract policies auto-generated from {pricingObj.label} model — configures CostPilot, ClaimShield, SupplyChain behavior</li>}
           </ul>
         </div>
       )}
