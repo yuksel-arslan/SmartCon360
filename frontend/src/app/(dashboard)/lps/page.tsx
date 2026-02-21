@@ -113,33 +113,28 @@ const TASK_TEMPLATES: Record<string, string[]> = {
 
 // generateLookaheadTasks is now inline in LookaheadTab using props
 
-function generatePPCHistory(): WeeklyPPC[] {
-  const ppcValues = [62, 65, 68, 71, 74, 78, 82, 85, 87, 89, 91, 93];
-  return ppcValues.map((ppc, i) => {
-    const committed = 24 + Math.floor(Math.random() * 8);
-    const completed = Math.round((ppc / 100) * committed);
-    return {
-      weekLabel: `W${i + 1}`,
-      weekId: `w-${i + 1}`,
-      ppc,
-      committed,
-      completed,
-    };
-  });
+function generateCalendarWeeks(count: number): { weekLabel: string; weekId: string; weekStart: string; weekEnd: string }[] {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const currentMonday = new Date(today);
+  currentMonday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+
+  const weeks: { weekLabel: string; weekId: string; weekStart: string; weekEnd: string }[] = [];
+  for (let i = count - 1; i >= 0; i--) {
+    const monday = new Date(currentMonday);
+    monday.setDate(currentMonday.getDate() - i * 7);
+    const friday = new Date(monday);
+    friday.setDate(monday.getDate() + 4);
+    const fmt = (d: Date) => `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}`;
+    weeks.push({
+      weekLabel: `${fmt(monday)} - ${fmt(friday)}`,
+      weekId: monday.toISOString().split('T')[0],
+      weekStart: monday.toISOString().split('T')[0],
+      weekEnd: friday.toISOString().split('T')[0],
+    });
+  }
+  return weeks;
 }
-
-// generateCurrentWeekCommitments and generateTradePPC are no longer used - data comes from API
-
-// Variance distribution: Material 35%, Labor 25%, Design 15%, Predecessor 10%, Equipment 8%, Space 5%, Information 2%
-const VARIANCE_DATA: { category: VarianceCategory; count: number; pct: number }[] = [
-  { category: 'Material', count: 14, pct: 35 },
-  { category: 'Labor', count: 10, pct: 25 },
-  { category: 'Design', count: 6, pct: 15 },
-  { category: 'Predecessor', count: 4, pct: 10 },
-  { category: 'Equipment', count: 3, pct: 8 },
-  { category: 'Space', count: 2, pct: 5 },
-  { category: 'Information', count: 1, pct: 2 },
-];
 
 // ─── Helper Components ──────────────────────────────────────────────────────
 
@@ -646,12 +641,12 @@ function WeeklyWorkPlanTab({ trades, zones, projectId }: { trades: { name: strin
     }));
   }, [trades, zones]);
 
-  // Load existing commitments from API
+  // Load commitments from API for the selected week
   useEffect(() => {
-    if (!projectId) return;
+    if (!projectId || !currentWeek) return;
     (async () => {
       try {
-        const data = await getWeeklyCommitments(projectId);
+        const data = await getWeeklyCommitments(projectId, currentWeek.weekStart);
         if (data && data.length > 0) {
           const loaded: Commitment[] = data.map((c) => {
             const trade = trades.find((t) => t.name === c.tradeName);
@@ -664,20 +659,22 @@ function WeeklyWorkPlanTab({ trades, zones, projectId }: { trades: { name: strin
               committedBy: 'Team',
               status: c.completed ? 'completed' as CommitmentStatus : c.committed ? 'committed' as CommitmentStatus : 'committed' as CommitmentStatus,
               varianceReason: c.varianceCategory as VarianceCategory | undefined,
-              weekId: `w-api-${c.weekStart}`,
+              weekId: currentWeek.weekId,
             };
           });
-          setCommitments((prev) => [...prev, ...loaded]);
+          setCommitments(loaded);
+        } else {
+          setCommitments([]);
         }
-      } catch { /* API unavailable — use local state */ }
+      } catch { /* API unavailable — keep local state */ }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
+  }, [projectId, selectedWeekIdx]);
 
   const formId = useId();
 
-  const ppcHistory = useMemo(() => generatePPCHistory(), []);
-  const currentWeek = ppcHistory[selectedWeekIdx];
+  const calendarWeeks = useMemo(() => generateCalendarWeeks(12), []);
+  const currentWeek = calendarWeeks[selectedWeekIdx];
 
   const weekCommitments = useMemo(
     () => commitments.filter((c) => c.weekId === currentWeek.weekId),
@@ -733,15 +730,10 @@ function WeeklyWorkPlanTab({ trades, zones, projectId }: { trades: { name: strin
     // Persist to API
     if (projectId) {
       try {
-        const today = new Date();
-        const monday = new Date(today);
-        monday.setDate(today.getDate() - today.getDay() + 1);
-        const friday = new Date(monday);
-        friday.setDate(monday.getDate() + 4);
         await createWeeklyCommitment({
           projectId,
-          weekStart: monday.toISOString().split('T')[0],
-          weekEnd: friday.toISOString().split('T')[0],
+          weekStart: currentWeek.weekStart,
+          weekEnd: currentWeek.weekEnd,
           tradeId: trade?.name || c.trade,
           tradeName: c.trade,
           zoneId: c.zone,
@@ -772,7 +764,7 @@ function WeeklyWorkPlanTab({ trades, zones, projectId }: { trades: { name: strin
                 {currentWeek.weekLabel} — Weekly Work Plan
               </h3>
               <button
-                onClick={() => setSelectedWeekIdx((p) => Math.min(ppcHistory.length - 1, p + 1))}
+                onClick={() => setSelectedWeekIdx((p) => Math.min(calendarWeeks.length - 1, p + 1))}
                 className="w-7 h-7 rounded-md border flex items-center justify-center hover:opacity-80"
                 style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)' }}
                 aria-label="Next week"
@@ -786,7 +778,7 @@ function WeeklyWorkPlanTab({ trades, zones, projectId }: { trades: { name: strin
               )}
             </div>
             <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-              10 Feb - 14 Feb 2026 &middot; PPC Target: 85%
+              PPC Target: 85%
             </p>
           </div>
           <button
@@ -1138,7 +1130,7 @@ function TradeBarChart({ data }: { data: TradePPC[] }) {
   );
 }
 
-function VarianceParetoChart({ data }: { data: typeof VARIANCE_DATA }) {
+function VarianceParetoChart({ data }: { data: { category: string; count: number; pct: number }[] }) {
   const maxCount = Math.max(...data.map((d) => d.count));
   return (
     <div className="space-y-2">
@@ -1169,12 +1161,14 @@ function VarianceParetoChart({ data }: { data: typeof VARIANCE_DATA }) {
 }
 
 function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color: string }[]; projectId: string | null }) {
-  const [ppcHistory, setPpcHistory] = useState<WeeklyPPC[]>(generatePPCHistory);
+  const [ppcHistory, setPpcHistory] = useState<WeeklyPPC[]>([]);
   const [tradePPC, setTradePPC] = useState<TradePPC[]>([]);
-  const [varianceData, setVarianceData] = useState<{ category: VarianceCategory; count: number; pct: number }[]>(VARIANCE_DATA);
+  const [varianceData, setVarianceData] = useState<{ category: string; count: number; pct: number }[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!projectId) return;
+    if (!projectId) { setLoading(false); return; }
+    setLoading(true);
     (async () => {
       try {
         const result = await getPPCHistory(projectId);
@@ -1202,32 +1196,63 @@ function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color:
       } catch { /* no trade PPC data yet */ }
       try {
         const varianceResult = await getVarianceAnalysis(projectId);
-        const reasons = varianceResult as { categories?: { category: string; count: number; pct: number }[] };
-        if (reasons.categories && reasons.categories.length > 0) {
-          setVarianceData(reasons.categories.map((c) => ({
-            category: c.category as VarianceCategory,
+        if (varianceResult.byCategory && varianceResult.byCategory.length > 0) {
+          const totalCount = varianceResult.byCategory.reduce((sum, c) => sum + c.count, 0);
+          setVarianceData(varianceResult.byCategory.map((c) => ({
+            category: c.category,
             count: c.count,
-            pct: c.pct,
+            pct: totalCount > 0 ? Math.round((c.count / totalCount) * 100) : 0,
           })));
         }
-      } catch { /* no variance data yet — keep defaults */ }
+      } catch { /* no variance data yet */ }
+      setLoading(false);
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
-  const currentPPC = ppcHistory[ppcHistory.length - 1].ppc;
+  const hasData = ppcHistory.length > 0;
+  const currentPPC = hasData ? ppcHistory[ppcHistory.length - 1].ppc : 0;
   const prevPPC = ppcHistory.length > 1 ? ppcHistory[ppcHistory.length - 2].ppc : currentPPC;
   const ppcDelta = currentPPC - prevPPC;
   const isImproving = ppcDelta >= 0;
 
-  const avgPPC4Weeks = Math.round(
-    ppcHistory.slice(-4).reduce((sum, w) => sum + w.ppc, 0) / Math.min(4, ppcHistory.length),
-  );
+  const avgPPC4Weeks = hasData
+    ? Math.round(ppcHistory.slice(-4).reduce((sum, w) => sum + w.ppc, 0) / Math.min(4, ppcHistory.length))
+    : 0;
 
   const bestTrade = tradePPC.length > 0
     ? tradePPC.reduce((a, b) => (a.ppc > b.ppc ? a : b))
     : { trade: '-', color: 'var(--color-text-muted)', ppc: 0, committed: 0, completed: 0 };
-  const topVariance = varianceData[0] || VARIANCE_DATA[0];
+  const topVariance = varianceData.length > 0 ? varianceData[0] : { category: '-', count: 0, pct: 0 };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 rounded-full animate-spin mx-auto" style={{ borderColor: 'var(--color-border)', borderTopColor: 'var(--color-accent)' }} />
+          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Loading PPC data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasData && tradePPC.length === 0) {
+    return (
+      <Card className="p-8 text-center">
+        <div className="space-y-3">
+          <div className="w-12 h-12 rounded-xl mx-auto flex items-center justify-center" style={{ background: 'rgba(232,115,26,0.1)' }}>
+            <BarChart3 size={24} style={{ color: 'var(--color-accent)' }} />
+          </div>
+          <h3 className="text-sm font-medium" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
+            No PPC Data Yet
+          </h3>
+          <p className="text-xs max-w-md mx-auto" style={{ color: 'var(--color-text-muted)' }}>
+            Create weekly commitments in the Weekly Work Plan tab, then calculate PPC to see trends, trade performance, and variance analysis here.
+          </p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -1339,7 +1364,7 @@ function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color:
             </span>
             <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
               {isImproving
-                ? `PPC has grown from ${ppcHistory[0].ppc}% to ${currentPPC}% over 12 weeks. Sustained improvement of +${currentPPC - ppcHistory[0].ppc} percentage points.`
+                ? `PPC has grown from ${ppcHistory[0]?.ppc ?? 0}% to ${currentPPC}% over ${ppcHistory.length} weeks. Sustained improvement of +${currentPPC - (ppcHistory[0]?.ppc ?? 0)} percentage points.`
                 : 'Consider reviewing constraint management and resource allocation.'}
             </p>
           </div>
@@ -1349,28 +1374,35 @@ function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color:
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* PPC Trend Line Chart */}
-        <Card className="p-5">
-          <SectionTitle icon={TrendingUp}>PPC Trend (12 Weeks)</SectionTitle>
-          <PPCLineChart data={ppcHistory} />
-        </Card>
+        {ppcHistory.length >= 2 && (
+          <Card className="p-5">
+            <SectionTitle icon={TrendingUp}>PPC Trend ({ppcHistory.length} Weeks)</SectionTitle>
+            <PPCLineChart data={ppcHistory} />
+          </Card>
+        )}
 
         {/* PPC by Trade */}
-        <Card className="p-5">
-          <SectionTitle icon={Users}>PPC by Trade (Current Week)</SectionTitle>
-          <TradeBarChart data={tradePPC} />
-        </Card>
+        {tradePPC.length > 0 && (
+          <Card className="p-5">
+            <SectionTitle icon={Users}>PPC by Trade (Current Week)</SectionTitle>
+            <TradeBarChart data={tradePPC} />
+          </Card>
+        )}
       </div>
 
       {/* Variance Pareto */}
-      <Card className="p-5">
-        <SectionTitle icon={AlertTriangle}>Variance Pareto Analysis</SectionTitle>
-        <p className="text-[10px] mb-3" style={{ color: 'var(--color-text-muted)' }}>
-          Root cause distribution of failed commitments across all weeks. Focus improvement efforts on the top categories.
-        </p>
-        <VarianceParetoChart data={varianceData} />
-      </Card>
+      {varianceData.length > 0 && (
+        <Card className="p-5">
+          <SectionTitle icon={AlertTriangle}>Variance Pareto Analysis</SectionTitle>
+          <p className="text-[10px] mb-3" style={{ color: 'var(--color-text-muted)' }}>
+            Root cause distribution of failed commitments across all weeks. Focus improvement efforts on the top categories.
+          </p>
+          <VarianceParetoChart data={varianceData} />
+        </Card>
+      )}
 
       {/* Detailed PPC table */}
+      {ppcHistory.length > 0 && (
       <Card className="p-5">
         <SectionTitle icon={ClipboardList}>Weekly PPC History</SectionTitle>
         <div className="overflow-x-auto">
@@ -1411,6 +1443,7 @@ function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color:
           </table>
         </div>
       </Card>
+      )}
     </div>
   );
 }

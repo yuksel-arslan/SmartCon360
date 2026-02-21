@@ -193,6 +193,12 @@ export async function getPPCByTrade(
 
 // ── Variance ─────────────────────────────────────────────
 
-export async function getVarianceAnalysis(projectId: string): Promise<Record<string, unknown>> {
-  return api<Record<string, unknown>>(`/progress/variance/analysis?projectId=${projectId}`);
+export async function getVarianceAnalysis(projectId: string): Promise<{
+  topReasons: { reason: string; category: string; count: number }[];
+  byCategory: { category: string; count: number; percentage: number }[];
+}> {
+  return api<{
+    topReasons: { reason: string; category: string; count: number }[];
+    byCategory: { category: string; count: number; percentage: number }[];
+  }>(`/progress/variance/reasons?projectId=${projectId}`);
 }
