@@ -39,6 +39,43 @@ function authMiddleware(req: express.Request, res: express.Response, next: expre
   }
 }
 
+// ── Module Licensing Middleware ──
+// Tier definitions (must match frontend TIER_MODULES)
+const TIER_MODULES: Record<string, string[]> = {
+  starter: ['takt', 'flowline', 'simulate', 'constraints', 'progress', 'comm', 'ai', 'reports', 'hub', 'notifications'],
+  professional: ['quality', 'safety', 'cost', 'vision'],
+  enterprise: ['resources', 'supply-chain', 'risk', 'claims'],
+  ultimate: ['stakeholder', 'sustainability', 'analytics', 'drl', 'bim'],
+};
+
+const TIER_ORDER = ['starter', 'professional', 'enterprise', 'ultimate'];
+
+function getModulesForTier(tier: string): string[] {
+  const idx = TIER_ORDER.indexOf(tier);
+  if (idx === -1) return TIER_MODULES.starter;
+  const modules: string[] = [];
+  for (let i = 0; i <= idx; i++) modules.push(...TIER_MODULES[TIER_ORDER[i]]);
+  return modules;
+}
+
+/**
+ * Middleware: check if user's license tier allows access to a module.
+ * Uses X-License-Tier header (set by auth-service) or defaults to 'ultimate' for dev.
+ */
+function requireModuleAccess(moduleId: string) {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const tier = (req.headers['x-license-tier'] as string) || 'ultimate';
+    const allowed = getModulesForTier(tier);
+    if (!allowed.includes(moduleId)) {
+      return res.status(403).json({
+        data: null,
+        error: { code: 'MODULE_NOT_LICENSED', message: `Module '${moduleId}' is not included in your '${tier}' tier` },
+      });
+    }
+    next();
+  };
+}
+
 // ── Consolidated Service URLs (27 services → 6 services) ──
 const CORE_SERVICE = process.env.CORE_SERVICE_URL || 'http://localhost:3001';
 const OPS_SERVICE = process.env.OPS_SERVICE_URL || 'http://localhost:3002';
@@ -91,14 +128,14 @@ app.use('/api/v1/simulate', aiLimiter, authMiddleware, proxy(TAKT_SERVICE, { '^/
 // OPS-SERVICE routes (quality, safety, claims, risk, supply-chain, stakeholder, sustainability, comm)
 // ══════════════════════════════════════════════════════
 
-app.use('/api/v1/quality', defaultLimiter, authMiddleware, proxy(OPS_SERVICE, { '^/api/v1': '' }));
-app.use('/api/v1/safety', defaultLimiter, authMiddleware, proxy(OPS_SERVICE, { '^/api/v1': '' }));
-app.use('/api/v1/claims', defaultLimiter, authMiddleware, proxy(OPS_SERVICE, { '^/api/v1': '' }));
-app.use('/api/v1/supply-chain', defaultLimiter, authMiddleware, proxy(OPS_SERVICE, { '^/api/v1': '' }));
-app.use('/api/v1/risk', defaultLimiter, authMiddleware, proxy(OPS_SERVICE, { '^/api/v1': '' }));
-app.use('/api/v1/comm', defaultLimiter, authMiddleware, proxy(OPS_SERVICE, { '^/api/v1': '' }));
-app.use('/api/v1/stakeholder', defaultLimiter, authMiddleware, proxy(OPS_SERVICE, { '^/api/v1': '' }));
-app.use('/api/v1/sustainability', defaultLimiter, authMiddleware, proxy(OPS_SERVICE, { '^/api/v1': '' }));
+app.use('/api/v1/quality', defaultLimiter, authMiddleware, requireModuleAccess('quality'), proxy(OPS_SERVICE, { '^/api/v1': '' }));
+app.use('/api/v1/safety', defaultLimiter, authMiddleware, requireModuleAccess('safety'), proxy(OPS_SERVICE, { '^/api/v1': '' }));
+app.use('/api/v1/claims', defaultLimiter, authMiddleware, requireModuleAccess('claims'), proxy(OPS_SERVICE, { '^/api/v1': '' }));
+app.use('/api/v1/supply-chain', defaultLimiter, authMiddleware, requireModuleAccess('supply-chain'), proxy(OPS_SERVICE, { '^/api/v1': '' }));
+app.use('/api/v1/risk', defaultLimiter, authMiddleware, requireModuleAccess('risk'), proxy(OPS_SERVICE, { '^/api/v1': '' }));
+app.use('/api/v1/comm', defaultLimiter, authMiddleware, proxy(OPS_SERVICE, { '^/api/v1': '' }));  // starter tier
+app.use('/api/v1/stakeholder', defaultLimiter, authMiddleware, requireModuleAccess('stakeholder'), proxy(OPS_SERVICE, { '^/api/v1': '' }));
+app.use('/api/v1/sustainability', defaultLimiter, authMiddleware, requireModuleAccess('sustainability'), proxy(OPS_SERVICE, { '^/api/v1': '' }));
 
 // ══════════════════════════════════════════════════════
 // PLATFORM-SERVICE routes (hub, reports, notifications, resources)
@@ -106,7 +143,7 @@ app.use('/api/v1/sustainability', defaultLimiter, authMiddleware, proxy(OPS_SERV
 
 app.use('/api/v1/hub', defaultLimiter, authMiddleware, proxy(PLATFORM_SERVICE, { '^/api/v1': '' }));
 app.use('/api/v1/notifications', defaultLimiter, authMiddleware, proxy(PLATFORM_SERVICE, { '^/api/v1': '' }));
-app.use('/api/v1/resources', defaultLimiter, authMiddleware, proxy(PLATFORM_SERVICE, { '^/api/v1': '' }));
+app.use('/api/v1/resources', defaultLimiter, authMiddleware, requireModuleAccess('resources'), proxy(PLATFORM_SERVICE, { '^/api/v1': '' }));
 
 // ══════════════════════════════════════════════════════
 // AI-SERVICE routes (ai planner, concierge, reports, vision, bim, analytics, drl)
@@ -115,10 +152,10 @@ app.use('/api/v1/resources', defaultLimiter, authMiddleware, proxy(PLATFORM_SERV
 app.use('/api/v1/ai', aiLimiter, authMiddleware, proxy(AI_SERVICE, { '^/api/v1': '' }));
 app.use('/api/v1/concierge', aiLimiter, authMiddleware, proxy(AI_SERVICE, { '^/api/v1': '' }));
 app.use('/api/v1/reports', aiLimiter, authMiddleware, proxy(AI_SERVICE, { '^/api/v1': '' }));
-app.use('/api/v1/vision', aiLimiter, authMiddleware, proxy(AI_SERVICE, { '^/api/v1': '' }));
-app.use('/api/v1/bim', defaultLimiter, authMiddleware, proxy(AI_SERVICE, { '^/api/v1': '' }));
-app.use('/api/v1/analytics', defaultLimiter, authMiddleware, proxy(AI_SERVICE, { '^/api/v1': '' }));
-app.use('/api/v1/drl', aiLimiter, authMiddleware, proxy(AI_SERVICE, { '^/api/v1': '' }));
+app.use('/api/v1/vision', aiLimiter, authMiddleware, requireModuleAccess('vision'), proxy(AI_SERVICE, { '^/api/v1': '' }));
+app.use('/api/v1/bim', defaultLimiter, authMiddleware, requireModuleAccess('bim'), proxy(AI_SERVICE, { '^/api/v1': '' }));
+app.use('/api/v1/analytics', defaultLimiter, authMiddleware, requireModuleAccess('analytics'), proxy(AI_SERVICE, { '^/api/v1': '' }));
+app.use('/api/v1/drl', aiLimiter, authMiddleware, requireModuleAccess('drl'), proxy(AI_SERVICE, { '^/api/v1': '' }));
 
 // ── 404 ──
 app.use((_req, res) => {
