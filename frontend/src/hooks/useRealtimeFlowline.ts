@@ -5,7 +5,9 @@ import { useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useFlowlineStore } from '@/stores/flowlineStore';
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || '';
+// WebSocket URL must be explicitly configured; skip connection otherwise.
+// Without a deployed notification-service, Socket.io would spam failed connections.
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? '';
 
 export type FlowlineEvent =
   | 'plan:updated'
@@ -27,6 +29,9 @@ export function useRealtimeFlowline({ projectId, onEvent }: UseRealtimeFlowlineO
   const connect = useCallback(() => {
     if (!projectId || socketRef.current?.connected) return;
 
+    // Skip WebSocket connection when no server is configured or available
+    if (!WS_URL) return;
+
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
     const socket = io(WS_URL, {
@@ -35,9 +40,9 @@ export function useRealtimeFlowline({ projectId, onEvent }: UseRealtimeFlowlineO
       query: { projectId },
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionDelay: 2000,
-      reconnectionDelayMax: 16000,
-      reconnectionAttempts: 10,
+      reconnectionDelay: 5000,
+      reconnectionDelayMax: 30000,
+      reconnectionAttempts: 3,
     });
 
     socket.on('connect', () => {
@@ -47,6 +52,10 @@ export function useRealtimeFlowline({ projectId, onEvent }: UseRealtimeFlowlineO
 
     socket.on('disconnect', () => {
       setConnected(false);
+    });
+
+    socket.on('connect_error', () => {
+      // Silently handle connection errors — WS server may not be deployed yet
     });
 
     // Listen for plan/progress events from the server
