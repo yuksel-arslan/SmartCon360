@@ -1,0 +1,384 @@
+{
+  "mappings": {
+    "IfcWall": {
+      "material:Concrete": {
+        "code": "EF_25_10"
+      },
+      "material:Brick": {
+        "code": "EF_25_10_06"
+      },
+      "material:Block": {
+        "code": "EF_25_10_06"
+      },
+      "material:Masonry": {
+        "code": "EF_25_10_06"
+      },
+      "material:Steel": {
+        "code": "EF_25_10_79"
+      },
+      "material:Timber": {
+        "code": "EF_25_10_89"
+      },
+      "material:Drywall": {
+        "code": "EF_25_30"
+      },
+      "material:Gypsum": {
+        "code": "EF_25_30"
+      },
+      "material:Plasterboard": {
+        "code": "EF_25_30"
+      },
+      "material:Glass": {
+        "code": "EF_25_10_35"
+      },
+      "default": {
+        "code": "EF_25_10"
+      }
+    },
+    "IfcWallStandardCase": {
+      "material:Concrete": {
+        "code": "EF_25_10"
+      },
+      "material:Brick": {
+        "code": "EF_25_10_06"
+      },
+      "material:Block": {
+        "code": "EF_25_10_06"
+      },
+      "material:Masonry": {
+        "code": "EF_25_10_06"
+      },
+      "material:Steel": {
+        "code": "EF_25_10_79"
+      },
+      "material:Timber": {
+        "code": "EF_25_10_89"
+      },
+      "material:Drywall": {
+        "code": "EF_25_30"
+      },
+      "material:Gypsum": {
+        "code": "EF_25_30"
+      },
+      "default": {
+        "code": "EF_25_10"
+      }
+    },
+    "IfcSlab": {
+      "material:Concrete": {
+        "code": "EF_25_30_25"
+      },
+      "material:Steel": {
+        "code": "EF_25_30_79"
+      },
+      "material:Timber": {
+        "code": "EF_25_30_89"
+      },
+      "material:Composite": {
+        "code": "EF_25_30_15"
+      },
+      "default": {
+        "code": "EF_25_30_25"
+      }
+    },
+    "IfcBeam": {
+      "material:Concrete": {
+        "code": "EF_25_04"
+      },
+      "material:Steel": {
+        "code": "EF_25_04_79"
+      },
+      "material:Timber": {
+        "code": "EF_25_04_89"
+      },
+      "material:Precast": {
+        "code": "EF_25_04_65"
+      },
+      "default": {
+        "code": "EF_25_04"
+      }
+    },
+    "IfcColumn": {
+      "material:Concrete": {
+        "code": "EF_25_08"
+      },
+      "material:Steel": {
+        "code": "EF_25_08_79"
+      },
+      "material:Timber": {
+        "code": "EF_25_08_89"
+      },
+      "material:Precast": {
+        "code": "EF_25_08_65"
+      },
+      "default": {
+        "code": "EF_25_08"
+      }
+    },
+    "IfcDoor": {
+      "material:Timber": {
+        "code": "Pr_30_59_29_89"
+      },
+      "material:Wood": {
+        "code": "Pr_30_59_29_89"
+      },
+      "material:Steel": {
+        "code": "Pr_30_59_29_79"
+      },
+      "material:Aluminium": {
+        "code": "Pr_30_59_29_02"
+      },
+      "material:Aluminum": {
+        "code": "Pr_30_59_29_02"
+      },
+      "material:Glass": {
+        "code": "Pr_30_59_29_35"
+      },
+      "default": {
+        "code": "Pr_30_59_29"
+      }
+    },
+    "IfcWindow": {
+      "material:Aluminium": {
+        "code": "Pr_30_59_98_02"
+      },
+      "material:Aluminum": {
+        "code": "Pr_30_59_98_02"
+      },
+      "material:Timber": {
+        "code": "Pr_30_59_98_89"
+      },
+      "material:PVC": {
+        "code": "Pr_30_59_98_63"
+      },
+      "material:Steel": {
+        "code": "Pr_30_59_98_79"
+      },
+      "default": {
+        "code": "Pr_30_59_98"
+      }
+    },
+    "IfcStairFlight": {
+      "material:Concrete": {
+        "code": "EF_25_50"
+      },
+      "material:Steel": {
+        "code": "EF_25_50_79"
+      },
+      "material:Timber": {
+        "code": "EF_25_50_89"
+      },
+      "default": {
+        "code": "EF_25_50"
+      }
+    },
+    "IfcStair": {
+      "default": {
+        "code": "EF_25_50"
+      }
+    },
+    "IfcRailing": {
+      "material:Steel": {
+        "code": "Pr_30_59_36_79"
+      },
+      "material:Glass": {
+        "code": "Pr_30_59_36_35"
+      },
+      "material:Timber": {
+        "code": "Pr_30_59_36_89"
+      },
+      "default": {
+        "code": "Pr_30_59_36"
+      }
+    },
+    "IfcRoof": {
+      "material:Concrete": {
+        "code": "EF_25_40"
+      },
+      "material:Steel": {
+        "code": "EF_25_40_79"
+      },
+      "material:Timber": {
+        "code": "EF_25_40_89"
+      },
+      "material:Tile": {
+        "code": "EF_25_40_86"
+      },
+      "default": {
+        "code": "EF_25_40"
+      }
+    },
+    "IfcCurtainWall": {
+      "material:Aluminium": {
+        "code": "EF_25_10_20"
+      },
+      "material:Aluminum": {
+        "code": "EF_25_10_20"
+      },
+      "material:Glass": {
+        "code": "EF_25_10_20"
+      },
+      "default": {
+        "code": "EF_25_10_20"
+      }
+    },
+    "IfcPlate": {
+      "material:Steel": {
+        "code": "Pr_20_93_52_79"
+      },
+      "material:Concrete": {
+        "code": "Pr_20_93_52_15"
+      },
+      "default": {
+        "code": "Pr_20_93_52"
+      }
+    },
+    "IfcMember": {
+      "material:Steel": {
+        "code": "Pr_20_93_52_79"
+      },
+      "material:Timber": {
+        "code": "Pr_20_93_52_89"
+      },
+      "default": {
+        "code": "Pr_20_93_52"
+      }
+    },
+    "IfcFooting": {
+      "material:Concrete": {
+        "code": "EF_20_10_30"
+      },
+      "default": {
+        "code": "EF_20_10_30"
+      }
+    },
+    "IfcPile": {
+      "material:Concrete": {
+        "code": "EF_20_10_60"
+      },
+      "material:Steel": {
+        "code": "EF_20_10_60_79"
+      },
+      "default": {
+        "code": "EF_20_10_60"
+      }
+    },
+    "IfcCovering": {
+      "material:Tile": {
+        "code": "Pr_25_71_25"
+      },
+      "material:Ceramic": {
+        "code": "Pr_25_71_25"
+      },
+      "material:Plaster": {
+        "code": "Pr_25_71_63"
+      },
+      "material:Paint": {
+        "code": "Pr_25_71_50"
+      },
+      "default": {
+        "code": "Pr_25_71"
+      }
+    },
+    "IfcRamp": {
+      "default": {
+        "code": "EF_25_50_69"
+      }
+    },
+    "IfcRampFlight": {
+      "default": {
+        "code": "EF_25_50_69"
+      }
+    },
+    "IfcBuildingElementProxy": {
+      "default": {
+        "code": "EF_25_90"
+      }
+    },
+    "IfcSpace": {
+      "default": {
+        "code": "SL_20"
+      }
+    },
+    "IfcDistributionElement": {
+      "default": {
+        "code": "EF_60"
+      }
+    },
+    "IfcFlowTerminal": {
+      "default": {
+        "code": "EF_65"
+      }
+    },
+    "IfcFlowSegment": {
+      "default": {
+        "code": "EF_65_40"
+      }
+    },
+    "IfcFlowFitting": {
+      "default": {
+        "code": "EF_65_50"
+      }
+    }
+  },
+  "descriptions": {
+    "EF_25_10": "Walls and barriers",
+    "EF_25_10_06": "Brick/block walls",
+    "EF_25_10_79": "Steel-framed walls",
+    "EF_25_10_89": "Timber-framed walls",
+    "EF_25_10_35": "Glass walls",
+    "EF_25_10_20": "Curtain walling",
+    "EF_25_30": "Partition systems",
+    "EF_25_30_25": "Concrete floor slabs",
+    "EF_25_30_79": "Steel floor decking",
+    "EF_25_30_89": "Timber floor systems",
+    "EF_25_30_15": "Composite floor systems",
+    "EF_25_04": "Beams",
+    "EF_25_04_79": "Steel beams",
+    "EF_25_04_89": "Timber beams",
+    "EF_25_04_65": "Precast beams",
+    "EF_25_08": "Columns",
+    "EF_25_08_79": "Steel columns",
+    "EF_25_08_89": "Timber columns",
+    "EF_25_08_65": "Precast columns",
+    "EF_25_50": "Stairs and ramps",
+    "EF_25_50_79": "Steel stairs",
+    "EF_25_50_89": "Timber stairs",
+    "EF_25_50_69": "Ramps",
+    "EF_25_40": "Roof structures",
+    "EF_25_40_79": "Steel roof structures",
+    "EF_25_40_89": "Timber roof structures",
+    "EF_25_40_86": "Tile roofing",
+    "EF_25_90": "General building elements",
+    "EF_20_10_30": "Pad foundations",
+    "EF_20_10_60": "Piled foundations",
+    "EF_20_10_60_79": "Steel piles",
+    "EF_60": "Distribution systems",
+    "EF_65": "Flow terminal elements",
+    "EF_65_40": "Pipeline segments",
+    "EF_65_50": "Pipeline fittings",
+    "Pr_30_59_29": "Doors",
+    "Pr_30_59_29_89": "Timber doors",
+    "Pr_30_59_29_79": "Steel doors",
+    "Pr_30_59_29_02": "Aluminium doors",
+    "Pr_30_59_29_35": "Glass doors",
+    "Pr_30_59_98": "Windows",
+    "Pr_30_59_98_02": "Aluminium windows",
+    "Pr_30_59_98_89": "Timber windows",
+    "Pr_30_59_98_63": "PVC windows",
+    "Pr_30_59_98_79": "Steel windows",
+    "Pr_30_59_36": "Railings and balustrades",
+    "Pr_30_59_36_79": "Steel railings",
+    "Pr_30_59_36_35": "Glass railings",
+    "Pr_30_59_36_89": "Timber railings",
+    "Pr_20_93_52": "Structural members",
+    "Pr_20_93_52_79": "Steel structural members",
+    "Pr_20_93_52_15": "Concrete structural members",
+    "Pr_20_93_52_89": "Timber structural members",
+    "Pr_25_71": "Floor coverings",
+    "Pr_25_71_25": "Tile floor coverings",
+    "Pr_25_71_63": "Plaster coverings",
+    "Pr_25_71_50": "Paint finishes",
+    "SL_20": "Spaces"
+  }
+}
