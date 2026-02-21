@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public", "cost", "quality", "safety", "resources", "claims"]
+  schemas  = ["public", "cost", "quality", "safety", "resources", "claims", "risk"]
 }
 
 // ============================================================================
@@ -1454,6 +1454,66 @@ model DelayEvent {
   @@index([category])
   @@map("delay_events")
   @@schema("claims")
+}
+
+// ============================================================================
+// RISK MODULE (RiskRadar)
+// ============================================================================
+
+model Risk {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String   @map("project_id") @db.Uuid
+  riskNumber      String   @map("risk_number") @db.VarChar(30)
+  title           String   @db.VarChar(255)
+  description     String?
+  category        String   @db.VarChar(50) // schedule, cost, quality, safety, scope, resource, external, technical
+  status          String   @default("open") @db.VarChar(30) // open, mitigating, monitoring, closed, occurred
+  probability     Int      @default(3) // 1-5 scale
+  impact          Int      @default(3) // 1-5 scale
+  riskScore       Int      @default(9) @map("risk_score") // probability * impact
+  owner           String?  @db.VarChar(255)
+  trigger         String?  @db.VarChar(500)
+  response        String   @default("mitigate") @db.VarChar(30) // avoid, mitigate, transfer, accept
+  mitigationPlan  String?  @map("mitigation_plan")
+  contingencyPlan String?  @map("contingency_plan")
+  costImpact      Decimal  @default(0) @map("cost_impact") @db.Decimal(14, 2)
+  timeImpactDays  Int      @default(0) @map("time_impact_days")
+  residualProb    Int?     @map("residual_prob") // after mitigation
+  residualImpact  Int?     @map("residual_impact")
+  identifiedDate  DateTime @default(now()) @map("identified_date") @db.Date
+  reviewDate      DateTime? @map("review_date") @db.Date
+  closedDate      DateTime? @map("closed_date") @db.Date
+  createdBy       String   @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, riskNumber])
+  @@index([projectId])
+  @@index([status])
+  @@index([category])
+  @@index([riskScore])
+  @@map("risks")
+  @@schema("risk")
+}
+
+model RiskAction {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  riskId      String   @map("risk_id") @db.Uuid
+  projectId   String   @map("project_id") @db.Uuid
+  title       String   @db.VarChar(255)
+  description String?
+  assignedTo  String?  @map("assigned_to") @db.VarChar(255)
+  dueDate     DateTime? @map("due_date") @db.Date
+  status      String   @default("pending") @db.VarChar(30) // pending, in_progress, completed, overdue
+  completedDate DateTime? @map("completed_date") @db.Date
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([riskId])
+  @@index([projectId])
+  @@index([status])
+  @@map("risk_actions")
+  @@schema("risk")
 }
 
 // ============================================================================

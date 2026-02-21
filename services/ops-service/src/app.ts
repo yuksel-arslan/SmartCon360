@@ -21,10 +21,11 @@ import evmRouter from './modules/cost/routes/evm';
 import catalogRouter from './modules/cost/routes/catalog';
 import classificationMappingRouter from './modules/cost/routes/classification-mapping';
 
-// Quality, Safety & Claims module routes
+// Quality, Safety, Claims & Risk module routes
 import qualityRouter from './modules/quality/routes';
 import safetyRouter from './modules/safety/routes';
 import claimsRouter from './modules/claims/routes';
+import riskRouter from './modules/risk/routes';
 
 // Cost module middleware
 import { authenticate } from './modules/cost/middleware/auth';
@@ -127,9 +128,10 @@ app.use('/safety', authenticate, safetyRouter);
 // ──────────────────────────────────────────────
 app.use('/claims', authenticate, claimsRouter);
 
-app.get('/risk/health', (_req: Request, res: Response) => {
-  res.json({ status: 'stub', module: 'risk' });
-});
+// ──────────────────────────────────────────────
+// RISK MODULE — Full routes (RiskRadar)
+// ──────────────────────────────────────────────
+app.use('/risk', authenticate, riskRouter);
 
 app.get('/supply-chain/health', (_req: Request, res: Response) => {
   res.json({ status: 'stub', module: 'supply-chain' });
