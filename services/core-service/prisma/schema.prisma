@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public", "cost", "quality", "safety", "resources"]
+  schemas  = ["public", "cost", "quality", "safety", "resources", "claims"]
 }
 
 // ============================================================================
@@ -1353,6 +1353,107 @@ model ToolboxTalk {
   @@index([projectId])
   @@map("toolbox_talks")
   @@schema("safety")
+}
+
+// ============================================================================
+// CLAIMS MODULE (ClaimShield)
+// ============================================================================
+
+model ChangeOrder {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String   @map("project_id") @db.Uuid
+  coNumber        String   @map("co_number") @db.VarChar(30)
+  title           String   @db.VarChar(255)
+  description     String?
+  type            String   @db.VarChar(50) // scope_variation, new_rate_item, cost_directive, unit_allocation_change, daywork
+  status          String   @default("draft") @db.VarChar(30) // draft, submitted, under_review, approved, rejected, withdrawn
+  priority        String   @default("medium") @db.VarChar(20) // low, medium, high, critical
+  initiatedBy     String   @map("initiated_by") @db.VarChar(50) // owner, contractor, engineer, subcontractor
+  costImpact      Decimal  @default(0) @map("cost_impact") @db.Decimal(14, 2)
+  timeImpactDays  Int      @default(0) @map("time_impact_days")
+  currency        String   @default("USD") @db.VarChar(3)
+  contractClause  String?  @map("contract_clause") @db.VarChar(100)
+  submittedDate   DateTime? @map("submitted_date") @db.Date
+  reviewedDate    DateTime? @map("reviewed_date") @db.Date
+  approvedDate    DateTime? @map("approved_date") @db.Date
+  approvedAmount  Decimal? @map("approved_amount") @db.Decimal(14, 2)
+  approvedDays    Int?     @map("approved_days")
+  reviewedBy      String?  @map("reviewed_by") @db.Uuid
+  notes           String?
+  createdBy       String   @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, coNumber])
+  @@index([projectId])
+  @@index([status])
+  @@index([type])
+  @@map("change_orders")
+  @@schema("claims")
+}
+
+model Claim {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String   @map("project_id") @db.Uuid
+  claimNumber     String   @map("claim_number") @db.VarChar(30)
+  title           String   @db.VarChar(255)
+  description     String?
+  type            String   @db.VarChar(50) // extension_of_time, additional_cost, disruption, acceleration, other
+  basis           String   @db.VarChar(50) // quantity_variance, scope_change, cost_substantiation, gmp_exceedance, delay
+  status          String   @default("draft") @db.VarChar(30) // draft, notified, submitted, under_review, negotiation, resolved, rejected, arbitration
+  priority        String   @default("medium") @db.VarChar(20) // low, medium, high, critical
+  claimedBy       String   @map("claimed_by") @db.VarChar(50) // contractor, subcontractor, owner
+  amountClaimed   Decimal  @default(0) @map("amount_claimed") @db.Decimal(14, 2)
+  amountAwarded   Decimal? @map("amount_awarded") @db.Decimal(14, 2)
+  daysClaimed     Int      @default(0) @map("days_claimed")
+  daysAwarded     Int?     @map("days_awarded")
+  currency        String   @default("USD") @db.VarChar(3)
+  contractClause  String?  @map("contract_clause") @db.VarChar(100)
+  notifiedDate    DateTime? @map("notified_date") @db.Date
+  submittedDate   DateTime? @map("submitted_date") @db.Date
+  resolvedDate    DateTime? @map("resolved_date") @db.Date
+  resolution      String?  @db.VarChar(50) // negotiated, engineer_determination, daab, adjudication, arbitration
+  resolvedBy      String?  @map("resolved_by") @db.Uuid
+  notes           String?
+  createdBy       String   @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, claimNumber])
+  @@index([projectId])
+  @@index([status])
+  @@index([type])
+  @@map("claims")
+  @@schema("claims")
+}
+
+model DelayEvent {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String   @map("project_id") @db.Uuid
+  eventNumber     String   @map("event_number") @db.VarChar(30)
+  title           String   @db.VarChar(255)
+  description     String?
+  category        String   @db.VarChar(50) // employer_risk, contractor_risk, neutral, concurrent
+  responsibleParty String  @map("responsible_party") @db.VarChar(50) // owner, contractor, subcontractor, force_majeure, shared
+  status          String   @default("identified") @db.VarChar(30) // identified, analysed, mitigated, closed
+  delayDays       Int      @default(0) @map("delay_days")
+  startDate       DateTime @map("start_date") @db.Date
+  endDate         DateTime? @map("end_date") @db.Date
+  isCriticalPath  Boolean  @default(false) @map("is_critical_path")
+  affectedActivities Json  @default("[]") @map("affected_activities")
+  mitigationAction String? @map("mitigation_action")
+  claimId         String?  @map("claim_id") @db.Uuid
+  notes           String?
+  createdBy       String   @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, eventNumber])
+  @@index([projectId])
+  @@index([status])
+  @@index([category])
+  @@map("delay_events")
+  @@schema("claims")
 }
 
 // ============================================================================
