@@ -12,7 +12,7 @@ interface WbsNode {
   children: WbsNode[];
 }
 
-export default function StepWbs({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
+export default function StepWbs({ projectId, state, onStateChange, authFetch }: SetupStepProps) {
   const [wbsTree, setWbsTree] = useState<WbsNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -23,9 +23,7 @@ export default function StepWbs({ projectId, state, onStateChange, authHeaders }
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/wbs`, {
-        headers: { ...authHeaders },
-      });
+      const res = await authFetch(`/api/v1/projects/${projectId}/wbs`);
       if (res.ok) {
         const json = await res.json();
         const tree: WbsNode[] = json.data || [];
@@ -45,7 +43,7 @@ export default function StepWbs({ projectId, state, onStateChange, authHeaders }
       setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, authHeaders]);
+  }, [projectId, authFetch]);
 
   // Always load existing WBS on mount
   useEffect(() => {
@@ -57,9 +55,9 @@ export default function StepWbs({ projectId, state, onStateChange, authHeaders }
     setError('');
 
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/wbs/generate`, {
+      const res = await authFetch(`/api/v1/projects/${projectId}/wbs/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           standard: state.classificationStandard,
           projectType: state.projectType || undefined,
