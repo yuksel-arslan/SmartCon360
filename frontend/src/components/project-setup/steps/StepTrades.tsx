@@ -42,7 +42,7 @@ function cycleContractType(current: ContractType): ContractType {
   return order[(idx + 1) % order.length];
 }
 
-export default function StepTrades({ projectId, state, onStateChange, onComplete, authHeaders }: SetupStepProps) {
+export default function StepTrades({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
   const [trades, setTrades] = useState<TradeRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -60,6 +60,19 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
 
   // Snapshot of saved state to detect changes
   const savedSnapshot = useRef<Map<string, { contractType: ContractType; subcontractorGroup: string }>>(new Map());
+
+  // Track pending group switch to prevent blur/click race condition
+  const pendingGroupSwitch = useRef<string | null>(null);
+
+  // Save current group editing (called before switching or closing)
+  const commitCurrentGroupEdit = useCallback(() => {
+    if (editingGroup) {
+      const trimmed = groupInput.trim();
+      setTrades((prev) => prev.map((t) =>
+        t.code === editingGroup ? { ...t, subcontractorGroup: trimmed } : t
+      ));
+    }
+  }, [editingGroup, groupInput]);
 
   // Load trades: first try DB, then fall back to templates
   const loadTrades = useCallback(async () => {
@@ -135,7 +148,8 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
       });
       if (res.ok) {
         const json = await res.json();
-        setTrades((json.data.trades || []).map((t: SubTradeTemplate) => ({
+        const templateTrades = json.data?.trades || [];
+        setTrades(templateTrades.map((t: SubTradeTemplate) => ({
           ...t,
           enabled: true,
           contractType: t.defaultContractType || 'supply_and_fix',
@@ -188,6 +202,21 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
 
   const setTradeGroup = (code: string, group: string) => {
     setTrades((prev) => prev.map((t) => (t.code === code ? { ...t, subcontractorGroup: group } : t)));
+  };
+
+  // Start editing a group: save current edit first, then switch
+  const startEditingGroup = (tradeCode: string, currentGroup: string) => {
+    // Save current group edit if any
+    commitCurrentGroupEdit();
+    setEditingGroup(tradeCode);
+    setGroupInput(currentGroup);
+  };
+
+  // Finish editing the current group
+  const finishEditingGroup = () => {
+    commitCurrentGroupEdit();
+    setEditingGroup(null);
+    setGroupInput('');
   };
 
   const filteredTrades = trades.filter((t) => selectedDisciplines.has(t.discipline));
@@ -269,12 +298,22 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
 
   // Save changes to existing trades (bulk PATCH)
   const handleSaveChanges = async () => {
+    // Commit any pending group edit before saving
+    commitCurrentGroupEdit();
+    setEditingGroup(null);
+    setGroupInput('');
+
     setSaving(true);
     setError('');
     setSuccessMsg('');
 
+    // Use a microtask to ensure state is flushed after commitCurrentGroupEdit
+    await new Promise((r) => setTimeout(r, 0));
+
     try {
-      const modifiedTrades = trades.filter((t) => {
+      // Re-read trades from the latest state
+      const currentTrades = trades;
+      const modifiedTrades = currentTrades.filter((t) => {
         if (!t.dbId) return false;
         const snap = savedSnapshot.current.get(t.code);
         if (!snap) return false;
@@ -283,6 +322,8 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
 
       if (modifiedTrades.length === 0) {
         setSaving(false);
+        setSuccessMsg('No changes to save');
+        setTimeout(() => setSuccessMsg(''), 2000);
         return;
       }
 
@@ -303,16 +344,23 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
         throw new Error(err.error?.message || 'Failed to save changes');
       }
 
+      const result = await res.json();
+      const updatedCount = result.data?.updated ?? 0;
+
+      if (updatedCount === 0) {
+        throw new Error('Server reported 0 updates — changes may not have been saved');
+      }
+
       // Update snapshot
       const snap = new Map<string, { contractType: ContractType; subcontractorGroup: string }>();
-      for (const t of trades) {
+      for (const t of currentTrades) {
         if (t.dbId) {
           snap.set(t.code, { contractType: t.contractType, subcontractorGroup: t.subcontractorGroup });
         }
       }
       savedSnapshot.current = snap;
       setHasChanges(false);
-      setSuccessMsg(`${modifiedTrades.length} trades updated`);
+      setSuccessMsg(`${updatedCount} trade${updatedCount > 1 ? 's' : ''} updated`);
       setTimeout(() => setSuccessMsg(''), 3000);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save changes');
@@ -403,7 +451,7 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
 
                 <div className="space-y-1">
                   {discTrades.map((trade) => {
-                    const ctBadge = CONTRACT_TYPE_BADGE[trade.contractType];
+                    const ctBadge = CONTRACT_TYPE_BADGE[trade.contractType] || CONTRACT_TYPE_BADGE.supply_and_fix;
                     return (
                       <div
                         key={trade.code}
@@ -463,6 +511,19 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
                                   value={groupInput}
                                   onChange={(e) => setGroupInput(e.target.value)}
                                   onBlur={() => {
+                                    // Check if we're switching to another group (pendingGroupSwitch)
+                                    // If so, skip the close — startEditingGroup will handle it
+                                    if (pendingGroupSwitch.current) {
+                                      const nextCode = pendingGroupSwitch.current;
+                                      pendingGroupSwitch.current = null;
+                                      // Save current group
+                                      setTradeGroup(trade.code, groupInput.trim());
+                                      // Switch to next group
+                                      const nextTrade = trades.find((t) => t.code === nextCode);
+                                      setEditingGroup(nextCode);
+                                      setGroupInput(nextTrade?.subcontractorGroup || '');
+                                      return;
+                                    }
                                     setTradeGroup(trade.code, groupInput.trim());
                                     setEditingGroup(null);
                                     setGroupInput('');
@@ -497,10 +558,16 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
                               </div>
                             ) : (
                               <button
+                                onMouseDown={(e) => {
+                                  // Prevent blur from stealing focus when switching between group inputs
+                                  if (editingGroup && editingGroup !== trade.code) {
+                                    e.preventDefault();
+                                    pendingGroupSwitch.current = trade.code;
+                                  }
+                                }}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setEditingGroup(trade.code);
-                                  setGroupInput(trade.subcontractorGroup);
+                                  startEditingGroup(trade.code, trade.subcontractorGroup);
                                 }}
                                 className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded transition-colors"
                                 style={{
@@ -607,14 +674,28 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
 
           {/* Action bar */}
           <div className="mt-6 flex items-center justify-between">
-            <span className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
-              {enabledTrades.length} trades {applied ? 'saved' : 'selected'} across {selectedDisciplines.size} disciplines
-              {hasChanges && (
-                <span className="ml-2 text-[10px] font-medium" style={{ color: '#F59E0B' }}>
-                  (unsaved changes)
-                </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
+                {enabledTrades.length} trades {applied ? 'saved' : 'selected'} across {selectedDisciplines.size} disciplines
+                {hasChanges && (
+                  <span className="ml-2 text-[10px] font-medium" style={{ color: '#F59E0B' }}>
+                    (unsaved changes)
+                  </span>
+                )}
+              </span>
+
+              {/* Reload button */}
+              {applied && (
+                <button
+                  onClick={() => { setEditingGroup(null); setGroupInput(''); loadTrades(); }}
+                  className="flex items-center gap-1 text-[10px] px-2 py-1 rounded transition-colors hover:opacity-80"
+                  style={{ color: 'var(--color-text-muted)' }}
+                  title="Reload trades from database"
+                >
+                  <RefreshCw size={10} /> Reload
+                </button>
               )}
-            </span>
+            </div>
 
             <div className="flex items-center gap-2">
               {/* Save changes button (when already applied and has changes) */}
