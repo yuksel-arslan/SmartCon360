@@ -21,9 +21,15 @@ import evmRouter from './modules/cost/routes/evm';
 import catalogRouter from './modules/cost/routes/catalog';
 import classificationMappingRouter from './modules/cost/routes/classification-mapping';
 
-// Quality & Safety module routes
+// Quality, Safety, Claims, Risk, Comm & SupplyChain module routes
 import qualityRouter from './modules/quality/routes';
 import safetyRouter from './modules/safety/routes';
+import claimsRouter from './modules/claims/routes';
+import riskRouter from './modules/risk/routes';
+import commRouter from './modules/comm/routes';
+import supplyChainRouter from './modules/supply-chain/routes';
+import stakeholderRouter from './modules/stakeholder/routes';
+import sustainabilityRouter from './modules/sustainability/routes';
 
 // Cost module middleware
 import { authenticate } from './modules/cost/middleware/auth';
@@ -121,29 +127,35 @@ app.use('/quality', authenticate, qualityRouter);
 // ──────────────────────────────────────────────
 app.use('/safety', authenticate, safetyRouter);
 
-app.get('/claims/health', (_req: Request, res: Response) => {
-  res.json({ status: 'stub', module: 'claims' });
-});
+// ──────────────────────────────────────────────
+// CLAIMS MODULE — Full routes (ClaimShield)
+// ──────────────────────────────────────────────
+app.use('/claims', authenticate, claimsRouter);
 
-app.get('/risk/health', (_req: Request, res: Response) => {
-  res.json({ status: 'stub', module: 'risk' });
-});
+// ──────────────────────────────────────────────
+// RISK MODULE — Full routes (RiskRadar)
+// ──────────────────────────────────────────────
+app.use('/risk', authenticate, riskRouter);
 
-app.get('/supply-chain/health', (_req: Request, res: Response) => {
-  res.json({ status: 'stub', module: 'supply-chain' });
-});
+// ──────────────────────────────────────────────
+// SUPPLY CHAIN MODULE — Full routes (SupplyChain)
+// ──────────────────────────────────────────────
+app.use('/supply-chain', authenticate, supplyChainRouter);
 
-app.get('/stakeholder/health', (_req: Request, res: Response) => {
-  res.json({ status: 'stub', module: 'stakeholder' });
-});
+// ──────────────────────────────────────────────
+// STAKEHOLDER MODULE — Full routes (StakeHub)
+// ──────────────────────────────────────────────
+app.use('/stakeholder', authenticate, stakeholderRouter);
 
-app.get('/sustainability/health', (_req: Request, res: Response) => {
-  res.json({ status: 'stub', module: 'sustainability' });
-});
+// ──────────────────────────────────────────────
+// SUSTAINABILITY MODULE — Full routes (GreenSite)
+// ──────────────────────────────────────────────
+app.use('/sustainability', authenticate, sustainabilityRouter);
 
-app.get('/comm/health', (_req: Request, res: Response) => {
-  res.json({ status: 'stub', module: 'comm' });
-});
+// ──────────────────────────────────────────────
+// COMM MODULE — Full routes (CommHub)
+// ──────────────────────────────────────────────
+app.use('/comm', authenticate, commRouter);
 
 // ──────────────────────────────────────────────
 // 404 handler
