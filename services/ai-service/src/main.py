@@ -53,12 +53,15 @@ app.mount("/reporting", reporting_app)
 
 # Mount stub routers
 from .modules.analytics.router import router as analytics_router
-from .modules.bim.router import router as bim_router
 from .modules.drl.router import router as drl_router
 
 app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["analytics"])
-app.include_router(bim_router, prefix="/api/v1/bim", tags=["bim"])
 app.include_router(drl_router, prefix="/api/v1/drl", tags=["drl"])
+
+# Mount BIM QTO engine (production router)
+from .modules.bim.api.router import router as bim_qto_router
+
+app.include_router(bim_qto_router, prefix="/api/v1/bim", tags=["bim"])
 
 
 if __name__ == "__main__":
