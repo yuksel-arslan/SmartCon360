@@ -11,7 +11,7 @@ const SETUP_CONFIG_KEYS = [
   'buildingType', 'projectPhase', 'classificationStandard',
   'floorCount', 'basementCount', 'zonesPerFloor', 'structuralZonesPerFloor', 'substructureZonesCount',
   'typicalFloorArea', 'numberOfBuildings',
-  'structuralSystem', 'mepComplexity', 'flowDirection', 'deliveryMethod', 'siteCondition',
+  'structuralSystem', 'mepComplexity', 'flowDirection', 'deliveryMethod', 'contractPricingModel', 'siteCondition',
   'foundationType', 'groundCondition', 'groundImprovement',
 ] as const;
 

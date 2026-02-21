@@ -37,7 +37,8 @@ export interface SetupState {
   structuralSystem: string;         // 'rc_frame' | 'steel_frame' | 'precast' | 'hybrid' | 'timber' | 'masonry'
   mepComplexity: string;            // 'low' | 'medium' | 'high' | 'critical'
   flowDirection: string;            // 'bottom_up' | 'top_down'
-  deliveryMethod: string;           // 'dbb' | 'design_build' | 'cm_at_risk' | 'ipd' | 'epc'
+  deliveryMethod: string;           // 'dbb' | 'design_build' | 'cm_at_risk' | 'ipd' | 'epc' | 'kat_karsiligi' | ...
+  contractPricingModel: string;     // 'unit_price' | 'lump_sum' | 'cost_plus' | 'gmp' | 'build_share' | 'revenue_share'
   siteCondition: string;            // 'urban' | 'suburban' | 'rural' | 'remote'
   foundationType: string;           // 'raft' | 'piled' | 'strip' | 'pad' | 'combined' | 'caisson'
   groundCondition: string;          // 'normal' | 'high_water_table' | 'soft_soil' | 'rock' | 'contaminated'
@@ -320,21 +321,92 @@ export const FLOW_DIRECTIONS: FlowDirectionOption[] = [
 ];
 
 // ══════════════════════════════════════════════════════════════════════════════
-// Delivery Method — determines project organization and risk allocation
+// Delivery Method — project organizational structure and risk allocation
+// International + Local (Turkish) models
 // ══════════════════════════════════════════════════════════════════════════════
 
 export interface DeliveryMethodOption {
   value: string;
   label: string;
+  labelTR?: string;       // Turkish label for local models
   description: string;
+  icon: string;
+  category: 'international' | 'local';
 }
 
 export const DELIVERY_METHODS: DeliveryMethodOption[] = [
-  { value: 'dbb', label: 'Design-Bid-Build', description: 'Traditional — separate design and construction contracts' },
-  { value: 'design_build', label: 'Design-Build', description: 'Single entity responsible for both design and construction' },
-  { value: 'cm_at_risk', label: 'CM at Risk', description: 'Construction Manager provides GMP, manages subcontractors' },
-  { value: 'ipd', label: 'IPD', description: 'Integrated Project Delivery — shared risk/reward, collaborative' },
-  { value: 'epc', label: 'EPC / Turnkey', description: 'Engineering, Procurement, Construction — full turnkey contract' },
+  // International models
+  { value: 'dbb', label: 'Design-Bid-Build (DBB)', icon: '📋', category: 'international',
+    description: 'Traditional — separate design and construction contracts. Client manages design, then bids construction.' },
+  { value: 'design_build', label: 'Design-Build (DB)', icon: '🏗️', category: 'international',
+    description: 'Single entity responsible for both design and construction. Single point of accountability.' },
+  { value: 'cm_at_risk', label: 'CM at Risk (CMAR)', icon: '🤝', category: 'international',
+    description: 'Construction Manager provides GMP, manages subcontractors. Early involvement in design.' },
+  { value: 'ipd', label: 'Integrated Project Delivery (IPD)', icon: '🔗', category: 'international',
+    description: 'Multi-party agreement — shared risk/reward, collaborative decision-making, BIM-centric.' },
+  { value: 'epc', label: 'EPC / Turnkey', icon: '🔑', category: 'international',
+    description: 'Engineering, Procurement, Construction — full turnkey. Contractor handles everything.' },
+  // Local / Turkish models
+  { value: 'kat_karsiligi', label: 'Build-Share (Kat Karşılığı)', labelTR: 'Kat Karşılığı', icon: '🏘️', category: 'local',
+    description: 'Land-for-flats exchange — landowner provides land, contractor builds and shares units. No cash payment.' },
+  { value: 'hasilat_paylasimi', label: 'Revenue Sharing (Hasılat Paylaşımı)', labelTR: 'Hasılat Paylaşımı', icon: '💰', category: 'local',
+    description: 'Revenue split model — contractor builds, units are sold, revenue is divided by agreed percentage.' },
+  { value: 'bot', label: 'Build-Operate-Transfer (BOT)', labelTR: 'Yap-İşlet-Devret', icon: '🔄', category: 'local',
+    description: 'Contractor builds and operates for concession period, then transfers to the public authority.' },
+  { value: 'blt', label: 'Build-Lease-Transfer (BLT)', labelTR: 'Yap-Kirala-Devret', icon: '📑', category: 'local',
+    description: 'Contractor builds, leases to authority for agreed period, then transfers ownership.' },
+  { value: 'emanet', label: 'Cost Plus (Emanet)', labelTR: 'Emanet Usulü', icon: '📊', category: 'local',
+    description: 'Client reimburses actual costs plus management fee. Client bears full cost risk, maximum transparency.' },
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Contract Pricing Model — how the contractor gets paid
+// Separate from delivery method: a DBB project can use unit price or lump sum
+// ══════════════════════════════════════════════════════════════════════════════
+
+export interface ContractPricingModelOption {
+  value: string;
+  label: string;
+  labelTR?: string;
+  description: string;
+  icon: string;
+  // Module behavior implications
+  progressMeasurement: 'quantity' | 'milestone' | 'unit_completion' | 'revenue';
+  costTracking: 'boq_measured' | 'fixed_budget' | 'actual_cost' | 'unit_based' | 'revenue_based';
+  paymentStructure: 'hakedis' | 'milestone' | 'cost_plus_fee' | 'unit_handover' | 'revenue_split';
+}
+
+export const CONTRACT_PRICING_MODELS: ContractPricingModelOption[] = [
+  {
+    value: 'unit_price', label: 'Unit Price (Birim Fiyat)', labelTR: 'Birim Fiyat', icon: '📐',
+    description: 'Pay per measured quantity (m², m³, kg, ml). BOQ-based measurement. Monthly progress certificates (hakediş).',
+    progressMeasurement: 'quantity', costTracking: 'boq_measured', paymentStructure: 'hakedis',
+  },
+  {
+    value: 'lump_sum', label: 'Lump Sum (Götürü Bedel)', labelTR: 'Götürü Bedel', icon: '💎',
+    description: 'Fixed total price for defined scope. Contractor bears quantity risk. Payment by milestones or % completion.',
+    progressMeasurement: 'milestone', costTracking: 'fixed_budget', paymentStructure: 'milestone',
+  },
+  {
+    value: 'cost_plus', label: 'Cost Plus (Maliyet + Kar)', labelTR: 'Maliyet + Kar', icon: '📊',
+    description: 'Reimburse actual costs + agreed fee/percentage. Maximum transparency, client bears cost risk.',
+    progressMeasurement: 'quantity', costTracking: 'actual_cost', paymentStructure: 'cost_plus_fee',
+  },
+  {
+    value: 'gmp', label: 'Guaranteed Maximum Price (GMP)', icon: '🎯',
+    description: 'Cost-plus with a ceiling. Savings shared between contractor and client. Common with CM at Risk.',
+    progressMeasurement: 'quantity', costTracking: 'actual_cost', paymentStructure: 'cost_plus_fee',
+  },
+  {
+    value: 'build_share', label: 'Unit Exchange (Kat Karşılığı)', labelTR: 'Kat Karşılığı', icon: '🏘️',
+    description: 'No cash payment — contractor receives agreed number of units (apartments). Cost tracked per unit built.',
+    progressMeasurement: 'unit_completion', costTracking: 'unit_based', paymentStructure: 'unit_handover',
+  },
+  {
+    value: 'revenue_share', label: 'Revenue Share (Hasılat Paylaşımı)', labelTR: 'Hasılat Paylaşımı', icon: '💰',
+    description: 'Revenue from sales divided by agreed percentage. Construction pace may follow sales velocity.',
+    progressMeasurement: 'revenue', costTracking: 'revenue_based', paymentStructure: 'revenue_split',
+  },
 ];
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -463,6 +535,83 @@ export const GROUND_IMPROVEMENTS: GroundImprovementOption[] = [
   { value: 'soil_nailing', label: 'Soil Nailing', icon: '📌', description: 'Reinforced soil slope or excavation face using steel nails' },
   { value: 'diaphragm_wall', label: 'Diaphragm Wall', icon: '🧱', description: 'Cast in-situ concrete wall for deep basements and water cutoff' },
 ];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Module Behavior Config — how contract pricing model affects each module
+// Used by CostPilot, SupplyChain, TaktFlow, ClaimShield, CrewFlow, etc.
+// ══════════════════════════════════════════════════════════════════════════════
+
+export interface ModuleBehaviorConfig {
+  // CostPilot behavior
+  costPilot: {
+    evmEnabled: boolean;             // EVM (PV/EV/AC) applicable?
+    sCurveType: 'cost' | 'milestone' | 'unit' | 'revenue';
+    progressMethod: string;          // how progress is measured
+    paymentLabel: string;            // what payment documents are called
+  };
+  // SupplyChain behavior
+  supplyChain: {
+    materialProcurement: 'contractor' | 'mixed' | 'subcontractor';
+    mrpEnabled: boolean;
+  };
+  // ClaimShield behavior
+  claimShield: {
+    changeOrderType: string;         // what changes look like
+    claimBasis: string;              // basis for claims
+  };
+  // TaktFlow behavior
+  taktFlow: {
+    progressUnit: string;            // m², %, unit, revenue
+  };
+}
+
+export function getModuleBehavior(pricingModel: string): ModuleBehaviorConfig {
+  switch (pricingModel) {
+    case 'unit_price':
+      return {
+        costPilot: { evmEnabled: true, sCurveType: 'cost', progressMethod: 'BOQ measured quantities (m², m³, kg)', paymentLabel: 'Hakediş' },
+        supplyChain: { materialProcurement: 'mixed', mrpEnabled: true },
+        claimShield: { changeOrderType: 'Unit price adjustment / new items', claimBasis: 'Quantity variance + new rates' },
+        taktFlow: { progressUnit: 'Measured quantity' },
+      };
+    case 'lump_sum':
+      return {
+        costPilot: { evmEnabled: true, sCurveType: 'milestone', progressMethod: 'Milestone completion percentage', paymentLabel: 'Milestone Payment' },
+        supplyChain: { materialProcurement: 'subcontractor', mrpEnabled: false },
+        claimShield: { changeOrderType: 'Scope variation order', claimBasis: 'Scope change + schedule impact' },
+        taktFlow: { progressUnit: 'Milestone %' },
+      };
+    case 'cost_plus':
+    case 'gmp':
+      return {
+        costPilot: { evmEnabled: true, sCurveType: 'cost', progressMethod: 'Actual cost tracking + quantity verification', paymentLabel: 'Cost Reimbursement' },
+        supplyChain: { materialProcurement: 'contractor', mrpEnabled: true },
+        claimShield: { changeOrderType: 'Scope directive / cost adjustment', claimBasis: 'Cost substantiation + fee adjustment' },
+        taktFlow: { progressUnit: 'Measured quantity' },
+      };
+    case 'build_share':
+      return {
+        costPilot: { evmEnabled: false, sCurveType: 'unit', progressMethod: 'Unit (apartment/daire) completion tracking', paymentLabel: 'Unit Handover' },
+        supplyChain: { materialProcurement: 'contractor', mrpEnabled: true },
+        claimShield: { changeOrderType: 'Unit allocation change / specification change', claimBasis: 'Unit count agreement + area disputes' },
+        taktFlow: { progressUnit: 'Unit completion' },
+      };
+    case 'revenue_share':
+      return {
+        costPilot: { evmEnabled: false, sCurveType: 'revenue', progressMethod: 'Revenue realization + construction progress', paymentLabel: 'Revenue Distribution' },
+        supplyChain: { materialProcurement: 'contractor', mrpEnabled: true },
+        claimShield: { changeOrderType: 'Revenue share percentage adjustment', claimBasis: 'Market conditions + cost overrun disputes' },
+        taktFlow: { progressUnit: 'Revenue + physical %' },
+      };
+    default:
+      return {
+        costPilot: { evmEnabled: true, sCurveType: 'cost', progressMethod: 'Standard progress tracking', paymentLabel: 'Payment Certificate' },
+        supplyChain: { materialProcurement: 'mixed', mrpEnabled: true },
+        claimShield: { changeOrderType: 'Change order', claimBasis: 'Contract variation' },
+        taktFlow: { progressUnit: 'Percentage' },
+      };
+  }
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // Disciplines & defaults
