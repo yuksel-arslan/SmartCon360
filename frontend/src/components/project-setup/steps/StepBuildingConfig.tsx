@@ -112,11 +112,11 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
             </div>
           </div>
 
-          {/* ── Zone Configuration: Shell & Core vs Fit-Out (OmniClass 21-02 / 21-03) ── */}
+          {/* ── Zone Configuration: Substructure / Shell & Core / Fit-Out (OmniClass 21) ── */}
           <div
             className="mt-4 rounded-xl border p-4"
             style={{
-              background: 'linear-gradient(135deg, rgba(99,102,241,0.04), rgba(16,185,129,0.04))',
+              background: 'linear-gradient(135deg, rgba(146,64,14,0.03), rgba(99,102,241,0.03), rgba(16,185,129,0.03))',
               borderColor: 'var(--color-border)',
             }}
           >
@@ -127,10 +127,37 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
               </span>
             </div>
             <p className="text-[10px] mb-3" style={{ color: 'var(--color-text-muted)' }}>
-              Shell &amp; Core (OmniClass 21-02) uses larger zones (typically full floor), while Fit-Out (OmniClass 21-03) uses finer subdivisions per floor.
+              Substructure (21-01) uses sector/grid-based zones, Shell &amp; Core (21-02) uses larger zones per floor, Fit-Out (21-03) uses finer subdivisions.
             </p>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
+              {/* Substructure zones (OmniClass 21-01) */}
+              <div
+                className="rounded-lg border p-3"
+                style={{ background: 'var(--color-bg-card)', borderColor: 'rgba(146,64,14,0.3)' }}
+              >
+                <div className="flex items-center gap-1.5 mb-2">
+                  <div className="w-2 h-2 rounded-full" style={{ background: '#92400E' }} />
+                  <label className="text-[10px] font-semibold uppercase" style={{ color: '#92400E' }}>
+                    Substructure (21-01)
+                  </label>
+                </div>
+                <NumberStepper
+                  label="Sectors"
+                  value={state.substructureZonesCount || 3}
+                  min={2} max={8}
+                  onChange={(v) => onStateChange({ substructureZonesCount: v })}
+                  onStep={(d) => {
+                    const current = state.substructureZonesCount || 3;
+                    const next = Math.max(2, Math.min(8, current + d));
+                    onStateChange({ substructureZonesCount: next });
+                  }}
+                />
+                <div className="mt-1.5 text-[9px] text-center" style={{ color: 'var(--color-text-muted)' }}>
+                  plan-view sectors
+                </div>
+              </div>
+
               {/* Shell & Core zones (OmniClass 21-02) */}
               <div
                 className="rounded-lg border p-3"
@@ -185,8 +212,9 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
 
           {/* Quick stats */}
           {floorCount > 0 && (
-            <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="mt-3 grid grid-cols-2 md:grid-cols-5 gap-2">
               {[
+                { label: 'Substructure', value: state.substructureZonesCount || 3, color: '#92400E' },
                 { label: 'Shell Zones', value: totalStructuralZones, color: '#6366F1' },
                 { label: 'Fit-Out Zones', value: totalFinishingZones, color: '#10B981' },
                 { label: 'GFA', value: gfa > 0 ? `${gfa.toLocaleString()} m²` : '—', color: 'var(--color-accent)' },

@@ -9,6 +9,7 @@ import { useProjectStore } from '@/stores/projectStore';
 import { SETUP_STEPS, DEFAULT_WORKING_DAYS, BUILDING_TYPES, isStepOptional, getStepValidation, getMissingRequiredSteps } from './types';
 import type { SetupState } from './types';
 
+import StepProjectInfo from './steps/StepProjectInfo';
 import StepClassification from './steps/StepClassification';
 import StepBuildingConfig from './steps/StepBuildingConfig';
 import StepDrawings from './steps/StepDrawings';
@@ -21,6 +22,7 @@ import StepTaktConfig from './steps/StepTaktConfig';
 import StepReview from './steps/StepReview';
 
 const STEP_COMPONENTS = [
+  StepProjectInfo,
   StepClassification,
   StepBuildingConfig,
   StepDrawings,
@@ -34,8 +36,17 @@ const STEP_COMPONENTS = [
 ];
 
 const initialState: SetupState = {
-  currentStep: 'classification',
+  currentStep: 'info',
   completedSteps: [],
+  // Step 0: Project Info
+  projectCode: '',
+  projectDescription: '',
+  plannedStart: '',
+  plannedFinish: '',
+  projectCity: '',
+  projectCountry: '',
+  projectAddress: '',
+  projectBudget: '',
   // Step 1: Classification
   classificationStandard: 'uniclass',
   buildingType: '',
@@ -45,6 +56,7 @@ const initialState: SetupState = {
   basementCount: 0,
   zonesPerFloor: 3,
   structuralZonesPerFloor: 1,
+  substructureZonesCount: 3,
   typicalFloorArea: 0,
   numberOfBuildings: 1,
   structuralSystem: '',
@@ -82,25 +94,34 @@ const initialState: SetupState = {
 };
 
 interface Props {
-  projectId: string;
+  projectId: string; // UUID for existing project, 'new' for project creation
 }
 
-export default function ProjectSetupWizard({ projectId }: Props) {
+export default function ProjectSetupWizard({ projectId: initialProjectId }: Props) {
   const router = useRouter();
   const token = useAuthStore((s) => s.token);
-  const { updateProjectStatus, projects } = useProjectStore();
+  const { getAuthHeader, refreshAccessToken } = useAuthStore();
+  const { updateProjectStatus, fetchProjects, projects } = useProjectStore();
   const [step, setStep] = useState(0);
   const [state, setState] = useState<SetupState>(initialState);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialProjectId !== 'new');
   const [finalizing, setFinalizing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [validationError, setValidationError] = useState('');
 
+  // For new projects, projectId starts as 'new' and becomes a real UUID after creation
+  const [projectId, setProjectId] = useState(initialProjectId);
+  const isNewProject = projectId === 'new';
+
   // Detect edit mode: project is already active (finalized)
   const project = projects.find((p) => p.id === projectId);
-  const isEditMode = project?.status === 'active';
+  const isEditMode = !isNewProject && project?.status === 'active';
+
+  // For existing projects: skip the 'info' step (project already created)
+  // The info step index in SETUP_STEPS
+  const infoStepIndex = SETUP_STEPS.findIndex((s) => s.id === 'info');
 
   // Stable auth headers — only changes when token changes (prevents infinite re-renders)
   const authHeaders = useMemo(
@@ -108,8 +129,9 @@ export default function ProjectSetupWizard({ projectId }: Props) {
     [token],
   );
 
-  // Fetch setup state from server
+  // Fetch setup state from server (only for existing projects)
   const fetchState = useCallback(async () => {
+    if (isNewProject) return;
     try {
       const res = await fetch(`/api/v1/projects/${projectId}/setup`, {
         headers: { ...authHeaders },
@@ -120,7 +142,6 @@ export default function ProjectSetupWizard({ projectId }: Props) {
           const merged = { ...prev, ...json.data };
 
           // Sync buildingType from projectType if buildingType is empty
-          // (projectType is stored in DB but buildingType is client-only state)
           if (!merged.buildingType && merged.projectType) {
             merged.buildingType = merged.projectType;
             const bt = BUILDING_TYPES.find((b) => b.value === merged.projectType);
@@ -128,6 +149,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
               merged.floorCount = merged.floorCount || bt.defaultFloors;
               merged.basementCount = merged.basementCount || bt.defaultBasements;
               merged.zonesPerFloor = merged.zonesPerFloor || bt.defaultZonesPerFloor;
+              merged.substructureZonesCount = merged.substructureZonesCount || bt.defaultSubstructureZones;
               merged.typicalFloorArea = merged.typicalFloorArea || bt.defaultFloorArea;
               merged.structuralSystem = merged.structuralSystem || bt.defaultStructural;
               merged.mepComplexity = merged.mepComplexity || bt.defaultMep;
@@ -139,18 +161,30 @@ export default function ProjectSetupWizard({ projectId }: Props) {
             merged.projectPhase = 'new_build';
           }
 
+          // Mark info step as completed for existing projects (already have name/code)
+          if (merged.projectName) {
+            merged.completedSteps = [...new Set([...merged.completedSteps, 'info'])];
+          }
+
           return merged;
         });
 
+        // For existing projects, find the right starting step
         const currentStepIndex = SETUP_STEPS.findIndex((s) => s.id === json.data.currentStep);
-        if (currentStepIndex >= 0) setStep(currentStepIndex);
+        if (currentStepIndex >= 0) {
+          setStep(currentStepIndex);
+        } else {
+          // Default to classification step for existing projects
+          const classStep = SETUP_STEPS.findIndex((s) => s.id === 'classification');
+          setStep(classStep >= 0 ? classStep : 0);
+        }
       }
     } catch {
       // ignore — initial state used
     } finally {
       setLoading(false);
     }
-  }, [projectId, authHeaders]);
+  }, [projectId, authHeaders, isNewProject]);
 
   useEffect(() => {
     fetchState();
@@ -164,9 +198,97 @@ export default function ProjectSetupWizard({ projectId }: Props) {
 
   const onStateChange = useCallback((updates: Partial<SetupState>) => {
     setState((prev) => ({ ...prev, ...updates }));
-    // Clear validation error when user makes changes within a step
     setValidationError('');
   }, []);
+
+  // Create project via API (called after info step for new projects)
+  const createProject = async (): Promise<string | null> => {
+    try {
+      const buildHeaders = (): HeadersInit => ({
+        'Content-Type': 'application/json',
+        ...getAuthHeader() as Record<string, string>,
+      });
+
+      const authFetch = async (url: string, opts: RequestInit): Promise<Response> => {
+        const res = await fetch(url, opts);
+        if (res.status === 401) {
+          const refreshed = await refreshAccessToken();
+          if (refreshed) {
+            return fetch(url, { ...opts, headers: buildHeaders() });
+          }
+        }
+        return res;
+      };
+
+      const res = await authFetch('/api/v1/projects', {
+        method: 'POST',
+        headers: buildHeaders(),
+        body: JSON.stringify({
+          name: state.projectName,
+          code: state.projectCode,
+          projectType: state.buildingType || 'commercial',
+          description: state.projectDescription || undefined,
+          plannedStart: state.plannedStart || undefined,
+          plannedFinish: state.plannedFinish || undefined,
+          address: state.projectAddress || undefined,
+          city: state.projectCity || undefined,
+          country: state.projectCountry || undefined,
+          budget: state.projectBudget ? Number(state.projectBudget) : undefined,
+          currency: state.currency,
+          classificationStandard: state.classificationStandard || 'uniclass',
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const message = typeof err.error === 'object' ? err.error.message : err.error;
+        throw new Error(message || `Failed to create project (${res.status})`);
+      }
+
+      const { data: project } = await res.json();
+      await fetchProjects();
+
+      // Update URL to the real project ID without full page reload
+      window.history.replaceState(null, '', `/projects/${project.id}/setup`);
+      setProjectId(project.id);
+
+      return project.id;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create project');
+      return null;
+    }
+  };
+
+  // Persist setup config to server
+  const persistSetupConfig = async (pid: string) => {
+    try {
+      await fetch(`/api/v1/projects/${pid}/setup`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({
+          buildingType: state.buildingType,
+          projectPhase: state.projectPhase,
+          floorCount: state.floorCount,
+          basementCount: state.basementCount,
+          zonesPerFloor: state.zonesPerFloor,
+          structuralZonesPerFloor: state.structuralZonesPerFloor,
+          substructureZonesCount: state.substructureZonesCount,
+          typicalFloorArea: state.typicalFloorArea,
+          numberOfBuildings: state.numberOfBuildings,
+          structuralSystem: state.structuralSystem,
+          mepComplexity: state.mepComplexity,
+          flowDirection: state.flowDirection,
+          deliveryMethod: state.deliveryMethod,
+          siteCondition: state.siteCondition,
+          foundationType: state.foundationType,
+          groundCondition: state.groundCondition,
+          groundImprovement: state.groundImprovement,
+        }),
+      });
+    } catch {
+      // best-effort
+    }
+  };
 
   // Validate current step, mark completed if valid, persist to server
   const validateAndComplete = useCallback(
@@ -187,46 +309,33 @@ export default function ProjectSetupWizard({ projectId }: Props) {
         completedSteps: [...new Set([...prev.completedSteps, stepDef.id])],
       }));
 
-      // Persist to server (best-effort)
-      const nextStepId = SETUP_STEPS[stepIndex + 1]?.id || stepDef.id;
-      try {
-        await Promise.all([
-          fetch(`/api/v1/projects/${projectId}/setup/complete-step`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...authHeaders },
-            body: JSON.stringify({ step: stepDef.id, nextStep: nextStepId }),
-          }),
-          // Persist setup configuration (so it survives page refresh / edit mode re-entry)
-          fetch(`/api/v1/projects/${projectId}/setup`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', ...authHeaders },
-            body: JSON.stringify({
-              buildingType: state.buildingType,
-              projectPhase: state.projectPhase,
-              floorCount: state.floorCount,
-              basementCount: state.basementCount,
-              zonesPerFloor: state.zonesPerFloor,
-              structuralZonesPerFloor: state.structuralZonesPerFloor,
-              typicalFloorArea: state.typicalFloorArea,
-              numberOfBuildings: state.numberOfBuildings,
-              structuralSystem: state.structuralSystem,
-              mepComplexity: state.mepComplexity,
-              flowDirection: state.flowDirection,
-              deliveryMethod: state.deliveryMethod,
-              siteCondition: state.siteCondition,
-              foundationType: state.foundationType,
-              groundCondition: state.groundCondition,
-              groundImprovement: state.groundImprovement,
+      // For the info step on new projects: create the project first
+      if (stepDef.id === 'info' && isNewProject) {
+        const newProjectId = await createProject();
+        if (!newProjectId) return false;
+        return true;
+      }
+
+      // For other steps: persist to server (best-effort)
+      if (!isNewProject) {
+        const nextStepId = SETUP_STEPS[stepIndex + 1]?.id || stepDef.id;
+        try {
+          await Promise.all([
+            fetch(`/api/v1/projects/${projectId}/setup/complete-step`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', ...authHeaders },
+              body: JSON.stringify({ step: stepDef.id, nextStep: nextStepId }),
             }),
-          }),
-        ]);
-      } catch {
-        // best-effort
+            persistSetupConfig(projectId),
+          ]);
+        } catch {
+          // best-effort
+        }
       }
 
       return true;
     },
-    [state, projectId, authHeaders],
+    [state, projectId, authHeaders, isNewProject],
   );
 
   const next = async () => {
@@ -239,14 +348,13 @@ export default function ProjectSetupWizard({ projectId }: Props) {
   };
 
   const back = () => {
+    // Don't allow going back to info step for existing projects
     if (step > 0) {
       setStep(step - 1);
     }
   };
 
   // Navigate to a specific step
-  // In edit mode: all steps are freely navigable
-  // In setup mode: only completed or current steps
   const goToStep = (index: number) => {
     if (index === step) return;
     if (isEditMode) {
@@ -267,22 +375,38 @@ export default function ProjectSetupWizard({ projectId }: Props) {
     setError('');
 
     try {
+      // Also update project info fields if changed
+      await fetch(`/api/v1/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({
+          name: state.projectName || undefined,
+          description: state.projectDescription || undefined,
+          plannedStart: state.plannedStart || undefined,
+          plannedFinish: state.plannedFinish || undefined,
+          address: state.projectAddress || undefined,
+          city: state.projectCity || undefined,
+          country: state.projectCountry || undefined,
+          budget: state.projectBudget ? Number(state.projectBudget) : undefined,
+          currency: state.currency || undefined,
+        }),
+      });
+
       await fetch(`/api/v1/projects/${projectId}/setup`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
-          // Navigation state
           currentStep: SETUP_STEPS[step].id,
           completedSteps: state.completedSteps,
           classificationStandard: state.classificationStandard,
           taktPlanGenerated: state.taktPlanGenerated,
-          // Full setup configuration (persisted in Project.settings.setupConfig)
           buildingType: state.buildingType,
           projectPhase: state.projectPhase,
           floorCount: state.floorCount,
           basementCount: state.basementCount,
           zonesPerFloor: state.zonesPerFloor,
           structuralZonesPerFloor: state.structuralZonesPerFloor,
+          substructureZonesCount: state.substructureZonesCount,
           typicalFloorArea: state.typicalFloorArea,
           numberOfBuildings: state.numberOfBuildings,
           structuralSystem: state.structuralSystem,
@@ -306,7 +430,6 @@ export default function ProjectSetupWizard({ projectId }: Props) {
   };
 
   const handleFinalize = async () => {
-    // Client-side validation: check all required steps
     const missing = getMissingRequiredSteps(state);
     if (missing.length > 0) {
       setError(`Cannot finalize — missing required steps: ${missing.join(', ')}`);
@@ -378,7 +501,6 @@ export default function ProjectSetupWizard({ projectId }: Props) {
           const stepValid = getStepValidation(s.id, state).valid;
           const optional = isStepOptional(s.id);
           const showDone = (isCompleted || (stepValid && i < step)) && !isCurrent;
-          // In edit mode: all steps are clickable
           const isClickable = isEditMode || showDone || isCurrent;
           return (
             <div key={s.id} className="flex items-center gap-1 flex-shrink-0">
@@ -444,7 +566,6 @@ export default function ProjectSetupWizard({ projectId }: Props) {
             state={state}
             onStateChange={onStateChange}
             onComplete={() => {
-              // Step component signals completion — update state
               const stepId = SETUP_STEPS[step].id;
               setState((prev) => ({
                 ...prev,
@@ -493,7 +614,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
             style={{ color: 'var(--color-text-secondary)' }}
           >
             <ArrowLeft size={14} />
-            {step === 0 ? (isEditMode ? 'Back to Dashboard' : 'Back to Projects') : 'Back'}
+            {step === 0 ? (isEditMode ? 'Back to Dashboard' : 'Cancel') : 'Back'}
           </button>
 
           <div className="flex items-center gap-2">
@@ -518,7 +639,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
               </button>
             )}
 
-            {/* Skip button for optional steps — only when step not completed */}
+            {/* Skip button for optional steps */}
             {isCurrentOptional && !currentValidation.valid && (
               <button
                 onClick={next}

@@ -1,10 +1,16 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Info, Loader2, Check, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { Info, Loader2, Check, Sparkles, Minus, Plus, Layers } from 'lucide-react';
 import { getTemplate } from '@/lib/core/project-templates';
 import type { SetupStepProps } from '../types';
-import { DEFAULT_WORKING_DAYS, calculateRecommendedTakt, calculateRecommendedBuffer } from '../types';
+import {
+  DEFAULT_WORKING_DAYS,
+  calculateRecommendedTakt,
+  calculateRecommendedBuffer,
+  FOUNDATION_TYPES,
+  GROUND_CONDITIONS,
+} from '../types';
 
 const ALL_DAYS = [
   { key: 'mon', label: 'Mon' },
@@ -31,7 +37,17 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
   const bufferSize = state.bufferSize ?? (template?.defaultBufferSize ?? 1);
   const workingDays = state.workingDays?.length > 0 ? state.workingDays : [...DEFAULT_WORKING_DAYS];
 
-  const zoneCount = state.zoneCount || 0;
+  // Zone counts
+  const substructureZonesCount = state.substructureZonesCount || 3;
+  const isInfra = state.buildingType === 'infrastructure';
+  const floorCount = state.floorCount || 0;
+  const basementCount = state.basementCount || 0;
+  const totalFloors = floorCount + basementCount;
+  const shellZones = isInfra ? 0 : totalFloors * (state.structuralZonesPerFloor || 1);
+  const fitOutZones = isInfra ? 0 : totalFloors * (state.zonesPerFloor || 3);
+  const computedTotalZones = substructureZonesCount + shellZones + fitOutZones;
+
+  const zoneCount = state.zoneCount || computedTotalZones || 0;
   const tradeCount = state.tradeCount || 0;
   const totalTakts = tradeCount > 0 && zoneCount > 0
     ? zoneCount + tradeCount - 1 + (tradeCount - 1) * bufferSize
@@ -40,6 +56,10 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
   const calendarDays = workingDays.length > 0
     ? Math.ceil(totalDays / workingDays.length * 7)
     : 0;
+
+  // Foundation & ground info for substructure recommendation
+  const foundation = FOUNDATION_TYPES.find((f) => f.value === state.foundationType);
+  const ground = GROUND_CONDITIONS.find((g) => g.value === state.groundCondition);
 
   const toggleDay = (day: string) => {
     const current = workingDays;
@@ -117,6 +137,154 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
       </p>
 
       <div className="space-y-6">
+        {/* ── Zone Breakdown by Phase ── */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Layers size={14} style={{ color: 'var(--color-text-muted)' }} />
+            <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+              Zone Breakdown — OmniClass Table 21
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            {/* Substructure (21-01) */}
+            <div
+              className="rounded-xl border p-4"
+              style={{ background: 'rgba(146,64,14,0.04)', borderColor: 'rgba(146,64,14,0.2)' }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: '#92400E' }}>
+                    Substructure
+                  </div>
+                  <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                    OmniClass 21-01
+                  </div>
+                </div>
+                <div className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)', color: '#92400E' }}>
+                  {substructureZonesCount}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    if (substructureZonesCount > 2) {
+                      onStateChange({ substructureZonesCount: substructureZonesCount - 1 });
+                      setSaved(false);
+                    }
+                  }}
+                  disabled={substructureZonesCount <= 2}
+                  className="w-7 h-7 rounded-md flex items-center justify-center text-[12px] transition-all disabled:opacity-30"
+                  style={{ background: 'var(--color-bg-input)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+                >
+                  <Minus size={12} />
+                </button>
+                <div className="flex-1 text-center text-[11px] font-medium" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text)' }}>
+                  {substructureZonesCount} sectors
+                </div>
+                <button
+                  onClick={() => {
+                    if (substructureZonesCount < 8) {
+                      onStateChange({ substructureZonesCount: substructureZonesCount + 1 });
+                      setSaved(false);
+                    }
+                  }}
+                  disabled={substructureZonesCount >= 8}
+                  className="w-7 h-7 rounded-md flex items-center justify-center text-[12px] transition-all disabled:opacity-30"
+                  style={{ background: 'var(--color-bg-input)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+                >
+                  <Plus size={12} />
+                </button>
+              </div>
+              {foundation && (
+                <div className="mt-2 text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                  {foundation.icon} {foundation.label}
+                  {ground && ground.value !== 'normal' ? ` · ${ground.icon} ${ground.label}` : ''}
+                </div>
+              )}
+            </div>
+
+            {/* Shell & Core (21-02) */}
+            <div
+              className="rounded-xl border p-4"
+              style={{ background: 'rgba(99,102,241,0.04)', borderColor: 'rgba(99,102,241,0.2)' }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: '#6366F1' }}>
+                    Shell & Core
+                  </div>
+                  <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                    OmniClass 21-02
+                  </div>
+                </div>
+                <div className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)', color: '#6366F1' }}>
+                  {shellZones}
+                </div>
+              </div>
+              <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                {totalFloors > 0 ? (
+                  <>{totalFloors} floor{totalFloors !== 1 ? 's' : ''} × {state.structuralZonesPerFloor || 1} zone{(state.structuralZonesPerFloor || 1) !== 1 ? 's' : ''}/floor</>
+                ) : (
+                  'No floors configured'
+                )}
+              </div>
+            </div>
+
+            {/* Fit-Out (21-03) */}
+            <div
+              className="rounded-xl border p-4"
+              style={{ background: 'rgba(16,185,129,0.04)', borderColor: 'rgba(16,185,129,0.2)' }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: '#10B981' }}>
+                    Fit-Out
+                  </div>
+                  <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                    OmniClass 21-03
+                  </div>
+                </div>
+                <div className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)', color: '#10B981' }}>
+                  {fitOutZones}
+                </div>
+              </div>
+              <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                {totalFloors > 0 ? (
+                  <>{totalFloors} floor{totalFloors !== 1 ? 's' : ''} × {state.zonesPerFloor || 3} zone{(state.zonesPerFloor || 3) !== 1 ? 's' : ''}/floor</>
+                ) : (
+                  'No floors configured'
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Total zones bar */}
+          <div
+            className="rounded-lg border px-4 py-2.5 flex items-center justify-between"
+            style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+          >
+            <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+              Total Takt Zones
+            </span>
+            <div className="flex items-center gap-3">
+              {/* Mini stacked bar */}
+              <div className="flex h-2 w-32 rounded-full overflow-hidden" style={{ background: 'var(--color-bg-input)' }}>
+                {computedTotalZones > 0 && (
+                  <>
+                    <div style={{ width: `${(substructureZonesCount / computedTotalZones) * 100}%`, background: '#92400E' }} />
+                    <div style={{ width: `${(shellZones / computedTotalZones) * 100}%`, background: '#6366F1' }} />
+                    <div style={{ width: `${(fitOutZones / computedTotalZones) * 100}%`, background: '#10B981' }} />
+                  </>
+                )}
+              </div>
+              <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
+                {zoneCount > 0 ? zoneCount : computedTotalZones}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* AI Recommendation Banner */}
         {hasRecommendation && (
           <div
@@ -297,7 +465,7 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
           </div>
         )}
 
-        {zoneCount === 0 && (
+        {zoneCount === 0 && computedTotalZones === 0 && (
           <div
             className="rounded-lg px-4 py-3 text-[12px]"
             style={{ background: 'rgba(245,158,11,0.08)', color: 'var(--color-warning)' }}
