@@ -103,12 +103,26 @@ interface HistoryState {
 
 // ── Phase Helpers ─────────────────────────────────────────────
 
-function disciplineToWorkPhase(discipline: string | null | undefined): WorkPhase {
+// MEP rough-in (first fix) keywords → Kaba İşler
+const MEP_ROUGHIN_KEYWORDS = [
+  'rough', 'ductwork', 'conduit', 'cable tray', 'cable pull', 'containment',
+  'piping', 'suppression', 'sprinkler', 'medical gas', 'fire protection',
+];
+
+function isMepFirstFix(tradeName: string): boolean {
+  const lower = tradeName.toLowerCase();
+  return MEP_ROUGHIN_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+function disciplineToWorkPhase(discipline: string | null | undefined, tradeName = ''): WorkPhase {
   if (!discipline) return 'both';
   const d = discipline.toLowerCase();
   if (d === 'structural') return 'structural';
   if (d === 'architectural' || d === 'landscape') return 'finishing';
-  // MEP (mechanical, electrical) and general appear in both
+  // MEP: rough-in (first fix) → Kaba, finish (second fix) → İnce
+  if (d === 'mechanical' || d === 'electrical') {
+    return isMepFirstFix(tradeName) ? 'structural' : 'finishing';
+  }
   return 'both';
 }
 
@@ -640,7 +654,7 @@ export default function TaktEditorPage() {
                   crewSize: w.crewSize || 5,
                   notes: '',
                   discipline: disc,
-                  workPhase: disciplineToWorkPhase(disc),
+                  workPhase: disciplineToWorkPhase(disc, w.tradeName),
                 };
               }));
             }
@@ -695,7 +709,7 @@ export default function TaktEditorPage() {
             crewSize: t.defaultCrewSize || 5,
             notes: '',
             discipline: t.discipline || '',
-            workPhase: disciplineToWorkPhase(t.discipline),
+            workPhase: disciplineToWorkPhase(t.discipline, t.name),
           })));
           setGlobalTaktTime(data.defaultTaktTime || 5);
         }
