@@ -65,7 +65,7 @@ export interface BufferZone {
 // Generate flowline mock data
 const TAKT_TIME = 1;
 const BUFFER = 1;
-const TOTAL_PERIODS = DEMO_ZONES.length + DEMO_TRADES.length - 1 + (DEMO_TRADES.length - 1) * BUFFER;
+const TOTAL_PERIODS = (DEMO_ZONES.length + DEMO_TRADES.length - 1) * TAKT_TIME + (DEMO_TRADES.length - 1) * BUFFER;
 const TODAY_PERIOD = Math.floor(TOTAL_PERIODS * 0.45);
 
 // Critical path: first and last trades are on critical path
@@ -139,7 +139,7 @@ function generateTasks(tradeName: string, segStatus: FlowlineSegment['status'], 
 }
 
 export const DEMO_FLOWLINE: FlowlineWagon[] = DEMO_TRADES.map((trade, tradeIdx) => {
-  const tradeOffset = tradeIdx * (1 + BUFFER);
+  const tradeOffset = tradeIdx * (TAKT_TIME + BUFFER);
   const segments: FlowlineSegment[] = DEMO_ZONES.map((_, zoneIdx) => {
     const xStart = tradeOffset + zoneIdx * TAKT_TIME;
     const xEnd = xStart + TAKT_TIME;
@@ -183,8 +183,8 @@ export const DEMO_FLOWLINE: FlowlineWagon[] = DEMO_TRADES.map((trade, tradeIdx) 
 // Buffer zones between consecutive trades
 export const DEMO_BUFFERS: BufferZone[] = DEMO_TRADES.slice(0, -1).map((trade, tradeIdx) => {
   const nextTrade = DEMO_TRADES[tradeIdx + 1];
-  const tradeOffset = tradeIdx * (1 + BUFFER);
-  const nextTradeOffset = (tradeIdx + 1) * (1 + BUFFER);
+  const tradeOffset = tradeIdx * (TAKT_TIME + BUFFER);
+  const nextTradeOffset = (tradeIdx + 1) * (TAKT_TIME + BUFFER);
 
   const segments = DEMO_ZONES.map((_, zoneIdx) => {
     const bufferStart = tradeOffset + zoneIdx * TAKT_TIME + TAKT_TIME;
@@ -216,7 +216,7 @@ export const DEMO_BUFFERS: BufferZone[] = DEMO_TRADES.slice(0, -1).map((trade, t
 
 // Simulation comparison data (slightly shifted)
 export const DEMO_SIMULATION_FLOWLINE: FlowlineWagon[] = DEMO_TRADES.map((trade, tradeIdx) => {
-  const tradeOffset = tradeIdx * (1 + BUFFER);
+  const tradeOffset = tradeIdx * (TAKT_TIME + BUFFER);
   const segments: FlowlineSegment[] = DEMO_ZONES.map((_, zoneIdx) => {
     const jitter = (Math.random() - 0.3) * 0.6;
     const xStart = tradeOffset + zoneIdx * TAKT_TIME + jitter;

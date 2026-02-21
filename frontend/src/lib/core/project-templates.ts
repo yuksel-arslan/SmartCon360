@@ -719,8 +719,8 @@ export function generateLbsFromConfig(
     }
 
     children.push({
-      name: 'Substructure',
-      type: 'floor', // LBS level — acts as a grouping container
+      name: 'Foundation',
+      type: 'floor', // LBS level — acts as a grouping container (OmniClass 21-01: Substructure)
       children: subZones,
     });
   }

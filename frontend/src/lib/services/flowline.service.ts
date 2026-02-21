@@ -66,11 +66,11 @@ export function computeFlowline(
     yIndex: i,
   }));
 
-  const totalPeriods = zones.length + trades.length - 1 + (trades.length - 1) * bufferSize;
+  const totalPeriods = (zones.length + trades.length - 1) * taktTime + (trades.length - 1) * bufferSize;
   const todayPeriod = Math.floor(totalPeriods * 0.45);
 
   const wagons: Wagon[] = trades.map((trade, tradeIdx) => {
-    const tradeOffset = tradeIdx * (1 + bufferSize);
+    const tradeOffset = tradeIdx * (taktTime + bufferSize);
     const segments: Segment[] = zoneList.map((zone, zoneIdx) => {
       const xStart = tradeOffset + zoneIdx * taktTime;
       const xEnd = xStart + taktTime;

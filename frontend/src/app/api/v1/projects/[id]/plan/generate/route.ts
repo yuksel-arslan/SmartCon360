@@ -166,7 +166,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       throw new AppError('No matching trade-zone pairs found. Ensure trades and zones have compatible phase groups.', 'NO_MATCHES', 400);
     }
 
-    const totalPeriods = Math.max(...allAssignments.map((a) => a.periodNumber), 1);
+    // periodNumber is day-based (1-indexed). totalPeriods = last segment's end day.
+    const maxPeriodNumber = Math.max(...allAssignments.map((a) => a.periodNumber), 1);
+    const totalPeriods = maxPeriodNumber - 1 + taktTime;
 
     // 5. Run warning detection (AI-3 Core)
     const tradeInfos: TradeInfo[] = project.trades.map((t) => ({

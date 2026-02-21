@@ -6,6 +6,7 @@ import TopBar from '@/components/layout/TopBar';
 import { generatePlan, savePlan, listPlans, getPlan } from '@/lib/stores/takt-plans';
 import api from '@/lib/api';
 import { useProjectStore } from '@/stores/projectStore';
+import { useTaktPlanStore } from '@/stores/taktPlanStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useRealtimeFlowline } from '@/hooks/useRealtimeFlowline';
 import { ContractPolicyBanner } from '@/components/modules';
@@ -803,6 +804,8 @@ export default function TaktEditorPage() {
       setLastSaved(new Date());
       // Broadcast to other clients
       wsEmit('plan:updated', { projectId, planId: currentPlanId });
+      // Invalidate shared store so other pages (flowline, LPS, dashboard) refresh
+      useTaktPlanStore.getState().invalidate();
     } catch (err) {
       console.error('Save failed:', err);
     } finally {

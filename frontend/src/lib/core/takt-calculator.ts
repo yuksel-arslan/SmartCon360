@@ -27,18 +27,18 @@ export interface Assignment {
 }
 
 /**
- * Calculate total takt periods needed.
+ * Calculate total schedule duration in day units.
  *
- * Formula: zones + trades - 1 + buffer_periods
- * Buffer periods = bufferSize * (numTrades - 1) for time buffers
+ * Formula: (zones + trades - 1) * taktTime + (numTrades - 1) * bufferSize
+ * Each zone and wagon occupies taktTime days; bufferSize is in days.
  */
 export function calculateTotalPeriods(
   numZones: number,
   numTrades: number,
+  taktTime: number = 1,
   bufferSize: number = 0
 ): number {
-  const bufferPeriods = bufferSize * (numTrades - 1);
-  return numZones + numTrades - 1 + bufferPeriods;
+  return (numZones + numTrades - 1) * taktTime + (numTrades - 1) * bufferSize;
 }
 
 /**
@@ -67,10 +67,13 @@ export function addWorkingDays(
 /**
  * Generate the full takt assignment grid.
  *
- * For each zone z (1-indexed) and wagon w (1-indexed):
- *   period = z + (w - 1) + sum(buffers before w)
- *   start = project_start + (period - 1) * taktTime working days
+ * For each zone z (0-indexed from sequence) and wagon w (0-indexed):
+ *   dayOffset = z * taktTime + w * taktTime + cumulativeBufferDays(w)
+ *   periodNumber = dayOffset + 1 (1-indexed day position)
+ *   start = project_start + dayOffset working days
  *   end = start + wagon.durationDays - 1 working days
+ *
+ * Buffer is in DAYS (not periods), ensuring a 1-day buffer = 1-day gap.
  *
  * Returns list of Assignment objects.
  */
@@ -84,10 +87,10 @@ export function generateTaktGrid(
   const sortedZones = [...zones].sort((a, b) => a.sequence - b.sequence);
   const sortedWagons = [...wagons].sort((a, b) => a.sequence - b.sequence);
 
-  // Pre-compute cumulative buffer offsets
-  const bufferOffsets = [0];
+  // Pre-compute cumulative buffer offsets in DAYS
+  const bufferDayOffsets = [0];
   for (let i = 1; i < sortedWagons.length; i++) {
-    bufferOffsets.push(bufferOffsets[i - 1] + sortedWagons[i - 1].bufferAfter);
+    bufferDayOffsets.push(bufferDayOffsets[i - 1] + sortedWagons[i - 1].bufferAfter);
   }
 
   const assignments: Assignment[] = [];
@@ -95,16 +98,18 @@ export function generateTaktGrid(
   for (const zone of sortedZones) {
     for (let i = 0; i < sortedWagons.length; i++) {
       const wagon = sortedWagons[i];
-      const period = zone.sequence + i + bufferOffsets[i];
 
-      const daysOffset = (period - 1) * taktTime;
-      const plannedStart = addWorkingDays(startDate, daysOffset, workingDays);
+      // Day-based offset: zone progression + wagon progression + buffer days
+      const dayOffset = (zone.sequence - 1) * taktTime + i * taktTime + bufferDayOffsets[i];
+      const periodNumber = dayOffset + 1; // 1-indexed day position
+
+      const plannedStart = addWorkingDays(startDate, dayOffset, workingDays);
       const plannedEnd = addWorkingDays(plannedStart, wagon.durationDays - 1, workingDays);
 
       assignments.push({
         zoneId: zone.id,
         wagonId: wagon.id,
-        periodNumber: period,
+        periodNumber,
         plannedStart,
         plannedEnd,
       });
@@ -198,7 +203,7 @@ export function computeFlowlineData(
 
       const segments = wagonAssigns.map((a) => {
         const y = zoneSeqMap.get(a.zoneId) ?? 0;
-        const xStart = (a.periodNumber - 1) * taktTime;
+        const xStart = a.periodNumber - 1; // periodNumber is now day-based (1-indexed)
         const xEnd = xStart + wagon.durationDays;
 
         return {
@@ -218,12 +223,16 @@ export function computeFlowlineData(
       };
     });
 
-  const totalPeriods = calculateTotalPeriods(zones.length, wagons.length);
+  // Compute total days from segment extents
+  const totalDays = Math.max(
+    ...wagonData.flatMap((w) => w.segments.map((s) => s.xEnd)),
+    0,
+  );
 
   return {
     zones: zoneData,
     wagons: wagonData,
-    totalDays: totalPeriods * taktTime,
+    totalDays,
     taktTime,
   };
 }
