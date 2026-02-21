@@ -6,6 +6,7 @@ import {
   MEP_COMPLEXITY_LEVELS,
   FLOW_DIRECTIONS,
   DELIVERY_METHODS,
+  CONTRACT_PRICING_MODELS,
   SITE_CONDITIONS,
   FOUNDATION_TYPES,
   GROUND_CONDITIONS,
@@ -13,7 +14,7 @@ import {
   calculateRecommendedTakt,
   calculateRecommendedBuffer,
 } from '../types';
-import { Layers, Minus, Plus, Building, Zap, ArrowUpDown, FileText, MapPin, Calculator, Grid3x3, Shovel, Droplets } from 'lucide-react';
+import { Layers, Minus, Plus, Building, Zap, ArrowUpDown, FileText, MapPin, Calculator, Grid3x3, Shovel, Droplets, Banknote } from 'lucide-react';
 
 export default function StepBuildingConfig({ state, onStateChange }: SetupStepProps) {
   const floorCount = state.floorCount || 0;
@@ -527,9 +528,151 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
         </div>
       </div>
 
-      {/* ── Section 6: Flow Direction + Delivery + Site (compact row) ── */}
+      {/* ── Section 6: Delivery Method ── */}
       <div className="border-t pt-6 mb-6" style={{ borderColor: 'var(--color-border)' }}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex items-center gap-2 mb-1">
+          <FileText size={16} style={{ color: 'var(--color-purple)' }} />
+          <h3 className="text-[13px] font-semibold" style={{ color: 'var(--color-text)' }}>
+            Delivery Method
+          </h3>
+        </div>
+        <p className="text-[11px] mb-3" style={{ color: 'var(--color-text-muted)' }}>
+          Project organizational structure — determines how design, construction, and risk are distributed between parties.
+        </p>
+
+        {/* International models */}
+        <div className="text-[9px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-muted)' }}>
+          International
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
+          {DELIVERY_METHODS.filter((dm) => dm.category === 'international').map((dm) => {
+            const isActive = state.deliveryMethod === dm.value;
+            return (
+              <button
+                key={dm.value}
+                onClick={() => onStateChange({ deliveryMethod: dm.value })}
+                className="text-left rounded-lg border px-3 py-2.5 transition-all hover:scale-[1.01]"
+                style={{
+                  background: isActive ? 'rgba(139,92,246,0.08)' : 'var(--color-bg-card)',
+                  borderColor: isActive ? 'var(--color-purple)' : 'var(--color-border)',
+                  borderWidth: isActive ? 2 : 1,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base">{dm.icon}</span>
+                  <span className="text-[11px] font-semibold" style={{ color: isActive ? 'var(--color-purple)' : 'var(--color-text)' }}>
+                    {dm.label}
+                  </span>
+                </div>
+                <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                  {dm.description}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Local / Turkish models */}
+        <div className="text-[9px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-muted)' }}>
+          Local / Turkey
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {DELIVERY_METHODS.filter((dm) => dm.category === 'local').map((dm) => {
+            const isActive = state.deliveryMethod === dm.value;
+            return (
+              <button
+                key={dm.value}
+                onClick={() => onStateChange({ deliveryMethod: dm.value })}
+                className="text-left rounded-lg border px-3 py-2.5 transition-all hover:scale-[1.01]"
+                style={{
+                  background: isActive ? 'rgba(139,92,246,0.08)' : 'var(--color-bg-card)',
+                  borderColor: isActive ? 'var(--color-purple)' : 'var(--color-border)',
+                  borderWidth: isActive ? 2 : 1,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base">{dm.icon}</span>
+                  <div className="min-w-0">
+                    <span className="text-[11px] font-semibold block" style={{ color: isActive ? 'var(--color-purple)' : 'var(--color-text)' }}>
+                      {dm.labelTR || dm.label}
+                    </span>
+                    {dm.labelTR && (
+                      <span className="text-[9px] block" style={{ color: 'var(--color-text-muted)' }}>
+                        {dm.label.replace(` (${dm.labelTR})`, '')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                  {dm.description}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Section 7: Contract Pricing Model ── */}
+      <div className="border-t pt-6 mb-6" style={{ borderColor: 'var(--color-border)' }}>
+        <div className="flex items-center gap-2 mb-1">
+          <Banknote size={16} style={{ color: '#10B981' }} />
+          <h3 className="text-[13px] font-semibold" style={{ color: 'var(--color-text)' }}>
+            Contract Pricing Model
+          </h3>
+        </div>
+        <p className="text-[11px] mb-3" style={{ color: 'var(--color-text-muted)' }}>
+          How the contractor gets paid — affects CostPilot EVM calculations, progress measurement method, and payment structure.
+        </p>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {CONTRACT_PRICING_MODELS.map((cpm) => {
+            const isActive = state.contractPricingModel === cpm.value;
+            return (
+              <button
+                key={cpm.value}
+                onClick={() => onStateChange({ contractPricingModel: cpm.value })}
+                className="text-left rounded-lg border px-3 py-2.5 transition-all hover:scale-[1.01]"
+                style={{
+                  background: isActive ? 'rgba(16,185,129,0.08)' : 'var(--color-bg-card)',
+                  borderColor: isActive ? '#10B981' : 'var(--color-border)',
+                  borderWidth: isActive ? 2 : 1,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base">{cpm.icon}</span>
+                  <div className="min-w-0">
+                    <span className="text-[11px] font-semibold block" style={{ color: isActive ? '#10B981' : 'var(--color-text)' }}>
+                      {cpm.labelTR || cpm.label}
+                    </span>
+                    {cpm.labelTR && (
+                      <span className="text-[9px] block" style={{ color: 'var(--color-text-muted)' }}>
+                        {cpm.label.replace(` (${cpm.labelTR})`, '')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                  {cpm.description}
+                </div>
+                {isActive && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    <span className="text-[8px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'rgba(59,130,246,0.1)', color: '#3B82F6' }}>
+                      {cpm.progressMeasurement === 'quantity' ? 'Quantity-based' : cpm.progressMeasurement === 'milestone' ? 'Milestone-based' : cpm.progressMeasurement === 'unit_completion' ? 'Unit completion' : 'Revenue-based'}
+                    </span>
+                    <span className="text-[8px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'rgba(16,185,129,0.1)', color: '#10B981' }}>
+                      {cpm.paymentStructure === 'hakedis' ? 'Hakediş' : cpm.paymentStructure === 'milestone' ? 'Milestone' : cpm.paymentStructure === 'cost_plus_fee' ? 'Cost + Fee' : cpm.paymentStructure === 'unit_handover' ? 'Unit Handover' : 'Revenue Split'}
+                    </span>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Section 8: Flow Direction + Site Conditions (compact row) ── */}
+      <div className="border-t pt-6 mb-6" style={{ borderColor: 'var(--color-border)' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Flow Direction */}
           <div>
             <div className="flex items-center gap-1.5 mb-2">
@@ -561,36 +704,6 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
                 );
               })}
             </div>
-          </div>
-
-          {/* Delivery Method */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <FileText size={14} style={{ color: 'var(--color-purple)' }} />
-              <span className="text-[11px] font-semibold" style={{ color: 'var(--color-text)' }}>
-                Delivery Method
-              </span>
-            </div>
-            <select
-              value={state.deliveryMethod || ''}
-              onChange={(e) => onStateChange({ deliveryMethod: e.target.value })}
-              className="w-full h-9 rounded-lg border px-3 text-[11px] font-medium"
-              style={{
-                background: 'var(--color-bg-input)',
-                borderColor: 'var(--color-border)',
-                color: 'var(--color-text)',
-              }}
-            >
-              <option value="">Select...</option>
-              {DELIVERY_METHODS.map((dm) => (
-                <option key={dm.value} value={dm.value}>{dm.label}</option>
-              ))}
-            </select>
-            {state.deliveryMethod && (
-              <div className="mt-1.5 text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
-                {DELIVERY_METHODS.find((d) => d.value === state.deliveryMethod)?.description}
-              </div>
-            )}
           </div>
 
           {/* Site Conditions */}
