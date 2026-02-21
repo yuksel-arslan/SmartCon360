@@ -381,7 +381,7 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
-              Buffer Between Trades
+              Buffer Between Wagons
             </label>
             <span className="text-lg font-medium" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-purple)' }}>
               {bufferSize} {bufferSize === 1 ? 'takt' : 'takts'}
@@ -448,7 +448,7 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
                 { label: 'Zones', value: zoneCount, color: 'var(--color-success)' },
-                { label: 'Trades', value: tradeCount, color: 'var(--color-purple)' },
+                { label: 'Wagons', value: tradeCount, color: 'var(--color-purple)' },
                 { label: 'Working Days', value: totalDays, color: 'var(--color-accent)' },
                 { label: 'Calendar Days', value: `~${calendarDays}`, color: 'var(--color-warning)' },
               ].map((s) => (

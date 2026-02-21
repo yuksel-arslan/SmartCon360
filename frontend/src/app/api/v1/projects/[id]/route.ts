@@ -43,10 +43,20 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const body = await request.json();
     const input = updateProjectSchema.parse(body);
 
+    // If settings is provided, merge with existing settings (deep merge top-level keys)
+    let mergedSettings: Record<string, unknown> | undefined;
+    if (input.settings) {
+      const existing = await prisma.project.findUnique({ where: { id }, select: { settings: true } });
+      const existingSettings = (existing?.settings as Record<string, unknown>) || {};
+      mergedSettings = { ...existingSettings, ...input.settings };
+    }
+
+    const { settings: _settings, ...rest } = input;
     const project = await prisma.project.update({
       where: { id },
       data: {
-        ...input,
+        ...rest,
+        ...(mergedSettings && { settings: mergedSettings }),
         ...(input.plannedStart && { plannedStart: new Date(input.plannedStart) }),
         ...(input.plannedFinish && { plannedFinish: new Date(input.plannedFinish) }),
       },
