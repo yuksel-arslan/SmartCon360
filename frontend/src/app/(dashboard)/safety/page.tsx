@@ -6,7 +6,7 @@ import {
   Calendar, Timer, Activity, ShieldAlert, ClipboardCheck, Flame,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { ModulePageHeader } from '@/components/modules';
+import { ModulePageHeader, ContractPolicyBanner } from '@/components/modules';
 import { useSafetyStore } from '@/stores/safetyStore';
 import { useProjectStore } from '@/stores/projectStore';
 import type { Incident, PermitToWork, SafetyObservation, ToolboxTalk } from '@/stores/safetyStore';
@@ -189,6 +189,10 @@ export default function SafetyPage() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-6">
       <ModulePageHeader moduleId="safety" />
+      <ContractPolicyBanner
+        module="safe_zone"
+        policyLabels={{ 'reporting.level': 'Reporting', 'ptw.strictness': 'PTW Level', 'toolbox.frequency': 'Toolbox Talks' }}
+      />
 
       {error && (
         <div className="rounded-lg px-4 py-3 flex items-center gap-3 text-[12px]"
@@ -281,21 +285,21 @@ function OverviewTab() {
       value: summary?.activePtws ?? 0,
       icon: FileCheck,
       color: 'rgb(59,130,246)',
-      desc: 'Permits currently active',
+      desc: summary?.ptwStrictness === 'strict' ? 'Strict PTW regime' : 'Standard PTW',
     },
     {
       label: 'Open Observations',
       value: summary?.openObservations ?? 0,
       icon: Eye,
       color: 'rgb(168,85,247)',
-      desc: 'Awaiting resolution',
+      desc: summary?.reportingLevel === 'detailed' ? 'Detailed reporting' : 'Summary reporting',
     },
     {
       label: 'Toolbox Talks (Month)',
       value: summary?.toolboxTalksThisMonth ?? 0,
       icon: Users,
       color: 'var(--color-accent)',
-      desc: 'Sessions this month',
+      desc: summary?.toolboxFrequency === 'daily' ? 'Daily required' : 'Weekly required',
     },
     {
       label: 'LTIR',

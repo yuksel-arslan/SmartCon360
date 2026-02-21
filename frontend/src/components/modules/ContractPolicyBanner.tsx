@@ -20,6 +20,9 @@ const MODULE_NAMES: Record<string, string> = {
   quality_gate: 'QualityGate',
   safe_zone: 'SafeZone',
   comm_hub: 'CommHub',
+  risk_radar: 'RiskRadar',
+  stakeholder: 'StakeHub',
+  green_site: 'GreenSite',
 };
 
 /**

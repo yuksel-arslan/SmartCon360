@@ -3,6 +3,7 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../../lib/prisma';
+import { getQualityPolicies } from './utils/policy-client';
 
 const router = Router();
 
@@ -68,16 +69,25 @@ router.get('/summary/project/:projectId', async (req: Request, res: Response, ne
 
     const copq = copqResult._sum.reworkCost ?? 0;
 
+    // Fetch contract policies for quality thresholds
+    const policies = await getQualityPolicies(projectId);
+    const ftrMeetsTarget = ftrRate >= policies.ftrThreshold;
+
     res.json({
       data: {
         ftrRate,
+        ftrThreshold: policies.ftrThreshold,
+        ftrMeetsTarget,
         openNcrs,
         closedNcrs,
         totalInspections,
         passedInspections,
-        copq,
+        copq: policies.copqEnabled ? copq : null,
+        copqEnabled: policies.copqEnabled,
         openPunchItems,
         inspectionsThisWeek,
+        inspectionFrequency: policies.inspectionFrequency,
+        ncrApproval: policies.ncrApproval,
       },
     });
   } catch (error) {
@@ -314,6 +324,21 @@ router.delete('/punch-items/:id', async (req: Request, res: Response, next: Next
       where: { id: req.params.id },
     });
     res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ─── POLICIES ──────────────────────────────────────────────────────────────
+
+/**
+ * GET /quality/policies/:projectId
+ * Get contract-driven QualityGate policies for a project
+ */
+router.get('/policies/:projectId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const policies = await getQualityPolicies(req.params.projectId);
+    res.json({ data: policies });
   } catch (error) {
     next(error);
   }

@@ -8,7 +8,7 @@ import {
   Download, Check, FolderOpen, Globe, Filter, Layers, ExternalLink, ShieldAlert,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { ModulePageHeader } from '@/components/modules';
+import { ModulePageHeader, ContractPolicyBanner } from '@/components/modules';
 import { UniclassBrowser } from '@/components/cost/UniclassBrowser';
 import { useCostStore } from '@/stores/costStore';
 import { useProjectStore } from '@/stores/projectStore';
@@ -60,6 +60,10 @@ export default function CostPage() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-6">
       <ModulePageHeader moduleId="cost" />
+      <ContractPolicyBanner
+        module="cost_pilot"
+        policyLabels={{ 'evm.enabled': 'EVM', 'payment.structure': 'Payment Type', 'progress.measurement': 'Progress Method', 'retention.percentage': 'Retention %' }}
+      />
 
       {error && (
         <div className="rounded-lg px-4 py-3 flex items-center gap-3 text-[12px]"
