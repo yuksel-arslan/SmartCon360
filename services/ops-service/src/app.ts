@@ -28,6 +28,7 @@ import claimsRouter from './modules/claims/routes';
 import riskRouter from './modules/risk/routes';
 import commRouter from './modules/comm/routes';
 import supplyChainRouter from './modules/supply-chain/routes';
+import stakeholderRouter from './modules/stakeholder/routes';
 
 // Cost module middleware
 import { authenticate } from './modules/cost/middleware/auth';
@@ -140,9 +141,10 @@ app.use('/risk', authenticate, riskRouter);
 // ──────────────────────────────────────────────
 app.use('/supply-chain', authenticate, supplyChainRouter);
 
-app.get('/stakeholder/health', (_req: Request, res: Response) => {
-  res.json({ status: 'stub', module: 'stakeholder' });
-});
+// ──────────────────────────────────────────────
+// STAKEHOLDER MODULE — Full routes (StakeHub)
+// ──────────────────────────────────────────────
+app.use('/stakeholder', authenticate, stakeholderRouter);
 
 app.get('/sustainability/health', (_req: Request, res: Response) => {
   res.json({ status: 'stub', module: 'sustainability' });

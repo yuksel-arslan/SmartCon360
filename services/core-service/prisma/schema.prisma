@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public", "cost", "quality", "safety", "resources", "claims", "risk", "comm", "supply"]
+  schemas  = ["public", "cost", "quality", "safety", "resources", "claims", "risk", "comm", "supply", "stakeholder"]
 }
 
 // ============================================================================
@@ -1820,4 +1820,62 @@ model Delivery {
   @@index([scheduledDate])
   @@map("deliveries")
   @@schema("supply")
+}
+
+// ============================================================================
+// STAKEHOLDER MODULE (StakeHub)
+// ============================================================================
+
+model Stakeholder {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  code          String   @db.VarChar(30)
+  name          String   @db.VarChar(255)
+  organization  String?  @db.VarChar(255)
+  role          String   @db.VarChar(100) // owner, client_rep, engineer, contractor, subcontractor, consultant, regulator, community, investor, other
+  category      String   @db.VarChar(50) // internal, external, regulatory, community
+  influence     Int      @default(3) // 1-5 scale
+  interest      Int      @default(3) // 1-5 scale
+  engagement    String   @default("inform") @db.VarChar(30) // monitor, inform, consult, collaborate, empower
+  contactEmail  String?  @map("contact_email") @db.VarChar(255)
+  contactPhone  String?  @map("contact_phone") @db.VarChar(20)
+  status        String   @default("active") @db.VarChar(30) // active, inactive, archived
+  expectations  String?
+  concerns      String?
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([category])
+  @@index([engagement])
+  @@map("stakeholders")
+  @@schema("stakeholder")
+}
+
+model EngagementAction {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String   @map("project_id") @db.Uuid
+  stakeholderId   String?  @map("stakeholder_id") @db.Uuid
+  actionNumber    String   @map("action_number") @db.VarChar(30)
+  title           String   @db.VarChar(255)
+  description     String?
+  type            String   @db.VarChar(50) // meeting, report, presentation, workshop, site_visit, notification, other
+  status          String   @default("planned") @db.VarChar(30) // planned, in_progress, completed, cancelled
+  priority        String   @default("medium") @db.VarChar(20) // low, medium, high
+  assignedTo      String?  @map("assigned_to") @db.VarChar(255)
+  dueDate         DateTime? @map("due_date") @db.Date
+  completedDate   DateTime? @map("completed_date") @db.Date
+  outcome         String?
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, actionNumber])
+  @@index([projectId])
+  @@index([stakeholderId])
+  @@index([status])
+  @@map("engagement_actions")
+  @@schema("stakeholder")
 }
