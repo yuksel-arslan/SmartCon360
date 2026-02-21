@@ -6,6 +6,7 @@ import pinoHttp from 'pino-http';
 
 import notificationRoutes from './modules/notification/routes';
 import resourceRoutes from './modules/resource/routes';
+import hubRoutes from './modules/hub/routes';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -34,11 +35,9 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 // ---------------------------------------------------------------------------
-// Hub module (stub — hub-service source copied for reference only)
+// Hub module — cross-module orchestrator, Project Health Score
 // ---------------------------------------------------------------------------
-app.get('/hub/health', (_req: Request, res: Response) => {
-  res.json({ status: 'stub', module: 'hub' });
-});
+app.use('/hub', hubRoutes);
 
 // ---------------------------------------------------------------------------
 // Reporting module (stub — Python reporting-service lives in ai-service)

@@ -20,6 +20,7 @@ import { listPlans, getFlowlineData } from '@/lib/stores/takt-plans';
 import { getCurrentPPC } from '@/lib/stores/progress-store';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useHubStore } from '@/stores/hubStore';
 
 const constraintColors: Record<string, string> = {
   critical: 'var(--color-danger)',
@@ -57,6 +58,9 @@ export default function DashboardPage() {
   const activeProject = useProjectStore((s) => s.getActiveProject());
   const projects = useProjectStore((s) => s.projects);
   const token = useAuthStore((s) => s.token);
+  const hubHealth = useHubStore((s) => s.health);
+  const hubDashboard = useHubStore((s) => s.dashboard);
+  const fetchHubAll = useHubStore((s) => s.fetchAll);
 
   const [kpis, setKpis] = useState<DashboardKPIs>({
     ...DEMO_KPIS,
@@ -179,6 +183,9 @@ export default function DashboardPage() {
         }
       } catch { /* no constraints yet */ }
     })();
+
+    // Fetch Hub data (Project Health Score + cross-module summary)
+    fetchHubAll(projectId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeProjectId]);
 
@@ -215,11 +222,11 @@ export default function DashboardPage() {
             color="var(--color-danger)"
           />
           <MetricCard
-            label="AI Score"
-            value={kpis.aiScore > 0 ? `${kpis.aiScore}` : '—'}
-            sub="Project health index"
+            label="Health Score"
+            value={hubHealth ? `${hubHealth.overallScore}` : '—'}
+            sub={hubHealth ? `${hubHealth.recommendations[0]?.slice(0, 40) || 'Healthy'}` : 'Project health index'}
             icon={Zap}
-            color="var(--color-accent-light)"
+            color={hubHealth && hubHealth.overallScore >= 70 ? 'var(--color-success)' : hubHealth && hubHealth.overallScore >= 50 ? 'var(--color-warning)' : 'var(--color-accent-light)'}
           />
         </div>
 
@@ -280,7 +287,15 @@ export default function DashboardPage() {
                 color="var(--color-accent)"
                 message={`Project "${projectName}" is active with ${kpis.totalZones} zones and ${kpis.totalTrades} trades configured.`}
               />
-              {kpis.openConstraints > 0 && (
+              {hubHealth && hubHealth.recommendations.map((rec, i) => (
+                <ConciergeMessage
+                  key={i}
+                  type={hubHealth.overallScore >= 70 ? 'Info' : 'Warning'}
+                  color={hubHealth.overallScore >= 70 ? 'var(--color-success)' : 'var(--color-warning)'}
+                  message={rec}
+                />
+              ))}
+              {kpis.openConstraints > 0 && !hubHealth && (
                 <ConciergeMessage
                   type="Warning"
                   color="var(--color-warning)"
@@ -309,6 +324,69 @@ export default function DashboardPage() {
             </div>
           </Card>
         </div>
+
+        {/* Cross-Module Health Breakdown */}
+        {hubHealth && (
+          <Card padding="lg">
+            <SectionHeader icon={Activity} title="Module Health Breakdown" />
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mt-3">
+              {Object.values(hubHealth.components).map((comp) => {
+                const color = comp.score >= 70
+                  ? 'var(--color-success)'
+                  : comp.score >= 50
+                    ? 'var(--color-warning)'
+                    : 'var(--color-danger)';
+                return (
+                  <div key={comp.label} className="text-center">
+                    <div
+                      className="text-2xl font-bold font-mono"
+                      style={{ color }}
+                    >
+                      {comp.score}
+                    </div>
+                    <div className="text-[11px] font-medium mt-0.5" style={{ color: 'var(--color-text)' }}>
+                      {comp.label}
+                    </div>
+                    <div className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                      {comp.details}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        )}
+
+        {/* Cross-Module KPI Summary */}
+        {hubDashboard && (
+          <Card padding="lg">
+            <SectionHeader icon={TrendingUp} title="Module KPIs" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-3">
+              {[
+                { label: 'Open NCRs', value: hubDashboard.quality.openNcrs, warn: hubDashboard.quality.openNcrs > 0 },
+                { label: 'FTR Rate', value: `${hubDashboard.quality.ftrRate}%`, warn: hubDashboard.quality.ftrRate < 80 },
+                { label: 'Open Incidents', value: hubDashboard.safety.openIncidents, warn: hubDashboard.safety.openIncidents > 0 },
+                { label: 'CPI', value: hubDashboard.cost.cpi?.toFixed(2) ?? '—', warn: (hubDashboard.cost.cpi ?? 1) < 0.9 },
+                { label: 'SPI', value: hubDashboard.cost.spi?.toFixed(2) ?? '—', warn: (hubDashboard.cost.spi ?? 1) < 0.9 },
+                { label: 'Active Crews', value: hubDashboard.resources.activeCrews },
+                { label: 'Open POs', value: hubDashboard.supply.openPOs },
+                { label: 'Active Risks', value: hubDashboard.risk.activeRisks, warn: hubDashboard.risk.highRisks > 0 },
+                { label: 'Open Claims', value: hubDashboard.claims.openClaims, warn: hubDashboard.claims.openClaims > 0 },
+                { label: 'Open RFIs', value: hubDashboard.communication.openRfis },
+              ].map((kpi) => (
+                <div key={kpi.label} className="rounded-lg border p-3" style={{ borderColor: 'var(--color-border)' }}>
+                  <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{kpi.label}</div>
+                  <div
+                    className="text-lg font-bold font-mono mt-0.5"
+                    style={{ color: kpi.warn ? 'var(--color-danger)' : 'var(--color-text)' }}
+                  >
+                    {kpi.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* Bottom Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
