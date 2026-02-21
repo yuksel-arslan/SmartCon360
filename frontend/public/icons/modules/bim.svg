@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bim-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0EA5E9"/>
+      <stop offset="100%" style="stop-color:#38BDF8"/>
+    </linearGradient>
+  </defs>
+  <!-- 3D Building wireframe -->
+  <!-- Front face -->
+  <polygon points="20,90 60,90 60,40 20,40" fill="none" stroke="url(#bim-g)" stroke-width="2"/>
+  <!-- Top face -->
+  <polygon points="20,40 60,40 85,25 45,25" fill="url(#bim-g)" fill-opacity="0.15" stroke="url(#bim-g)" stroke-width="2"/>
+  <!-- Side face -->
+  <polygon points="60,40 85,25 85,75 60,90" fill="url(#bim-g)" fill-opacity="0.08" stroke="url(#bim-g)" stroke-width="2"/>
+  <!-- Floor lines -->
+  <line x1="20" y1="55" x2="60" y2="55" stroke="url(#bim-g)" stroke-width="1" opacity="0.5"/>
+  <line x1="60" y1="55" x2="85" y2="40" stroke="url(#bim-g)" stroke-width="1" opacity="0.5"/>
+  <line x1="20" y1="70" x2="60" y2="70" stroke="url(#bim-g)" stroke-width="1" opacity="0.5"/>
+  <line x1="60" y1="70" x2="85" y2="55" stroke="url(#bim-g)" stroke-width="1" opacity="0.5"/>
+  <!-- Window grid - front -->
+  <rect x="28" y="44" width="8" height="8" rx="1" fill="url(#bim-g)" fill-opacity="0.25"/>
+  <rect x="44" y="44" width="8" height="8" rx="1" fill="url(#bim-g)" fill-opacity="0.25"/>
+  <rect x="28" y="59" width="8" height="8" rx="1" fill="url(#bim-g)" fill-opacity="0.25"/>
+  <rect x="44" y="59" width="8" height="8" rx="1" fill="url(#bim-g)" fill-opacity="0.25"/>
+  <rect x="28" y="74" width="8" height="8" rx="1" fill="url(#bim-g)" fill-opacity="0.25"/>
+  <rect x="44" y="74" width="8" height="8" rx="1" fill="url(#bim-g)" fill-opacity="0.25"/>
+  <!-- Data nodes -->
+  <circle cx="95" cy="35" r="4" fill="#0EA5E9" opacity="0.8"/>
+  <circle cx="100" cy="55" r="3" fill="#38BDF8" opacity="0.6"/>
+  <circle cx="95" cy="75" r="3.5" fill="#0EA5E9" opacity="0.7"/>
+  <!-- Connection lines from building to data -->
+  <line x1="85" y1="35" x2="91" y2="35" stroke="#0EA5E9" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>
+  <line x1="85" y1="55" x2="97" y2="55" stroke="#38BDF8" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>
+  <line x1="85" y1="75" x2="91.5" y2="75" stroke="#0EA5E9" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>
+</svg>
