@@ -1,14 +1,29 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { SetupStepProps, SubTradeTemplate, ContractType } from '../types';
 import { DISCIPLINES, CONTRACT_TYPES } from '../types';
-import { Check, Loader2, Users, Package, Wrench, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Loader2, Users, Package, Wrench, ChevronDown, ChevronUp, Save, RefreshCw } from 'lucide-react';
 
 interface TradeRow extends SubTradeTemplate {
   enabled: boolean;
   contractType: ContractType;
   subcontractorGroup: string;
+  dbId?: string;        // database ID — present when trade is already saved
+}
+
+// DB trade shape from GET /api/v1/projects/:id/trades
+interface SavedTrade {
+  id: string;
+  name: string;
+  code: string;
+  color: string;
+  defaultCrewSize: number;
+  discipline: string | null;
+  contractType: string | null;
+  subcontractorGroup: string | null;
+  sortOrder: number;
+  isActive: boolean;
 }
 
 const CONTRACT_TYPE_BADGE: Record<ContractType, { label: string; bg: string; color: string }> = {
@@ -16,6 +31,10 @@ const CONTRACT_TYPE_BADGE: Record<ContractType, { label: string; bg: string; col
   supply_and_fix:  { label: 'Supply & Fix', bg: 'rgba(59,130,246,0.12)', color: '#3B82F6' },
   supply_install:  { label: 'S & I & C',    bg: 'rgba(16,185,129,0.12)', color: '#10B981' },
 };
+
+function isValidContractType(ct: string | null | undefined): ct is ContractType {
+  return ct === 'labor_only' || ct === 'supply_and_fix' || ct === 'supply_install';
+}
 
 function cycleContractType(current: ContractType): ContractType {
   const order: ContractType[] = ['labor_only', 'supply_and_fix', 'supply_install'];
@@ -27,8 +46,11 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
   const [trades, setTrades] = useState<TradeRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [applied, setApplied] = useState(state.tradeCount > 0);
+  const [hasChanges, setHasChanges] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [selectedDisciplines, setSelectedDisciplines] = useState<Set<string>>(
     new Set(DISCIPLINES.filter((d) => d.value !== 'general').map((d) => d.value)),
   );
@@ -36,9 +58,78 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
   const [editingGroup, setEditingGroup] = useState<string | null>(null);
   const [groupInput, setGroupInput] = useState('');
 
-  const fetchTradeTemplates = useCallback(async () => {
+  // Snapshot of saved state to detect changes
+  const savedSnapshot = useRef<Map<string, { contractType: ContractType; subcontractorGroup: string }>>(new Map());
+
+  // Load trades: first try DB, then fall back to templates
+  const loadTrades = useCallback(async () => {
     setLoading(true);
+    setError('');
+
     try {
+      // 1. Try fetching saved trades from DB
+      const savedRes = await fetch(`/api/v1/projects/${projectId}/trades`, {
+        headers: { ...authHeaders },
+      });
+
+      if (savedRes.ok) {
+        const savedJson = await savedRes.json();
+        const savedTrades: SavedTrade[] = savedJson.data || [];
+
+        if (savedTrades.length > 0) {
+          // Also fetch templates to get durationMultiplier and predecessorCodes
+          const tmplRes = await fetch(`/api/v1/projects/${projectId}/setup/trade-templates`, {
+            headers: { ...authHeaders },
+          });
+          const tmplData = tmplRes.ok ? (await tmplRes.json()).data?.trades || [] : [];
+          const tmplMap = new Map<string, SubTradeTemplate>();
+          for (const t of tmplData) {
+            tmplMap.set(t.code, t);
+          }
+
+          const rows: TradeRow[] = savedTrades.map((st) => {
+            const tmpl = tmplMap.get(st.code);
+            const ct = isValidContractType(st.contractType) ? st.contractType : 'supply_and_fix';
+            return {
+              name: st.name,
+              code: st.code,
+              color: st.color,
+              discipline: st.discipline || '',
+              defaultCrewSize: st.defaultCrewSize,
+              durationMultiplier: tmpl?.durationMultiplier ?? 1.0,
+              predecessorCodes: tmpl?.predecessorCodes ?? [],
+              sortOrder: st.sortOrder,
+              defaultContractType: tmpl?.defaultContractType ?? 'supply_and_fix',
+              enabled: true,
+              contractType: ct,
+              subcontractorGroup: st.subcontractorGroup || '',
+              dbId: st.id,
+            };
+          });
+
+          setTrades(rows);
+          setApplied(true);
+          onStateChange({ tradeCount: rows.length });
+
+          // Build snapshot for change detection
+          const snap = new Map<string, { contractType: ContractType; subcontractorGroup: string }>();
+          for (const r of rows) {
+            snap.set(r.code, { contractType: r.contractType, subcontractorGroup: r.subcontractorGroup });
+          }
+          savedSnapshot.current = snap;
+
+          // Set active disciplines from saved trades
+          const activeDisciplines = new Set(rows.map((r) => r.discipline).filter(Boolean));
+          if (activeDisciplines.size > 0) {
+            setSelectedDisciplines(activeDisciplines);
+          }
+
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 2. No saved trades — load templates
       const res = await fetch(`/api/v1/projects/${projectId}/setup/trade-templates`, {
         headers: { ...authHeaders },
       });
@@ -52,15 +143,31 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
         })));
       }
     } catch {
-      setError('Failed to load trade templates');
+      setError('Failed to load trades');
     } finally {
       setLoading(false);
     }
-  }, [projectId, authHeaders]);
+  }, [projectId, authHeaders, onStateChange]);
 
   useEffect(() => {
-    fetchTradeTemplates();
-  }, [fetchTradeTemplates]);
+    loadTrades();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Detect changes against saved snapshot
+  useEffect(() => {
+    if (!applied || savedSnapshot.current.size === 0) {
+      setHasChanges(false);
+      return;
+    }
+    const changed = trades.some((t) => {
+      if (!t.dbId) return false;
+      const snap = savedSnapshot.current.get(t.code);
+      if (!snap) return false;
+      return snap.contractType !== t.contractType || snap.subcontractorGroup !== t.subcontractorGroup;
+    });
+    setHasChanges(changed);
+  }, [trades, applied]);
 
   const toggleDiscipline = (disc: string) => {
     setSelectedDisciplines((prev) => {
@@ -81,10 +188,6 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
 
   const setTradeGroup = (code: string, group: string) => {
     setTrades((prev) => prev.map((t) => (t.code === code ? { ...t, subcontractorGroup: group } : t)));
-  };
-
-  const applyGroupToMultiple = (codes: string[], group: string) => {
-    setTrades((prev) => prev.map((t) => (codes.includes(t.code) ? { ...t, subcontractorGroup: group } : t)));
   };
 
   const filteredTrades = trades.filter((t) => selectedDisciplines.has(t.discipline));
@@ -109,9 +212,11 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
   // Get existing group names for autocomplete
   const existingGroups = [...new Set(trades.filter((t) => t.subcontractorGroup).map((t) => t.subcontractorGroup))];
 
+  // Apply trades for the first time (create in DB)
   const handleApply = async () => {
     setApplying(true);
     setError('');
+    setSuccessMsg('');
 
     try {
       const res = await fetch(`/api/v1/projects/${projectId}/setup/apply-trades`, {
@@ -133,12 +238,86 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
       }
 
       const json = await res.json();
+      const createdTrades: SavedTrade[] = json.data || [];
+
+      // Update local state with DB IDs
+      setTrades((prev) =>
+        prev.map((t) => {
+          const saved = createdTrades.find((s: SavedTrade) => s.code === t.code);
+          return saved ? { ...t, dbId: saved.id } : t;
+        }),
+      );
+
+      // Update snapshot
+      const snap = new Map<string, { contractType: ContractType; subcontractorGroup: string }>();
+      for (const t of enabledTrades) {
+        snap.set(t.code, { contractType: t.contractType, subcontractorGroup: t.subcontractorGroup });
+      }
+      savedSnapshot.current = snap;
+
       setApplied(true);
-      onStateChange({ tradeCount: json.data?.created || enabledTrades.length });
+      setHasChanges(false);
+      onStateChange({ tradeCount: json.meta?.created || enabledTrades.length });
+      setSuccessMsg(`${json.meta?.created || enabledTrades.length} trades applied successfully`);
+      setTimeout(() => setSuccessMsg(''), 3000);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to apply trades');
     } finally {
       setApplying(false);
+    }
+  };
+
+  // Save changes to existing trades (bulk PATCH)
+  const handleSaveChanges = async () => {
+    setSaving(true);
+    setError('');
+    setSuccessMsg('');
+
+    try {
+      const modifiedTrades = trades.filter((t) => {
+        if (!t.dbId) return false;
+        const snap = savedSnapshot.current.get(t.code);
+        if (!snap) return false;
+        return snap.contractType !== t.contractType || snap.subcontractorGroup !== t.subcontractorGroup;
+      });
+
+      if (modifiedTrades.length === 0) {
+        setSaving(false);
+        return;
+      }
+
+      const res = await fetch(`/api/v1/projects/${projectId}/setup/save-trades`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({
+          trades: modifiedTrades.map((t) => ({
+            id: t.dbId,
+            contractType: t.contractType,
+            subcontractorGroup: t.subcontractorGroup || null,
+          })),
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || 'Failed to save changes');
+      }
+
+      // Update snapshot
+      const snap = new Map<string, { contractType: ContractType; subcontractorGroup: string }>();
+      for (const t of trades) {
+        if (t.dbId) {
+          snap.set(t.code, { contractType: t.contractType, subcontractorGroup: t.subcontractorGroup });
+        }
+      }
+      savedSnapshot.current = snap;
+      setHasChanges(false);
+      setSuccessMsg(`${modifiedTrades.length} trades updated`);
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save changes');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -237,8 +416,9 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
                       >
                         {/* Enable toggle + trade info */}
                         <button
-                          onClick={() => toggleTrade(trade.code)}
+                          onClick={() => !applied && toggleTrade(trade.code)}
                           className="flex items-center gap-2 flex-1 px-3 py-2 text-left min-w-0"
+                          style={{ cursor: applied ? 'default' : 'pointer' }}
                         >
                           <div
                             className="w-4 h-4 rounded border flex items-center justify-center shrink-0"
@@ -360,11 +540,11 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
               </div>
 
               <div className="space-y-2">
-                {Object.entries(groupedTrades).map(([group, groupTrades]) => {
+                {Object.entries(groupedTrades).map(([group, grpTrades]) => {
                   const isExpanded = expandedGroups.has(group);
-                  const laborCount = groupTrades.filter((t) => t.contractType === 'labor_only').length;
-                  const sfCount = groupTrades.filter((t) => t.contractType === 'supply_and_fix').length;
-                  const siCount = groupTrades.filter((t) => t.contractType === 'supply_install').length;
+                  const laborCount = grpTrades.filter((t) => t.contractType === 'labor_only').length;
+                  const sfCount = grpTrades.filter((t) => t.contractType === 'supply_and_fix').length;
+                  const siCount = grpTrades.filter((t) => t.contractType === 'supply_install').length;
 
                   return (
                     <div key={group}>
@@ -379,7 +559,7 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
                             {group}
                           </span>
                           <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'var(--color-accent-muted)', color: 'var(--color-accent)' }}>
-                            {groupTrades.length} trades
+                            {grpTrades.length} trades
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -403,7 +583,7 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
 
                       {isExpanded && (
                         <div className="ml-5 mt-1 space-y-0.5">
-                          {groupTrades.map((t) => (
+                          {grpTrades.map((t) => (
                             <div key={t.code} className="flex items-center gap-2 px-2 py-1 text-[11px]">
                               <span className="w-2 h-2 rounded-full" style={{ background: t.color }} />
                               <span style={{ color: 'var(--color-text-muted)' }} className="font-mono text-[10px]">{t.code}</span>
@@ -425,32 +605,70 @@ export default function StepTrades({ projectId, state, onStateChange, onComplete
             </div>
           )}
 
-          {/* Apply button */}
+          {/* Action bar */}
           <div className="mt-6 flex items-center justify-between">
             <span className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
-              {enabledTrades.length} trades selected across {selectedDisciplines.size} disciplines
+              {enabledTrades.length} trades {applied ? 'saved' : 'selected'} across {selectedDisciplines.size} disciplines
+              {hasChanges && (
+                <span className="ml-2 text-[10px] font-medium" style={{ color: '#F59E0B' }}>
+                  (unsaved changes)
+                </span>
+              )}
             </span>
 
-            {!applied ? (
-              <button
-                onClick={handleApply}
-                disabled={applying || enabledTrades.length === 0}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))' }}
-              >
-                {applying ? (
-                  <><Loader2 size={14} className="animate-spin" /> Applying...</>
-                ) : (
-                  <><Check size={14} /> Apply Trades to Project</>
-                )}
-              </button>
-            ) : (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-medium" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)' }}>
-                <Check size={14} /> Trades applied
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Save changes button (when already applied and has changes) */}
+              {applied && hasChanges && (
+                <button
+                  onClick={handleSaveChanges}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)' }}
+                >
+                  {saving ? (
+                    <><Loader2 size={14} className="animate-spin" /> Saving...</>
+                  ) : (
+                    <><Save size={14} /> Save Changes</>
+                  )}
+                </button>
+              )}
+
+              {/* Apply button (first time only) */}
+              {!applied && (
+                <button
+                  onClick={handleApply}
+                  disabled={applying || enabledTrades.length === 0}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[12px] font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))' }}
+                >
+                  {applying ? (
+                    <><Loader2 size={14} className="animate-spin" /> Applying...</>
+                  ) : (
+                    <><Check size={14} /> Apply Trades to Project</>
+                  )}
+                </button>
+              )}
+
+              {/* Applied badge */}
+              {applied && !hasChanges && (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-medium" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)' }}>
+                  <Check size={14} /> Trades saved
+                </div>
+              )}
+            </div>
           </div>
 
+          {/* Success message */}
+          {successMsg && (
+            <div
+              className="mt-3 rounded-lg px-3 py-2 text-[11px]"
+              style={{ background: 'rgba(16,185,129,0.08)', color: 'var(--color-success)' }}
+            >
+              {successMsg}
+            </div>
+          )}
+
+          {/* Error */}
           {error && (
             <div
               className="mt-3 rounded-lg px-3 py-2 text-[11px]"
