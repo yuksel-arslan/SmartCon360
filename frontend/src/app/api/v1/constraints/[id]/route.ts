@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { updateConstraintSchema } from '@/lib/validators/constraint';
@@ -41,7 +42,18 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     });
     if (!existing) throw new AppError('Constraint not found', 'NOT_FOUND', 404);
 
-    const data: Record<string, unknown> = { ...input };
+    // Build update data explicitly to satisfy Prisma's strict types
+    const data: Prisma.ConstraintUpdateInput = {};
+
+    if (input.title !== undefined) data.title = input.title;
+    if (input.description !== undefined) data.description = input.description;
+    if (input.category !== undefined) data.category = input.category;
+    if (input.priority !== undefined) data.priority = input.priority;
+    if (input.status !== undefined) data.status = input.status;
+    if (input.tradeCode !== undefined) data.tradeCode = input.tradeCode;
+    if (input.zoneName !== undefined) data.zoneName = input.zoneName;
+    if (input.assignedTo !== undefined) data.assignedTo = input.assignedTo;
+    if (input.resolution !== undefined) data.resolution = input.resolution;
     if (input.dueDate) data.dueDate = new Date(input.dueDate);
 
     // Auto-set resolvedAt when status changes to resolved
