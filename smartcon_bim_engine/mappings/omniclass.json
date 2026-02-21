@@ -1,0 +1,374 @@
+{
+  "mappings": {
+    "IfcWall": {
+      "material:Concrete": {
+        "code": "23-17 11 13"
+      },
+      "material:Brick": {
+        "code": "23-17 11 11 11"
+      },
+      "material:Block": {
+        "code": "23-17 11 11 13"
+      },
+      "material:Masonry": {
+        "code": "23-17 11 11"
+      },
+      "material:Steel": {
+        "code": "23-17 11 15"
+      },
+      "material:Timber": {
+        "code": "23-17 11 17"
+      },
+      "material:Drywall": {
+        "code": "23-17 13 13"
+      },
+      "material:Gypsum": {
+        "code": "23-17 13 13"
+      },
+      "material:Plasterboard": {
+        "code": "23-17 13 13"
+      },
+      "default": {
+        "code": "23-17 11 13"
+      }
+    },
+    "IfcWallStandardCase": {
+      "material:Concrete": {
+        "code": "23-17 11 13"
+      },
+      "material:Brick": {
+        "code": "23-17 11 11 11"
+      },
+      "material:Steel": {
+        "code": "23-17 11 15"
+      },
+      "material:Timber": {
+        "code": "23-17 11 17"
+      },
+      "material:Drywall": {
+        "code": "23-17 13 13"
+      },
+      "default": {
+        "code": "23-17 11 13"
+      }
+    },
+    "IfcSlab": {
+      "material:Concrete": {
+        "code": "23-13 13 11"
+      },
+      "material:Steel": {
+        "code": "23-13 13 13"
+      },
+      "material:Timber": {
+        "code": "23-13 13 15"
+      },
+      "material:Composite": {
+        "code": "23-13 13 17"
+      },
+      "default": {
+        "code": "23-13 13 11"
+      }
+    },
+    "IfcBeam": {
+      "material:Concrete": {
+        "code": "23-13 11 13"
+      },
+      "material:Steel": {
+        "code": "23-13 11 15"
+      },
+      "material:Timber": {
+        "code": "23-13 11 17"
+      },
+      "material:Precast": {
+        "code": "23-13 11 19"
+      },
+      "default": {
+        "code": "23-13 11 13"
+      }
+    },
+    "IfcColumn": {
+      "material:Concrete": {
+        "code": "23-13 11 11"
+      },
+      "material:Steel": {
+        "code": "23-13 11 11 15"
+      },
+      "material:Timber": {
+        "code": "23-13 11 11 17"
+      },
+      "material:Precast": {
+        "code": "23-13 11 11 19"
+      },
+      "default": {
+        "code": "23-13 11 11"
+      }
+    },
+    "IfcDoor": {
+      "material:Timber": {
+        "code": "23-17 15 11 11"
+      },
+      "material:Wood": {
+        "code": "23-17 15 11 11"
+      },
+      "material:Steel": {
+        "code": "23-17 15 11 13"
+      },
+      "material:Aluminium": {
+        "code": "23-17 15 11 15"
+      },
+      "material:Aluminum": {
+        "code": "23-17 15 11 15"
+      },
+      "material:Glass": {
+        "code": "23-17 15 11 17"
+      },
+      "default": {
+        "code": "23-17 15 11"
+      }
+    },
+    "IfcWindow": {
+      "material:Aluminium": {
+        "code": "23-17 15 13 15"
+      },
+      "material:Aluminum": {
+        "code": "23-17 15 13 15"
+      },
+      "material:Timber": {
+        "code": "23-17 15 13 11"
+      },
+      "material:PVC": {
+        "code": "23-17 15 13 17"
+      },
+      "material:Steel": {
+        "code": "23-17 15 13 13"
+      },
+      "default": {
+        "code": "23-17 15 13"
+      }
+    },
+    "IfcStairFlight": {
+      "material:Concrete": {
+        "code": "23-17 17 11"
+      },
+      "material:Steel": {
+        "code": "23-17 17 13"
+      },
+      "material:Timber": {
+        "code": "23-17 17 15"
+      },
+      "default": {
+        "code": "23-17 17 11"
+      }
+    },
+    "IfcStair": {
+      "default": {
+        "code": "23-17 17 11"
+      }
+    },
+    "IfcRailing": {
+      "material:Steel": {
+        "code": "23-17 17 21 13"
+      },
+      "material:Glass": {
+        "code": "23-17 17 21 15"
+      },
+      "material:Timber": {
+        "code": "23-17 17 21 11"
+      },
+      "default": {
+        "code": "23-17 17 21"
+      }
+    },
+    "IfcRoof": {
+      "material:Concrete": {
+        "code": "23-13 15 11"
+      },
+      "material:Steel": {
+        "code": "23-13 15 13"
+      },
+      "material:Timber": {
+        "code": "23-13 15 15"
+      },
+      "material:Tile": {
+        "code": "23-13 15 17"
+      },
+      "default": {
+        "code": "23-13 15 11"
+      }
+    },
+    "IfcCurtainWall": {
+      "material:Aluminium": {
+        "code": "23-17 11 21"
+      },
+      "material:Aluminum": {
+        "code": "23-17 11 21"
+      },
+      "material:Glass": {
+        "code": "23-17 11 21"
+      },
+      "default": {
+        "code": "23-17 11 21"
+      }
+    },
+    "IfcPlate": {
+      "material:Steel": {
+        "code": "23-13 11 21 13"
+      },
+      "material:Concrete": {
+        "code": "23-13 11 21 11"
+      },
+      "default": {
+        "code": "23-13 11 21"
+      }
+    },
+    "IfcMember": {
+      "material:Steel": {
+        "code": "23-13 11 23 13"
+      },
+      "material:Timber": {
+        "code": "23-13 11 23 15"
+      },
+      "default": {
+        "code": "23-13 11 23"
+      }
+    },
+    "IfcFooting": {
+      "material:Concrete": {
+        "code": "23-11 11 11"
+      },
+      "default": {
+        "code": "23-11 11 11"
+      }
+    },
+    "IfcPile": {
+      "material:Concrete": {
+        "code": "23-11 11 13"
+      },
+      "material:Steel": {
+        "code": "23-11 11 13 15"
+      },
+      "default": {
+        "code": "23-11 11 13"
+      }
+    },
+    "IfcCovering": {
+      "material:Tile": {
+        "code": "23-15 11 11"
+      },
+      "material:Ceramic": {
+        "code": "23-15 11 11"
+      },
+      "material:Plaster": {
+        "code": "23-15 11 13"
+      },
+      "material:Paint": {
+        "code": "23-15 11 15"
+      },
+      "default": {
+        "code": "23-15 11"
+      }
+    },
+    "IfcRamp": {
+      "default": {
+        "code": "23-17 17 13"
+      }
+    },
+    "IfcRampFlight": {
+      "default": {
+        "code": "23-17 17 13"
+      }
+    },
+    "IfcBuildingElementProxy": {
+      "default": {
+        "code": "23-19 11"
+      }
+    },
+    "IfcSpace": {
+      "default": {
+        "code": "13-11"
+      }
+    },
+    "IfcDistributionElement": {
+      "default": {
+        "code": "23-21"
+      }
+    },
+    "IfcFlowTerminal": {
+      "default": {
+        "code": "23-21 17"
+      }
+    },
+    "IfcFlowSegment": {
+      "default": {
+        "code": "23-21 13"
+      }
+    },
+    "IfcFlowFitting": {
+      "default": {
+        "code": "23-21 15"
+      }
+    }
+  },
+  "descriptions": {
+    "23-17 11 13": "Concrete walls",
+    "23-17 11 11": "Masonry walls",
+    "23-17 11 11 11": "Brick walls",
+    "23-17 11 11 13": "Block walls",
+    "23-17 11 15": "Steel-framed walls",
+    "23-17 11 17": "Timber-framed walls",
+    "23-17 11 21": "Curtain walls",
+    "23-17 13 13": "Drywall/gypsum partitions",
+    "23-13 13 11": "Concrete floor slabs",
+    "23-13 13 13": "Steel floor decking",
+    "23-13 13 15": "Timber floor systems",
+    "23-13 13 17": "Composite floor systems",
+    "23-13 11 13": "Concrete beams",
+    "23-13 11 15": "Steel beams",
+    "23-13 11 17": "Timber beams",
+    "23-13 11 19": "Precast beams",
+    "23-13 11 11": "Concrete columns",
+    "23-13 11 11 15": "Steel columns",
+    "23-13 11 11 17": "Timber columns",
+    "23-13 11 11 19": "Precast columns",
+    "23-13 11 21": "Structural plates",
+    "23-13 11 21 13": "Steel structural plates",
+    "23-13 11 21 11": "Concrete structural plates",
+    "23-13 11 23": "Structural members",
+    "23-13 11 23 13": "Steel structural members",
+    "23-13 11 23 15": "Timber structural members",
+    "23-17 15 11": "Doors",
+    "23-17 15 11 11": "Timber doors",
+    "23-17 15 11 13": "Steel doors",
+    "23-17 15 11 15": "Aluminium doors",
+    "23-17 15 11 17": "Glass doors",
+    "23-17 15 13": "Windows",
+    "23-17 15 13 11": "Timber windows",
+    "23-17 15 13 13": "Steel windows",
+    "23-17 15 13 15": "Aluminium windows",
+    "23-17 15 13 17": "PVC windows",
+    "23-17 17 11": "Concrete stairs",
+    "23-17 17 13": "Ramps",
+    "23-17 17 15": "Timber stairs",
+    "23-17 17 21": "Railings and balustrades",
+    "23-17 17 21 11": "Timber railings",
+    "23-17 17 21 13": "Steel railings",
+    "23-17 17 21 15": "Glass railings",
+    "23-13 15 11": "Concrete roof structures",
+    "23-13 15 13": "Steel roof structures",
+    "23-13 15 15": "Timber roof structures",
+    "23-13 15 17": "Tile roofing",
+    "23-11 11 11": "Pad foundations",
+    "23-11 11 13": "Piled foundations",
+    "23-11 11 13 15": "Steel piles",
+    "23-15 11": "Floor and wall finishes",
+    "23-15 11 11": "Tile finishes",
+    "23-15 11 13": "Plaster finishes",
+    "23-15 11 15": "Paint finishes",
+    "23-19 11": "General building elements",
+    "13-11": "Spaces and rooms",
+    "23-21": "Distribution systems",
+    "23-21 13": "Pipeline segments",
+    "23-21 15": "Pipeline fittings",
+    "23-21 17": "Terminal devices"
+  }
+}
