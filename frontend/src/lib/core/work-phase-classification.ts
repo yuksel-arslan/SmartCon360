@@ -15,7 +15,7 @@
  *     21-07  Sitework
  *
  *   Uniclass 2015 — EF (Elements/Functions) + Ss (Systems)
- *     EF_20  Structural elements             → Shell & Core
+ *     EF_20  Structural elements             → Substructure / Shell & Core
  *     EF_25  Wall and barrier elements        → Shell (external) / Fit-Out (internal)
  *     EF_30  Roof elements                    → Shell & Core
  *     EF_37  Ceiling and soffit elements      → Fit-Out
@@ -24,9 +24,13 @@
  *     EF_85  Fittings, fixtures, equipment    → Fit-Out
  *     EF_90  External / site elements         → Externals
  *
- * Standard Takt Train Phases (Porsche Consulting / IGLC methodology):
- *   Shell & Core → Facade → MEP 1st Fix → Fit-Out 1st Fix →
- *   MEP 2nd Fix → Fit-Out 2nd Fix (Finishes) → FF&E → T&C → Externals
+ * Standard Takt Train Groups (3 separate zone structures):
+ *   1. Substructure — Sector/grid-based zones (plan-view horizontal divisions)
+ *      Excavation → Piling → Foundation → Ground Slab → Waterproofing
+ *   2. Shell & Core — Floor-based repetitive zones (vertical divisions)
+ *      Frame → Facade → MEP 1st Fix
+ *   3. Fit-Out — Floor-based zones (same as shell, following behind)
+ *      Partitions → MEP 2nd Fix → Finishes → FF&E → T&C
  */
 
 // ─── Takt Phase Enum ────────────────────────────────────────────────
@@ -44,10 +48,15 @@ export type TaktPhase =
   | 'externals';         // OmniClass 21-07: Landscaping, external services, sitework
 
 /**
- * Simplified two-phase grouping for Takt Plan tabs.
- * Groups the 10 detailed phases into two macro trains.
+ * Three-group classification for Takt Plan tabs.
+ *
+ * Substructure is separated from Shell & Core because:
+ * - Different zone structure: sector/grid-based (plan-view) vs floor-based (vertical)
+ * - Different trade sequences: excavation/piling/foundation vs frame/facade
+ * - Different takt rhythms: non-repetitive vs highly repetitive per floor
+ * - Runs independently before superstructure can begin
  */
-export type TaktPlanGroup = 'shell' | 'fitout';
+export type TaktPlanGroup = 'substructure' | 'shell' | 'fitout';
 
 // ─── Phase Metadata ─────────────────────────────────────────────────
 
@@ -63,16 +72,20 @@ export interface TaktPhaseInfo {
 }
 
 export const TAKT_PHASES: TaktPhaseInfo[] = [
+  // ── Substructure Group (OmniClass 21-01) ──
+  // Zone structure: Sector/grid-based — Sector A, Sector B, Grid 1-4, Pile Group A
   {
     id: 'substructure',
     omniclass: '21-01',
     uniclass: 'EF_20',
     label: 'Substructure',
     shortLabel: 'Substructure',
-    group: 'shell',
+    group: 'substructure',
     sortOrder: 1,
     color: '#92400E',
   },
+  // ── Shell & Core Group (OmniClass 21-02 + MEP 1st Fix) ──
+  // Zone structure: Floor-based repetitive — Floor N / Zone A, Zone B
   {
     id: 'shell-and-core',
     omniclass: '21-02 10',
@@ -103,6 +116,8 @@ export const TAKT_PHASES: TaktPhaseInfo[] = [
     sortOrder: 4,
     color: '#8B5CF6',
   },
+  // ── Fit-Out Group (OmniClass 21-03 + MEP 2nd Fix + FF&E) ──
+  // Zone structure: Floor-based — same zones as shell, trades follow behind
   {
     id: 'fitout-first-fix',
     omniclass: '21-03 10',
@@ -175,22 +190,33 @@ export interface TaktPlanGroupInfo {
   id: TaktPlanGroup;
   label: string;
   description: string;
+  zoneStructure: string;   // How zones are organized in this group
   phases: TaktPhase[];
   color: string;
 }
 
 export const TAKT_PLAN_GROUPS: TaktPlanGroupInfo[] = [
   {
+    id: 'substructure',
+    label: 'Substructure',
+    description: 'Excavation, Piling, Foundation, Ground Slab',
+    zoneStructure: 'Sector/grid-based (plan-view divisions)',
+    phases: ['substructure'],
+    color: '#92400E',
+  },
+  {
     id: 'shell',
     label: 'Shell & Core',
-    description: 'Substructure, Superstructure, Facade, MEP 1st Fix',
-    phases: ['substructure', 'shell-and-core', 'facade-envelope', 'mep-first-fix'],
+    description: 'Frame, Facade, MEP 1st Fix',
+    zoneStructure: 'Floor-based repetitive (vertical divisions)',
+    phases: ['shell-and-core', 'facade-envelope', 'mep-first-fix'],
     color: '#6366F1',
   },
   {
     id: 'fitout',
     label: 'Fit-Out & Finishes',
     description: 'Interior Construction, MEP 2nd Fix, Finishes, FF&E',
+    zoneStructure: 'Floor-based (same zones as shell, trades follow behind)',
     phases: ['fitout-first-fix', 'mep-second-fix', 'fitout-second-fix', 'ffe-specialist', 'testing-commissioning', 'externals'],
     color: '#10B981',
   },
@@ -204,19 +230,25 @@ export const TAKT_PLAN_GROUPS: TaktPlanGroupInfo[] = [
  */
 const PHASE_KEYWORDS: { phase: TaktPhase; keywords: string[] }[] = [
   // Substructure (OmniClass 22-02, 22-31)
+  // Zone pattern: sectors, grids, pile groups — NOT floor-based
   {
     phase: 'substructure',
     keywords: [
       'excavat', 'foundation', 'piling', 'pile', 'earthwork', 'ground',
-      'subbase', 'base course', 'site clear', 'grading',
+      'subbase', 'base course', 'site clear', 'grading', 'dewater',
+      'shoring', 'sheet pile', 'retention', 'raft', 'strip found',
+      'pad found', 'secant', 'diaphragm wall', 'ground beam',
+      'blinding', 'lean concrete', 'sub-slab', 'damp proof',
     ],
   },
   // Shell & Core — Superstructure (OmniClass 22-03, 22-05)
+  // Zone pattern: floor-based — Frame follows floors vertically
   {
     phase: 'shell-and-core',
     keywords: [
       'formwork', 'rebar', 'reinforc', 'concrete pour', 'concrete slab',
       'steel struct', 'stripping', 'precast', 'shear wall', 'core wall',
+      'column', 'beam', 'slab', 'staircase', 'lift shaft',
     ],
   },
   // Facade & Envelope (OmniClass 22-07, 22-08 exterior)
@@ -370,7 +402,12 @@ export function phaseMatchesGroup(phase: TaktPhase, group: TaktPlanGroup): boole
 
 /**
  * Map location metadata phase to TaktPlanGroup.
- * Supports both legacy values ('structural'/'finishing') and new values ('shell'/'fitout').
+ * Supports legacy values ('structural'/'finishing') and new values.
+ *
+ * Zone structure by group:
+ *   substructure → sector/grid-based plan-view divisions
+ *   shell        → floor-based repetitive vertical divisions
+ *   fitout       → floor-based (same as shell, trades follow behind)
  */
 export function classifyLocationPhase(
   metadata: Record<string, unknown> | null | undefined,
@@ -384,6 +421,7 @@ export function classifyLocationPhase(
   if (phase === 'finishing') return 'fitout';
 
   // New standard values
+  if (phase === 'substructure') return 'substructure';
   if (phase === 'shell') return 'shell';
   if (phase === 'fitout') return 'fitout';
 

@@ -7,10 +7,13 @@ import {
   FLOW_DIRECTIONS,
   DELIVERY_METHODS,
   SITE_CONDITIONS,
+  FOUNDATION_TYPES,
+  GROUND_CONDITIONS,
+  GROUND_IMPROVEMENTS,
   calculateRecommendedTakt,
   calculateRecommendedBuffer,
 } from '../types';
-import { Layers, Minus, Plus, Building, Zap, ArrowUpDown, FileText, MapPin, Calculator, Grid3x3 } from 'lucide-react';
+import { Layers, Minus, Plus, Building, Zap, ArrowUpDown, FileText, MapPin, Calculator, Grid3x3, Shovel, Droplets } from 'lucide-react';
 
 export default function StepBuildingConfig({ state, onStateChange }: SetupStepProps) {
   const floorCount = state.floorCount || 0;
@@ -109,7 +112,7 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
             </div>
           </div>
 
-          {/* ── Zone Configuration: Kaba İnşaat vs İnce İş ── */}
+          {/* ── Zone Configuration: Shell & Core vs Fit-Out (OmniClass 21-02 / 21-03) ── */}
           <div
             className="mt-4 rounded-xl border p-4"
             style={{
@@ -124,11 +127,11 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
               </span>
             </div>
             <p className="text-[10px] mb-3" style={{ color: 'var(--color-text-muted)' }}>
-              Structural (Kaba İnşaat) uses larger zones (typically full floor), while finishing (İnce İş) uses finer subdivisions per floor.
+              Shell &amp; Core (OmniClass 21-02) uses larger zones (typically full floor), while Fit-Out (OmniClass 21-03) uses finer subdivisions per floor.
             </p>
 
             <div className="grid grid-cols-2 gap-3">
-              {/* Structural zones (Kaba İnşaat) */}
+              {/* Shell & Core zones (OmniClass 21-02) */}
               <div
                 className="rounded-lg border p-3"
                 style={{ background: 'var(--color-bg-card)', borderColor: 'rgba(99,102,241,0.3)' }}
@@ -136,7 +139,7 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
                 <div className="flex items-center gap-1.5 mb-2">
                   <div className="w-2 h-2 rounded-full" style={{ background: '#6366F1' }} />
                   <label className="text-[10px] font-semibold uppercase" style={{ color: '#6366F1' }}>
-                    Kaba İnşaat (Structural)
+                    Shell &amp; Core (21-02)
                   </label>
                 </div>
                 <NumberStepper
@@ -153,7 +156,7 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
                 )}
               </div>
 
-              {/* Finishing zones (İnce İş) */}
+              {/* Fit-Out zones (OmniClass 21-03) */}
               <div
                 className="rounded-lg border p-3"
                 style={{ background: 'var(--color-bg-card)', borderColor: 'rgba(16,185,129,0.3)' }}
@@ -161,7 +164,7 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
                 <div className="flex items-center gap-1.5 mb-2">
                   <div className="w-2 h-2 rounded-full" style={{ background: '#10B981' }} />
                   <label className="text-[10px] font-semibold uppercase" style={{ color: '#10B981' }}>
-                    İnce İş (Finishing)
+                    Fit-Out (21-03)
                   </label>
                 </div>
                 <NumberStepper
@@ -184,8 +187,8 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
           {floorCount > 0 && (
             <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
               {[
-                { label: 'Structural Zones', value: totalStructuralZones, color: '#6366F1' },
-                { label: 'Finishing Zones', value: totalFinishingZones, color: '#10B981' },
+                { label: 'Shell Zones', value: totalStructuralZones, color: '#6366F1' },
+                { label: 'Fit-Out Zones', value: totalFinishingZones, color: '#10B981' },
                 { label: 'GFA', value: gfa > 0 ? `${gfa.toLocaleString()} m²` : '—', color: 'var(--color-accent)' },
                 { label: 'Total Floors', value: totalFloors, color: 'var(--color-cyan)' },
               ].map((s) => (
@@ -217,7 +220,179 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
         </div>
       )}
 
-      {/* ── Section 2: Structural System ── */}
+      {/* ── Section 2: Foundation Type (OmniClass 21-01 Substructure) ── */}
+      <div className="border-t pt-6 mb-6" style={{ borderColor: 'var(--color-border)' }}>
+        <div className="flex items-center gap-2 mb-1">
+          <Shovel size={16} style={{ color: '#92400E' }} />
+          <h3 className="text-[13px] font-semibold" style={{ color: 'var(--color-text)' }}>
+            Foundation Type
+          </h3>
+          <span className="text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ background: 'rgba(146,64,14,0.1)', color: '#92400E' }}>
+            OmniClass 21-01
+          </span>
+        </div>
+        <p className="text-[11px] mb-3" style={{ color: 'var(--color-text-muted)' }}>
+          Foundation type determines the substructure takt plan, zone layout, and duration. Deep foundations significantly extend substructure phase.
+        </p>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {FOUNDATION_TYPES.map((ft) => {
+            const isActive = state.foundationType === ft.value;
+            return (
+              <button
+                key={ft.value}
+                onClick={() => onStateChange({ foundationType: ft.value })}
+                className="text-left rounded-lg border px-3 py-2.5 transition-all hover:scale-[1.01]"
+                style={{
+                  background: isActive ? 'rgba(146,64,14,0.08)' : 'var(--color-bg-card)',
+                  borderColor: isActive ? '#92400E' : 'var(--color-border)',
+                  borderWidth: isActive ? 2 : 1,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">{ft.icon}</span>
+                  <span
+                    className="text-[11px] font-semibold"
+                    style={{ color: isActive ? '#92400E' : 'var(--color-text)' }}
+                  >
+                    {ft.label}
+                  </span>
+                  {ft.taktMultiplier !== 1.0 && (
+                    <span
+                      className="ml-auto text-[9px] px-1.5 py-0.5 rounded font-mono font-medium"
+                      style={{
+                        background: ft.taktMultiplier < 1.0 ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)',
+                        color: ft.taktMultiplier < 1.0 ? 'var(--color-success)' : 'var(--color-warning)',
+                      }}
+                    >
+                      {ft.taktMultiplier < 1.0 ? '' : '+'}{Math.round((ft.taktMultiplier - 1) * 100)}%
+                    </span>
+                  )}
+                </div>
+                <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                  {ft.description}
+                </div>
+                <div className="text-[9px] mt-1 font-mono" style={{ color: 'var(--color-text-muted)' }}>
+                  {ft.typicalDuration}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Section 3: Ground Conditions & Improvement ── */}
+      <div className="border-t pt-6 mb-6" style={{ borderColor: 'var(--color-border)' }}>
+        <div className="flex items-center gap-2 mb-1">
+          <Droplets size={16} style={{ color: '#0891B2' }} />
+          <h3 className="text-[13px] font-semibold" style={{ color: 'var(--color-text)' }}>
+            Ground Conditions
+          </h3>
+        </div>
+        <p className="text-[11px] mb-3" style={{ color: 'var(--color-text-muted)' }}>
+          Ground conditions affect excavation method, foundation design, and whether soil improvement is needed. Critical for substructure scheduling.
+        </p>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
+          {GROUND_CONDITIONS.map((gc) => {
+            const isActive = state.groundCondition === gc.value;
+            return (
+              <button
+                key={gc.value}
+                onClick={() => onStateChange({ groundCondition: gc.value })}
+                className="text-left rounded-lg border px-3 py-2.5 transition-all hover:scale-[1.01]"
+                style={{
+                  background: isActive ? 'rgba(8,145,178,0.08)' : 'var(--color-bg-card)',
+                  borderColor: isActive ? '#0891B2' : 'var(--color-border)',
+                  borderWidth: isActive ? 2 : 1,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base">{gc.icon}</span>
+                  <span
+                    className="text-[11px] font-semibold"
+                    style={{ color: isActive ? '#0891B2' : 'var(--color-text)' }}
+                  >
+                    {gc.label}
+                  </span>
+                  {gc.taktMultiplier !== 1.0 && (
+                    <span
+                      className="ml-auto text-[9px] px-1.5 py-0.5 rounded font-mono font-medium"
+                      style={{
+                        background: 'rgba(245,158,11,0.12)',
+                        color: 'var(--color-warning)',
+                      }}
+                    >
+                      +{Math.round((gc.taktMultiplier - 1) * 100)}%
+                    </span>
+                  )}
+                </div>
+                <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                  {gc.description}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Ground Improvement Methods (multi-select) */}
+        {state.groundCondition && state.groundCondition !== 'normal' && (
+          <div
+            className="rounded-xl border p-4"
+            style={{
+              background: 'linear-gradient(135deg, rgba(8,145,178,0.04), rgba(146,64,14,0.04))',
+              borderColor: 'var(--color-border)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[12px] font-semibold" style={{ color: 'var(--color-text)' }}>
+                Ground Improvement Required?
+              </span>
+            </div>
+            <p className="text-[10px] mb-3" style={{ color: 'var(--color-text-muted)' }}>
+              Select applicable ground treatment methods. These add activities to the substructure takt plan.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {GROUND_IMPROVEMENTS.map((gi) => {
+                const selected = (state.groundImprovement || []).includes(gi.value);
+                return (
+                  <button
+                    key={gi.value}
+                    onClick={() => {
+                      const current = state.groundImprovement || [];
+                      const next = selected
+                        ? current.filter((v: string) => v !== gi.value)
+                        : [...current, gi.value];
+                      onStateChange({ groundImprovement: next });
+                    }}
+                    className="text-left rounded-lg border px-2.5 py-2 transition-all hover:scale-[1.01]"
+                    style={{
+                      background: selected ? 'rgba(8,145,178,0.08)' : 'var(--color-bg-card)',
+                      borderColor: selected ? '#0891B2' : 'var(--color-border)',
+                      borderWidth: selected ? 2 : 1,
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-sm">{gi.icon}</span>
+                      <span
+                        className="text-[10px] font-semibold"
+                        style={{ color: selected ? '#0891B2' : 'var(--color-text)' }}
+                      >
+                        {gi.label}
+                      </span>
+                    </div>
+                    <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                      {gi.description}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Section 4: Structural System ── */}
       <div className="border-t pt-6 mb-6" style={{ borderColor: 'var(--color-border)' }}>
         <div className="flex items-center gap-2 mb-1">
           <Building size={16} style={{ color: 'var(--color-accent)' }} />
@@ -272,7 +447,7 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
         </div>
       </div>
 
-      {/* ── Section 3: MEP Complexity ── */}
+      {/* ── Section 5: MEP Complexity ── */}
       <div className="border-t pt-6 mb-6" style={{ borderColor: 'var(--color-border)' }}>
         <div className="flex items-center gap-2 mb-1">
           <Zap size={16} style={{ color: '#F59E0B' }} />
@@ -324,7 +499,7 @@ export default function StepBuildingConfig({ state, onStateChange }: SetupStepPr
         </div>
       </div>
 
-      {/* ── Section 4: Flow Direction + Delivery + Site (compact row) ── */}
+      {/* ── Section 6: Flow Direction + Delivery + Site (compact row) ── */}
       <div className="border-t pt-6 mb-6" style={{ borderColor: 'var(--color-border)' }}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Flow Direction */}

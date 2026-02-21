@@ -19,8 +19,8 @@ export interface SetupState {
   // Step 2: Building Configuration (Scope)
   floorCount: number;               // above-ground floors (incl. ground)
   basementCount: number;            // basement levels
-  zonesPerFloor: number;            // finishing zones per typical floor (İnce İş)
-  structuralZonesPerFloor: number;  // structural zones per typical floor (Kaba İnşaat)
+  zonesPerFloor: number;            // fit-out zones per typical floor (OmniClass 21-03)
+  structuralZonesPerFloor: number;  // shell & core zones per typical floor (OmniClass 21-02)
   typicalFloorArea: number;         // m² per typical floor
   numberOfBuildings: number;        // multi-building projects
   structuralSystem: string;         // 'rc_frame' | 'steel_frame' | 'precast' | 'hybrid' | 'timber' | 'masonry'
@@ -28,6 +28,9 @@ export interface SetupState {
   flowDirection: string;            // 'bottom_up' | 'top_down'
   deliveryMethod: string;           // 'dbb' | 'design_build' | 'cm_at_risk' | 'ipd' | 'epc'
   siteCondition: string;            // 'urban' | 'suburban' | 'rural' | 'remote'
+  foundationType: string;           // 'raft' | 'piled' | 'strip' | 'pad' | 'combined' | 'caisson'
+  groundCondition: string;          // 'normal' | 'high_water_table' | 'soft_soil' | 'rock' | 'contaminated'
+  groundImprovement: string[];      // ['dewatering', 'soil_stabilization', 'piling', 'ground_anchors', 'sheet_piling']
 
   // Documents (optional steps)
   boqUploaded: boolean;
@@ -156,8 +159,8 @@ export interface BuildingTypeOption {
   // Defaults auto-populated when selected
   defaultFloors: number;
   defaultBasements: number;
-  defaultZonesPerFloor: number;              // finishing zones (İnce İş)
-  defaultStructuralZonesPerFloor: number;    // structural zones (Kaba İnşaat) — typically 1 (full floor)
+  defaultZonesPerFloor: number;              // fit-out zones (OmniClass 21-03 Interiors)
+  defaultStructuralZonesPerFloor: number;    // shell & core zones (OmniClass 21-02 Shell) — typically 1 (full floor)
   defaultFloorArea: number;                  // m² per typical floor
   defaultStructural: string;                 // structural system key
   defaultMep: string;                        // MEP complexity key
@@ -328,6 +331,115 @@ export const SITE_CONDITIONS: SiteConditionOption[] = [
   { value: 'suburban', label: 'Suburban', description: 'Good access, moderate restrictions, standard logistics', bufferMultiplier: 1.0 },
   { value: 'rural', label: 'Rural / Greenfield', description: 'Open site, minimal restrictions, ample storage', bufferMultiplier: 0.8 },
   { value: 'remote', label: 'Remote / Camp-based', description: 'Limited infrastructure, camp-based workforce, long supply chains', bufferMultiplier: 2.0 },
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Foundation Types — OmniClass 21-01 10 Foundations (Substructure)
+// Determines substructure takt plan, zone layout, and duration
+// ══════════════════════════════════════════════════════════════════════════════
+
+export interface FoundationTypeOption {
+  value: string;
+  label: string;
+  icon: string;
+  description: string;
+  taktMultiplier: number;    // relative to pad foundation baseline
+  typicalDuration: string;   // indicative duration description
+}
+
+export const FOUNDATION_TYPES: FoundationTypeOption[] = [
+  {
+    value: 'pad', label: 'Pad / Isolated Footing', icon: '⬜',
+    description: 'Individual footings under columns — simplest, fastest for low-rise',
+    taktMultiplier: 0.7, typicalDuration: '2-4 weeks',
+  },
+  {
+    value: 'strip', label: 'Strip Foundation', icon: '▬',
+    description: 'Continuous strip under load-bearing walls — common for masonry structures',
+    taktMultiplier: 0.8, typicalDuration: '3-5 weeks',
+  },
+  {
+    value: 'raft', label: 'Raft / Mat Foundation', icon: '⬛',
+    description: 'Continuous slab covering full footprint — uniform settlement, high water table',
+    taktMultiplier: 1.0, typicalDuration: '4-8 weeks',
+  },
+  {
+    value: 'piled', label: 'Piled Foundation', icon: '📍',
+    description: 'Deep piles to bedrock or bearing stratum — soft ground, heavy loads',
+    taktMultiplier: 1.5, typicalDuration: '6-16 weeks',
+  },
+  {
+    value: 'combined', label: 'Piled Raft', icon: '🔲',
+    description: 'Raft slab on piles — high-rise, differential settlement control',
+    taktMultiplier: 1.8, typicalDuration: '8-20 weeks',
+  },
+  {
+    value: 'caisson', label: 'Caisson / Drilled Shaft', icon: '🕳️',
+    description: 'Large-diameter deep foundations — bridge piers, heavy point loads',
+    taktMultiplier: 2.0, typicalDuration: '10-24 weeks',
+  },
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Ground Conditions — affects substructure approach, dewatering, soil treatment
+// ══════════════════════════════════════════════════════════════════════════════
+
+export interface GroundConditionOption {
+  value: string;
+  label: string;
+  icon: string;
+  description: string;
+  taktMultiplier: number;  // affects substructure duration
+}
+
+export const GROUND_CONDITIONS: GroundConditionOption[] = [
+  {
+    value: 'normal', label: 'Normal / Stable', icon: '🟢',
+    description: 'Adequate bearing capacity, no special measures needed',
+    taktMultiplier: 1.0,
+  },
+  {
+    value: 'high_water_table', label: 'High Water Table', icon: '💧',
+    description: 'Water table within excavation depth — dewatering required',
+    taktMultiplier: 1.4,
+  },
+  {
+    value: 'soft_soil', label: 'Soft / Compressible Soil', icon: '🟤',
+    description: 'Clay, silt, peat — settlement risk, ground improvement likely needed',
+    taktMultiplier: 1.5,
+  },
+  {
+    value: 'rock', label: 'Rock / Hard Ground', icon: '🪨',
+    description: 'Shallow bedrock — strong bearing but excavation requires rock-breaking',
+    taktMultiplier: 1.3,
+  },
+  {
+    value: 'contaminated', label: 'Contaminated / Brownfield', icon: '⚠️',
+    description: 'Soil contamination requiring remediation — environmental constraints',
+    taktMultiplier: 1.6,
+  },
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Ground Improvement Methods — techniques to improve bearing capacity or control water
+// ══════════════════════════════════════════════════════════════════════════════
+
+export interface GroundImprovementOption {
+  value: string;
+  label: string;
+  icon: string;
+  description: string;
+}
+
+export const GROUND_IMPROVEMENTS: GroundImprovementOption[] = [
+  { value: 'dewatering', label: 'Dewatering', icon: '💧', description: 'Wellpoints or deep wells to lower water table during excavation' },
+  { value: 'soil_stabilization', label: 'Soil Stabilization', icon: '🧪', description: 'Cement/lime mixing, jet grouting, or compaction grouting' },
+  { value: 'ground_anchors', label: 'Ground Anchors', icon: '⚓', description: 'Anchored retaining walls for deep excavation stability' },
+  { value: 'sheet_piling', label: 'Sheet Piling', icon: '🛡️', description: 'Steel sheet piles for excavation support and water cutoff' },
+  { value: 'vibro_compaction', label: 'Vibro Compaction', icon: '📳', description: 'Densification of granular soils via vibratory probes' },
+  { value: 'stone_columns', label: 'Stone Columns', icon: '🪨', description: 'Gravel columns to improve bearing and accelerate drainage' },
+  { value: 'soil_nailing', label: 'Soil Nailing', icon: '📌', description: 'Reinforced soil slope or excavation face using steel nails' },
+  { value: 'diaphragm_wall', label: 'Diaphragm Wall', icon: '🧱', description: 'Cast in-situ concrete wall for deep basements and water cutoff' },
 ];
 
 // ══════════════════════════════════════════════════════════════════════════════

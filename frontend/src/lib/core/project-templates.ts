@@ -14,7 +14,7 @@
 export interface LocationTemplate {
   name: string;
   type: 'site' | 'building' | 'floor' | 'zone' | 'room' | 'area';
-  phase?: 'structural' | 'finishing'; // OmniClass 21-02 (shell) or 21-03 (fitout) — legacy: 'structural'/'finishing'
+  phase?: 'substructure' | 'structural' | 'finishing'; // OmniClass: 21-01 (substructure) / 21-02 (shell) / 21-03 (fitout)
   repeat?: number; // e.g. repeat: 20 for 20 typical floors
   repeatLabel?: string; // e.g. "Floor {n}" — {n} replaced with number
   areaSqm?: number;
@@ -590,10 +590,25 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
 // ── Dynamic LBS Generation from Floor Configuration ──
 
 /**
- * Structural zone name patterns per building type (Kaba İnşaat).
- * Structural zones are typically larger — often the entire floor is one zone.
- * For multi-zone structural work (e.g., large footprint industrial), zones
- * represent pour sections or erection sequences.
+ * Substructure zone name patterns per building type (OmniClass 21-01).
+ * Substructure zones are sector/grid-based plan-view divisions — NOT floor-based.
+ * They represent excavation sectors, pile groups, foundation blocks, or pour areas.
+ */
+const SUBSTRUCTURE_ZONE_PATTERNS: Record<string, string[]> = {
+  hotel:        ['Sector A — Main Building', 'Sector B — Podium', 'Sector C — Pool/Amenity', 'Service Corridor'],
+  hospital:     ['Sector A — Main Wing', 'Sector B — Emergency', 'Sector C — Support', 'Helipad Area'],
+  residential:  ['Sector A — Tower', 'Sector B — Podium', 'Sector C — Parking', 'Service Core Area'],
+  commercial:   ['Sector A — Tower Core', 'Sector B — Perimeter', 'Sector C — Loading/Service', 'Lobby Area'],
+  industrial:   ['Grid 1-4 — Production', 'Grid 5-8 — Warehouse', 'Grid 9-12 — Admin', 'Yard/Hardstand'],
+  infrastructure: ['Chainage 0-100', 'Chainage 100-200', 'Chainage 200-300', 'Structure Foundation'],
+  educational:  ['Sector A — Main Building', 'Sector B — Sports Hall', 'Sector C — Admin', 'Courtyard'],
+  mixed_use:    ['Sector A — Tower', 'Sector B — Retail Podium', 'Sector C — Parking', 'Service Area'],
+  data_center:  ['Sector A — Hall', 'Sector B — Power', 'Sector C — Cooling', 'Admin Block'],
+};
+
+/**
+ * Shell & Core zone name patterns per building type (OmniClass 21-02).
+ * Superstructure zones are floor-based — pour sections or erection sequences per floor.
  */
 const STRUCTURAL_ZONE_PATTERNS: Record<string, string[]> = {
   hotel:        ['Full Slab', 'Slab Section A', 'Slab Section B', 'Core & Shear Wall'],
@@ -607,7 +622,7 @@ const STRUCTURAL_ZONE_PATTERNS: Record<string, string[]> = {
   data_center:  ['Hall A Slab', 'Hall B Slab', 'Service Core', 'Power Block'],
 };
 
-/** Finishing zone name patterns per building type (İnce İş) */
+/** Fit-Out zone name patterns per building type (OmniClass 21-03) */
 const ZONE_PATTERNS: Record<string, string[]> = {
   hotel:        ['Wing A — Rooms', 'Wing B — Rooms', 'Corridor & Services', 'Amenity Zone', 'Back of House', 'Suite Wing', 'Service Zone', 'Pool Deck Zone'],
   hospital:     ['Ward A — Patient Rooms', 'Ward B — Patient Rooms', 'Nurse Station & Support', 'Corridor & Services', 'Diagnostics Zone', 'Treatment Zone', 'Operating Zone', 'Recovery Zone'],
@@ -651,6 +666,7 @@ export function generateLbsFromConfig(
     return tpl?.locations || [];
   }
 
+  const substructureZoneNames = SUBSTRUCTURE_ZONE_PATTERNS[buildingType] || SUBSTRUCTURE_ZONE_PATTERNS.commercial;
   const finishingZoneNames = ZONE_PATTERNS[buildingType] || ZONE_PATTERNS.commercial;
   const structuralZoneNames = STRUCTURAL_ZONE_PATTERNS[buildingType] || STRUCTURAL_ZONE_PATTERNS.commercial;
   const basementZones = BASEMENT_ZONES[buildingType] || BASEMENT_ZONES.commercial;
@@ -666,7 +682,7 @@ export function generateLbsFromConfig(
     data_center: 'Data Center Facility',
   };
 
-  /** Build zone children for a floor with both structural and finishing phases */
+  /** Build zone children for a floor with both shell and fitout phases */
   function buildFloorZones(structCount: number, finishCount: number): LocationTemplate[] {
     const zones: LocationTemplate[] = [];
 
@@ -687,7 +703,23 @@ export function generateLbsFromConfig(
 
   const children: LocationTemplate[] = [];
 
-  // Basements — structural zones only (no finishing in basements typically)
+  // ── Substructure (OmniClass 21-01) ──
+  // Sector/grid-based zones — plan-view divisions, NOT floor-based.
+  // Excavation, piling, foundations, ground beams, raft, ground slab
+  {
+    const subZoneCount = Math.max(2, Math.min(substructureZoneNames.length, 4));
+    const subZones: LocationTemplate[] = substructureZoneNames
+      .slice(0, subZoneCount)
+      .map((name) => ({ name, type: 'zone' as const, phase: 'substructure' as const }));
+
+    children.push({
+      name: 'Substructure',
+      type: 'floor', // LBS level — acts as a grouping container
+      children: subZones,
+    });
+  }
+
+  // ── Basements ──
   if (basementCount > 0) {
     for (let b = basementCount; b >= 1; b--) {
       const basementChildren: LocationTemplate[] = basementZones
@@ -703,7 +735,7 @@ export function generateLbsFromConfig(
     }
   }
 
-  // Ground floor (always present if floorCount > 0)
+  // ── Ground floor ──
   if (floorCount > 0) {
     children.push({
       name: 'Ground Floor',
@@ -712,7 +744,7 @@ export function generateLbsFromConfig(
     });
   }
 
-  // Typical floors (floorCount - 1 because ground is already counted, and last is roof)
+  // ── Typical floors (floorCount - 2: ground is counted, last is roof) ──
   const typicalFloors = Math.max(0, floorCount - 2);
   if (typicalFloors > 0) {
     children.push({
@@ -724,7 +756,7 @@ export function generateLbsFromConfig(
     });
   }
 
-  // Roof / top floor
+  // ── Roof / top floor ──
   if (floorCount >= 2) {
     children.push({
       name: 'Roof / Mechanical',
