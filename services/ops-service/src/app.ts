@@ -29,6 +29,7 @@ import riskRouter from './modules/risk/routes';
 import commRouter from './modules/comm/routes';
 import supplyChainRouter from './modules/supply-chain/routes';
 import stakeholderRouter from './modules/stakeholder/routes';
+import sustainabilityRouter from './modules/sustainability/routes';
 
 // Cost module middleware
 import { authenticate } from './modules/cost/middleware/auth';
@@ -146,9 +147,10 @@ app.use('/supply-chain', authenticate, supplyChainRouter);
 // ──────────────────────────────────────────────
 app.use('/stakeholder', authenticate, stakeholderRouter);
 
-app.get('/sustainability/health', (_req: Request, res: Response) => {
-  res.json({ status: 'stub', module: 'sustainability' });
-});
+// ──────────────────────────────────────────────
+// SUSTAINABILITY MODULE — Full routes (GreenSite)
+// ──────────────────────────────────────────────
+app.use('/sustainability', authenticate, sustainabilityRouter);
 
 // ──────────────────────────────────────────────
 // COMM MODULE — Full routes (CommHub)

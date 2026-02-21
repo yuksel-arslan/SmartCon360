@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public", "cost", "quality", "safety", "resources", "claims", "risk", "comm", "supply", "stakeholder"]
+  schemas  = ["public", "cost", "quality", "safety", "resources", "claims", "risk", "comm", "supply", "stakeholder", "sustainability"]
 }
 
 // ============================================================================
@@ -1878,4 +1878,80 @@ model EngagementAction {
   @@index([status])
   @@map("engagement_actions")
   @@schema("stakeholder")
+}
+
+// ============================================================================
+// SUSTAINABILITY MODULE (GreenSite)
+// ============================================================================
+
+model CarbonRecord {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  date          DateTime @db.Date
+  source        String   @db.VarChar(50) // transport, equipment, materials, energy, water, other
+  category      String   @db.VarChar(50) // scope_1, scope_2, scope_3
+  description   String?
+  quantity      Decimal  @db.Decimal(12, 4)
+  unit          String   @db.VarChar(20) // kg_co2e, tonnes_co2e, litres, kwh, km
+  emissionFactor Decimal? @map("emission_factor") @db.Decimal(10, 6)
+  co2eTonnes    Decimal  @default(0) @map("co2e_tonnes") @db.Decimal(12, 4) // calculated
+  notes         String?
+  recordedBy    String   @map("recorded_by") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([projectId])
+  @@index([date])
+  @@index([source])
+  @@index([category])
+  @@map("carbon_records")
+  @@schema("sustainability")
+}
+
+model WasteRecord {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  date          DateTime @db.Date
+  wasteType     String   @map("waste_type") @db.VarChar(50) // concrete, metal, wood, plastic, soil, hazardous, mixed, other
+  source        String   @db.VarChar(50) // demolition, excavation, construction, packaging, other
+  quantityTonnes Decimal @map("quantity_tonnes") @db.Decimal(12, 4)
+  disposition   String   @db.VarChar(30) // recycled, reused, landfill, incineration, composted, hazardous_disposal
+  recyclingPct  Decimal? @map("recycling_pct") @db.Decimal(5, 2)
+  destination   String?  @db.VarChar(255) // facility name
+  manifestNumber String? @map("manifest_number") @db.VarChar(50)
+  notes         String?
+  recordedBy    String   @map("recorded_by") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([projectId])
+  @@index([date])
+  @@index([wasteType])
+  @@index([disposition])
+  @@map("waste_records")
+  @@schema("sustainability")
+}
+
+model Certification {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  scheme        String   @db.VarChar(50) // leed, breeam, green_star, well, envision, other
+  targetLevel   String   @map("target_level") @db.VarChar(30) // certified, silver, gold, platinum, excellent, outstanding, etc.
+  currentStatus String   @default("pursuing") @map("current_status") @db.VarChar(30) // pursuing, submitted, under_review, achieved, not_achieved
+  registrationDate DateTime? @map("registration_date") @db.Date
+  submissionDate   DateTime? @map("submission_date") @db.Date
+  certificationDate DateTime? @map("certification_date") @db.Date
+  totalCredits  Int?     @map("total_credits")
+  earnedCredits Int?     @map("earned_credits")
+  pendingCredits Int?    @map("pending_credits")
+  assessorName  String?  @map("assessor_name") @db.VarChar(255)
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([projectId])
+  @@index([scheme])
+  @@index([currentStatus])
+  @@map("certifications")
+  @@schema("sustainability")
 }
