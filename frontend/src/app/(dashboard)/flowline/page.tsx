@@ -9,6 +9,7 @@ import type { FlowlineWagon } from '@/lib/mockData';
 import { useFlowlineStore } from '@/stores/flowlineStore';
 import { getFlowlineData, listPlans } from '@/lib/stores/takt-plans';
 import { useProjectStore } from '@/stores/projectStore';
+import { useRealtimeFlowline } from '@/hooks/useRealtimeFlowline';
 import type { ViewMode, StatusFilter, SelectedSegment } from '@/stores/flowlineStore';
 import {
   Eye,
@@ -149,6 +150,53 @@ export default function FlowlinePage() {
       }
     })();
   }, [activeProjectId, setConnected]);
+
+  // ── Real-time updates via WebSocket ────────────────────────
+
+  const reloadFlowline = useCallback(() => {
+    if (!activeProjectId) return;
+    const projectId = activeProjectId;
+    (async () => {
+      try {
+        const plans = await listPlans(projectId);
+        if (plans.length > 0) {
+          const raw = await getFlowlineData(projectId, plans[0].id);
+          if (raw && Array.isArray((raw as Record<string, unknown>).wagons)) {
+            const apiData = raw as {
+              wagons: { tradeName: string; tradeColor: string; segments: { zoneSequence?: number; periodNumber: number; status: string; progressPct?: number; plannedStart: string; plannedEnd: string; actualStart?: string; actualEnd?: string }[] }[];
+              zones: { id: string; name: string; sequence?: number }[];
+              todayX?: number;
+              totalPeriods?: number;
+            };
+            setFlowlineData(apiData.wagons.map((w) => ({
+              trade_name: w.tradeName,
+              color: w.tradeColor,
+              segments: w.segments.map((s) => ({
+                zone_index: (s.zoneSequence || 1) - 1,
+                x_start: s.periodNumber - 1,
+                x_end: s.periodNumber,
+                y: (s.zoneSequence || 1) - 1,
+                status: s.status,
+                percentComplete: s.progressPct || 0,
+                isCriticalPath: false,
+                plannedStart: s.plannedStart,
+                plannedEnd: s.plannedEnd,
+                actualStart: s.actualStart || undefined,
+                actualEnd: s.actualEnd || undefined,
+                crew: undefined,
+                tasks: [],
+              })),
+            })));
+          }
+        }
+      } catch { /* silent reload */ }
+    })();
+  }, [activeProjectId]);
+
+  useRealtimeFlowline({
+    projectId: activeProjectId,
+    onEvent: reloadFlowline,
+  });
 
   // ── Initialize visible trades on mount ──────────────────────
 

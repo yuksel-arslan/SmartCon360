@@ -7,6 +7,7 @@ import { generatePlan, savePlan, listPlans, getPlan } from '@/lib/stores/takt-pl
 import api from '@/lib/api';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useRealtimeFlowline } from '@/hooks/useRealtimeFlowline';
 import { ContractPolicyBanner } from '@/components/modules';
 import {
   calculateTotalPeriods,
@@ -260,6 +261,9 @@ export default function TaktEditorPage() {
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
   const activeProject = useProjectStore((s) => s.getActiveProject());
   const token = useAuthStore((s) => s.token);
+
+  // ── Real-time WebSocket ──
+  const { emit: wsEmit } = useRealtimeFlowline({ projectId: activeProjectId });
 
   // ── Core State ──
   const [trades, setTrades] = useState<TradeRow[]>([]);
@@ -751,12 +755,14 @@ export default function TaktEditorPage() {
         setCurrentPlanId(created.id);
       }
       setLastSaved(new Date());
+      // Broadcast to other clients
+      wsEmit('plan:updated', { projectId, planId: currentPlanId });
     } catch (err) {
       console.error('Save failed:', err);
     } finally {
       setIsSaving(false);
     }
-  }, [projectId, currentPlanId, globalTaktTime, globalBuffer, zones, trades, cells, projectStart]);
+  }, [projectId, currentPlanId, globalTaktTime, globalBuffer, zones, trades, cells, projectStart, wsEmit]);
 
   // ── Simulate ──
   const handleSimulate = useCallback(async () => {
