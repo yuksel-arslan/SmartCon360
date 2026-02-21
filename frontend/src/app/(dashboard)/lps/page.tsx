@@ -621,7 +621,12 @@ function LookaheadTab({ trades, zones, projectId, planAssignments }: {
 
 // ─── Tab: Weekly Work Plan ──────────────────────────────────────────────────
 
-function WeeklyWorkPlanTab({ trades, zones, projectId }: { trades: { name: string; color: string }[]; zones: { id: string; name: string; y_index: number }[]; projectId: string | null }) {
+function WeeklyWorkPlanTab({ trades, zones, projectId, planAssignments }: {
+  trades: { name: string; color: string }[];
+  zones: { id: string; name: string; y_index: number }[];
+  projectId: string | null;
+  planAssignments: { trade: string; zone: string; plannedStart: string; plannedEnd: string; status: string; periodNumber: number }[];
+}) {
   const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [selectedWeekIdx, setSelectedWeekIdx] = useState(11);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -642,10 +647,11 @@ function WeeklyWorkPlanTab({ trades, zones, projectId }: { trades: { name: strin
     }));
   }, [trades, zones]);
 
-  // Load commitments from API for the selected week
+  // Load commitments from API for the selected week; seed from takt plan if API has no data
   useEffect(() => {
     if (!projectId || !currentWeek) return;
     (async () => {
+      let apiLoaded = false;
       try {
         const data = await getWeeklyCommitments(projectId, currentWeek.weekStart);
         if (data && data.length > 0) {
@@ -664,13 +670,40 @@ function WeeklyWorkPlanTab({ trades, zones, projectId }: { trades: { name: strin
             };
           });
           setCommitments(loaded);
-        } else {
-          setCommitments([]);
+          apiLoaded = true;
         }
-      } catch { /* API unavailable — keep local state */ }
+      } catch { /* API unavailable */ }
+
+      // Seed from takt plan assignments when API has no commitments for this week
+      if (!apiLoaded && planAssignments.length > 0 && trades.length > 0) {
+        const weekStart = new Date(currentWeek.weekStart);
+        const weekEnd = new Date(currentWeek.weekEnd);
+        weekEnd.setHours(23, 59, 59, 999);
+
+        const seeded: Commitment[] = [];
+        let idx = 0;
+        for (const a of planAssignments) {
+          const aStart = new Date(a.plannedStart);
+          if (aStart < weekStart || aStart > weekEnd) continue;
+          const trade = trades.find((t) => t.name === a.trade);
+          seeded.push({
+            id: `seed-${idx++}`,
+            trade: a.trade,
+            tradeColor: trade?.color || '#94A3B8',
+            zone: a.zone.split(' — ')[1] || a.zone,
+            description: `T${a.periodNumber} — ${a.zone.split(' — ')[1] || a.zone}`,
+            committedBy: 'Takt Plan',
+            status: 'committed',
+            weekId: currentWeek.weekId,
+          });
+        }
+        setCommitments(seeded);
+      } else if (!apiLoaded) {
+        setCommitments([]);
+      }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, selectedWeekIdx]);
+  }, [projectId, selectedWeekIdx, planAssignments]);
 
   const formId = useId();
 
@@ -1619,7 +1652,7 @@ export default function LPSPage() {
             transition={{ duration: 0.2 }}
           >
             {activeTab === 'lookahead' && <LookaheadTab trades={trades} zones={zones} projectId={activeProjectId} planAssignments={planAssignments} />}
-            {activeTab === 'weekly' && <WeeklyWorkPlanTab trades={trades} zones={zones} projectId={activeProjectId} />}
+            {activeTab === 'weekly' && <WeeklyWorkPlanTab trades={trades} zones={zones} projectId={activeProjectId} planAssignments={planAssignments} />}
             {activeTab === 'ppc' && <PPCDashboardTab trades={trades} projectId={activeProjectId} />}
           </motion.div>
         </AnimatePresence>
