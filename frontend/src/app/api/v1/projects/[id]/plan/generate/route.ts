@@ -38,10 +38,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     if (!project) throw new AppError('Project not found', 'NOT_FOUND', 404);
 
-    // 2. Extract takt zones (only zone-type locations)
-    const zoneLocations = project.locations.filter((l) => l.locationType === 'zone');
+    // 2. Extract takt zones (zone, sector, and grid-type locations)
+    const taktLocationTypes = ['zone', 'sector', 'grid'];
+    const zoneLocations = project.locations.filter((l) => taktLocationTypes.includes(l.locationType));
     if (zoneLocations.length === 0) {
-      throw new AppError('No zones defined. Add zone-type locations first.', 'NO_ZONES', 400);
+      throw new AppError('No zones defined. Add zone, sector, or grid-type locations first.', 'NO_ZONES', 400);
     }
     if (project.trades.length === 0) {
       throw new AppError('No trades defined. Add trades first.', 'NO_TRADES', 400);

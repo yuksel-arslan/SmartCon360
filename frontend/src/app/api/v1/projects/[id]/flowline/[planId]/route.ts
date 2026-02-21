@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     }
 
     // Enrich wagons with trade info
-    const tradeIds = plan.wagons.map((w) => w.tradeId);
+    const tradeIds = plan.wagons.map((w: { tradeId: string }) => w.tradeId);
     const trades = await prisma.trade.findMany({ where: { id: { in: tradeIds } } });
     const tradeMap = new Map(trades.map((t) => [t.id, t]));
 
@@ -42,6 +42,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     }));
 
     const zoneIdToIndex = new Map(plan.zones.map((z, i) => [z.id, i]));
+    const zoneIdToSeq = new Map(plan.zones.map((z) => [z.id, z.sequence]));
 
     const wagons = plan.wagons.map((w) => {
       const trade = tradeMap.get(w.tradeId);
@@ -49,24 +50,26 @@ export async function GET(request: NextRequest, { params }: Params) {
 
       return {
         id: w.id,
-        trade_name: trade?.name || `Trade ${w.sequence}`,
-        trade_code: trade?.code || '',
-        color: trade?.color || '#999',
+        tradeName: trade?.name || `Trade ${w.sequence}`,
+        tradeCode: trade?.code || '',
+        tradeColor: trade?.color || '#999',
         durationDays: w.durationDays,
+        bufferAfter: w.bufferAfter,
         segments: wagonAssignments.map((a) => {
           const zoneIdx = zoneIdToIndex.get(a.zoneId) ?? 0;
-          const startDay = Math.floor((a.plannedStart.getTime() - plan.startDate.getTime()) / (1000 * 60 * 60 * 24));
-          const endDay = Math.floor((a.plannedEnd.getTime() - plan.startDate.getTime()) / (1000 * 60 * 60 * 24));
+          const zoneSeq = zoneIdToSeq.get(a.zoneId) ?? 1;
 
           return {
             zoneId: a.zoneId,
             zoneName: plan.zones.find((z) => z.id === a.zoneId)?.name || '',
+            zoneSequence: zoneSeq,
             zoneIndex: zoneIdx,
-            xStart: startDay,
-            xEnd: endDay,
-            y: zoneIdx,
+            periodNumber: a.periodNumber,
             plannedStart: a.plannedStart.toISOString().split('T')[0],
             plannedEnd: a.plannedEnd.toISOString().split('T')[0],
+            actualStart: a.actualStart?.toISOString().split('T')[0] ?? null,
+            actualEnd: a.actualEnd?.toISOString().split('T')[0] ?? null,
+            y: zoneIdx,
             status: a.status,
             progressPct: a.progressPct,
           };

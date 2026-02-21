@@ -7,6 +7,7 @@ import { generatePlan, savePlan, listPlans, getPlan } from '@/lib/stores/takt-pl
 import api from '@/lib/api';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useRealtimeFlowline } from '@/hooks/useRealtimeFlowline';
 import { ContractPolicyBanner } from '@/components/modules';
 import {
   calculateTotalPeriods,
@@ -260,6 +261,9 @@ export default function TaktEditorPage() {
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
   const activeProject = useProjectStore((s) => s.getActiveProject());
   const token = useAuthStore((s) => s.token);
+
+  // ── Real-time WebSocket ──
+  const { emit: wsEmit } = useRealtimeFlowline({ projectId: activeProjectId });
 
   // ── Core State ──
   const [trades, setTrades] = useState<TradeRow[]>([]);
@@ -598,12 +602,18 @@ export default function TaktEditorPage() {
             const plan = await getPlan(activeProjectId, plans[0].id);
 
             // Load zones from plan — look up location metadata for phase and parent floor
+            // Include zone, sector, and grid types for substructure support
             const locationGroupMap = new Map<string, TaktPlanGroup | null>();
             const locationFloorMap = new Map<string, string>();
             const allLocations = data.locations || [];
+            const taktLocTypes = ['zone', 'sector', 'grid'];
             for (const loc of allLocations) {
-              if (loc.locationType === 'zone') {
-                locationGroupMap.set(loc.id, classifyLocationPhase(loc.metadata));
+              if (taktLocTypes.includes(loc.locationType)) {
+                // Sector/grid locations default to 'substructure' group
+                const group = loc.locationType === 'sector' || loc.locationType === 'grid'
+                  ? 'substructure' as TaktPlanGroup
+                  : classifyLocationPhase(loc.metadata);
+                locationGroupMap.set(loc.id, group);
                 // Find parent floor name from hierarchy
                 const parent = allLocations.find((p: { id: string }) => p.id === loc.parentId);
                 locationFloorMap.set(loc.id, parent?.name || '');
@@ -671,17 +681,23 @@ export default function TaktEditorPage() {
         }
 
         // Fallback: build zones from project locations (no takt plan yet)
+        // Include zone, sector, and grid types for substructure support
         const fallbackLocations = data.locations || [];
-        const projectLocations = fallbackLocations.filter((l: { locationType: string }) => l.locationType === 'zone');
+        const taktLocationTypes = ['zone', 'sector', 'grid'];
+        const projectLocations = fallbackLocations.filter((l: { locationType: string }) => taktLocationTypes.includes(l.locationType));
         if (projectLocations.length > 0) {
-          setZones(projectLocations.map((l: { id: string; name: string; sortOrder: number; parentId?: string; metadata?: Record<string, unknown> }, i: number) => {
+          setZones(projectLocations.map((l: { id: string; name: string; locationType: string; sortOrder: number; parentId?: string; metadata?: Record<string, unknown> }, i: number) => {
             const parent = fallbackLocations.find((p: { id: string }) => p.id === l.parentId);
+            // Sector/grid locations default to 'substructure' group
+            const group = l.locationType === 'sector' || l.locationType === 'grid'
+              ? 'substructure' as TaktPlanGroup
+              : classifyLocationPhase(l.metadata);
             return {
               id: l.id,
               name: l.name,
               sequence: l.sortOrder || i + 1,
               parentFloor: parent?.name || '',
-              group: classifyLocationPhase(l.metadata),
+              group,
             };
           }));
         }
@@ -751,12 +767,14 @@ export default function TaktEditorPage() {
         setCurrentPlanId(created.id);
       }
       setLastSaved(new Date());
+      // Broadcast to other clients
+      wsEmit('plan:updated', { projectId, planId: currentPlanId });
     } catch (err) {
       console.error('Save failed:', err);
     } finally {
       setIsSaving(false);
     }
-  }, [projectId, currentPlanId, globalTaktTime, globalBuffer, zones, trades, cells, projectStart]);
+  }, [projectId, currentPlanId, globalTaktTime, globalBuffer, zones, trades, cells, projectStart, wsEmit]);
 
   // ── Simulate ──
   const handleSimulate = useCallback(async () => {
@@ -1078,6 +1096,24 @@ export default function TaktEditorPage() {
           {/* ── Takt Grid (Zone x Period) ────────────────────── */}
           <div className="flex-1 overflow-auto">
             <div className="p-3 sm:p-4 md:p-6 lg:p-8">
+              {/* Empty state for plan group with no trades or zones */}
+              {(sortedTrades.length === 0 || sortedZones.length === 0) && (
+                <div
+                  className="rounded-xl border p-8 text-center"
+                  style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+                >
+                  <Layers size={32} style={{ color: 'var(--color-text-muted)' }} className="mx-auto mb-3" />
+                  <h3 className="text-sm font-medium mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
+                    No {TAKT_PLAN_GROUPS.find((g) => g.id === planGroup)?.label || planGroup} Data
+                  </h3>
+                  <p className="text-[11px] max-w-md mx-auto" style={{ color: 'var(--color-text-muted)' }}>
+                    {sortedTrades.length === 0
+                      ? `No trades classified as "${planGroup}" phase were found. Add trades with matching disciplines (e.g., ${planGroup === 'substructure' ? 'Excavation, Piling, Foundation' : planGroup === 'shell' ? 'Formwork, Structure, Facade' : 'Drywall, MEP Finish, Painting'}) in Project Setup, or switch to another plan group tab.`
+                      : `No ${planGroup === 'substructure' ? 'sector/grid' : 'zone'} locations found for this phase. Add locations in Project Setup.`}
+                  </p>
+                </div>
+              )}
+              {sortedTrades.length > 0 && sortedZones.length > 0 && (
               <div
                 className="rounded-xl border overflow-hidden"
                 style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
@@ -1216,6 +1252,7 @@ export default function TaktEditorPage() {
                   </table>
                 </div>
               </div>
+              )}
             </div>
           </div>
 

@@ -7,6 +7,7 @@ import { useUIStore } from '@/stores/uiStore';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAuthStore } from '@/stores/authStore';
 import { NAV_GROUPS, MODULE_REGISTRY, BRAND, type NavGroupItem } from '@/lib/modules';
+import { useAccessibleModules } from '@/hooks/useModuleAccess';
 import {
   Settings, PanelLeftClose, Plus, ChevronDown, ChevronRight,
   Building2, Hospital, Building, Landmark, Factory, Construction, FolderKanban, Loader2,
@@ -30,6 +31,7 @@ export default function Sidebar() {
   const router = useRouter();
   const { sidebarCollapsed, toggleSidebar, theme } = useUIStore();
   const { token } = useAuthStore();
+  const accessibleModules = useAccessibleModules();
   const { projects, activeProjectId, loading, initialized, error, fetchProjects, setActiveProject } = useProjectStore();
   const sidebarLogo = theme === 'dark' ? BRAND.logoDark : BRAND.logoLight;
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
@@ -53,6 +55,7 @@ export default function Sidebar() {
   const renderNavLink = (moduleId: string, path: string, collapsed: boolean, indented = false) => {
     const mod = MODULE_REGISTRY[moduleId as keyof typeof MODULE_REGISTRY];
     if (!mod) return null;
+    if (!accessibleModules.includes(moduleId)) return null;
     const isActive = path === mod.href;
     return (
       <Link
@@ -320,6 +323,9 @@ export default function Sidebar() {
                 // Parent with children
                 const parentMod = MODULE_REGISTRY[item.parent];
                 if (!parentMod) return null;
+                // Filter children by license tier
+                const accessibleChildren = item.children.filter((cid) => accessibleModules.includes(cid));
+                if (accessibleChildren.length === 0 && !accessibleModules.includes(item.parent)) return null;
                 const isSubCollapsed = collapsedGroups[`sub:${item.parent}`];
                 const hasActiveChild = item.children.some((cid) => pathname === MODULE_REGISTRY[cid]?.href);
 

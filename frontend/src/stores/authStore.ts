@@ -12,6 +12,7 @@ export interface AuthUser {
   company?: string;
   avatarUrl?: string;
   roles: { role: string; projectId?: string | null }[];
+  licenseTier?: LicenseTier;
 }
 
 interface AuthState {
