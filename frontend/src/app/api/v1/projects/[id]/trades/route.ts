@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { createTradeSchema } from '@/lib/validators/project';
@@ -34,9 +35,21 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     const count = await prisma.trade.count({ where: { projectId } });
 
-    const trade = await prisma.trade.create({
-      data: { ...input, projectId, sortOrder: count },
-    });
+    // Build create data explicitly to satisfy Prisma's strict types
+    const data: Prisma.TradeUncheckedCreateInput = {
+      projectId,
+      name: input.name,
+      code: input.code,
+      color: input.color,
+      sortOrder: count,
+    };
+
+    if (input.defaultCrewSize !== undefined) data.defaultCrewSize = input.defaultCrewSize;
+    if (input.predecessorTradeIds !== undefined) data.predecessorTradeIds = input.predecessorTradeIds;
+    if (input.companyName !== undefined) data.companyName = input.companyName;
+    if (input.contactEmail !== undefined) data.contactEmail = input.contactEmail;
+
+    const trade = await prisma.trade.create({ data });
 
     return NextResponse.json({ data: trade, error: null }, { status: 201 });
   } catch (err) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getUserId, requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { createConstraintSchema } from '@/lib/validators/constraint';
@@ -51,12 +52,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const input = createConstraintSchema.parse(body);
 
-    const constraint = await prisma.constraint.create({
-      data: {
-        ...input,
-        dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
-      },
-    });
+    // Build create data explicitly to satisfy Prisma's strict types
+    const data: Prisma.ConstraintUncheckedCreateInput = {
+      projectId: input.projectId,
+      title: input.title,
+      category: input.category,
+    };
+
+    if (input.description !== undefined) data.description = input.description;
+    if (input.priority !== undefined) data.priority = input.priority;
+    if (input.tradeCode !== undefined) data.tradeCode = input.tradeCode;
+    if (input.zoneName !== undefined) data.zoneName = input.zoneName;
+    if (input.assignedTo !== undefined) data.assignedTo = input.assignedTo;
+    if (input.source !== undefined) data.source = input.source;
+    if (input.dueDate) data.dueDate = new Date(input.dueDate);
+
+    const constraint = await prisma.constraint.create({ data });
 
     return NextResponse.json({ data: constraint, error: null }, { status: 201 });
   } catch (err) {
