@@ -146,7 +146,7 @@ function TemplateLocationNode({
               color: location.phase === 'structural' ? '#6366F1' : '#10B981',
             }}
           >
-            {location.phase === 'structural' ? 'Kaba' : 'İnce'}
+            {location.phase === 'structural' ? 'Shell' : 'Fit-Out'}
           </span>
         )}
         {location.areaSqm && (
@@ -361,8 +361,8 @@ export default function StepLBS({ projectId, state, onStateChange, authHeaders }
               <div className="flex gap-3 mb-4">
                 {[
                   { label: 'Floors', value: templateCounts.floors, color: 'var(--color-cyan)' },
-                  { label: 'Kaba Zones', value: templateCounts.structuralZones, color: '#6366F1' },
-                  { label: 'İnce Zones', value: templateCounts.finishingZones, color: '#10B981' },
+                  { label: 'Shell Zones', value: templateCounts.structuralZones, color: '#6366F1' },
+                  { label: 'Fit-Out Zones', value: templateCounts.finishingZones, color: '#10B981' },
                   { label: 'Total', value: templateCounts.total, color: 'var(--color-accent)' },
                 ].map((s) => (
                   <div

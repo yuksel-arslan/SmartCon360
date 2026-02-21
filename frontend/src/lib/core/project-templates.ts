@@ -14,7 +14,7 @@
 export interface LocationTemplate {
   name: string;
   type: 'site' | 'building' | 'floor' | 'zone' | 'room' | 'area';
-  phase?: 'structural' | 'finishing'; // construction phase — structural (Kaba İnşaat) or finishing (İnce İş)
+  phase?: 'structural' | 'finishing'; // OmniClass 21-02 (shell) or 21-03 (fitout) — legacy: 'structural'/'finishing'
   repeat?: number; // e.g. repeat: 20 for 20 typical floors
   repeatLabel?: string; // e.g. "Floor {n}" — {n} replaced with number
   areaSqm?: number;
@@ -28,7 +28,7 @@ export interface TradeTemplate {
   defaultCrewSize: number;
   durationMultiplier: number; // relative to takt time (1.0 = 1 takt)
   predecessors: string[]; // trade codes that must finish before this starts
-  category: 'structural' | 'mep' | 'architectural' | 'finishing' | 'specialty';
+  category: 'structural' | 'mep' | 'architectural' | 'finishing' | 'specialty'; // OmniClass Table 22 work result grouping
 }
 
 export interface ProjectTemplate {
@@ -634,9 +634,9 @@ const BASEMENT_ZONES: Record<string, string[]> = {
  * Generate a dynamic LBS template based on building type and floor configuration.
  * Uses user-specified floor/basement/zone counts instead of hardcoded templates.
  *
- * Creates dual-phase zones per floor:
- * - Structural zones (Kaba İnşaat): larger zones for formwork/concrete/steel work
- * - Finishing zones (İnce İş): finer subdivisions for MEP, architectural, and finishing trades
+ * Creates dual-phase zones per floor (OmniClass Table 21 aligned):
+ * - Shell zones (21-02): larger zones for superstructure work (formwork, concrete, steel)
+ * - Fit-Out zones (21-03): finer subdivisions for interior construction, MEP, and finishes
  */
 export function generateLbsFromConfig(
   buildingType: string,
@@ -670,13 +670,13 @@ export function generateLbsFromConfig(
   function buildFloorZones(structCount: number, finishCount: number): LocationTemplate[] {
     const zones: LocationTemplate[] = [];
 
-    // Structural zones (Kaba İnşaat)
+    // Shell zones — OmniClass 21-02 (Superstructure)
     const sNames = structuralZoneNames.slice(0, structCount);
     for (const name of sNames) {
       zones.push({ name, type: 'zone', phase: 'structural' });
     }
 
-    // Finishing zones (İnce İş)
+    // Fit-Out zones — OmniClass 21-03 (Interiors)
     const fNames = finishingZoneNames.slice(0, finishCount);
     for (const name of fNames) {
       zones.push({ name, type: 'zone', phase: 'finishing' });

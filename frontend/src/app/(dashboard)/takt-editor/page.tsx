@@ -40,14 +40,21 @@ import {
   Shield,
   Loader2,
   Wrench,
+  Building2,
 } from 'lucide-react';
+import {
+  type TaktPhase,
+  type TaktPlanGroup,
+  classifyTradePhase,
+  classifyLocationPhase,
+  phaseMatchesGroup,
+  TAKT_PHASE_MAP,
+  TAKT_PLAN_GROUPS,
+} from '@/lib/core/work-phase-classification';
 
 // ── Types ──────────────────────────────────────────────────────
 
 type CellStatus = 'completed' | 'in_progress' | 'planned' | 'delayed';
-type PlanType = 'kaba' | 'ince';
-
-type WorkPhase = 'structural' | 'finishing' | 'both';
 
 interface TradeRow {
   id: string;
@@ -59,14 +66,15 @@ interface TradeRow {
   crewSize: number;
   notes: string;
   discipline: string;
-  workPhase: WorkPhase;
+  taktPhase: TaktPhase; // OmniClass-aligned phase classification
 }
 
 interface Zone {
   id: string;
   name: string;
   sequence: number;
-  phase: WorkPhase;
+  parentFloor: string; // LBS hierarchy — floor name from Project Setup
+  group: TaktPlanGroup | null; // shell / fitout / null (both)
 }
 
 interface GridCell {
@@ -101,38 +109,8 @@ interface HistoryState {
   cellOverrides: Record<string, Partial<GridCell>>;
 }
 
-// ── Phase Helpers ─────────────────────────────────────────────
-
-// MEP rough-in (first fix) keywords → Kaba İşler
-const MEP_ROUGHIN_KEYWORDS = [
-  'rough', 'ductwork', 'conduit', 'cable tray', 'cable pull', 'containment',
-  'piping', 'suppression', 'sprinkler', 'medical gas', 'fire protection',
-];
-
-function isMepFirstFix(tradeName: string): boolean {
-  const lower = tradeName.toLowerCase();
-  return MEP_ROUGHIN_KEYWORDS.some((kw) => lower.includes(kw));
-}
-
-function disciplineToWorkPhase(discipline: string | null | undefined, tradeName = ''): WorkPhase {
-  if (!discipline) return 'both';
-  const d = discipline.toLowerCase();
-  if (d === 'structural') return 'structural';
-  if (d === 'architectural' || d === 'landscape') return 'finishing';
-  // MEP: rough-in (first fix) → Kaba, finish (second fix) → İnce
-  if (d === 'mechanical' || d === 'electrical') {
-    return isMepFirstFix(tradeName) ? 'structural' : 'finishing';
-  }
-  return 'both';
-}
-
-function metadataToPhase(metadata: Record<string, unknown> | null | undefined): WorkPhase {
-  if (!metadata) return 'both';
-  const phase = metadata.phase as string | undefined;
-  if (phase === 'structural') return 'structural';
-  if (phase === 'finishing') return 'finishing';
-  return 'both';
-}
+// Phase classification is handled by @/lib/core/work-phase-classification.ts
+// Uses OmniClass Table 21 / Uniclass 2015 standard taxonomy
 
 // ── Initial Data ───────────────────────────────────────────────
 
@@ -289,7 +267,7 @@ export default function TaktEditorPage() {
   const [globalBuffer, setGlobalBuffer] = useState(1);
   const [cellOverrides, setCellOverrides] = useState<Record<string, Partial<GridCell>>>({});
   const [projectStart, setProjectStart] = useState<Date>(DEFAULT_PROJECT_START);
-  const [planType, setPlanType] = useState<PlanType>('kaba');
+  const [planGroup, setPlanGroup] = useState<TaktPlanGroup>('shell');
 
   // ── UI State ──
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
@@ -618,11 +596,16 @@ export default function TaktEditorPage() {
           try {
             const plan = await getPlan(activeProjectId, plans[0].id);
 
-            // Load zones from plan — also look up location metadata for phase
-            const locationPhaseMap = new Map<string, WorkPhase>();
-            for (const loc of (data.locations || [])) {
+            // Load zones from plan — look up location metadata for phase and parent floor
+            const locationGroupMap = new Map<string, TaktPlanGroup | null>();
+            const locationFloorMap = new Map<string, string>();
+            const allLocations = data.locations || [];
+            for (const loc of allLocations) {
               if (loc.locationType === 'zone') {
-                locationPhaseMap.set(loc.id, metadataToPhase(loc.metadata));
+                locationGroupMap.set(loc.id, classifyLocationPhase(loc.metadata));
+                // Find parent floor name from hierarchy
+                const parent = allLocations.find((p: { id: string }) => p.id === loc.parentId);
+                locationFloorMap.set(loc.id, parent?.name || '');
               }
             }
 
@@ -631,7 +614,8 @@ export default function TaktEditorPage() {
                 id: z.id,
                 name: z.name,
                 sequence: z.sequence,
-                phase: locationPhaseMap.get(z.id) || 'both' as WorkPhase,
+                parentFloor: locationFloorMap.get(z.id) || '',
+                group: locationGroupMap.get(z.id) ?? null,
               })));
             }
 
@@ -654,7 +638,7 @@ export default function TaktEditorPage() {
                   crewSize: w.crewSize || 5,
                   notes: '',
                   discipline: disc,
-                  workPhase: disciplineToWorkPhase(disc, w.tradeName),
+                  taktPhase: classifyTradePhase(disc, w.tradeName),
                 };
               }));
             }
@@ -686,14 +670,19 @@ export default function TaktEditorPage() {
         }
 
         // Fallback: build zones from project locations (no takt plan yet)
-        const projectLocations = (data.locations || []).filter((l: { locationType: string }) => l.locationType === 'zone');
+        const fallbackLocations = data.locations || [];
+        const projectLocations = fallbackLocations.filter((l: { locationType: string }) => l.locationType === 'zone');
         if (projectLocations.length > 0) {
-          setZones(projectLocations.map((l: { id: string; name: string; sortOrder: number; metadata?: Record<string, unknown> }, i: number) => ({
-            id: l.id,
-            name: l.name,
-            sequence: l.sortOrder || i + 1,
-            phase: metadataToPhase(l.metadata),
-          })));
+          setZones(projectLocations.map((l: { id: string; name: string; sortOrder: number; parentId?: string; metadata?: Record<string, unknown> }, i: number) => {
+            const parent = fallbackLocations.find((p: { id: string }) => p.id === l.parentId);
+            return {
+              id: l.id,
+              name: l.name,
+              sequence: l.sortOrder || i + 1,
+              parentFloor: parent?.name || '',
+              group: classifyLocationPhase(l.metadata),
+            };
+          }));
         }
 
         // Fallback: build trades from project trades
@@ -709,7 +698,7 @@ export default function TaktEditorPage() {
             crewSize: t.defaultCrewSize || 5,
             notes: '',
             discipline: t.discipline || '',
-            workPhase: disciplineToWorkPhase(t.discipline, t.name),
+            taktPhase: classifyTradePhase(t.discipline, t.name),
           })));
           setGlobalTaktTime(data.defaultTaktTime || 5);
         }
@@ -814,16 +803,14 @@ export default function TaktEditorPage() {
     );
   }, [pushHistory]);
 
-  // ── Filtered & sorted trades/zones by plan type ──
+  // ── Filtered & sorted trades/zones by plan group (OmniClass aligned) ──
   const filteredTrades = useMemo(() => {
-    const targetPhase = planType === 'kaba' ? 'structural' : 'finishing';
-    return trades.filter((t) => t.workPhase === targetPhase || t.workPhase === 'both');
-  }, [trades, planType]);
+    return trades.filter((t) => phaseMatchesGroup(t.taktPhase, planGroup));
+  }, [trades, planGroup]);
 
   const filteredZones = useMemo(() => {
-    const targetPhase = planType === 'kaba' ? 'structural' : 'finishing';
-    return zones.filter((z) => z.phase === targetPhase || z.phase === 'both');
-  }, [zones, planType]);
+    return zones.filter((z) => z.group === null || z.group === planGroup);
+  }, [zones, planGroup]);
 
   const sortedTrades = useMemo(
     () => [...filteredTrades].sort((a, b) => a.sequence - b.sequence),
@@ -870,28 +857,22 @@ export default function TaktEditorPage() {
             className="flex items-center gap-2 px-4 py-2.5 border-b flex-shrink-0 flex-wrap"
             style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}
           >
-            {/* Plan Type Tabs */}
+            {/* Plan Group Tabs — OmniClass Table 21 */}
             <div className="flex items-center gap-0.5 rounded-lg p-0.5" style={{ background: 'var(--color-bg-input)' }}>
-              <button
-                onClick={() => setPlanType('kaba')}
-                className="px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all"
-                style={{
-                  background: planType === 'kaba' ? 'var(--color-accent)' : 'transparent',
-                  color: planType === 'kaba' ? 'white' : 'var(--color-text-muted)',
-                }}
-              >
-                Kaba Isler
-              </button>
-              <button
-                onClick={() => setPlanType('ince')}
-                className="px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all"
-                style={{
-                  background: planType === 'ince' ? 'var(--color-purple)' : 'transparent',
-                  color: planType === 'ince' ? 'white' : 'var(--color-text-muted)',
-                }}
-              >
-                Ince Isler
-              </button>
+              {TAKT_PLAN_GROUPS.map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => setPlanGroup(g.id)}
+                  className="px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all"
+                  style={{
+                    background: planGroup === g.id ? g.color : 'transparent',
+                    color: planGroup === g.id ? 'white' : 'var(--color-text-muted)',
+                  }}
+                  title={g.description}
+                >
+                  {g.label}
+                </button>
+              ))}
             </div>
 
             {/* Separator */}
@@ -1051,9 +1032,14 @@ export default function TaktEditorPage() {
                   >
                     <GripVertical size={10} style={{ color: `${trade.color}80` }} />
                     <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: trade.color }} />
-                    <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: 'var(--color-text)' }}>
-                      {trade.name}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-semibold whitespace-nowrap leading-tight" style={{ color: 'var(--color-text)' }}>
+                        {trade.name}
+                      </span>
+                      <span className="text-[7px] font-medium uppercase leading-tight" style={{ color: TAKT_PHASE_MAP.get(trade.taktPhase)?.color || 'var(--color-text-muted)' }}>
+                        {TAKT_PHASE_MAP.get(trade.taktPhase)?.shortLabel || trade.taktPhase}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-1 ml-1">
                       {editingField?.tradeId === trade.id && editingField.field === 'taktTime' ? (
                         <input type="number" min={1} max={20} value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={commitInlineEdit} onKeyDown={handleInlineKeyDown} autoFocus className="w-7 text-center text-[9px] font-medium rounded border outline-none" style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-accent)', color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }} />
@@ -1117,14 +1103,28 @@ export default function TaktEditorPage() {
                             className="px-3 py-2 border-b text-xs font-semibold sticky left-0 z-10"
                             style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-card)', color: 'var(--color-text)' }}
                           >
-                            {zone.name.includes(' \u2014 ') ? (
-                              <>
-                                {zone.name.split(' \u2014 ')[0]}
-                                <div className="text-[8px] font-normal mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                                  {zone.name.split(' \u2014 ')[1]}
-                                </div>
-                              </>
-                            ) : zone.name}
+                            <div className="flex items-start gap-1.5">
+                              <div className="flex flex-col min-w-0">
+                                {zone.parentFloor && (
+                                  <div className="flex items-center gap-1 text-[7px] font-medium uppercase" style={{ color: 'var(--color-text-muted)' }}>
+                                    <Building2 size={7} />
+                                    {zone.parentFloor}
+                                  </div>
+                                )}
+                                <span className="truncate">{zone.name}</span>
+                              </div>
+                              {zone.group && (
+                                <span
+                                  className="text-[6px] font-bold uppercase px-1 py-0.5 rounded flex-shrink-0 mt-0.5"
+                                  style={{
+                                    background: zone.group === 'shell' ? 'rgba(99,102,241,0.12)' : 'rgba(16,185,129,0.12)',
+                                    color: zone.group === 'shell' ? '#6366F1' : '#10B981',
+                                  }}
+                                >
+                                  {zone.group === 'shell' ? 'S&C' : 'FO'}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           {periods.map((p) => {
                             const pgKey = `${zone.id}::${p}`;
@@ -1184,7 +1184,10 @@ export default function TaktEditorPage() {
                                       >
                                         <div className="rounded-lg px-3 py-2 shadow-lg text-left whitespace-nowrap" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
                                           <div className="text-[10px] font-medium" style={{ color: 'var(--color-text)' }}>
-                                            {cell.trade.name} — {zone.name.split(' — ')[0]}
+                                            {cell.trade.name} — {zone.name}
+                                          </div>
+                                          <div className="text-[8px] mt-0.5 font-semibold uppercase" style={{ color: TAKT_PHASE_MAP.get(cell.trade.taktPhase)?.color || 'var(--color-text-muted)' }}>
+                                            {TAKT_PHASE_MAP.get(cell.trade.taktPhase)?.label} ({TAKT_PHASE_MAP.get(cell.trade.taktPhase)?.omniclass})
                                           </div>
                                           <div className="text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
                                             Period T{cell.periodNumber} | {formatDate(cell.plannedStart)} – {formatDate(cell.plannedEnd)}
@@ -1304,11 +1307,11 @@ export default function TaktEditorPage() {
 
                 {/* Panel Body */}
                 <div className="flex-1 p-4 space-y-4 overflow-auto">
-                  {/* Trade & Zone */}
+                  {/* Trade & OmniClass Phase */}
                   <div className="space-y-3">
                     <div>
                       <label className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
-                        Trade
+                        Trade (Wagon)
                       </label>
                       <div className="flex items-center gap-2 mt-1">
                         <div className="w-4 h-4 rounded" style={{ background: selectedCellData.trade.color }} />
@@ -1316,13 +1319,33 @@ export default function TaktEditorPage() {
                           {selectedCellData.trade.name}
                         </span>
                       </div>
+                      {(() => {
+                        const phaseInfo = TAKT_PHASE_MAP.get(selectedCellData.trade.taktPhase);
+                        return phaseInfo ? (
+                          <div className="mt-1.5 flex items-center gap-1.5">
+                            <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: `${phaseInfo.color}18`, color: phaseInfo.color }}>
+                              {phaseInfo.shortLabel}
+                            </span>
+                            <span className="text-[8px]" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                              OmniClass {phaseInfo.omniclass} | Uniclass {phaseInfo.uniclass}
+                            </span>
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
 
                     <div>
                       <label className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
-                        Zone
+                        Zone (LBS)
                       </label>
-                      <div className="text-sm font-medium mt-1" style={{ color: 'var(--color-text)' }}>
+                      {selectedCellData.zone.parentFloor && (
+                        <div className="flex items-center gap-1 mt-1 text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                          <Building2 size={9} />
+                          <span>{selectedCellData.zone.parentFloor}</span>
+                          <ChevronRight size={8} />
+                        </div>
+                      )}
+                      <div className="text-sm font-medium mt-0.5" style={{ color: 'var(--color-text)' }}>
                         {selectedCellData.zone.name}
                       </div>
                     </div>
@@ -1437,6 +1460,40 @@ export default function TaktEditorPage() {
                         <span className="text-[10px] font-medium" style={{ color: 'var(--color-success)' }}>Successor</span>
                       </div>
                     )}
+                  </div>
+
+                  {/* Zone-to-Zone Flow for this Trade */}
+                  <div>
+                    <label className="text-[9px] font-semibold uppercase tracking-wider block mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                      Zone Flow Continuity
+                    </label>
+                    <div className="space-y-1">
+                      {sortedZones.map((z) => {
+                        const cellKey = `${selectedCellData.trade.id}::${z.id}`;
+                        const c = cells.get(cellKey);
+                        const isCurrent = z.id === selectedCellData.zone.id;
+                        return (
+                          <div
+                            key={z.id}
+                            className="flex items-center gap-1.5 px-2 py-1 rounded text-[9px]"
+                            style={{
+                              background: isCurrent ? `${selectedCellData.trade.color}15` : 'transparent',
+                              border: isCurrent ? `1px solid ${selectedCellData.trade.color}40` : '1px solid transparent',
+                            }}
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: c ? STATUS_CONFIG[c.status].text : 'var(--color-border)' }} />
+                            <span className="flex-1 truncate" style={{ color: isCurrent ? 'var(--color-text)' : 'var(--color-text-muted)', fontWeight: isCurrent ? 600 : 400 }}>
+                              {z.name}
+                            </span>
+                            {c && (
+                              <span style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                T{c.periodNumber}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* Notes */}
