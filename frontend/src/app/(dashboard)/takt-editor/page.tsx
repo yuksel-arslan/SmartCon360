@@ -41,11 +41,13 @@ import {
   Shield,
   Loader2,
   Check,
+  Wrench,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────
 
 type CellStatus = 'completed' | 'in_progress' | 'planned' | 'delayed';
+type PlanType = 'kaba' | 'ince';
 
 interface TradeRow {
   id: string;
@@ -251,6 +253,7 @@ export default function TaktEditorPage() {
   const [globalBuffer, setGlobalBuffer] = useState(1);
   const [cellOverrides, setCellOverrides] = useState<Record<string, Partial<GridCell>>>({});
   const [projectStart, setProjectStart] = useState<Date>(DEFAULT_PROJECT_START);
+  const [planType, setPlanType] = useState<PlanType>('kaba');
 
   // ── UI State ──
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
@@ -343,6 +346,35 @@ export default function TaktEditorPage() {
   const { cells, assignments, totalPeriods } = useMemo(
     () => computeGrid(trades, zones, globalTaktTime, cellOverrides, projectStart),
     [trades, zones, globalTaktTime, cellOverrides, projectStart],
+  );
+
+  // ── Period Grid (Zone x Period orientation) ──
+  const periodGrid = useMemo(() => {
+    const grid = new Map<string, GridCell & { trade: TradeRow }>();
+    for (const a of assignments) {
+      const key = `${a.zoneId}::${a.periodNumber}`;
+      const trade = trades.find((t) => t.id === a.wagonId);
+      if (!trade) continue;
+      const cellKey = `${a.wagonId}::${a.zoneId}`;
+      const override = cellOverrides[cellKey];
+      grid.set(key, {
+        tradeId: a.wagonId,
+        zoneId: a.zoneId,
+        periodNumber: a.periodNumber,
+        plannedStart: a.plannedStart,
+        plannedEnd: a.plannedEnd,
+        status: override?.status ?? computeCellStatus(),
+        crewSize: override?.crewSize ?? trade.crewSize,
+        notes: override?.notes ?? '',
+        trade,
+      });
+    }
+    return grid;
+  }, [assignments, trades, cellOverrides]);
+
+  const periods = useMemo(
+    () => Array.from({ length: totalPeriods }, (_, i) => i + 1),
+    [totalPeriods],
   );
 
   // ── Warnings ──
@@ -455,6 +487,15 @@ export default function TaktEditorPage() {
 
     setDraggedTradeId(null);
     setDragOverTradeId(null);
+  }, [pushHistory]);
+
+  // ── Resolve Sequence Conflicts ──
+  const resolveSequenceConflicts = useCallback(() => {
+    pushHistory();
+    setTrades((prev) => {
+      const sorted = [...prev].sort((a, b) => a.sequence - b.sequence);
+      return sorted.map((t, i) => ({ ...t, sequence: i + 1 }));
+    });
   }, [pushHistory]);
 
   // ── Inline Edit Handlers ──
@@ -829,6 +870,30 @@ export default function TaktEditorPage() {
               Add Zone
             </button>
 
+            {/* Plan Type Tabs */}
+            <div className="flex items-center gap-0.5 rounded-lg p-0.5" style={{ background: 'var(--color-bg-input)' }}>
+              <button
+                onClick={() => setPlanType('kaba')}
+                className="px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all"
+                style={{
+                  background: planType === 'kaba' ? 'var(--color-accent)' : 'transparent',
+                  color: planType === 'kaba' ? 'white' : 'var(--color-text-muted)',
+                }}
+              >
+                Kaba Isler
+              </button>
+              <button
+                onClick={() => setPlanType('ince')}
+                className="px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all"
+                style={{
+                  background: planType === 'ince' ? 'var(--color-purple)' : 'transparent',
+                  color: planType === 'ince' ? 'white' : 'var(--color-text-muted)',
+                }}
+              >
+                Ince Isler
+              </button>
+            </div>
+
             {/* Separator */}
             <div className="w-px h-6 mx-1" style={{ background: 'var(--color-border)' }} />
 
@@ -953,7 +1018,71 @@ export default function TaktEditorPage() {
             ))}
           </div>
 
-          {/* ── Takt Grid ───────────────────────────────────── */}
+
+          {/* ── Wagon Train ─────────────────────────────────── */}
+          <div
+            className="px-4 py-2.5 border-b flex-shrink-0"
+            style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Layers size={12} style={{ color: 'var(--color-accent)' }} />
+              <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
+                Wagon Train — Trade Sequence
+              </span>
+            </div>
+            <div className="flex items-center gap-1 overflow-x-auto pb-1">
+              {sortedTrades.map((trade, i) => (
+                <div key={trade.id} style={{ display: 'contents' }}>
+                  <div
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, trade.id)}
+                    onDragEnd={(e) => handleDragEnd(e)}
+                    onDragOver={(e) => handleDragOver(e, trade.id)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, trade.id)}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-grab active:cursor-grabbing flex-shrink-0 transition-all"
+                    style={{
+                      background: `${trade.color}15`,
+                      border: `1.5px solid ${trade.color}60`,
+                      opacity: draggedTradeId === trade.id ? 0.5 : 1,
+                      borderTopWidth: dragOverTradeId === trade.id && draggedTradeId !== trade.id ? 3 : 1.5,
+                      borderTopColor: dragOverTradeId === trade.id && draggedTradeId !== trade.id ? 'var(--color-accent)' : `${trade.color}60`,
+                    }}
+                  >
+                    <GripVertical size={10} style={{ color: `${trade.color}80` }} />
+                    <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: trade.color }} />
+                    <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: 'var(--color-text)' }}>
+                      {trade.name}
+                    </span>
+                    <div className="flex items-center gap-1 ml-1">
+                      {editingField?.tradeId === trade.id && editingField.field === 'taktTime' ? (
+                        <input type="number" min={1} max={20} value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={commitInlineEdit} onKeyDown={handleInlineKeyDown} autoFocus className="w-7 text-center text-[9px] font-medium rounded border outline-none" style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-accent)', color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }} />
+                      ) : (
+                        <button onClick={() => startInlineEdit(trade.id, 'taktTime', trade.taktTime)} className="text-[9px] font-medium px-1 py-0.5 rounded hover:opacity-70" style={{ background: 'rgba(232,115,26,0.1)', color: 'var(--color-accent)', fontFamily: 'var(--font-mono)' }} title="Takt time">{trade.taktTime}d</button>
+                      )}
+                      {editingField?.tradeId === trade.id && editingField.field === 'buffer' ? (
+                        <input type="number" min={0} max={10} value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={commitInlineEdit} onKeyDown={handleInlineKeyDown} autoFocus className="w-7 text-center text-[9px] font-medium rounded border outline-none" style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-warning)', color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }} />
+                      ) : (
+                        <button onClick={() => startInlineEdit(trade.id, 'buffer', trade.bufferAfter)} className="text-[9px] font-medium px-1 py-0.5 rounded hover:opacity-70" style={{ background: trade.bufferAfter === 0 ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)', color: trade.bufferAfter === 0 ? 'var(--color-danger)' : 'var(--color-warning)', fontFamily: 'var(--font-mono)' }} title="Buffer">b{trade.bufferAfter}</button>
+                      )}
+                      {editingField?.tradeId === trade.id && editingField.field === 'crewSize' ? (
+                        <input type="number" min={1} max={50} value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={commitInlineEdit} onKeyDown={handleInlineKeyDown} autoFocus className="w-7 text-center text-[9px] font-medium rounded border outline-none" style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-success)', color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }} />
+                      ) : (
+                        <button onClick={() => startInlineEdit(trade.id, 'crewSize', trade.crewSize)} className="text-[9px] font-medium px-1 py-0.5 rounded hover:opacity-70" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)', fontFamily: 'var(--font-mono)' }} title="Crew size"><span className="inline-flex items-center gap-0.5"><Users size={8} />{trade.crewSize}</span></button>
+                      )}
+                    </div>
+                  </div>
+                  {i < sortedTrades.length - 1 && (
+                    <div className="flex-shrink-0 text-[10px] px-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                      {trade.bufferAfter > 0 ? `\u2192 b${trade.bufferAfter} \u2192` : '\u2192'}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Takt Grid (Zone x Period) ────────────────────── */}
           <div className="flex-1 overflow-auto">
             <div className="p-3 sm:p-4 md:p-6 lg:p-8">
               <div
@@ -961,301 +1090,125 @@ export default function TaktEditorPage() {
                 style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
               >
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse" style={{ minWidth: 800 }}>
+                  <table className="w-full border-collapse" style={{ minWidth: Math.max(800, 140 + periods.length * 90) }}>
                     <thead>
                       <tr>
-                        {/* Drag handle column */}
                         <th
-                          className="w-8 border-b"
-                          style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}
-                        />
-                        {/* Trade column header */}
-                        <th
-                          className="text-left text-[10px] font-semibold uppercase tracking-wider px-3 py-3 border-b"
-                          style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border)', background: 'var(--color-bg-secondary)', minWidth: 180 }}
+                          className="text-left text-[10px] font-semibold uppercase tracking-wider px-3 py-3 border-b sticky left-0 z-10"
+                          style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border)', background: 'var(--color-bg-secondary)', minWidth: 140 }}
                         >
-                          <div className="flex items-center gap-3">
-                            <span>Trade</span>
-                            <span className="text-[9px] font-normal" style={{ color: 'var(--color-text-muted)' }}>Takt</span>
-                            <span className="text-[9px] font-normal" style={{ color: 'var(--color-text-muted)' }}>Buf</span>
-                            <span className="text-[9px] font-normal" style={{ color: 'var(--color-text-muted)' }}>Crew</span>
-                          </div>
+                          Zone / LBS
                         </th>
-                        {/* Zone column headers */}
-                        {sortedZones.map((zone) => (
+                        {periods.map((p) => (
                           <th
-                            key={zone.id}
+                            key={p}
                             className="text-center text-[9px] font-semibold uppercase tracking-wider px-2 py-3 border-b border-l"
-                            style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border)', background: 'var(--color-bg-secondary)', minWidth: 100 }}
+                            style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border)', background: 'var(--color-bg-secondary)', minWidth: 90 }}
                           >
-                            {zone.name.includes(' — ') ? zone.name.split(' — ')[0] : zone.name}
-                            <div className="text-[8px] font-normal mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                              {zone.name.includes(' — ') ? zone.name.split(' — ')[1] : ''}
-                            </div>
+                            T{p}
                           </th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      <AnimatePresence mode="popLayout">
-                        {sortedTrades.map((trade) => {
-                          const isDragOver = dragOverTradeId === trade.id && draggedTradeId !== trade.id;
-
-                          return (
-                            <motion.tr
-                              key={trade.id}
-                              layout
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{
-                                opacity: draggedTradeId === trade.id ? 0.5 : 1,
-                                y: 0,
-                                backgroundColor: isDragOver ? 'rgba(232,115,26,0.08)' : 'transparent',
-                              }}
-                              exit={{ opacity: 0, y: 10 }}
-                              transition={{ duration: 0.25, type: 'spring', stiffness: 500, damping: 30 }}
-                              draggable
-                              onDragStart={(e) => handleDragStart(e as unknown as React.DragEvent, trade.id)}
-                              onDragEnd={(e) => handleDragEnd(e as unknown as React.DragEvent)}
-                              onDragOver={(e) => handleDragOver(e as unknown as React.DragEvent, trade.id)}
-                              onDragLeave={handleDragLeave}
-                              onDrop={(e) => handleDrop(e as unknown as React.DragEvent, trade.id)}
-                              style={{
-                                borderTop: isDragOver ? '2px solid var(--color-accent)' : '2px solid transparent',
-                              }}
-                            >
-                              {/* Drag handle */}
-                              <td
-                                className="border-b cursor-grab active:cursor-grabbing px-1"
-                                style={{ borderColor: 'var(--color-border)' }}
-                              >
-                                <div className="flex items-center justify-center" style={{ color: 'var(--color-text-muted)' }}>
-                                  <GripVertical size={14} />
+                      {sortedZones.map((zone) => (
+                        <tr key={zone.id}>
+                          <td
+                            className="px-3 py-2 border-b text-xs font-semibold sticky left-0 z-10"
+                            style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-card)', color: 'var(--color-text)' }}
+                          >
+                            {zone.name.includes(' \u2014 ') ? (
+                              <>
+                                {zone.name.split(' \u2014 ')[0]}
+                                <div className="text-[8px] font-normal mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                                  {zone.name.split(' \u2014 ')[1]}
                                 </div>
-                              </td>
-
-                              {/* Trade info cell */}
+                              </>
+                            ) : zone.name}
+                          </td>
+                          {periods.map((p) => {
+                            const pgKey = `${zone.id}::${p}`;
+                            const cell = periodGrid.get(pgKey);
+                            if (!cell) {
+                              return (
+                                <td key={p} className="px-1 py-1 border-b border-l text-center" style={{ borderColor: 'var(--color-border)' }}>
+                                  <div className="h-14 rounded-lg" style={{ background: 'var(--color-bg-input)', opacity: 0.3 }} />
+                                </td>
+                              );
+                            }
+                            const statusCfg = STATUS_CONFIG[cell.status];
+                            const isSelected = selectedCell?.tradeId === cell.tradeId && selectedCell?.zoneId === zone.id;
+                            const hoverKey = `${cell.tradeId}::${zone.id}`;
+                            const isHovered = hoveredCell === hoverKey;
+                            return (
                               <td
-                                className="px-3 py-2.5 border-b"
+                                key={p}
+                                className="px-1 py-1 border-b border-l text-center cursor-pointer"
                                 style={{ borderColor: 'var(--color-border)' }}
+                                onClick={() => handleCellClick(cell.tradeId, zone.id)}
+                                onMouseEnter={() => setHoveredCell(hoverKey)}
+                                onMouseLeave={() => setHoveredCell(null)}
                               >
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: trade.color }} />
-                                  <span className="text-xs font-semibold flex-shrink-0" style={{ color: 'var(--color-text)' }}>
-                                    {trade.name}
-                                  </span>
-                                  <div className="flex items-center gap-1.5 ml-auto">
-                                    {/* Takt time (inline editable) */}
-                                    {editingField?.tradeId === trade.id && editingField.field === 'taktTime' ? (
-                                      <input
-                                        type="number"
-                                        min={1}
-                                        max={20}
-                                        value={editValue}
-                                        onChange={(e) => setEditValue(e.target.value)}
-                                        onBlur={commitInlineEdit}
-                                        onKeyDown={handleInlineKeyDown}
-                                        autoFocus
-                                        className="w-8 text-center text-[10px] font-medium rounded border outline-none"
-                                        style={{
-                                          background: 'var(--color-bg-input)',
-                                          borderColor: 'var(--color-accent)',
-                                          color: 'var(--color-text)',
-                                          fontFamily: 'var(--font-mono)',
-                                        }}
-                                      />
-                                    ) : (
-                                      <button
-                                        onClick={() => startInlineEdit(trade.id, 'taktTime', trade.taktTime)}
-                                        className="text-[10px] font-medium px-1.5 py-0.5 rounded transition-all hover:opacity-70"
-                                        style={{
-                                          background: 'rgba(232,115,26,0.1)',
-                                          color: 'var(--color-accent)',
-                                          fontFamily: 'var(--font-mono)',
-                                        }}
-                                        title="Click to edit takt time"
-                                      >
-                                        {trade.taktTime}d
-                                      </button>
-                                    )}
-
-                                    {/* Buffer (inline editable) */}
-                                    {editingField?.tradeId === trade.id && editingField.field === 'buffer' ? (
-                                      <input
-                                        type="number"
-                                        min={0}
-                                        max={10}
-                                        value={editValue}
-                                        onChange={(e) => setEditValue(e.target.value)}
-                                        onBlur={commitInlineEdit}
-                                        onKeyDown={handleInlineKeyDown}
-                                        autoFocus
-                                        className="w-8 text-center text-[10px] font-medium rounded border outline-none"
-                                        style={{
-                                          background: 'var(--color-bg-input)',
-                                          borderColor: 'var(--color-warning)',
-                                          color: 'var(--color-text)',
-                                          fontFamily: 'var(--font-mono)',
-                                        }}
-                                      />
-                                    ) : (
-                                      <button
-                                        onClick={() => startInlineEdit(trade.id, 'buffer', trade.bufferAfter)}
-                                        className="text-[10px] font-medium px-1.5 py-0.5 rounded transition-all hover:opacity-70"
-                                        style={{
-                                          background: trade.bufferAfter === 0 ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)',
-                                          color: trade.bufferAfter === 0 ? 'var(--color-danger)' : 'var(--color-warning)',
-                                          fontFamily: 'var(--font-mono)',
-                                        }}
-                                        title="Click to edit buffer"
-                                      >
-                                        b{trade.bufferAfter}
-                                      </button>
-                                    )}
-
-                                    {/* Crew size (inline editable) */}
-                                    {editingField?.tradeId === trade.id && editingField.field === 'crewSize' ? (
-                                      <input
-                                        type="number"
-                                        min={1}
-                                        max={50}
-                                        value={editValue}
-                                        onChange={(e) => setEditValue(e.target.value)}
-                                        onBlur={commitInlineEdit}
-                                        onKeyDown={handleInlineKeyDown}
-                                        autoFocus
-                                        className="w-8 text-center text-[10px] font-medium rounded border outline-none"
-                                        style={{
-                                          background: 'var(--color-bg-input)',
-                                          borderColor: 'var(--color-success)',
-                                          color: 'var(--color-text)',
-                                          fontFamily: 'var(--font-mono)',
-                                        }}
-                                      />
-                                    ) : (
-                                      <button
-                                        onClick={() => startInlineEdit(trade.id, 'crewSize', trade.crewSize)}
-                                        className="text-[10px] font-medium px-1.5 py-0.5 rounded transition-all hover:opacity-70"
-                                        style={{
-                                          background: 'rgba(16,185,129,0.1)',
-                                          color: 'var(--color-success)',
-                                          fontFamily: 'var(--font-mono)',
-                                        }}
-                                        title="Click to edit crew size"
-                                      >
-                                        <span className="inline-flex items-center gap-0.5">
-                                          <Users size={9} />
-                                          {trade.crewSize}
-                                        </span>
-                                      </button>
-                                    )}
+                                <motion.div
+                                  className="rounded-lg px-1.5 py-1 mx-auto relative"
+                                  style={{
+                                    background: `${cell.trade.color}20`,
+                                    maxWidth: 90,
+                                    boxShadow: isSelected
+                                      ? `0 0 0 2px ${cell.trade.color}, 0 0 0 4px var(--color-bg-card)`
+                                      : isHovered
+                                      ? `0 0 0 1px ${cell.trade.color}40`
+                                      : 'none',
+                                  }}
+                                  whileHover={{ scale: 1.04 }}
+                                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                                >
+                                  <div className="text-[9px] font-bold truncate" style={{ color: cell.trade.color }}>
+                                    {cell.trade.name.length > 8 ? cell.trade.name.substring(0, 8) + '\u2026' : cell.trade.name}
                                   </div>
-                                </div>
+                                  <div className="flex items-center justify-center gap-0.5 mt-0.5">
+                                    <statusCfg.icon size={8} style={{ color: statusCfg.text }} />
+                                    <span className="text-[7px] font-semibold" style={{ color: statusCfg.text }}>{statusCfg.label}</span>
+                                  </div>
+                                  <div className="text-[7px] mt-0.5" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                    {formatDate(cell.plannedStart)}
+                                  </div>
+                                  <div className="absolute bottom-0 left-0 right-0 h-[2px] rounded-b-lg" style={{ background: cell.trade.color }} />
+                                  <AnimatePresence>
+                                    {isHovered && !isSelected && (
+                                      <motion.div
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 5 }}
+                                        className="absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none"
+                                      >
+                                        <div className="rounded-lg px-3 py-2 shadow-lg text-left whitespace-nowrap" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
+                                          <div className="text-[10px] font-medium" style={{ color: 'var(--color-text)' }}>
+                                            {cell.trade.name} — {zone.name.split(' — ')[0]}
+                                          </div>
+                                          <div className="text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                            Period T{cell.periodNumber} | {formatDate(cell.plannedStart)} – {formatDate(cell.plannedEnd)}
+                                          </div>
+                                          <div className="text-[9px] mt-0.5" style={{ color: statusCfg.text }}>
+                                            {STATUS_SYMBOLS[cell.status]} {statusCfg.label}
+                                          </div>
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </motion.div>
                               </td>
-
-                              {/* Zone cells */}
-                              {sortedZones.map((zone) => {
-                                const key = `${trade.id}::${zone.id}`;
-                                const cell = cells.get(key);
-                                if (!cell) return <td key={zone.id} className="border-b border-l" style={{ borderColor: 'var(--color-border)' }} />;
-
-                                const statusCfg = STATUS_CONFIG[cell.status];
-                                const isSelected = selectedCell?.tradeId === trade.id && selectedCell?.zoneId === zone.id;
-                                const isHovered = hoveredCell === key;
-
-                                return (
-                                  <td
-                                    key={zone.id}
-                                    className="px-1.5 py-1.5 border-b border-l text-center cursor-pointer"
-                                    style={{ borderColor: 'var(--color-border)' }}
-                                    onClick={() => handleCellClick(trade.id, zone.id)}
-                                    onMouseEnter={() => setHoveredCell(key)}
-                                    onMouseLeave={() => setHoveredCell(null)}
-                                  >
-                                    <motion.div
-                                      layout
-                                      className="rounded-lg px-1.5 py-1.5 mx-auto relative"
-                                      style={{
-                                        background: statusCfg.bg,
-                                        maxWidth: 90,
-                                        boxShadow: isSelected
-                                          ? `0 0 0 2px ${trade.color}, 0 0 0 4px var(--color-bg-card)`
-                                          : isHovered
-                                          ? `0 0 0 1px ${trade.color}40`
-                                          : 'none',
-                                      }}
-                                      whileHover={{ scale: 1.04 }}
-                                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                                    >
-                                      {/* Status indicator */}
-                                      <div className="flex items-center justify-center gap-1 mb-0.5">
-                                        <statusCfg.icon size={9} style={{ color: statusCfg.text }} />
-                                        <span className="text-[8px] font-semibold" style={{ color: statusCfg.text }}>
-                                          {statusCfg.label}
-                                        </span>
-                                      </div>
-                                      {/* Period */}
-                                      <div
-                                        className="text-[10px] font-medium"
-                                        style={{ color: statusCfg.text, fontFamily: 'var(--font-mono)' }}
-                                      >
-                                        T{cell.periodNumber}
-                                      </div>
-                                      {/* Date range */}
-                                      <div
-                                        className="text-[8px] mt-0.5"
-                                        style={{ color: statusCfg.text, fontFamily: 'var(--font-mono)', opacity: 0.7 }}
-                                      >
-                                        {formatDate(cell.plannedStart)}
-                                      </div>
-                                      {/* Trade color stripe at bottom */}
-                                      <div
-                                        className="absolute bottom-0 left-0 right-0 h-[2px] rounded-b-lg"
-                                        style={{ background: trade.color }}
-                                      />
-
-                                      {/* Hover tooltip */}
-                                      <AnimatePresence>
-                                        {isHovered && !isSelected && (
-                                          <motion.div
-                                            initial={{ opacity: 0, y: 5 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: 5 }}
-                                            className="absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none"
-                                          >
-                                            <div
-                                              className="rounded-lg px-3 py-2 shadow-lg text-left whitespace-nowrap"
-                                              style={{
-                                                background: 'var(--color-bg-secondary)',
-                                                border: '1px solid var(--color-border)',
-                                              }}
-                                            >
-                                              <div className="text-[10px] font-medium" style={{ color: 'var(--color-text)' }}>
-                                                {trade.name} - {zone.name.split(' — ')[0]}
-                                              </div>
-                                              <div className="text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-                                                Period T{cell.periodNumber} | {formatDate(cell.plannedStart)} - {formatDate(cell.plannedEnd)}
-                                              </div>
-                                              <div className="text-[9px] mt-0.5" style={{ color: statusCfg.text }}>
-                                                {STATUS_SYMBOLS[cell.status]} {statusCfg.label}
-                                              </div>
-                                            </div>
-                                          </motion.div>
-                                        )}
-                                      </AnimatePresence>
-                                    </motion.div>
-                                  </td>
-                                );
-                              })}
-                            </motion.tr>
-                          );
-                        })}
-                      </AnimatePresence>
+                            );
+                          })}
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
               </div>
             </div>
           </div>
+
 
           {/* ── Warnings Panel ──────────────────────────────── */}
           {warnings.length > 0 && (
@@ -1291,7 +1244,7 @@ export default function TaktEditorPage() {
                       style={{ background: severityBg }}
                     >
                       <TypeIcon size={12} className="flex-shrink-0 mt-0.5" style={{ color: severityColor }} />
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="text-[10px] font-semibold truncate" style={{ color: severityColor }}>
                           {w.message}
                         </div>
@@ -1299,6 +1252,16 @@ export default function TaktEditorPage() {
                           {w.details}
                         </div>
                       </div>
+                      {w.type === 'predecessor' && (
+                        <button
+                          onClick={resolveSequenceConflicts}
+                          className="flex items-center gap-1 text-[9px] font-semibold px-2 py-1 rounded-md transition-all hover:opacity-80 flex-shrink-0"
+                          style={{ background: 'var(--color-accent)', color: 'white' }}
+                        >
+                          <Wrench size={9} />
+                          Resolve
+                        </button>
+                      )}
                     </div>
                   );
                 })}
