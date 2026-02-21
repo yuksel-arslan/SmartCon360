@@ -25,7 +25,12 @@ export async function GET(request: NextRequest, { params }: Params) {
     const [project, locationCount, zoneCount, tradeCount] = await Promise.all([
       prisma.project.findUnique({
         where: { id: projectId },
-        select: { projectType: true, currency: true, name: true, defaultTaktTime: true, settings: true, status: true },
+        select: {
+          projectType: true, currency: true, name: true, code: true, defaultTaktTime: true,
+          settings: true, status: true, description: true,
+          plannedStart: true, plannedFinish: true,
+          address: true, city: true, country: true, budget: true,
+        },
       }),
       prisma.location.count({ where: { projectId, isActive: true } }),
       prisma.location.count({ where: { projectId, isActive: true, locationType: 'zone' } }),
@@ -82,6 +87,15 @@ export async function GET(request: NextRequest, { params }: Params) {
         projectType: project?.projectType,
         currency: project?.currency,
         projectName: project?.name,
+        // Project info fields (for unified setup wizard)
+        projectCode: project?.code || '',
+        projectDescription: project?.description || '',
+        plannedStart: project?.plannedStart ? new Date(project.plannedStart).toISOString().split('T')[0] : '',
+        plannedFinish: project?.plannedFinish ? new Date(project.plannedFinish).toISOString().split('T')[0] : '',
+        projectCity: project?.city || '',
+        projectCountry: project?.country || '',
+        projectAddress: project?.address || '',
+        projectBudget: project?.budget ? String(project.budget) : '',
       },
       error: null,
     });

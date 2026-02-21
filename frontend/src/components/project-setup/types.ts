@@ -11,6 +11,16 @@ export interface SetupState {
   currentStep: string;
   completedSteps: string[];
 
+  // Step 0: Project Info (for new project creation)
+  projectCode: string;
+  projectDescription: string;
+  plannedStart: string;
+  plannedFinish: string;
+  projectCity: string;
+  projectCountry: string;
+  projectAddress: string;
+  projectBudget: string;
+
   // Step 1: Classification
   classificationStandard: string;   // 'uniclass' | 'omniclass' | 'custom'
   buildingType: string;             // building type key from BUILDING_TYPES
@@ -130,6 +140,7 @@ export interface SubTradeTemplate {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export const SETUP_STEPS: SetupStepDef[] = [
+  { id: 'info',           label: 'Project Info',     description: 'Name, code, dates & budget' },
   { id: 'classification', label: 'Classification',   description: 'Standard, building type & project phase' },
   { id: 'scope',          label: 'Building Config',  description: 'Floors, structural, MEP & site' },
   { id: 'drawings',       label: 'Drawings',         description: 'Upload project drawings' },
@@ -545,6 +556,14 @@ export function getStepValidation(
   state: SetupState,
 ): { valid: boolean; message: string } {
   switch (stepId) {
+    case 'info':
+      if (!state.projectName || !state.projectName.trim()) {
+        return { valid: false, message: 'Enter a project name to continue.' };
+      }
+      if (!state.projectCode || !state.projectCode.trim()) {
+        return { valid: false, message: 'Enter a project code to continue.' };
+      }
+      return { valid: true, message: '' };
     case 'classification':
       if (!state.classificationStandard) {
         return { valid: false, message: 'Select a classification standard to continue.' };

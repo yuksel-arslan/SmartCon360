@@ -1,13 +1,13 @@
 'use client';
 
 import TopBar from '@/components/layout/TopBar';
-import ProjectWizard from '@/components/wizard/ProjectWizard';
+import ProjectSetupWizard from '@/components/project-setup/ProjectSetupWizard';
 
 export default function NewProjectPage() {
   return (
     <>
       <TopBar title="New Project" />
-      <ProjectWizard />
+      <ProjectSetupWizard projectId="new" />
     </>
   );
 }
