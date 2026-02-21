@@ -124,6 +124,8 @@ export interface BoqItem {
   errors: string[];
 }
 
+export type ContractType = 'labor_only' | 'supply_and_fix' | 'supply_install';
+
 export interface SubTradeTemplate {
   name: string;
   code: string;
@@ -133,7 +135,14 @@ export interface SubTradeTemplate {
   durationMultiplier: number;
   predecessorCodes: string[];
   sortOrder: number;
+  defaultContractType: ContractType;
 }
+
+export const CONTRACT_TYPES: { value: ContractType; label: string; shortLabel: string; description: string; color: string }[] = [
+  { value: 'labor_only', label: 'Labor Only', shortLabel: 'Labor', description: 'Subcontractor provides labor only — main contractor procures materials', color: '#F59E0B' },
+  { value: 'supply_and_fix', label: 'Supply & Fix', shortLabel: 'S&F', description: 'Subcontractor provides both materials and labor', color: '#3B82F6' },
+  { value: 'supply_install', label: 'Supply, Install & Commission', shortLabel: 'S&I', description: 'Full turnkey — supply, install and commissioning', color: '#10B981' },
+];
 
 // ══════════════════════════════════════════════════════════════════════════════
 // 10-Step Wizard Flow

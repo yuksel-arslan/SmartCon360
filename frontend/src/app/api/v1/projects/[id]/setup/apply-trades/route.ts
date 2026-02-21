@@ -11,7 +11,7 @@ export async function POST(request: NextRequest, { params }: Params) {
   try {
     requireAuth(request);
     const { id: projectId } = await params;
-    const { selectedDisciplines, selectedTradeCodes } = await request.json();
+    const { selectedDisciplines, selectedTradeCodes, tradeOverrides } = await request.json();
 
     const project = await prisma.project.findUnique({
       where: { id: projectId },
@@ -34,9 +34,13 @@ export async function POST(request: NextRequest, { params }: Params) {
       tradesToApply = tradesToApply.filter((t) => selectedTradeCodes.includes(t.code));
     }
 
+    // tradeOverrides: { [code]: { contractType, subcontractorGroup } }
+    const overrides: Record<string, { contractType?: string; subcontractorGroup?: string }> = tradeOverrides || {};
+
     const created = [];
     for (const template of tradesToApply) {
       try {
+        const override = overrides[template.code] || {};
         const trade = await prisma.trade.create({
           data: {
             projectId,
@@ -47,6 +51,8 @@ export async function POST(request: NextRequest, { params }: Params) {
             discipline: template.discipline,
             sortOrder: template.sortOrder,
             predecessorTradeIds: [],
+            contractType: override.contractType || template.defaultContractType || 'supply_and_fix',
+            subcontractorGroup: override.subcontractorGroup || null,
           },
         });
         created.push(trade);
