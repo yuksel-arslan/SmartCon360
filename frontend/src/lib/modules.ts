@@ -12,14 +12,14 @@ import {
   ClipboardCheck, Users, FileText, Bot, Settings,
   ShieldCheck, HardHat, DollarSign, Truck, Radar, Scale,
   Camera, MessageSquare, UserCheck, Leaf, Activity, Play,
-  Hammer, Package, Wrench, Layers,
+  Hammer, Package, Wrench, Layers, Box,
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────
 
 export type ModuleId =
   | 'taktflow' | 'dashboard' | 'flowline' | 'takt-editor' | 'constraints' | 'lps'
-  | 'quality' | 'safety' | 'vision'
+  | 'quality' | 'safety' | 'vision' | 'bim'
   | 'cost' | 'resources' | 'workmanship' | 'material' | 'equipment' | 'scaffoldings'
   | 'supply' | 'risk' | 'claims'
   | 'communication' | 'stakeholders'
@@ -183,6 +183,18 @@ export const MODULE_REGISTRY: Record<ModuleId, ModuleDef> = {
     color: '#8B5CF6',
     features: ['Photo Analysis', 'Progress Detection', 'Defect Identification', 'Time-Lapse', 'AI Comparison', 'Report Generation'],
     kpis: [], // VisionAI — Layer 2 feature, KPIs will come from vision-service
+  },
+  bim: {
+    id: 'bim',
+    href: '/bim',
+    label: 'BIM Engine',
+    brandName: 'BIM Intelligence',
+    description: 'IFC processing — elements, WBS, LBS, takt zones, cost binding',
+    icon: Box,
+    svgIcon: '/icons/modules/bim.svg',
+    color: '#0EA5E9',
+    features: ['IFC Parsing', 'Element Graph', 'Quantity Extraction', 'Classification', 'WBS/LBS Generation', 'Takt Zone Generation', 'Cost Binding'],
+    kpis: [],
   },
 
   // ── Cost & Resources ─────────────────────
@@ -439,7 +451,7 @@ export const NAV_GROUPS: ModuleGroup[] = [
   {
     id: 'quality-safety',
     label: 'Quality & Safety',
-    items: ['quality', 'safety', 'vision'],
+    items: ['quality', 'safety', 'vision', 'bim'],
   },
   {
     id: 'supply-risk',
