@@ -14,7 +14,7 @@ const FILE_TYPE_LABELS: Record<string, string> = {
   ifc: 'IFC/BIM',
 };
 
-export default function StepDrawings({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
+export default function StepDrawings({ projectId, state, onStateChange, authFetch }: SetupStepProps) {
   const [drawings, setDrawings] = useState<DrawingFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -25,9 +25,7 @@ export default function StepDrawings({ projectId, state, onStateChange, authHead
   useEffect(() => {
     const checkDrive = async () => {
       try {
-        const res = await fetch('/api/v1/auth/google/drive-connect', {
-          headers: { ...authHeaders },
-        });
+        const res = await authFetch('/api/v1/auth/google/drive-connect');
         if (res.ok) {
           const json = await res.json();
           setDriveConnected(json.data?.connected || false);
@@ -42,9 +40,7 @@ export default function StepDrawings({ projectId, state, onStateChange, authHead
 
   const fetchDrawings = useCallback(async () => {
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/drawings`, {
-        headers: { ...authHeaders },
-      });
+      const res = await authFetch(`/api/v1/projects/${projectId}/drawings`);
       if (res.ok) {
         const json = await res.json();
         const list = json.data || [];
@@ -56,7 +52,7 @@ export default function StepDrawings({ projectId, state, onStateChange, authHead
     } catch {
       // ignore
     }
-  }, [projectId, authHeaders, state.drawingCount, onStateChange]);
+  }, [projectId, authFetch, state.drawingCount, onStateChange]);
 
   useEffect(() => {
     fetchDrawings();
@@ -75,9 +71,8 @@ export default function StepDrawings({ projectId, state, onStateChange, authHead
       }
       formData.append('discipline', selectedDiscipline);
 
-      const res = await fetch(`/api/v1/projects/${projectId}/drawings`, {
+      const res = await authFetch(`/api/v1/projects/${projectId}/drawings`, {
         method: 'POST',
-        headers: { ...authHeaders },
         body: formData,
       });
 
@@ -99,7 +94,7 @@ export default function StepDrawings({ projectId, state, onStateChange, authHead
 
   const handleDelete = async (drawingId: string) => {
     try {
-      await fetch(`/api/v1/projects/${projectId}/drawings/${drawingId}`, { method: 'DELETE', headers: { ...authHeaders } });
+      await authFetch(`/api/v1/projects/${projectId}/drawings/${drawingId}`, { method: 'DELETE' });
       setDrawings((prev) => prev.filter((d) => d.id !== drawingId));
       onStateChange({ drawingCount: Math.max(0, state.drawingCount - 1) });
     } catch {

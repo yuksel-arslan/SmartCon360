@@ -130,13 +130,31 @@ export default function ProjectSetupWizard({ projectId: initialProjectId }: Prop
     [token],
   );
 
+  // Fetch wrapper that auto-refreshes JWT on 401
+  const authFetch = useCallback(
+    async (url: string, opts?: RequestInit): Promise<Response> => {
+      const buildHeaders = (): Record<string, string> => ({
+        ...(opts?.headers as Record<string, string> | undefined),
+        ...getAuthHeader() as Record<string, string>,
+      });
+
+      const res = await fetch(url, { ...opts, headers: buildHeaders() });
+      if (res.status === 401) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          return fetch(url, { ...opts, headers: buildHeaders() });
+        }
+      }
+      return res;
+    },
+    [getAuthHeader, refreshAccessToken],
+  );
+
   // Fetch setup state from server (only for existing projects)
   const fetchState = useCallback(async () => {
     if (isNewProject) return;
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/setup`, {
-        headers: { ...authHeaders },
-      });
+      const res = await authFetch(`/api/v1/projects/${projectId}/setup`);
       if (res.ok) {
         const json = await res.json();
         setState((prev) => {
@@ -185,7 +203,7 @@ export default function ProjectSetupWizard({ projectId: initialProjectId }: Prop
     } finally {
       setLoading(false);
     }
-  }, [projectId, authHeaders, isNewProject]);
+  }, [projectId, authFetch, isNewProject]);
 
   useEffect(() => {
     fetchState();
@@ -323,9 +341,9 @@ export default function ProjectSetupWizard({ projectId: initialProjectId }: Prop
         const nextStepId = SETUP_STEPS[stepIndex + 1]?.id || stepDef.id;
         try {
           await Promise.all([
-            fetch(`/api/v1/projects/${projectId}/setup/complete-step`, {
+            authFetch(`/api/v1/projects/${projectId}/setup/complete-step`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', ...authHeaders },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ step: stepDef.id, nextStep: nextStepId }),
             }),
             persistSetupConfig(projectId),
@@ -337,7 +355,7 @@ export default function ProjectSetupWizard({ projectId: initialProjectId }: Prop
 
       return true;
     },
-    [state, projectId, authHeaders, isNewProject],
+    [state, projectId, authFetch, isNewProject],
   );
 
   const next = async () => {
@@ -443,9 +461,9 @@ export default function ProjectSetupWizard({ projectId: initialProjectId }: Prop
     setError('');
 
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/setup/finalize`, {
+      const res = await authFetch(`/api/v1/projects/${projectId}/setup/finalize`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers: { 'Content-Type': 'application/json' },
       });
 
       if (!res.ok) {
@@ -576,6 +594,7 @@ export default function ProjectSetupWizard({ projectId: initialProjectId }: Prop
               }));
             }}
             authHeaders={authHeaders}
+            authFetch={authFetch}
           />
         </div>
       </div>

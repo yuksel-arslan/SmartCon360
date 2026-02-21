@@ -22,7 +22,7 @@ const ALL_DAYS = [
   { key: 'sun', label: 'Sun' },
 ];
 
-export default function StepTaktConfig({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
+export default function StepTaktConfig({ projectId, state, onStateChange, authFetch }: SetupStepProps) {
   const template = getTemplate(state.buildingType || state.projectType);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(state.taktPlanGenerated);
@@ -77,9 +77,9 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
     setSaving(true);
     setError('');
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}`, {
+      const res = await authFetch(`/api/v1/projects/${projectId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           defaultTaktTime,
           settings: {
@@ -98,9 +98,9 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
       }
 
       // Persist taktPlanGenerated flag to ProjectSetup table
-      const setupRes = await fetch(`/api/v1/projects/${projectId}/setup`, {
+      const setupRes = await authFetch(`/api/v1/projects/${projectId}/setup`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ taktPlanGenerated: true }),
       });
 
@@ -113,9 +113,8 @@ export default function StepTaktConfig({ projectId, state, onStateChange, authHe
       onStateChange({ taktPlanGenerated: true });
 
       // Trigger plan generation (best-effort)
-      fetch(`/api/v1/projects/${projectId}/plan/generate`, {
+      authFetch(`/api/v1/projects/${projectId}/plan/generate`, {
         method: 'POST',
-        headers: { ...authHeaders },
       }).catch(() => {});
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save');

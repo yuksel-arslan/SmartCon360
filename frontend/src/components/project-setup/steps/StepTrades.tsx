@@ -42,7 +42,7 @@ function cycleContractType(current: ContractType): ContractType {
   return order[(idx + 1) % order.length];
 }
 
-export default function StepTrades({ projectId, state, onStateChange, authHeaders }: SetupStepProps) {
+export default function StepTrades({ projectId, state, onStateChange, authFetch }: SetupStepProps) {
   const [trades, setTrades] = useState<TradeRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -81,9 +81,7 @@ export default function StepTrades({ projectId, state, onStateChange, authHeader
 
     try {
       // 1. Try fetching saved trades from DB
-      const savedRes = await fetch(`/api/v1/projects/${projectId}/trades`, {
-        headers: { ...authHeaders },
-      });
+      const savedRes = await authFetch(`/api/v1/projects/${projectId}/trades`);
 
       if (savedRes.ok) {
         const savedJson = await savedRes.json();
@@ -91,9 +89,7 @@ export default function StepTrades({ projectId, state, onStateChange, authHeader
 
         if (savedTrades.length > 0) {
           // Also fetch templates to get durationMultiplier and predecessorCodes
-          const tmplRes = await fetch(`/api/v1/projects/${projectId}/setup/trade-templates`, {
-            headers: { ...authHeaders },
-          });
+          const tmplRes = await authFetch(`/api/v1/projects/${projectId}/setup/trade-templates`);
           const tmplData = tmplRes.ok ? (await tmplRes.json()).data?.trades || [] : [];
           const tmplMap = new Map<string, SubTradeTemplate>();
           for (const t of tmplData) {
@@ -143,9 +139,7 @@ export default function StepTrades({ projectId, state, onStateChange, authHeader
       }
 
       // 2. No saved trades — load templates
-      const res = await fetch(`/api/v1/projects/${projectId}/setup/trade-templates`, {
-        headers: { ...authHeaders },
-      });
+      const res = await authFetch(`/api/v1/projects/${projectId}/setup/trade-templates`);
       if (res.ok) {
         const json = await res.json();
         const templateTrades = json.data?.trades || [];
@@ -161,7 +155,7 @@ export default function StepTrades({ projectId, state, onStateChange, authHeader
     } finally {
       setLoading(false);
     }
-  }, [projectId, authHeaders, onStateChange]);
+  }, [projectId, authFetch, onStateChange]);
 
   useEffect(() => {
     loadTrades();
@@ -248,9 +242,9 @@ export default function StepTrades({ projectId, state, onStateChange, authHeader
     setSuccessMsg('');
 
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/setup/apply-trades`, {
+      const res = await authFetch(`/api/v1/projects/${projectId}/setup/apply-trades`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           selectedDisciplines: Array.from(selectedDisciplines),
           selectedTradeCodes: enabledTrades.map((t) => t.code),
@@ -327,9 +321,9 @@ export default function StepTrades({ projectId, state, onStateChange, authHeader
         return;
       }
 
-      const res = await fetch(`/api/v1/projects/${projectId}/setup/save-trades`, {
+      const res = await authFetch(`/api/v1/projects/${projectId}/setup/save-trades`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           trades: modifiedTrades.map((t) => ({
             id: t.dbId,
