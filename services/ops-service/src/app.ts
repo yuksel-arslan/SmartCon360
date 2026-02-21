@@ -21,11 +21,12 @@ import evmRouter from './modules/cost/routes/evm';
 import catalogRouter from './modules/cost/routes/catalog';
 import classificationMappingRouter from './modules/cost/routes/classification-mapping';
 
-// Quality, Safety, Claims & Risk module routes
+// Quality, Safety, Claims, Risk & Comm module routes
 import qualityRouter from './modules/quality/routes';
 import safetyRouter from './modules/safety/routes';
 import claimsRouter from './modules/claims/routes';
 import riskRouter from './modules/risk/routes';
+import commRouter from './modules/comm/routes';
 
 // Cost module middleware
 import { authenticate } from './modules/cost/middleware/auth';
@@ -145,9 +146,10 @@ app.get('/sustainability/health', (_req: Request, res: Response) => {
   res.json({ status: 'stub', module: 'sustainability' });
 });
 
-app.get('/comm/health', (_req: Request, res: Response) => {
-  res.json({ status: 'stub', module: 'comm' });
-});
+// ──────────────────────────────────────────────
+// COMM MODULE — Full routes (CommHub)
+// ──────────────────────────────────────────────
+app.use('/comm', authenticate, commRouter);
 
 // ──────────────────────────────────────────────
 // 404 handler

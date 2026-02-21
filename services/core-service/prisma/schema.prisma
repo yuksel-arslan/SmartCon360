@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public", "cost", "quality", "safety", "resources", "claims", "risk"]
+  schemas  = ["public", "cost", "quality", "safety", "resources", "claims", "risk", "comm"]
 }
 
 // ============================================================================
@@ -1514,6 +1514,104 @@ model RiskAction {
   @@index([status])
   @@map("risk_actions")
   @@schema("risk")
+}
+
+// ============================================================================
+// COMM MODULE (CommHub)
+// ============================================================================
+
+model Rfi {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  rfiNumber     String   @map("rfi_number") @db.VarChar(30)
+  subject       String   @db.VarChar(255)
+  description   String?
+  discipline    String   @db.VarChar(50) // architectural, structural, mep, civil, landscape, other
+  priority      String   @default("medium") @db.VarChar(20) // low, medium, high, urgent
+  status        String   @default("draft") @db.VarChar(30) // draft, submitted, under_review, answered, closed, overdue
+  assignedTo    String?  @map("assigned_to") @db.VarChar(255)
+  responseDue   DateTime? @map("response_due") @db.Date
+  respondedDate DateTime? @map("responded_date") @db.Date
+  response      String?
+  costImpact    Boolean  @default(false) @map("cost_impact")
+  scheduleImpact Boolean @default(false) @map("schedule_impact")
+  drawingRef    String?  @map("drawing_ref") @db.VarChar(100)
+  specRef       String?  @map("spec_ref") @db.VarChar(100)
+  createdBy     String   @map("created_by") @db.Uuid
+  closedDate    DateTime? @map("closed_date") @db.Date
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, rfiNumber])
+  @@index([projectId])
+  @@index([status])
+  @@index([discipline])
+  @@map("rfis")
+  @@schema("comm")
+}
+
+model Transmittal {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String   @map("project_id") @db.Uuid
+  transmittalNumber String @map("transmittal_number") @db.VarChar(30)
+  subject         String   @db.VarChar(255)
+  description     String?
+  type            String   @db.VarChar(50) // for_approval, for_information, for_review, for_construction, as_built
+  status          String   @default("draft") @db.VarChar(30) // draft, sent, received, reviewed, approved, rejected, superseded
+  priority        String   @default("medium") @db.VarChar(20) // low, medium, high, urgent
+  fromCompany     String   @map("from_company") @db.VarChar(255)
+  toCompany       String   @map("to_company") @db.VarChar(255)
+  sentDate        DateTime? @map("sent_date") @db.Date
+  receivedDate    DateTime? @map("received_date") @db.Date
+  dueDate         DateTime? @map("due_date") @db.Date
+  documentCount   Int      @default(0) @map("document_count")
+  documentRefs    Json     @default("[]") @map("document_refs")
+  reviewStatus    String?  @map("review_status") @db.VarChar(30) // approved, approved_with_comments, rejected, revise_resubmit
+  reviewedBy      String?  @map("reviewed_by") @db.Uuid
+  reviewedDate    DateTime? @map("reviewed_date") @db.Date
+  notes           String?
+  createdBy       String   @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, transmittalNumber])
+  @@index([projectId])
+  @@index([status])
+  @@index([type])
+  @@map("transmittals")
+  @@schema("comm")
+}
+
+model MeetingMinute {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String   @map("project_id") @db.Uuid
+  meetingNumber   String   @map("meeting_number") @db.VarChar(30)
+  title           String   @db.VarChar(255)
+  type            String   @db.VarChar(50) // progress, coordination, safety, design, kickoff, closeout, other
+  status          String   @default("draft") @db.VarChar(30) // draft, issued, acknowledged
+  date            DateTime @db.Date
+  startTime       String?  @map("start_time") @db.VarChar(10) // HH:MM
+  endTime         String?  @map("end_time") @db.VarChar(10)
+  location        String?  @db.VarChar(255)
+  attendees       Json     @default("[]")
+  absentees       Json     @default("[]")
+  agendaItems     Json     @default("[]") @map("agenda_items")
+  actionItems     Json     @default("[]") @map("action_items")
+  decisions       Json     @default("[]")
+  nextMeetingDate DateTime? @map("next_meeting_date") @db.Date
+  distributionList Json    @default("[]") @map("distribution_list")
+  notes           String?
+  conductedBy     String   @map("conducted_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, meetingNumber])
+  @@index([projectId])
+  @@index([status])
+  @@index([type])
+  @@index([date])
+  @@map("meeting_minutes")
+  @@schema("comm")
 }
 
 // ============================================================================
