@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { createProjectSchema } from '@/lib/validators/project';
@@ -55,14 +56,25 @@ export async function POST(request: NextRequest) {
     const input = createProjectSchema.parse(body);
     const { classificationStandard, ...projectData } = input;
 
-    const project = await prisma.project.create({
-      data: {
-        ...projectData,
-        plannedStart: projectData.plannedStart ? new Date(projectData.plannedStart) : undefined,
-        plannedFinish: projectData.plannedFinish ? new Date(projectData.plannedFinish) : undefined,
-        ownerId: userId,
-      },
-    });
+    // Build create data explicitly to satisfy Prisma's strict types
+    const data: Prisma.ProjectUncheckedCreateInput = {
+      name: projectData.name,
+      code: projectData.code,
+      projectType: projectData.projectType,
+      ownerId: userId,
+    };
+
+    if (projectData.description !== undefined) data.description = projectData.description;
+    if (projectData.defaultTaktTime !== undefined) data.defaultTaktTime = projectData.defaultTaktTime;
+    if (projectData.address !== undefined) data.address = projectData.address;
+    if (projectData.city !== undefined) data.city = projectData.city;
+    if (projectData.country !== undefined) data.country = projectData.country;
+    if (projectData.budget !== undefined) data.budget = projectData.budget;
+    if (projectData.currency !== undefined) data.currency = projectData.currency;
+    if (projectData.plannedStart) data.plannedStart = new Date(projectData.plannedStart);
+    if (projectData.plannedFinish) data.plannedFinish = new Date(projectData.plannedFinish);
+
+    const project = await prisma.project.create({ data });
 
     // Initialize project setup record
     await prisma.projectSetup.create({
