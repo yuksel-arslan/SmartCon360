@@ -17,7 +17,6 @@ import {
 } from '@/lib/core/takt-calculator';
 import {
   GripVertical,
-  Plus,
   Save,
   Undo2,
   Redo2,
@@ -40,7 +39,6 @@ import {
   TrendingUp,
   Shield,
   Loader2,
-  Check,
   Wrench,
 } from 'lucide-react';
 
@@ -48,6 +46,8 @@ import {
 
 type CellStatus = 'completed' | 'in_progress' | 'planned' | 'delayed';
 type PlanType = 'kaba' | 'ince';
+
+type WorkPhase = 'structural' | 'finishing' | 'both';
 
 interface TradeRow {
   id: string;
@@ -58,12 +58,15 @@ interface TradeRow {
   bufferAfter: number;
   crewSize: number;
   notes: string;
+  discipline: string;
+  workPhase: WorkPhase;
 }
 
 interface Zone {
   id: string;
   name: string;
   sequence: number;
+  phase: WorkPhase;
 }
 
 interface GridCell {
@@ -96,6 +99,25 @@ interface HistoryState {
   globalTaktTime: number;
   globalBuffer: number;
   cellOverrides: Record<string, Partial<GridCell>>;
+}
+
+// ── Phase Helpers ─────────────────────────────────────────────
+
+function disciplineToWorkPhase(discipline: string | null | undefined): WorkPhase {
+  if (!discipline) return 'both';
+  const d = discipline.toLowerCase();
+  if (d === 'structural') return 'structural';
+  if (d === 'architectural' || d === 'landscape') return 'finishing';
+  // MEP (mechanical, electrical) and general appear in both
+  return 'both';
+}
+
+function metadataToPhase(metadata: Record<string, unknown> | null | undefined): WorkPhase {
+  if (!metadata) return 'both';
+  const phase = metadata.phase as string | undefined;
+  if (phase === 'structural') return 'structural';
+  if (phase === 'finishing') return 'finishing';
+  return 'both';
 }
 
 // ── Initial Data ───────────────────────────────────────────────
@@ -259,11 +281,7 @@ export default function TaktEditorPage() {
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
   const [editingField, setEditingField] = useState<{ tradeId: string; field: 'taktTime' | 'buffer' | 'crewSize' } | null>(null);
   const [editValue, setEditValue] = useState('');
-  const [showAddTrade, setShowAddTrade] = useState(false);
-  const [showAddZone, setShowAddZone] = useState(false);
-  const [newTradeName, setNewTradeName] = useState('');
-  const [newTradeColor, setNewTradeColor] = useState('#6366F1');
-  const [newZoneName, setNewZoneName] = useState('');
+  // Trades and zones come from Project Setup — no add modals needed
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
@@ -559,42 +577,6 @@ export default function TaktEditorPage() {
     }));
   }, [selectedCell]);
 
-  // ── Add Trade ──
-  const handleAddTrade = useCallback(() => {
-    if (!newTradeName.trim()) return;
-    pushHistory();
-    const maxSeq = Math.max(...trades.map((t) => t.sequence), 0);
-    const newTrade: TradeRow = {
-      id: `trade-${Date.now()}`,
-      name: newTradeName.trim(),
-      color: newTradeColor,
-      sequence: maxSeq + 1,
-      taktTime: globalTaktTime,
-      bufferAfter: globalBuffer,
-      crewSize: 5,
-      notes: '',
-    };
-    setTrades((prev) => [...prev, newTrade]);
-    setNewTradeName('');
-    setNewTradeColor('#6366F1');
-    setShowAddTrade(false);
-  }, [newTradeName, newTradeColor, globalTaktTime, globalBuffer, trades, pushHistory]);
-
-  // ── Add Zone ──
-  const handleAddZone = useCallback(() => {
-    if (!newZoneName.trim()) return;
-    pushHistory();
-    const maxSeq = Math.max(...zones.map((z) => z.sequence), 0);
-    const newZone: Zone = {
-      id: `z-${Date.now()}`,
-      name: newZoneName.trim(),
-      sequence: maxSeq + 1,
-    };
-    setZones((prev) => [...prev, newZone]);
-    setNewZoneName('');
-    setShowAddZone(false);
-  }, [newZoneName, zones, pushHistory]);
-
   // ── Save ──
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const projectId = activeProjectId || '';
@@ -622,27 +604,45 @@ export default function TaktEditorPage() {
           try {
             const plan = await getPlan(activeProjectId, plans[0].id);
 
-            // Load zones from plan
+            // Load zones from plan — also look up location metadata for phase
+            const locationPhaseMap = new Map<string, WorkPhase>();
+            for (const loc of (data.locations || [])) {
+              if (loc.locationType === 'zone') {
+                locationPhaseMap.set(loc.id, metadataToPhase(loc.metadata));
+              }
+            }
+
             if (plan.zones.length > 0) {
               setZones(plan.zones.map((z) => ({
                 id: z.id,
                 name: z.name,
                 sequence: z.sequence,
+                phase: locationPhaseMap.get(z.id) || 'both' as WorkPhase,
               })));
             }
 
             // Load trades (wagons) from plan with real crew sizes & buffers
+            const tradeDiscMap = new Map<string, string>();
+            for (const t of (data.trades || [])) {
+              tradeDiscMap.set(t.id, t.discipline || '');
+            }
+
             if (plan.wagons.length > 0) {
-              setTrades(plan.wagons.map((w) => ({
-                id: w.tradeId,
-                name: w.tradeName,
-                color: w.tradeColor || '#6366F1',
-                sequence: w.sequence,
-                taktTime: w.durationDays,
-                bufferAfter: w.bufferAfter,
-                crewSize: w.crewSize || 5,
-                notes: '',
-              })));
+              setTrades(plan.wagons.map((w) => {
+                const disc = tradeDiscMap.get(w.tradeId) || '';
+                return {
+                  id: w.tradeId,
+                  name: w.tradeName,
+                  color: w.tradeColor || '#6366F1',
+                  sequence: w.sequence,
+                  taktTime: w.durationDays,
+                  bufferAfter: w.bufferAfter,
+                  crewSize: w.crewSize || 5,
+                  notes: '',
+                  discipline: disc,
+                  workPhase: disciplineToWorkPhase(disc),
+                };
+              }));
             }
 
             // Load real assignment statuses as cell overrides
@@ -674,25 +674,28 @@ export default function TaktEditorPage() {
         // Fallback: build zones from project locations (no takt plan yet)
         const projectLocations = (data.locations || []).filter((l: { locationType: string }) => l.locationType === 'zone');
         if (projectLocations.length > 0) {
-          setZones(projectLocations.map((l: { id: string; name: string; sortOrder: number }, i: number) => ({
+          setZones(projectLocations.map((l: { id: string; name: string; sortOrder: number; metadata?: Record<string, unknown> }, i: number) => ({
             id: l.id,
             name: l.name,
             sequence: l.sortOrder || i + 1,
+            phase: metadataToPhase(l.metadata),
           })));
         }
 
         // Fallback: build trades from project trades
         const projectTrades = data.trades || [];
         if (projectTrades.length > 0) {
-          setTrades(projectTrades.map((t: { id: string; name: string; color: string; sortOrder: number }, i: number) => ({
+          setTrades(projectTrades.map((t: { id: string; name: string; color: string; sortOrder: number; discipline?: string; defaultCrewSize?: number }, i: number) => ({
             id: t.id,
             name: t.name,
             color: t.color || '#6366F1',
             sequence: t.sortOrder || i + 1,
             taktTime: data.defaultTaktTime || 5,
             bufferAfter: i < projectTrades.length - 1 ? 1 : 0,
-            crewSize: 5,
+            crewSize: t.defaultCrewSize || 5,
             notes: '',
+            discipline: t.discipline || '',
+            workPhase: disciplineToWorkPhase(t.discipline),
           })));
           setGlobalTaktTime(data.defaultTaktTime || 5);
         }
@@ -797,23 +800,26 @@ export default function TaktEditorPage() {
     );
   }, [pushHistory]);
 
-  // ── Sorted trades for rendering ──
+  // ── Filtered & sorted trades/zones by plan type ──
+  const filteredTrades = useMemo(() => {
+    const targetPhase = planType === 'kaba' ? 'structural' : 'finishing';
+    return trades.filter((t) => t.workPhase === targetPhase || t.workPhase === 'both');
+  }, [trades, planType]);
+
+  const filteredZones = useMemo(() => {
+    const targetPhase = planType === 'kaba' ? 'structural' : 'finishing';
+    return zones.filter((z) => z.phase === targetPhase || z.phase === 'both');
+  }, [zones, planType]);
+
   const sortedTrades = useMemo(
-    () => [...trades].sort((a, b) => a.sequence - b.sequence),
-    [trades],
+    () => [...filteredTrades].sort((a, b) => a.sequence - b.sequence),
+    [filteredTrades],
   );
 
   const sortedZones = useMemo(
-    () => [...zones].sort((a, b) => a.sequence - b.sequence),
-    [zones],
+    () => [...filteredZones].sort((a, b) => a.sequence - b.sequence),
+    [filteredZones],
   );
-
-  // ── Trade color palette for Add Trade ──
-  const tradeColors = [
-    '#3B82F6', '#8B5CF6', '#F59E0B', '#06B6D4', '#10B981',
-    '#EC4899', '#F97316', '#6366F1', '#14B8A6', '#EF4444',
-    '#84CC16', '#A855F7',
-  ];
 
   // ── Keyboard shortcuts ──
   useEffect(() => {
@@ -833,8 +839,6 @@ export default function TaktEditorPage() {
       if (e.key === 'Escape') {
         setSelectedCell(null);
         setEditingField(null);
-        setShowAddTrade(false);
-        setShowAddZone(false);
       }
     };
     window.addEventListener('keydown', handler);
@@ -852,24 +856,6 @@ export default function TaktEditorPage() {
             className="flex items-center gap-2 px-4 py-2.5 border-b flex-shrink-0 flex-wrap"
             style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}
           >
-            {/* Add buttons */}
-            <button
-              onClick={() => setShowAddTrade(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:opacity-80"
-              style={{ background: 'var(--color-accent)', color: 'white' }}
-            >
-              <Plus size={13} />
-              Add Trade
-            </button>
-            <button
-              onClick={() => setShowAddZone(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:opacity-80"
-              style={{ background: 'var(--color-purple)', color: 'white' }}
-            >
-              <Plus size={13} />
-              Add Zone
-            </button>
-
             {/* Plan Type Tabs */}
             <div className="flex items-center gap-0.5 rounded-lg p-0.5" style={{ background: 'var(--color-bg-input)' }}>
               <button
@@ -1464,163 +1450,6 @@ export default function TaktEditorPage() {
         </AnimatePresence>
       </div>
 
-      {/* ── Add Trade Modal ─────────────────────────────────── */}
-      <AnimatePresence>
-        {showAddTrade && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ background: 'rgba(0,0,0,0.5)' }}
-            onClick={() => setShowAddTrade(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="rounded-xl border p-6 w-full max-w-md shadow-2xl"
-              style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3
-                className="text-lg font-medium mb-4"
-                style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
-              >
-                Add Trade to Wagon Train
-              </h3>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                    Trade Name
-                  </label>
-                  <input
-                    value={newTradeName}
-                    onChange={(e) => setNewTradeName(e.target.value)}
-                    placeholder="e.g., HVAC Install"
-                    className="w-full text-sm rounded-lg px-3 py-2 border outline-none"
-                    style={{
-                      background: 'var(--color-bg-input)',
-                      borderColor: 'var(--color-border)',
-                      color: 'var(--color-text)',
-                    }}
-                    autoFocus
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleAddTrade(); }}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-semibold uppercase tracking-wider block mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                    Color
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {tradeColors.map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => setNewTradeColor(c)}
-                        className="w-7 h-7 rounded-lg transition-all"
-                        style={{
-                          background: c,
-                          boxShadow: newTradeColor === c ? `0 0 0 2px var(--color-bg-card), 0 0 0 4px ${c}` : 'none',
-                          transform: newTradeColor === c ? 'scale(1.15)' : 'scale(1)',
-                        }}
-                      >
-                        {newTradeColor === c && <Check size={14} className="mx-auto text-white" />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 mt-6">
-                <button
-                  onClick={() => setShowAddTrade(false)}
-                  className="px-4 py-2 rounded-lg text-[11px] font-semibold transition-all hover:opacity-70"
-                  style={{ color: 'var(--color-text-secondary)' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddTrade}
-                  disabled={!newTradeName.trim()}
-                  className="px-4 py-2 rounded-lg text-[11px] font-semibold transition-all hover:opacity-80 disabled:opacity-40"
-                  style={{ background: 'var(--color-accent)', color: 'white' }}
-                >
-                  Add Trade
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Add Zone Modal ──────────────────────────────────── */}
-      <AnimatePresence>
-        {showAddZone && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ background: 'rgba(0,0,0,0.5)' }}
-            onClick={() => setShowAddZone(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="rounded-xl border p-6 w-full max-w-md shadow-2xl"
-              style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3
-                className="text-lg font-medium mb-4"
-                style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
-              >
-                Add Zone
-              </h3>
-
-              <div>
-                <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                  Zone Name
-                </label>
-                <input
-                  value={newZoneName}
-                  onChange={(e) => setNewZoneName(e.target.value)}
-                  placeholder="e.g., Zone G — 6th Floor"
-                  className="w-full text-sm rounded-lg px-3 py-2 border outline-none"
-                  style={{
-                    background: 'var(--color-bg-input)',
-                    borderColor: 'var(--color-border)',
-                    color: 'var(--color-text)',
-                  }}
-                  autoFocus
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleAddZone(); }}
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 mt-6">
-                <button
-                  onClick={() => setShowAddZone(false)}
-                  className="px-4 py-2 rounded-lg text-[11px] font-semibold transition-all hover:opacity-70"
-                  style={{ color: 'var(--color-text-secondary)' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddZone}
-                  disabled={!newZoneName.trim()}
-                  className="px-4 py-2 rounded-lg text-[11px] font-semibold transition-all hover:opacity-80 disabled:opacity-40"
-                  style={{ background: 'var(--color-purple)', color: 'white' }}
-                >
-                  Add Zone
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }
