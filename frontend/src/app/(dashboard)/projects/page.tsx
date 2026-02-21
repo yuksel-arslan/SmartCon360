@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useProjectStore } from '@/stores/projectStore';
@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/authStore';
 import {
   Plus, Building2, Hospital, Building, Landmark, Factory, Construction,
   FolderKanban, MapPin, Calendar, Loader2, AlertCircle, ArrowRight, Settings2,
+  Trash2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -51,7 +52,9 @@ function formatDate(dateStr?: string | null): string {
 export default function ProjectsPage() {
   const router = useRouter();
   const { token } = useAuthStore();
-  const { projects, loading, initialized, error, fetchProjects, setActiveProject } = useProjectStore();
+  const { projects, loading, initialized, error, fetchProjects, setActiveProject, deleteProject } = useProjectStore();
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (token && !initialized) {
@@ -75,6 +78,24 @@ export default function ProjectsPage() {
   const handleSetup = (e: React.MouseEvent, projectId: string) => {
     e.stopPropagation();
     router.push(`/projects/${projectId}/setup`);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, projectId: string, projectName: string) => {
+    e.stopPropagation();
+    setDeleteConfirm({ id: projectId, name: projectName });
+  };
+
+  const confirmDeleteProject = async () => {
+    if (!deleteConfirm) return;
+    setDeleting(true);
+    try {
+      await deleteProject(deleteConfirm.id);
+    } catch {
+      // error handled silently
+    } finally {
+      setDeleting(false);
+      setDeleteConfirm(null);
+    }
   };
 
   return (
@@ -241,14 +262,24 @@ export default function ProjectsPage() {
 
                   {/* Actions */}
                   <div className="flex items-center justify-between mt-2">
-                    <button
-                      onClick={(e) => handleSetup(e, project.id)}
-                      className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors hover:opacity-80"
-                      style={{ background: 'var(--color-accent-muted)', color: 'var(--color-accent)' }}
-                    >
-                      <Settings2 size={10} />
-                      Setup
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => handleSetup(e, project.id)}
+                        className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors hover:opacity-80"
+                        style={{ background: 'var(--color-accent-muted)', color: 'var(--color-accent)' }}
+                      >
+                        <Settings2 size={10} />
+                        Setup
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteClick(e, project.id, project.name)}
+                        className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors hover:opacity-80"
+                        style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--color-danger)' }}
+                      >
+                        <Trash2 size={10} />
+                        Delete
+                      </button>
+                    </div>
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                       <ArrowRight size={14} style={{ color: 'var(--color-accent)' }} />
                     </div>
@@ -259,6 +290,54 @@ export default function ProjectsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete confirmation modal */}
+      {deleteConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.5)' }}
+          onClick={() => !deleting && setDeleteConfirm(null)}
+        >
+          <div
+            className="rounded-xl border p-6 max-w-sm w-full shadow-2xl"
+            style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3
+              className="text-[15px] font-bold mb-2"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
+            >
+              Delete Project
+            </h3>
+            <p className="text-[13px] mb-5" style={{ color: 'var(--color-text-muted)' }}>
+              Are you sure you want to delete <strong style={{ color: 'var(--color-text)' }}>{deleteConfirm.name}</strong>? This action cannot be undone.
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                disabled={deleting}
+                className="px-4 py-2 rounded-lg text-[12px] font-medium transition-colors"
+                style={{ background: 'var(--color-bg-secondary)', color: 'var(--color-text-muted)' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteProject}
+                disabled={deleting}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold text-white transition-colors hover:opacity-90"
+                style={{ background: 'var(--color-danger, #ef4444)' }}
+              >
+                {deleting ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <Trash2 size={12} />
+                )}
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
