@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public", "cost", "quality", "safety", "resources", "claims", "risk", "comm"]
+  schemas  = ["public", "cost", "quality", "safety", "resources", "claims", "risk", "comm", "supply"]
 }
 
 // ============================================================================
@@ -1728,4 +1728,96 @@ model Scaffold {
   @@index([status])
   @@map("scaffolds")
   @@schema("resources")
+}
+
+// ============================================================================
+// SUPPLY MODULE (SupplyChain)
+// ============================================================================
+
+model Supplier {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  code          String   @db.VarChar(30)
+  name          String   @db.VarChar(255)
+  category      String   @db.VarChar(50) // materials, equipment, subcontractor, services, other
+  contactName   String?  @map("contact_name") @db.VarChar(100)
+  contactEmail  String?  @map("contact_email") @db.VarChar(255)
+  contactPhone  String?  @map("contact_phone") @db.VarChar(20)
+  address       String?
+  rating        Int?     // 1-5 performance rating
+  status        String   @default("active") @db.VarChar(30) // active, approved, probation, blacklisted, inactive
+  certifications Json    @default("[]")
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  purchaseOrders PurchaseOrder[]
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([status])
+  @@index([category])
+  @@map("suppliers")
+  @@schema("supply")
+}
+
+model PurchaseOrder {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  supplierId    String?  @map("supplier_id") @db.Uuid
+  poNumber      String   @map("po_number") @db.VarChar(30)
+  title         String   @db.VarChar(255)
+  description   String?
+  category      String   @db.VarChar(50) // materials, equipment_rental, subcontract, services
+  status        String   @default("draft") @db.VarChar(30) // draft, submitted, approved, ordered, partial_received, received, cancelled
+  priority      String   @default("medium") @db.VarChar(20) // low, medium, high, urgent
+  totalAmount   Decimal  @default(0) @map("total_amount") @db.Decimal(14, 2)
+  currency      String   @default("USD") @db.VarChar(3)
+  orderDate     DateTime? @map("order_date") @db.Date
+  requiredDate  DateTime? @map("required_date") @db.Date
+  deliveredDate DateTime? @map("delivered_date") @db.Date
+  approvedBy    String?  @map("approved_by") @db.Uuid
+  approvedDate  DateTime? @map("approved_date") @db.Date
+  notes         String?
+  createdBy     String   @map("created_by") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  supplier  Supplier?  @relation(fields: [supplierId], references: [id])
+  deliveries Delivery[]
+
+  @@unique([projectId, poNumber])
+  @@index([projectId])
+  @@index([supplierId])
+  @@index([status])
+  @@map("purchase_orders")
+  @@schema("supply")
+}
+
+model Delivery {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String   @map("project_id") @db.Uuid
+  purchaseOrderId String?  @map("purchase_order_id") @db.Uuid
+  deliveryNumber  String   @map("delivery_number") @db.VarChar(30)
+  description     String?
+  status          String   @default("scheduled") @db.VarChar(30) // scheduled, in_transit, delivered, inspected, accepted, rejected
+  scheduledDate   DateTime @map("scheduled_date") @db.Date
+  actualDate      DateTime? @map("actual_date") @db.Date
+  receivedBy      String?  @map("received_by") @db.Uuid
+  inspectionResult String? @map("inspection_result") @db.VarChar(30) // passed, failed, partial
+  itemCount       Int      @default(0) @map("item_count")
+  items           Json     @default("[]")
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+
+  @@unique([projectId, deliveryNumber])
+  @@index([projectId])
+  @@index([purchaseOrderId])
+  @@index([status])
+  @@index([scheduledDate])
+  @@map("deliveries")
+  @@schema("supply")
 }
