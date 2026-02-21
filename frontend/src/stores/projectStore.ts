@@ -50,6 +50,9 @@ interface ProjectState {
   /** Update a single project's status locally */
   updateProjectStatus: (projectId: string, status: string) => void;
 
+  /** Delete (archive) a project by ID */
+  deleteProject: (projectId: string) => Promise<void>;
+
   /** Clear project state (on logout) */
   clear: () => void;
 }
@@ -152,6 +155,39 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         p.id === projectId ? { ...p, status } : p
       ),
     }));
+  },
+
+  deleteProject: async (projectId) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const headers: HeadersInit = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`/api/v1/projects/${projectId}`, {
+      method: 'DELETE',
+      headers,
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to delete project (${res.status})`);
+    }
+
+    set((state) => {
+      const projects = state.projects.filter((p) => p.id !== projectId);
+      const activeProjectId =
+        state.activeProjectId === projectId
+          ? projects.length > 0
+            ? projects[0].id
+            : null
+          : state.activeProjectId;
+
+      if (activeProjectId && typeof window !== 'undefined') {
+        localStorage.setItem('activeProjectId', activeProjectId);
+      } else if (typeof window !== 'undefined') {
+        localStorage.removeItem('activeProjectId');
+      }
+
+      return { projects, activeProjectId };
+    });
   },
 
   addProject: (project) => {
