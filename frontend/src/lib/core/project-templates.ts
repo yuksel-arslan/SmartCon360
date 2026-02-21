@@ -659,6 +659,7 @@ export function generateLbsFromConfig(
   basementCount: number,
   zonesPerFloor: number,
   structuralZonesPerFloor: number = 1,
+  substructureZonesCount: number = 3,
 ): LocationTemplate[] {
   if (buildingType === 'infrastructure') {
     // Infrastructure uses sections, not floors — keep original template
@@ -707,10 +708,15 @@ export function generateLbsFromConfig(
   // Sector/grid-based zones — plan-view divisions, NOT floor-based.
   // Excavation, piling, foundations, ground beams, raft, ground slab
   {
-    const subZoneCount = Math.max(2, Math.min(substructureZoneNames.length, 4));
-    const subZones: LocationTemplate[] = substructureZoneNames
-      .slice(0, subZoneCount)
-      .map((name) => ({ name, type: 'zone' as const, phase: 'substructure' as const }));
+    const subZoneCount = Math.max(2, Math.min(8, substructureZonesCount));
+    // Use pattern names for named zones, then generate "Sector N" for extras
+    const subZones: LocationTemplate[] = [];
+    for (let i = 0; i < subZoneCount; i++) {
+      const name = i < substructureZoneNames.length
+        ? substructureZoneNames[i]
+        : `Sector ${String.fromCharCode(65 + i)}`;
+      subZones.push({ name, type: 'zone' as const, phase: 'substructure' as const });
+    }
 
     children.push({
       name: 'Substructure',

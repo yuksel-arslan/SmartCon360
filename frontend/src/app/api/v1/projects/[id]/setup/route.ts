@@ -9,7 +9,7 @@ type Params = { params: Promise<{ id: string }> };
 // Setup configuration keys persisted in Project.settings.setupConfig
 const SETUP_CONFIG_KEYS = [
   'buildingType', 'projectPhase', 'classificationStandard',
-  'floorCount', 'basementCount', 'zonesPerFloor', 'structuralZonesPerFloor',
+  'floorCount', 'basementCount', 'zonesPerFloor', 'structuralZonesPerFloor', 'substructureZonesCount',
   'typicalFloorArea', 'numberOfBuildings',
   'structuralSystem', 'mepComplexity', 'flowDirection', 'deliveryMethod', 'siteCondition',
   'foundationType', 'groundCondition', 'groundImprovement',

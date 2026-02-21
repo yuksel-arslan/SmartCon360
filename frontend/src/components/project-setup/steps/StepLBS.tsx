@@ -245,7 +245,7 @@ export default function StepLBS({ projectId, state, onStateChange, authHeaders }
   // otherwise fall back to static project type template
   const hasDynamicConfig = !!(state.buildingType && (state.floorCount > 0 || state.buildingType === 'infrastructure'));
   const dynamicLocations = hasDynamicConfig
-    ? generateLbsFromConfig(state.buildingType, state.floorCount, state.basementCount, state.zonesPerFloor, state.structuralZonesPerFloor || 1)
+    ? generateLbsFromConfig(state.buildingType, state.floorCount, state.basementCount, state.zonesPerFloor, state.structuralZonesPerFloor || 1, state.substructureZonesCount || 3)
     : [];
   const template = getTemplate(state.buildingType || state.projectType);
   const templateLocations = hasDynamicConfig ? dynamicLocations : (template?.locations || []);

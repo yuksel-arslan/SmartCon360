@@ -21,6 +21,7 @@ export interface SetupState {
   basementCount: number;            // basement levels
   zonesPerFloor: number;            // fit-out zones per typical floor (OmniClass 21-03)
   structuralZonesPerFloor: number;  // shell & core zones per typical floor (OmniClass 21-02)
+  substructureZonesCount: number;   // substructure sectors/grid zones (OmniClass 21-01)
   typicalFloorArea: number;         // m² per typical floor
   numberOfBuildings: number;        // multi-building projects
   structuralSystem: string;         // 'rc_frame' | 'steel_frame' | 'precast' | 'hybrid' | 'timber' | 'masonry'
@@ -161,6 +162,7 @@ export interface BuildingTypeOption {
   defaultBasements: number;
   defaultZonesPerFloor: number;              // fit-out zones (OmniClass 21-03 Interiors)
   defaultStructuralZonesPerFloor: number;    // shell & core zones (OmniClass 21-02 Shell) — typically 1 (full floor)
+  defaultSubstructureZones: number;          // substructure sectors (OmniClass 21-01 Substructure) — 2-6
   defaultFloorArea: number;                  // m² per typical floor
   defaultStructural: string;                 // structural system key
   defaultMep: string;                        // MEP complexity key
@@ -171,55 +173,55 @@ export const BUILDING_TYPES: BuildingTypeOption[] = [
   {
     value: 'hotel', label: 'Hotel / Resort', icon: '🏨',
     description: 'Guest rooms, lobbies, restaurants, back-of-house',
-    defaultFloors: 10, defaultBasements: 1, defaultZonesPerFloor: 3, defaultStructuralZonesPerFloor: 1,
+    defaultFloors: 10, defaultBasements: 1, defaultZonesPerFloor: 3, defaultStructuralZonesPerFloor: 1, defaultSubstructureZones: 4,
     defaultFloorArea: 1200, defaultStructural: 'rc_frame', defaultMep: 'medium', defaultFlowDirection: 'bottom_up',
   },
   {
     value: 'hospital', label: 'Hospital / Healthcare', icon: '🏥',
     description: 'Patient rooms, OR suites, emergency, diagnostics',
-    defaultFloors: 6, defaultBasements: 1, defaultZonesPerFloor: 4, defaultStructuralZonesPerFloor: 1,
+    defaultFloors: 6, defaultBasements: 1, defaultZonesPerFloor: 4, defaultStructuralZonesPerFloor: 1, defaultSubstructureZones: 4,
     defaultFloorArea: 3000, defaultStructural: 'rc_frame', defaultMep: 'high', defaultFlowDirection: 'bottom_up',
   },
   {
     value: 'residential', label: 'Residential Tower', icon: '🏢',
     description: 'Apartments, condos, residential complexes',
-    defaultFloors: 20, defaultBasements: 1, defaultZonesPerFloor: 3, defaultStructuralZonesPerFloor: 1,
+    defaultFloors: 20, defaultBasements: 1, defaultZonesPerFloor: 3, defaultStructuralZonesPerFloor: 1, defaultSubstructureZones: 3,
     defaultFloorArea: 1000, defaultStructural: 'rc_frame', defaultMep: 'low', defaultFlowDirection: 'bottom_up',
   },
   {
     value: 'commercial', label: 'Commercial Office', icon: '🏛️',
     description: 'Office towers, business parks, co-working spaces',
-    defaultFloors: 15, defaultBasements: 1, defaultZonesPerFloor: 4, defaultStructuralZonesPerFloor: 1,
+    defaultFloors: 15, defaultBasements: 1, defaultZonesPerFloor: 4, defaultStructuralZonesPerFloor: 1, defaultSubstructureZones: 4,
     defaultFloorArea: 1500, defaultStructural: 'steel_frame', defaultMep: 'medium', defaultFlowDirection: 'bottom_up',
   },
   {
     value: 'industrial', label: 'Industrial / Factory', icon: '🏭',
     description: 'Factories, warehouses, logistics centers',
-    defaultFloors: 1, defaultBasements: 0, defaultZonesPerFloor: 4, defaultStructuralZonesPerFloor: 2,
+    defaultFloors: 1, defaultBasements: 0, defaultZonesPerFloor: 4, defaultStructuralZonesPerFloor: 2, defaultSubstructureZones: 4,
     defaultFloorArea: 5000, defaultStructural: 'steel_frame', defaultMep: 'low', defaultFlowDirection: 'bottom_up',
   },
   {
     value: 'infrastructure', label: 'Infrastructure', icon: '🌉',
     description: 'Roads, bridges, tunnels, utilities',
-    defaultFloors: 0, defaultBasements: 0, defaultZonesPerFloor: 3, defaultStructuralZonesPerFloor: 1,
+    defaultFloors: 0, defaultBasements: 0, defaultZonesPerFloor: 3, defaultStructuralZonesPerFloor: 1, defaultSubstructureZones: 3,
     defaultFloorArea: 0, defaultStructural: 'rc_frame', defaultMep: 'low', defaultFlowDirection: 'bottom_up',
   },
   {
     value: 'educational', label: 'Educational', icon: '🎓',
     description: 'Schools, universities, training facilities',
-    defaultFloors: 4, defaultBasements: 1, defaultZonesPerFloor: 3, defaultStructuralZonesPerFloor: 1,
+    defaultFloors: 4, defaultBasements: 1, defaultZonesPerFloor: 3, defaultStructuralZonesPerFloor: 1, defaultSubstructureZones: 3,
     defaultFloorArea: 2000, defaultStructural: 'rc_frame', defaultMep: 'medium', defaultFlowDirection: 'bottom_up',
   },
   {
     value: 'mixed_use', label: 'Mixed Use', icon: '🏙️',
     description: 'Mixed residential, retail, and office',
-    defaultFloors: 25, defaultBasements: 2, defaultZonesPerFloor: 4, defaultStructuralZonesPerFloor: 1,
+    defaultFloors: 25, defaultBasements: 2, defaultZonesPerFloor: 4, defaultStructuralZonesPerFloor: 1, defaultSubstructureZones: 4,
     defaultFloorArea: 1500, defaultStructural: 'rc_frame', defaultMep: 'medium', defaultFlowDirection: 'bottom_up',
   },
   {
     value: 'data_center', label: 'Data Center', icon: '🖥️',
     description: 'Server halls, power rooms, cooling systems',
-    defaultFloors: 2, defaultBasements: 0, defaultZonesPerFloor: 4, defaultStructuralZonesPerFloor: 2,
+    defaultFloors: 2, defaultBasements: 0, defaultZonesPerFloor: 4, defaultStructuralZonesPerFloor: 2, defaultSubstructureZones: 4,
     defaultFloorArea: 3000, defaultStructural: 'steel_frame', defaultMep: 'critical', defaultFlowDirection: 'bottom_up',
   },
 ];

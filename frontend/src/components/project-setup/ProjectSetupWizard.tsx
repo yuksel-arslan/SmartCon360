@@ -45,6 +45,7 @@ const initialState: SetupState = {
   basementCount: 0,
   zonesPerFloor: 3,
   structuralZonesPerFloor: 1,
+  substructureZonesCount: 3,
   typicalFloorArea: 0,
   numberOfBuildings: 1,
   structuralSystem: '',
@@ -128,6 +129,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
               merged.floorCount = merged.floorCount || bt.defaultFloors;
               merged.basementCount = merged.basementCount || bt.defaultBasements;
               merged.zonesPerFloor = merged.zonesPerFloor || bt.defaultZonesPerFloor;
+              merged.substructureZonesCount = merged.substructureZonesCount || bt.defaultSubstructureZones;
               merged.typicalFloorArea = merged.typicalFloorArea || bt.defaultFloorArea;
               merged.structuralSystem = merged.structuralSystem || bt.defaultStructural;
               merged.mepComplexity = merged.mepComplexity || bt.defaultMep;
@@ -207,6 +209,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
               basementCount: state.basementCount,
               zonesPerFloor: state.zonesPerFloor,
               structuralZonesPerFloor: state.structuralZonesPerFloor,
+              substructureZonesCount: state.substructureZonesCount,
               typicalFloorArea: state.typicalFloorArea,
               numberOfBuildings: state.numberOfBuildings,
               structuralSystem: state.structuralSystem,
@@ -283,6 +286,7 @@ export default function ProjectSetupWizard({ projectId }: Props) {
           basementCount: state.basementCount,
           zonesPerFloor: state.zonesPerFloor,
           structuralZonesPerFloor: state.structuralZonesPerFloor,
+          substructureZonesCount: state.substructureZonesCount,
           typicalFloorArea: state.typicalFloorArea,
           numberOfBuildings: state.numberOfBuildings,
           structuralSystem: state.structuralSystem,
