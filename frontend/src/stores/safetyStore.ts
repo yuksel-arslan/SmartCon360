@@ -85,6 +85,9 @@ export interface SafetySummary {
   openObservations: number;
   toolboxTalksThisMonth: number;
   ltir: number;
+  reportingLevel: 'detailed' | 'summary';
+  ptwStrictness: 'strict' | 'standard';
+  toolboxFrequency: 'daily' | 'weekly';
 }
 
 // ── Store ──────────────────────────────────────────────

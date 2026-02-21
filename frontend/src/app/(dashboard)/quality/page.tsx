@@ -7,7 +7,7 @@ import {
   BarChart3, Target, CircleDot, AlertCircle,
   Calendar, DollarSign,
 } from 'lucide-react';
-import { ModulePageHeader } from '@/components/modules';
+import { ModulePageHeader, ContractPolicyBanner } from '@/components/modules';
 import { useQualityStore } from '@/stores/qualityStore';
 import { useProjectStore } from '@/stores/projectStore';
 import type { Inspection, Ncr, PunchItem } from '@/stores/qualityStore';
@@ -222,6 +222,10 @@ export default function QualityPage() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-6">
       <ModulePageHeader moduleId="quality" />
+      <ContractPolicyBanner
+        module="quality_gate"
+        policyLabels={{ 'inspection.frequency': 'Inspection', 'ftr.threshold': 'FTR Target', 'ncr.approval': 'NCR Approval', 'copq.enabled': 'COPQ Tracking' }}
+      />
 
       {error && (
         <div
@@ -283,11 +287,13 @@ function OverviewTab() {
   const { summary, inspections, ncrs, punchItems } = useQualityStore();
 
   const ftrRate = summary?.ftrRate ?? 0;
+  const ftrThreshold = summary?.ftrThreshold ?? 85;
   const openNcrs = summary?.openNcrs ?? 0;
   const closedNcrs = summary?.closedNcrs ?? 0;
   const totalInspections = summary?.totalInspections ?? 0;
   const passedInspections = summary?.passedInspections ?? 0;
   const copq = summary?.copq ?? 0;
+  const copqEnabled = summary?.copqEnabled ?? true;
   const openPunchItems = summary?.openPunchItems ?? 0;
   const inspectionsThisWeek = summary?.inspectionsThisWeek ?? 0;
 
@@ -298,8 +304,8 @@ function OverviewTab() {
       label: 'FTR Rate',
       value: `${ftrRate.toFixed(1)}%`,
       icon: CheckCircle2,
-      color: ftrRate >= 85 ? 'var(--color-success)' : ftrRate >= 70 ? 'var(--color-warning)' : 'var(--color-danger)',
-      desc: 'First Time Right',
+      color: ftrRate >= ftrThreshold ? 'var(--color-success)' : ftrRate >= (ftrThreshold - 15) ? 'var(--color-warning)' : 'var(--color-danger)',
+      desc: `Target: ${ftrThreshold}%`,
     },
     {
       label: 'Open NCRs',
@@ -308,13 +314,13 @@ function OverviewTab() {
       color: openNcrs > 10 ? 'var(--color-danger)' : openNcrs > 5 ? 'var(--color-warning)' : 'var(--color-success)',
       desc: `${closedNcrs} closed`,
     },
-    {
+    ...(copqEnabled ? [{
       label: 'COPQ',
-      value: copq > 0 ? `$${fmtCurrency(copq)}` : '$0',
+      value: copq && copq > 0 ? `$${fmtCurrency(copq)}` : '$0',
       icon: DollarSign,
-      color: copq > 50000 ? 'var(--color-danger)' : copq > 10000 ? 'var(--color-warning)' : 'var(--color-success)',
+      color: (copq ?? 0) > 50000 ? 'var(--color-danger)' : (copq ?? 0) > 10000 ? 'var(--color-warning)' : 'var(--color-success)',
       desc: 'Cost of Poor Quality',
-    },
+    }] : []),
     {
       label: 'Inspections',
       value: `${totalInspections}`,

@@ -2,6 +2,7 @@
 
 import { Router } from 'express';
 import { prisma } from '../../lib/prisma';
+import { getSafetyPolicies } from './utils/policy-client';
 
 const router = Router();
 
@@ -78,6 +79,9 @@ router.get('/summary/project/:projectId', async (req, res, next) => {
         ? Number(((lostTimeIncidents * 200000) / estimatedTotalHours).toFixed(2))
         : 0;
 
+    // Fetch contract policies for safety configuration
+    const policies = await getSafetyPolicies(projectId);
+
     res.json({
       data: {
         totalIncidents,
@@ -89,6 +93,9 @@ router.get('/summary/project/:projectId', async (req, res, next) => {
         openObservations,
         toolboxTalksThisMonth,
         ltir,
+        reportingLevel: policies.reportingLevel,
+        ptwStrictness: policies.ptwStrictness,
+        toolboxFrequency: policies.toolboxFrequency,
       },
     });
   } catch (error) {
@@ -402,6 +409,21 @@ router.delete('/toolbox-talks/:id', async (req, res, next) => {
   try {
     await prisma.toolboxTalk.delete({ where: { id: req.params.id } });
     res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ─── POLICIES ──────────────────────────────────────────────────────────────
+
+/**
+ * GET /safety/policies/:projectId
+ * Get contract-driven SafeZone policies for a project
+ */
+router.get('/policies/:projectId', async (req, res, next) => {
+  try {
+    const policies = await getSafetyPolicies(req.params.projectId);
+    res.json({ data: policies });
   } catch (error) {
     next(error);
   }

@@ -3,6 +3,7 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../../lib/prisma';
+import { getCrewFlowPolicies } from './policy-client';
 
 const router = Router();
 
@@ -10,6 +11,17 @@ const router = Router();
 
 router.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', module: 'resource' });
+});
+
+// ─── POLICIES ────────────────────────────────────────────────────────────────
+
+router.get('/policies/project/:projectId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const policies = await getCrewFlowPolicies(req.params.projectId);
+    res.json({ data: policies, error: null });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // ─── SUMMARY ─────────────────────────────────────────────────────────────────

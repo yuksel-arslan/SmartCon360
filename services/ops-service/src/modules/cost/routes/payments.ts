@@ -3,8 +3,34 @@
 import { Router } from 'express';
 import { paymentService } from '../services/payment.service';
 import { createPaymentCertificateSchema, addPaymentItemsSchema } from '../schemas';
+import { getCostPolicies } from '../utils/policy-client';
 
 const router = Router();
+
+/**
+ * GET /api/v1/cost/payments/policies/:projectId
+ * Get contract-driven payment policies for a project
+ */
+router.get('/policies/:projectId', async (req, res, next) => {
+  try {
+    const policies = await getCostPolicies(req.params.projectId);
+    res.json({
+      data: {
+        paymentLabel: policies.paymentLabel,
+        paymentStructure: policies.paymentStructure,
+        retentionPct: policies.retentionPct,
+        advancePct: policies.advancePct,
+        escalationEnabled: policies.escalationEnabled,
+        escalationIndex: policies.escalationIndex,
+        evmEnabled: policies.evmEnabled,
+        progressMeasurement: policies.progressMeasurement,
+      },
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 /**
  * POST /api/v1/cost/payments

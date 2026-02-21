@@ -67,13 +67,18 @@ export interface PunchItem {
 
 export interface QualitySummary {
   ftrRate: number;
+  ftrThreshold: number;
+  ftrMeetsTarget: boolean;
   openNcrs: number;
   closedNcrs: number;
   totalInspections: number;
   passedInspections: number;
-  copq: number;
+  copq: number | null;
+  copqEnabled: boolean;
   openPunchItems: number;
   inspectionsThisWeek: number;
+  inspectionFrequency: 'per_activity' | 'per_milestone';
+  ncrApproval: 'engineer_approval' | 'self_certification';
 }
 
 // ── Store ──────────────────────────────────────────────

@@ -242,6 +242,21 @@ export interface PriceCatalogItem {
 }
 
 // ============================================================================
+// CONTRACT POLICIES
+// ============================================================================
+
+export interface CostPolicies {
+  paymentLabel: string;
+  paymentStructure: string;
+  retentionPct: number;
+  advancePct: number;
+  escalationEnabled: boolean;
+  escalationIndex: string | null;
+  evmEnabled: boolean;
+  progressMeasurement: string;
+}
+
+// ============================================================================
 // STORE
 // ============================================================================
 
@@ -257,6 +272,7 @@ interface CostState {
   payments: PaymentCertificate[];
   costRecords: CostRecord[];
   evmSnapshots: EvmSnapshot[];
+  costPolicies: CostPolicies | null;
 
   // Catalog
   catalogs: PriceCatalog[];
@@ -296,6 +312,7 @@ interface CostState {
   fetchPayments: (projectId: string) => Promise<void>;
   fetchCostRecords: (projectId: string) => Promise<void>;
   fetchEvmSnapshots: (projectId: string) => Promise<void>;
+  fetchCostPolicies: (projectId: string) => Promise<void>;
   fetchAll: (projectId: string) => Promise<void>;
 
   // Actions — CRUD Work Items
@@ -393,6 +410,7 @@ export const useCostStore = create<CostState>((set, get) => ({
   payments: [],
   costRecords: [],
   evmSnapshots: [],
+  costPolicies: null,
 
   catalogs: [],
   catalogItems: [],
@@ -501,6 +519,15 @@ export const useCostStore = create<CostState>((set, get) => ({
     }
   },
 
+  fetchCostPolicies: async (projectId) => {
+    try {
+      const data = await apiFetch<CostPolicies>(`/payments/policies/${projectId}`);
+      set({ costPolicies: data });
+    } catch {
+      set({ costPolicies: null });
+    }
+  },
+
   fetchAll: async (projectId) => {
     set({ loading: true, error: null });
     try {
@@ -513,6 +540,7 @@ export const useCostStore = create<CostState>((set, get) => ({
         s.fetchEvmSnapshots(projectId),
         s.fetchQuantityTakeoffs(projectId),
         s.fetchCostRecords(projectId),
+        s.fetchCostPolicies(projectId),
       ]);
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to load data' });

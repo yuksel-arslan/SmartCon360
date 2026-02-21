@@ -5,10 +5,10 @@ import {
   Package, ClipboardList, Loader2, AlertCircle, CheckCircle2, Clock, Send,
   FileText, ArrowUpRight, ArrowDownRight, Minus, X, Trash2, Plus, Upload,
   Edit3, Eye, ChevronDown, Building2, Landmark, Wrench, Library, Search,
-  Download, Check, FolderOpen, Globe, Filter, Layers, ExternalLink,
+  Download, Check, FolderOpen, Globe, Filter, Layers, ExternalLink, ShieldAlert,
 } from 'lucide-react';
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { ModulePageHeader } from '@/components/modules';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { ModulePageHeader, ContractPolicyBanner } from '@/components/modules';
 import { UniclassBrowser } from '@/components/cost/UniclassBrowser';
 import { useCostStore } from '@/stores/costStore';
 import { useProjectStore } from '@/stores/projectStore';
@@ -16,30 +16,34 @@ import { useAuthStore } from '@/stores/authStore';
 import type {
   WorkItem, UnitPriceAnalysis, QuantityTakeoff, Estimate,
   Budget, BudgetItem, PaymentCertificate, EvmSnapshot, CostRecord,
-  PriceCatalog, PriceCatalogItem,
+  PriceCatalog, PriceCatalogItem, CostPolicies,
 } from '@/stores/costStore';
 
 type CostTab = 'overview' | 'library' | 'work-items' | 'unit-prices' | 'takeoffs' | 'estimates' | 'budgets' | 'payments' | 'evm';
 
 // Removed hardcoded IDs — now uses activeProjectId from projectStore and user.id from authStore
 
-const tabs: { id: CostTab; label: string; icon: typeof DollarSign }[] = [
-  { id: 'overview', label: 'Overview', icon: BarChart3 },
-  { id: 'library', label: 'Price Library', icon: Library },
-  { id: 'work-items', label: 'Work Items', icon: ClipboardList },
-  { id: 'unit-prices', label: 'Unit Prices', icon: Calculator },
-  { id: 'takeoffs', label: 'Quantity Takeoff', icon: FileSpreadsheet },
-  { id: 'estimates', label: 'Estimates', icon: Package },
-  { id: 'budgets', label: 'Budgets', icon: DollarSign },
-  { id: 'payments', label: 'Payment Certificates', icon: Receipt },
-  { id: 'evm', label: 'EVM', icon: TrendingUp },
-];
+function getTabs(policies: CostPolicies | null): { id: CostTab; label: string; icon: typeof DollarSign }[] {
+  const paymentLabel = policies?.paymentLabel || 'Payment Certificates';
+  return [
+    { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'library', label: 'Price Library', icon: Library },
+    { id: 'work-items', label: 'Work Items', icon: ClipboardList },
+    { id: 'unit-prices', label: 'Unit Prices', icon: Calculator },
+    { id: 'takeoffs', label: 'Quantity Takeoff', icon: FileSpreadsheet },
+    { id: 'estimates', label: 'Estimates', icon: Package },
+    { id: 'budgets', label: 'Budgets', icon: DollarSign },
+    { id: 'payments', label: paymentLabel, icon: Receipt },
+    { id: 'evm', label: 'EVM', icon: TrendingUp },
+  ];
+}
 
 export default function CostPage() {
   const [activeTab, setActiveTab] = useState<CostTab>('overview');
   const { activeProjectId } = useProjectStore();
   const authUser = useAuthStore((s) => s.user);
-  const { loading, error, initialized, fetchAll } = useCostStore();
+  const { loading, error, initialized, fetchAll, costPolicies } = useCostStore();
+  const tabs = useMemo(() => getTabs(costPolicies), [costPolicies]);
 
   const pid = activeProjectId || '';
   const userId = authUser?.id || '';
@@ -56,6 +60,10 @@ export default function CostPage() {
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-6">
       <ModulePageHeader moduleId="cost" />
+      <ContractPolicyBanner
+        module="cost_pilot"
+        policyLabels={{ 'evm.enabled': 'EVM', 'payment.structure': 'Payment Type', 'progress.measurement': 'Progress Method', 'retention.percentage': 'Retention %' }}
+      />
 
       {error && (
         <div className="rounded-lg px-4 py-3 flex items-center gap-3 text-[12px]"
@@ -1414,11 +1422,13 @@ function BudgetsTab() {
 
 function PaymentsTab() {
   const { pid, userId } = useProjectContext();
-  const { payments, createPayment, submitPayment, approvePayment } = useCostStore();
+  const { payments, createPayment, submitPayment, approvePayment, costPolicies } = useCostStore();
   const [showForm, setShowForm] = useState(false);
   const [fStart, setFStart] = useState('');
   const [fEnd, setFEnd] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const paymentLabel = costPolicies?.paymentLabel || 'Payment Certificate';
 
   const handleCreate = async () => {
     if (!fStart || !fEnd) return;
@@ -1429,7 +1439,6 @@ function PaymentsTab() {
       periodStart: new Date(fStart).toISOString(),
       periodEnd: new Date(fEnd).toISOString(),
       createdBy: userId,
-      retentionPct: 5,
     });
     setSaving(false);
     setFStart(''); setFEnd('');
@@ -1448,15 +1457,15 @@ function PaymentsTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Payment Certificates ({payments.length})</h3>
+        <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{paymentLabel} ({payments.length})</h3>
         <Btn variant={showForm ? 'danger' : 'primary'} onClick={() => setShowForm(!showForm)}>
-          {showForm ? <><X size={12} /> Cancel</> : <><Plus size={12} /> New Certificate</>}
+          {showForm ? <><X size={12} /> Cancel</> : <><Plus size={12} /> New {paymentLabel}</>}
         </Btn>
       </div>
 
       {showForm && (
         <Card className="!border-[var(--color-accent)]">
-          <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Payment Certificate #{payments.length + 1}</h4>
+          <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--color-text)' }}>{paymentLabel} #{payments.length + 1}</h4>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div>
               <label className="text-[10px] block mb-1" style={{ color: 'var(--color-text-muted)' }}>Period Start</label>
@@ -1475,12 +1484,26 @@ function PaymentsTab() {
         </Card>
       )}
 
+      {/* Contract policy info */}
+      {costPolicies && (
+        <div
+          className="rounded-lg px-4 py-2 flex items-center gap-3 text-[11px]"
+          style={{ background: 'rgba(99,102,241,0.06)', borderLeft: '3px solid #6366F1', color: 'var(--color-text-muted)' }}
+        >
+          <span>Contract Policy:</span>
+          <span><strong>Retention:</strong> %{costPolicies.retentionPct}</span>
+          <span><strong>Structure:</strong> {costPolicies.paymentStructure.replace(/_/g, ' ')}</span>
+          {costPolicies.escalationEnabled && <span><strong>Escalation:</strong> {costPolicies.escalationIndex || 'enabled'}</span>}
+          {costPolicies.advancePct > 0 && <span><strong>Advance:</strong> %{costPolicies.advancePct}</span>}
+        </div>
+      )}
+
       {/* Summary */}
       {payments.length > 0 && (
         <Card>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Total Certificates</div>
+              <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Total {paymentLabel}</div>
               <div className="text-lg font-medium font-mono" style={{ color: 'var(--color-text)' }}>{payments.length}</div>
             </div>
             <div>
@@ -1528,7 +1551,7 @@ function PaymentsTab() {
                 </tr>
               ))}
               {payments.length === 0 && (
-                <tr><td colSpan={9} className="px-4 py-8 text-center text-xs" style={{ color: 'var(--color-text-muted)' }}>No payment certificates yet</td></tr>
+                <tr><td colSpan={9} className="px-4 py-8 text-center text-xs" style={{ color: 'var(--color-text-muted)' }}>No {paymentLabel.toLowerCase()} yet</td></tr>
               )}
             </tbody>
           </table>
@@ -1544,7 +1567,7 @@ function PaymentsTab() {
 
 function EvmTab() {
   const { pid } = useProjectContext();
-  const { evmSnapshots, createEvmSnapshot } = useCostStore();
+  const { evmSnapshots, createEvmSnapshot, costPolicies } = useCostStore();
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fDate, setFDate] = useState('');
@@ -1552,6 +1575,30 @@ function EvmTab() {
   const [fEV, setFEV] = useState('');
   const [fAC, setFAC] = useState('');
   const [fBAC, setFBAC] = useState('');
+
+  // Contract-policy: EVM may be disabled for certain commercial models
+  if (costPolicies && !costPolicies.evmEnabled) {
+    return (
+      <div className="space-y-6">
+        <Card className="flex flex-col items-center py-12 text-center">
+          <ShieldAlert size={40} className="mb-4" style={{ color: 'var(--color-warning)' }} />
+          <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
+            EVM Not Applicable
+          </h3>
+          <p className="text-xs max-w-md" style={{ color: 'var(--color-text-muted)' }}>
+            Earned Value Management is not applicable for this project&apos;s contract model.
+            Progress is tracked using <strong>{costPolicies.progressMeasurement.replace(/_/g, ' ')}</strong> measurement instead.
+          </p>
+          <div
+            className="mt-4 rounded-lg px-4 py-2 text-[11px]"
+            style={{ background: 'rgba(99,102,241,0.06)', color: 'var(--color-text-muted)' }}
+          >
+            Contract policy: <strong>evm.enabled = false</strong> — configured via Contract Profile
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   const latest = evmSnapshots[evmSnapshots.length - 1];
 

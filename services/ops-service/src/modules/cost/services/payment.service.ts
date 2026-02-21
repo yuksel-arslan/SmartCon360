@@ -2,6 +2,7 @@
 
 import { prisma } from '../utils/prisma';
 import { NotFoundError, ConflictError } from '../utils/errors';
+import { getCostPolicies } from '../utils/policy-client';
 
 export interface CreatePaymentCertificateInput {
   projectId: string;
@@ -26,6 +27,8 @@ export interface CreatePaymentItemInput {
 export class PaymentService {
   /**
    * Create new payment certificate (hakediş)
+   * Auto-fills retentionPct and advanceDeduction from contract profile policies
+   * if not explicitly provided.
    */
   async create(input: CreatePaymentCertificateInput) {
     // Check for duplicate period number
@@ -42,12 +45,18 @@ export class PaymentService {
       );
     }
 
+    // Auto-fill from contract policies if not explicitly provided
+    const policies = await getCostPolicies(input.projectId);
+    const retentionPct = input.retentionPct ?? policies.retentionPct;
+    const advanceDeduction = input.advanceDeduction ?? 0;
+
     return await prisma.paymentCertificate.create({
       data: {
         ...input,
         periodStart: new Date(input.periodStart),
         periodEnd: new Date(input.periodEnd),
-        retentionPct: input.retentionPct || 0,
+        retentionPct,
+        advanceDeduction,
         vatPct: input.vatPct || 20,
       },
     });

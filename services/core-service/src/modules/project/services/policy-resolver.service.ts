@@ -29,6 +29,7 @@ export const CONTRACT_FORMS = [
 export const POLICY_MODULES = [
   'cost_pilot', 'takt_flow', 'claim_shield', 'supply_chain',
   'crew_flow', 'quality_gate', 'safe_zone', 'comm_hub',
+  'risk_radar', 'stakeholder', 'green_site',
 ] as const;
 
 export type DeliveryModel = typeof DELIVERY_MODELS[number];
@@ -321,6 +322,223 @@ function resolveCrewFlowPolicies(input: ContractProfileInput): PolicyEntry[] {
   return policies;
 }
 
+/**
+ * Resolve policies for QualityGate module.
+ */
+function resolveQualityGatePolicies(input: ContractProfileInput): PolicyEntry[] {
+  const d = input.deliveryModel;
+  const m = input.commercialModel;
+  const policies: PolicyEntry[] = [];
+
+  // Inspection frequency — higher for cost_plus/gmp where owner bears risk
+  const highFrequency = ['cost_plus', 'gmp', 'emanet'].includes(m);
+  policies.push({
+    module: 'quality_gate',
+    policyKey: 'inspection.frequency',
+    policyValue: highFrequency ? 'per_activity' : 'per_milestone',
+    description: highFrequency
+      ? 'Inspection required per activity — owner bears quality risk'
+      : 'Inspection at milestone level — contractor responsible for interim quality',
+  });
+
+  // FTR (First Time Right) threshold
+  const ftrThreshold = ['ipd', 'design_build'].includes(d) ? '90' : '85';
+  policies.push({
+    module: 'quality_gate',
+    policyKey: 'ftr.threshold',
+    policyValue: ftrThreshold,
+    description: `FTR target threshold: ${ftrThreshold}% — integrated delivery expects higher quality`,
+  });
+
+  // NCR approval workflow depth
+  const ncrApproval = ['dbb', 'kat_karsiligi'].includes(d) ? 'engineer_approval' : 'self_certification';
+  policies.push({
+    module: 'quality_gate',
+    policyKey: 'ncr.approval',
+    policyValue: ncrApproval,
+    description: ncrApproval === 'engineer_approval'
+      ? 'NCR resolution requires engineer approval — traditional oversight model'
+      : 'Contractor self-certifies NCR closure — integrated delivery model',
+  });
+
+  // COPQ tracking
+  const copqEnabled = !['build_share', 'revenue_share'].includes(m);
+  policies.push({
+    module: 'quality_gate',
+    policyKey: 'copq.enabled',
+    policyValue: String(copqEnabled),
+    description: copqEnabled
+      ? 'Cost of Poor Quality tracking enabled'
+      : 'COPQ not applicable for this commercial model',
+  });
+
+  return policies;
+}
+
+/**
+ * Resolve policies for SafeZone module.
+ */
+function resolveSafeZonePolicies(input: ContractProfileInput): PolicyEntry[] {
+  const d = input.deliveryModel;
+  const m = input.commercialModel;
+  const policies: PolicyEntry[] = [];
+
+  // Safety reporting level
+  const detailedReporting = ['ipd', 'cm_at_risk', 'epc'].includes(d) || ['cost_plus', 'gmp'].includes(m);
+  policies.push({
+    module: 'safe_zone',
+    policyKey: 'reporting.level',
+    policyValue: detailedReporting ? 'detailed' : 'summary',
+    description: detailedReporting
+      ? 'Detailed safety reporting — includes near-miss, observations, leading indicators'
+      : 'Summary safety reporting — incidents and PTW tracking',
+  });
+
+  // PTW requirement strictness
+  const strictPtw = ['epc', 'cm_at_risk', 'ipd'].includes(d);
+  policies.push({
+    module: 'safe_zone',
+    policyKey: 'ptw.strictness',
+    policyValue: strictPtw ? 'strict' : 'standard',
+    description: strictPtw
+      ? 'Strict PTW regime — all hazardous work requires approved permit'
+      : 'Standard PTW — permits for high-risk activities only',
+  });
+
+  // Toolbox talk frequency
+  policies.push({
+    module: 'safe_zone',
+    policyKey: 'toolbox.frequency',
+    policyValue: detailedReporting ? 'daily' : 'weekly',
+    description: `Toolbox talk frequency: ${detailedReporting ? 'daily' : 'weekly'}`,
+  });
+
+  return policies;
+}
+
+/**
+ * Resolve policies for CommHub module.
+ */
+function resolveCommHubPolicies(input: ContractProfileInput): PolicyEntry[] {
+  const d = input.deliveryModel;
+  const policies: PolicyEntry[] = [];
+
+  // RFI response time (days)
+  const rfiDays = ['dbb', 'kat_karsiligi'].includes(d) ? '14' : '7';
+  policies.push({
+    module: 'comm_hub',
+    policyKey: 'rfi.response_days',
+    policyValue: rfiDays,
+    description: `RFI response deadline: ${rfiDays} days — ${rfiDays === '14' ? 'traditional separate design review' : 'integrated faster turnaround'}`,
+  });
+
+  // Escalation model
+  const escalation = ['ipd', 'cm_at_risk'].includes(d) ? 'collaborative' : 'hierarchical';
+  policies.push({
+    module: 'comm_hub',
+    policyKey: 'escalation.model',
+    policyValue: escalation,
+    description: escalation === 'collaborative'
+      ? 'Collaborative escalation — shared problem-solving before formal escalation'
+      : 'Hierarchical escalation — formal chain of command',
+  });
+
+  return policies;
+}
+
+/**
+ * Resolve policies for RiskRadar module.
+ */
+function resolveRiskRadarPolicies(input: ContractProfileInput): PolicyEntry[] {
+  const d = input.deliveryModel;
+  const m = input.commercialModel;
+  const policies: PolicyEntry[] = [];
+
+  // Risk allocation model
+  const sharedRisk = ['ipd', 'cm_at_risk', 'build_share', 'revenue_share'].includes(m) ||
+    ['ipd'].includes(d);
+  policies.push({
+    module: 'risk_radar',
+    policyKey: 'allocation.model',
+    policyValue: sharedRisk ? 'shared' : 'transferred',
+    description: sharedRisk
+      ? 'Shared risk model — risks managed collaboratively'
+      : 'Transferred risk model — risk allocated per contract terms',
+  });
+
+  // Contingency tracking
+  const contingencyPct = ['cost_plus', 'gmp'].includes(m) ? '10' : '5';
+  policies.push({
+    module: 'risk_radar',
+    policyKey: 'contingency.default_pct',
+    policyValue: contingencyPct,
+    description: `Default contingency reserve: ${contingencyPct}%`,
+  });
+
+  return policies;
+}
+
+/**
+ * Resolve policies for StakeHub module.
+ */
+function resolveStakeholderPolicies(input: ContractProfileInput): PolicyEntry[] {
+  const d = input.deliveryModel;
+  const policies: PolicyEntry[] = [];
+
+  // Reporting frequency
+  const frequentReporting = ['ipd', 'cm_at_risk', 'epc'].includes(d);
+  policies.push({
+    module: 'stakeholder',
+    policyKey: 'reporting.frequency',
+    policyValue: frequentReporting ? 'weekly' : 'monthly',
+    description: `Stakeholder reporting: ${frequentReporting ? 'weekly' : 'monthly'} — ${frequentReporting ? 'integrated delivery requires closer engagement' : 'traditional periodic reporting'}`,
+  });
+
+  // Engagement level
+  const highEngagement = ['ipd', 'cm_at_risk'].includes(d);
+  policies.push({
+    module: 'stakeholder',
+    policyKey: 'engagement.level',
+    policyValue: highEngagement ? 'collaborative' : 'inform',
+    description: highEngagement
+      ? 'Collaborative stakeholder engagement — active participation in decisions'
+      : 'Informative engagement — stakeholders kept informed of progress',
+  });
+
+  return policies;
+}
+
+/**
+ * Resolve policies for GreenSite module.
+ */
+function resolveGreenSitePolicies(input: ContractProfileInput): PolicyEntry[] {
+  const d = input.deliveryModel;
+  const m = input.commercialModel;
+  const policies: PolicyEntry[] = [];
+
+  // Carbon tracking requirement
+  const carbonTracking = ['ipd', 'epc', 'design_build'].includes(d);
+  policies.push({
+    module: 'green_site',
+    policyKey: 'carbon.tracking',
+    policyValue: carbonTracking ? 'mandatory' : 'optional',
+    description: carbonTracking
+      ? 'Carbon tracking mandatory — integrated delivery model includes sustainability targets'
+      : 'Carbon tracking optional — available for voluntary reporting',
+  });
+
+  // Waste diversion target
+  const highTarget = ['ipd', 'epc'].includes(d);
+  policies.push({
+    module: 'green_site',
+    policyKey: 'waste.diversion_target',
+    policyValue: highTarget ? '90' : '75',
+    description: `Waste diversion target: ${highTarget ? '90' : '75'}%`,
+  });
+
+  return policies;
+}
+
 // ══════════════════════════════════════
 // MAIN RESOLVER
 // ══════════════════════════════════════
@@ -336,6 +554,12 @@ export function resolveAllPolicies(input: ContractProfileInput): PolicyEntry[] {
     ...resolveClaimShieldPolicies(input),
     ...resolveSupplyChainPolicies(input),
     ...resolveCrewFlowPolicies(input),
+    ...resolveQualityGatePolicies(input),
+    ...resolveSafeZonePolicies(input),
+    ...resolveCommHubPolicies(input),
+    ...resolveRiskRadarPolicies(input),
+    ...resolveStakeholderPolicies(input),
+    ...resolveGreenSitePolicies(input),
   ];
 }
 
