@@ -51,14 +51,14 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       mergedSettings = { ...existingSettings, ...input.settings };
     }
 
-    const { settings: _settings, ...rest } = input;
+    const { settings: _settings, plannedStart, plannedFinish, ...rest } = input;
     const project = await prisma.project.update({
       where: { id },
       data: {
         ...rest,
         ...(mergedSettings && { settings: mergedSettings }),
-        ...(input.plannedStart && { plannedStart: new Date(input.plannedStart) }),
-        ...(input.plannedFinish && { plannedFinish: new Date(input.plannedFinish) }),
+        ...(plannedStart && { plannedStart: new Date(plannedStart) }),
+        ...(plannedFinish && { plannedFinish: new Date(plannedFinish) }),
       },
     });
 
