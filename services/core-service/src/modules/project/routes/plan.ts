@@ -2,9 +2,11 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import {
   generateTaktGrid,
+  generateTaktGridWithRelationships,
   addWorkingDays,
   type ZoneInput,
   type WagonInput,
+  type WagonRelationship,
   type Assignment,
 } from '../utils/takt-calculator';
 import { validatePlan, type TradeInfo } from '../utils/warning-detector';
@@ -109,7 +111,18 @@ export default function planRoutes(prisma: PrismaClient) {
         tradeGroupMap.set(trade.id, group);
       }
 
-      // 4. Generate takt grid PER GROUP — each group is a separate takt train
+      // 4. Load activity relationships from database
+      const dbRelationships = await prisma.tradeRelationship.findMany({
+        where: { projectId, isActive: true },
+      });
+
+      // Build trade ID sets per group for relationship filtering
+      const tradeIdToGroup = new Map<string, TaktPlanGroup>();
+      for (const trade of project.trades) {
+        tradeIdToGroup.set(trade.id, tradeGroupMap.get(trade.id) || 'shell');
+      }
+
+      // 5. Generate takt grid PER GROUP — each group is a separate takt train
       const groups: TaktPlanGroup[] = ['substructure', 'shell', 'fitout'];
 
       const allZoneInputs: (ZoneInput & { group: TaktPlanGroup })[] = [];
@@ -123,6 +136,8 @@ export default function planRoutes(prisma: PrismaClient) {
 
         const groupTrades = project.trades.filter((t) => tradeGroupMap.get(t.id) === group);
         if (groupTrades.length === 0) continue;
+
+        const groupTradeIds = new Set(groupTrades.map((t) => t.id));
 
         const zoneInputs: ZoneInput[] = groupZones.map((loc, i) => ({
           id: loc.id,
@@ -139,7 +154,21 @@ export default function planRoutes(prisma: PrismaClient) {
           bufferAfter: i < groupTrades.length - 1 ? bufferSize : 0,
         }));
 
-        const groupAssignments = generateTaktGrid(zoneInputs, wagonInputs, new Date(startDate), taktTime, workingDays);
+        // Filter relationships for this group (both predecessor and successor must be in group)
+        const groupRelationships: WagonRelationship[] = dbRelationships
+          .filter((r) => groupTradeIds.has(r.predecessorTradeId) && groupTradeIds.has(r.successorTradeId))
+          .map((r) => ({
+            predecessorWagonId: r.predecessorTradeId,
+            successorWagonId: r.successorTradeId,
+            type: r.type as WagonRelationship['type'],
+            lagDays: r.lagDays,
+            mandatory: r.mandatory,
+          }));
+
+        // Use relationship-aware generator if relationships exist, otherwise simple grid
+        const groupAssignments = groupRelationships.length > 0
+          ? generateTaktGridWithRelationships(zoneInputs, wagonInputs, groupRelationships, new Date(startDate), taktTime, workingDays)
+          : generateTaktGrid(zoneInputs, wagonInputs, new Date(startDate), taktTime, workingDays);
 
         allZoneInputs.push(...zoneInputs.map((z) => ({ ...z, group })));
         allWagonInputs.push(...wagonInputs.map((w) => ({ ...w, group })));
@@ -159,7 +188,7 @@ export default function planRoutes(prisma: PrismaClient) {
 
       const totalPeriods = Math.max(...allAssignments.map((a) => a.periodNumber), 1);
 
-      // 5. Run warning detection (AI-3 Core) per group
+      // 6. Run warning detection (AI-3 Core) per group
       const tradeInfos: TradeInfo[] = project.trades.map((t) => ({
         id: t.id,
         code: t.code,
@@ -195,7 +224,7 @@ export default function planRoutes(prisma: PrismaClient) {
         }
       }
 
-      // 6. Persist to PostgreSQL using Prisma transaction
+      // 7. Persist to PostgreSQL using Prisma transaction
       const plan = await prisma.$transaction(async (tx) => {
         const taktPlan = await tx.taktPlan.create({
           data: {

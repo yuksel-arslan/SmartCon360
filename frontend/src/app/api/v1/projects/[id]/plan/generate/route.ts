@@ -5,10 +5,12 @@ import { requireAuth, isAuthError, unauthorizedResponse } from '@/lib/auth';
 import { errorResponse, AppError } from '@/lib/errors';
 import {
   generateTaktGrid,
+  generateTaktGridWithRelationships,
   calculateTotalPeriods,
   addWorkingDays,
   type ZoneInput,
   type WagonInput,
+  type WagonRelationship,
 } from '@/lib/core/takt-calculator';
 import { validatePlan, type TradeInfo } from '@/lib/core/warning-detector';
 import {
@@ -106,7 +108,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       tradeGroupMap.set(trade.id, group);
     }
 
-    // 4. Generate takt grid PER GROUP — each group is a separate takt train
+    // 4. Load activity relationships from database
+    const dbRelationships = await prisma.tradeRelationship.findMany({
+      where: { projectId, isActive: true },
+    });
+
+    // Build trade ID → group map
+    const tradeIdToGroup = new Map<string, TaktPlanGroup>();
+    for (const trade of project.trades) {
+      tradeIdToGroup.set(trade.id, tradeGroupMap.get(trade.id) || 'shell');
+    }
+
+    // 5. Generate takt grid PER GROUP — each group is a separate takt train
     const groups: TaktPlanGroup[] = ['substructure', 'shell', 'fitout'];
 
     const allZoneInputs: (ZoneInput & { group: TaktPlanGroup })[] = [];
@@ -132,6 +145,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         .filter((t) => tradeGroupMap.get(t.id) === group);
       if (groupTrades.length === 0) continue;
 
+      const groupTradeIds = new Set(groupTrades.map((t) => t.id));
+
       // Build zone inputs for this group (sequential numbering within group)
       const zoneInputs: ZoneInput[] = groupZones.map((loc, i) => ({
         id: loc.id,
@@ -149,8 +164,24 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         bufferAfter: i < groupTrades.length - 1 ? bufferSize : 0,
       }));
 
-      // Generate takt grid for this group
-      const groupAssignments = generateTaktGrid(zoneInputs, wagonInputs, new Date(startDate), taktTime, workingDays);
+      // Build wagon ID mapping (tradeId → wagonId) for relationship resolution
+      const tradeIdToWagonId = new Map(wagonInputs.map((w) => [w.tradeId, w.id]));
+
+      // Filter relationships for this group (both trades must be in group)
+      const groupRelationships: WagonRelationship[] = dbRelationships
+        .filter((r) => groupTradeIds.has(r.predecessorTradeId) && groupTradeIds.has(r.successorTradeId))
+        .map((r) => ({
+          predecessorWagonId: tradeIdToWagonId.get(r.predecessorTradeId) || r.predecessorTradeId,
+          successorWagonId: tradeIdToWagonId.get(r.successorTradeId) || r.successorTradeId,
+          type: r.type as WagonRelationship['type'],
+          lagDays: r.lagDays,
+          mandatory: r.mandatory,
+        }));
+
+      // Use relationship-aware generator if relationships exist
+      const groupAssignments = groupRelationships.length > 0
+        ? generateTaktGridWithRelationships(zoneInputs, wagonInputs, groupRelationships, new Date(startDate), taktTime, workingDays)
+        : generateTaktGrid(zoneInputs, wagonInputs, new Date(startDate), taktTime, workingDays);
 
       allZoneInputs.push(...zoneInputs.map((z) => ({ ...z, group })));
       allWagonInputs.push(...wagonInputs.map((w) => ({ ...w, group })));
