@@ -2,7 +2,7 @@
  * Activity Relationship Templates
  *
  * Defines logical dependencies between construction activities (trades/wagons)
- * using standard scheduling relationship types:
+ * using standard scheduling relationship types per PMI PMBOK Guide & ISO 21500:
  *
  *   FS (Finish-to-Start)  — Predecessor finishes before successor starts (most common)
  *   SS (Start-to-Start)   — Successor starts when predecessor starts (+ optional lag)
@@ -14,6 +14,11 @@
  * These templates are used by the plan generator (AI-1 Core) to schedule
  * activities with proper construction logic. Without these, the takt grid
  * would be a simple sequential layout without respecting real dependencies.
+ *
+ * Zone-Based Enforcement:
+ *   All relationships are enforced per zone — within each zone, the predecessor
+ *   activity must satisfy the constraint before the successor can start in that
+ *   same zone.
  */
 
 // ============================================================================
@@ -23,9 +28,9 @@
 export type RelationshipType = 'FS' | 'SS' | 'FF' | 'SF';
 
 export interface ActivityRelationshipTemplate {
-  /** Predecessor trade code (e.g., 'STR-FRM') */
+  /** Predecessor trade code (e.g., 'STR-KRK') */
   predecessorCode: string;
-  /** Successor trade code (e.g., 'STR-RBR') */
+  /** Successor trade code (e.g., 'MEC-PLB') */
   successorCode: string;
   /** Relationship type: FS, SS, FF, SF */
   type: RelationshipType;
@@ -42,45 +47,66 @@ export interface ActivityRelationshipTemplate {
 // ============================================================================
 
 const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  // ── WAGON-LEVEL: Excavation → [Shoring/Piling] → Foundation → Superstructure ─
   {
     predecessorCode: 'STR-EXC',
-    successorCode: 'STR-FRM',
+    successorCode: 'STR-FND',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Foundation formwork starts after excavation completes',
+    description: 'Foundation starts after excavation completes in zone',
+  },
+  // Shoring (İksa) — optional wagon, auto-filtered by getRelationshipsForTrades()
+  // Derin kazılarda: Önce iksa kazıkları çakılır, ardından kademeli kazı + iksa kirişleri
+  // eş zamanlı ilerler. İksa, kazıdan ÖNCE başlar ve kademeli olarak birlikte tamamlanır.
+  {
+    predecessorCode: 'STR-IKS',
+    successorCode: 'STR-EXC',
+    type: 'SS',
+    lagDays: 3,
+    mandatory: true,
+    description: 'Staged excavation starts after shoring piles installed (3 day lag)',
   },
   {
-    predecessorCode: 'STR-FRM',
-    successorCode: 'STR-RBR',
+    predecessorCode: 'STR-IKS',
+    successorCode: 'STR-FND',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Rebar installation starts after formwork is in place',
+    description: 'Foundation starts after shoring fully complete in zone',
   },
+  // Piling — optional wagon, auto-filtered by getRelationshipsForTrades()
   {
-    predecessorCode: 'STR-RBR',
-    successorCode: 'STR-CON',
+    predecessorCode: 'STR-EXC',
+    successorCode: 'STR-PIL',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Concrete pour after rebar placement and inspection',
+    description: 'Piling starts after excavation to pile cut-off level in zone',
   },
   {
-    predecessorCode: 'STR-CON',
-    successorCode: 'STR-STP',
+    predecessorCode: 'STR-PIL',
+    successorCode: 'STR-FND',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Foundation starts after piling provides bearing capacity in zone',
+  },
+  {
+    predecessorCode: 'STR-FND',
+    successorCode: 'STR-KRK',
     type: 'FS',
     lagDays: 3,
     mandatory: true,
-    description: 'Formwork stripping after concrete curing (min 3 days)',
+    description: 'Superstructure starts after foundation concrete cures (min 3 days)',
   },
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-KRK',
     successorCode: 'STR-WPR',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Waterproofing after formwork stripping exposes surfaces',
+    description: 'Waterproofing after superstructure frame complete in zone',
   },
   {
     predecessorCode: 'STR-WPR',
@@ -88,7 +114,7 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 1,
     mandatory: true,
-    description: 'Insulation after waterproofing cures (min 1 day)',
+    description: 'Insulation after waterproofing membrane cures (min 24h)',
   },
 ];
 
@@ -98,7 +124,7 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 
 const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-KRK',
     successorCode: 'MEC-PLB',
     type: 'FS',
     lagDays: 0,
@@ -106,7 +132,7 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     description: 'Plumbing rough-in starts after structural formwork stripped',
   },
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-KRK',
     successorCode: 'MEC-HVC',
     type: 'FS',
     lagDays: 0,
@@ -177,7 +203,7 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 
 const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-KRK',
     successorCode: 'ELC-RGH',
     type: 'FS',
     lagDays: 0,
@@ -271,21 +297,23 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 // ============================================================================
 
 const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  // ── MASONRY PHASE ──────────────────────────────────────────────────────
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-KRK',
     successorCode: 'ARC-MSN',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Masonry/blockwork after structure is exposed',
+    description: 'Masonry/blockwork starts after structure is exposed in zone',
   },
+  // ── PLASTERING PHASE ───────────────────────────────────────────────────
   {
     predecessorCode: 'ARC-MSN',
     successorCode: 'ARC-PLS',
     type: 'FS',
-    lagDays: 0,
+    lagDays: 2,
     mandatory: true,
-    description: 'Plastering after masonry walls built',
+    description: 'Plastering after masonry mortar cures in zone (min 2 days)',
   },
   {
     predecessorCode: 'MEC-PLB',
@@ -293,7 +321,7 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Plastering after plumbing rough-in (pipes concealed)',
+    description: 'Plastering after plumbing rough-in — pipes must be concealed in zone',
   },
   {
     predecessorCode: 'ELC-RGH',
@@ -301,15 +329,24 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Plastering after electrical rough-in (conduits concealed)',
+    description: 'Plastering after electrical rough-in — conduits must be concealed in zone',
   },
+  {
+    predecessorCode: 'ARC-FAC',
+    successorCode: 'ARC-PLS',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Interior plastering after facade/envelope is weather-tight in zone',
+  },
+  // ── DRYWALL PHASE ─────────────────────────────────────────────────────
   {
     predecessorCode: 'MEC-PLB',
     successorCode: 'ARC-DRW',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Drywall after plumbing rough-in behind walls',
+    description: 'Drywall after plumbing rough-in behind walls in zone',
   },
   {
     predecessorCode: 'ELC-RGH',
@@ -317,23 +354,50 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Drywall after electrical rough-in behind walls',
+    description: 'Drywall after electrical rough-in behind walls in zone',
   },
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-INS',
+    successorCode: 'ARC-DRW',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Drywall after insulation installed behind wall cavities in zone',
+  },
+  // ── FACADE / ENVELOPE ─────────────────────────────────────────────────
+  {
+    predecessorCode: 'STR-KRK',
     successorCode: 'ARC-FAC',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Facade starts after structural formwork stripped',
+    description: 'Facade starts after structural formwork stripped in zone',
   },
+  // ── WINDOWS ────────────────────────────────────────────────────────────
+  {
+    predecessorCode: 'ARC-MSN',
+    successorCode: 'ARC-WND',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Windows after masonry openings ready and lintel mortar cured (1 day)',
+  },
+  {
+    predecessorCode: 'ARC-WND',
+    successorCode: 'ARC-PLS',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: false,
+    description: 'Plaster window reveals after window frames installed in zone',
+  },
+  // ── TILING PHASE ───────────────────────────────────────────────────────
   {
     predecessorCode: 'ARC-PLS',
     successorCode: 'ARC-TIL',
     type: 'FS',
-    lagDays: 1,
+    lagDays: 3,
     mandatory: true,
-    description: 'Tiling after plaster cures (min 1 day)',
+    description: 'Tiling after plaster cures in zone (min 3 days)',
   },
   {
     predecessorCode: 'MEC-PLB',
@@ -341,23 +405,41 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Tiling after plumbing rough-in (floor drains in place)',
+    description: 'Tiling after plumbing rough-in — floor drains set in zone',
   },
+  {
+    predecessorCode: 'STR-WPR',
+    successorCode: 'ARC-TIL',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Tiling wet areas after waterproofing membrane cures and tested (1 day)',
+  },
+  // ── FLOORING PHASE ─────────────────────────────────────────────────────
   {
     predecessorCode: 'ARC-DRW',
     successorCode: 'ARC-FLR',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Flooring after drywall partitions complete',
+    description: 'Flooring after drywall partitions define room boundaries in zone',
   },
+  {
+    predecessorCode: 'ARC-PLS',
+    successorCode: 'ARC-FLR',
+    type: 'FS',
+    lagDays: 2,
+    mandatory: true,
+    description: 'Flooring after floor screed/plaster cures in zone (min 2 days)',
+  },
+  // ── SUSPENDED CEILING PHASE ────────────────────────────────────────────
   {
     predecessorCode: 'MEC-EQP',
     successorCode: 'ARC-CLG',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Suspended ceiling after above-ceiling MEP installed',
+    description: 'Suspended ceiling after above-ceiling MEP equipment installed in zone',
   },
   {
     predecessorCode: 'ELC-LGT',
@@ -365,15 +447,32 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'SS',
     lagDays: 0,
     mandatory: true,
-    description: 'Ceiling grid can start with lighting (concurrent install)',
+    description: 'Ceiling grid starts with lighting rough-in (concurrent install in zone)',
+  },
+  {
+    predecessorCode: 'MEC-FPR',
+    successorCode: 'ARC-CLG',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Suspended ceiling after sprinkler heads positioned in zone',
+  },
+  // ── PAINTING PHASE ─────────────────────────────────────────────────────
+  {
+    predecessorCode: 'ARC-PLS',
+    successorCode: 'ARC-PNT',
+    type: 'FS',
+    lagDays: 5,
+    mandatory: true,
+    description: 'Painting after plaster fully cures in zone (min 5 days)',
   },
   {
     predecessorCode: 'ARC-DRW',
     successorCode: 'ARC-PNT',
     type: 'FS',
-    lagDays: 1,
+    lagDays: 2,
     mandatory: true,
-    description: 'Painting after drywall finishing/sanding (1 day dust settle)',
+    description: 'Painting after drywall joint compound cures in zone (min 2 days)',
   },
   {
     predecessorCode: 'ARC-CLG',
@@ -381,39 +480,66 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Painting after ceiling installed (avoid overspray)',
+    description: 'Painting after ceiling installed in zone — avoid overspray damage',
   },
+  {
+    predecessorCode: 'ARC-WND',
+    successorCode: 'ARC-PNT',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Painting after windows installed — zone must be weather-tight',
+  },
+  // ── DOORS & HARDWARE ──────────────────────────────────────────────────
   {
     predecessorCode: 'ARC-PNT',
     successorCode: 'ARC-DOR',
     type: 'FS',
     lagDays: 1,
     mandatory: true,
-    description: 'Doors & hardware after painting dries (1 day)',
+    description: 'Doors after paint dries in zone (min 1 day)',
   },
   {
-    predecessorCode: 'ARC-MSN',
-    successorCode: 'ARC-WND',
+    predecessorCode: 'ARC-FLR',
+    successorCode: 'ARC-DOR',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Windows after masonry openings are ready',
+    description: 'Door hanging after flooring — finished floor level determines clearance',
   },
+  // ── CABINETRY & MILLWORK ──────────────────────────────────────────────
   {
     predecessorCode: 'ARC-PNT',
     successorCode: 'ARC-CAB',
     type: 'FS',
     lagDays: 1,
     mandatory: true,
-    description: 'Cabinetry after painting (1 day to dry)',
+    description: 'Cabinetry after paint dries in zone (min 1 day)',
   },
+  {
+    predecessorCode: 'ARC-FLR',
+    successorCode: 'ARC-CAB',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Base cabinets after flooring — finished floor level required in zone',
+  },
+  {
+    predecessorCode: 'ARC-TIL',
+    successorCode: 'ARC-CAB',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Cabinets in wet areas after tile grout cures in zone (min 1 day)',
+  },
+  // ── FF&E (FURNITURE, FIXTURES & EQUIPMENT) ─────────────────────────────
   {
     predecessorCode: 'ARC-FLR',
     successorCode: 'ARC-FFE',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Furniture after flooring is complete',
+    description: 'Furniture after flooring complete in zone',
   },
   {
     predecessorCode: 'ARC-PNT',
@@ -421,7 +547,15 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 1,
     mandatory: true,
-    description: 'Furniture after painting dries (1 day)',
+    description: 'Furniture after painting dries in zone (min 1 day)',
+  },
+  {
+    predecessorCode: 'ARC-TIL',
+    successorCode: 'ARC-FFE',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'FF&E after tile grout cures in zone (min 1 day)',
   },
 ];
 
@@ -497,12 +631,82 @@ const LANDSCAPE_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 ];
 
 // ============================================================================
+// CROSS-DISCIPLINE: SITE PREPARATION → EXCAVATION & FOUNDATION
+// ============================================================================
+
+const SITE_PREPARATION_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'LND-CLR',
+    successorCode: 'STR-EXC',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Excavation after site clearing — vegetation, roots, grading must be done',
+  },
+  {
+    predecessorCode: 'LND-CLR',
+    successorCode: 'STR-IKS',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Shoring after site clearing — site must be cleared before shoring piles',
+  },
+];
+
+// ============================================================================
+// CROSS-DISCIPLINE FINISHING CONSTRAINTS
+// ============================================================================
+
+const CROSS_DISCIPLINE_FINISHING: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'ARC-PNT',
+    successorCode: 'MEC-FIX',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Plumbing fixtures after painting dries in zone (protect chrome/porcelain)',
+  },
+  {
+    predecessorCode: 'ARC-TIL',
+    successorCode: 'MEC-FIX',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Plumbing fixtures after tile grout cures in zone (min 1 day)',
+  },
+  {
+    predecessorCode: 'ARC-FLR',
+    successorCode: 'MEC-FIX',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Plumbing fixtures after flooring — pedestal/base alignment in zone',
+  },
+  {
+    predecessorCode: 'ARC-CLG',
+    successorCode: 'ELC-FAD',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Fire alarm devices after ceiling grid installed in zone',
+  },
+  {
+    predecessorCode: 'ARC-PNT',
+    successorCode: 'ELC-SEC',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: false,
+    description: 'Security devices after painting dries in zone (wall-mounted equipment)',
+  },
+];
+
+// ============================================================================
 // CROSS-DISCIPLINE RELATIONSHIPS (Hospital Extras)
 // ============================================================================
 
 const HOSPITAL_EXTRA_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-KRK',
     successorCode: 'MEC-MED',
     type: 'FS',
     lagDays: 0,
@@ -568,6 +772,8 @@ const ALL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   ...ELECTRICAL_RELATIONSHIPS,
   ...ARCHITECTURAL_RELATIONSHIPS,
   ...LANDSCAPE_RELATIONSHIPS,
+  ...SITE_PREPARATION_RELATIONSHIPS,
+  ...CROSS_DISCIPLINE_FINISHING,
 ];
 
 // ============================================================================
@@ -737,4 +943,283 @@ export function topologicalSort(
   }
 
   return sorted;
+}
+
+// ============================================================================
+// SUB-ACTIVITY RELATIONSHIPS (Internal to wagons)
+// ============================================================================
+
+export interface SubActivityRelationshipMap {
+  /** Parent wagon code (e.g., 'STR-EXC') */
+  wagonCode: string;
+  /** Relationships between sub-activities within this wagon */
+  relationships: ActivityRelationshipTemplate[];
+}
+
+// ── STR-EXC: Excavation (internal chain) ─────────────────────────────────
+
+const EXC_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'EXC-SRV',
+    successorCode: 'EXC-BEX',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Bulk excavation starts after survey & setting out completes in zone',
+  },
+  {
+    predecessorCode: 'EXC-BEX',
+    successorCode: 'EXC-SGP',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Sub-grade preparation after bulk excavation reaches formation level',
+  },
+];
+
+// ── STR-IKS: Shoring / İksa (internal chain) ─────────────────────────────
+
+const IKS_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'IKS-MOB',
+    successorCode: 'IKS-DRV',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Sheet pile / secant pile installation after equipment mobilized',
+  },
+  {
+    predecessorCode: 'IKS-DRV',
+    successorCode: 'IKS-ANC',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Anchoring & bracing after piles installed in zone',
+  },
+  {
+    predecessorCode: 'IKS-ANC',
+    successorCode: 'IKS-MON',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Monitoring instrumentation after anchoring complete',
+  },
+];
+
+// ── STR-PIL: Piling (internal chain) ─────────────────────────────────────
+
+const PIL_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'PIL-MOB',
+    successorCode: 'PIL-DRV',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Pile driving / boring after rig mobilized in zone',
+  },
+  {
+    predecessorCode: 'PIL-DRV',
+    successorCode: 'PIL-TST',
+    type: 'FS',
+    lagDays: 7,
+    mandatory: true,
+    description: 'Pile load testing after concrete piles cure (min 7 days)',
+  },
+  {
+    predecessorCode: 'PIL-TST',
+    successorCode: 'PIL-CUT',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Pile head trimming after load test approved',
+  },
+];
+
+// ── STR-FND: Foundation (internal chain) ─────────────────────────────────
+
+const FND_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'FND-BLN',
+    successorCode: 'FND-FWP',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Foundation waterproofing after blinding concrete cures (min 1 day)',
+  },
+  {
+    predecessorCode: 'FND-FWP',
+    successorCode: 'FND-FFM',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Foundation formwork placed on waterproofing membrane',
+  },
+  {
+    predecessorCode: 'FND-FFM',
+    successorCode: 'FND-FRB',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Foundation reinforcement after formwork in place',
+  },
+  {
+    predecessorCode: 'FND-FRB',
+    successorCode: 'FND-FCN',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Foundation concrete pour after rebar placement and inspection',
+  },
+  {
+    predecessorCode: 'FND-FCN',
+    successorCode: 'FND-BKF',
+    type: 'FS',
+    lagDays: 3,
+    mandatory: true,
+    description: 'Backfill after foundation concrete cures (min 3 days)',
+  },
+];
+
+// ── STR-KRK: Superstructure Frame (internal chain) ───────────────────────
+
+const KRK_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'KRK-CFM',
+    successorCode: 'KRK-CRB',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Column/shear wall rebar after formwork in place',
+  },
+  {
+    predecessorCode: 'KRK-CRB',
+    successorCode: 'KRK-CCN',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Column/shear wall concrete pour after rebar and inspection',
+  },
+  {
+    predecessorCode: 'KRK-CCN',
+    successorCode: 'KRK-SFM',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Slab formwork after column concrete gains initial set (min 1 day)',
+  },
+  {
+    predecessorCode: 'KRK-SFM',
+    successorCode: 'KRK-SRB',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Slab rebar after slab formwork in place',
+  },
+  {
+    predecessorCode: 'KRK-SRB',
+    successorCode: 'KRK-SCN',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Slab concrete pour after rebar placement and inspection',
+  },
+  {
+    predecessorCode: 'KRK-SCN',
+    successorCode: 'KRK-STP',
+    type: 'FS',
+    lagDays: 3,
+    mandatory: true,
+    description: 'Formwork stripping after slab concrete cures (min 3 days)',
+  },
+];
+
+// ── LND-CLR: Site Clearing & Grading (internal chain) ────────────────────
+
+const CLR_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'CLR-SRV',
+    successorCode: 'CLR-VEG',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Vegetation clearing after site survey identifies boundaries',
+  },
+  {
+    predecessorCode: 'CLR-SRV',
+    successorCode: 'CLR-DEM',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Demolition after survey marks existing structures and utilities',
+  },
+  {
+    predecessorCode: 'CLR-VEG',
+    successorCode: 'CLR-TOP',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Topsoil stripping after vegetation and root removal complete',
+  },
+  {
+    predecessorCode: 'CLR-TOP',
+    successorCode: 'CLR-CUT',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Cut & fill earthworks after topsoil stripped and stockpiled',
+  },
+  {
+    predecessorCode: 'CLR-DEM',
+    successorCode: 'CLR-CUT',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Earthworks after demolition debris cleared from zone',
+  },
+  {
+    predecessorCode: 'CLR-CUT',
+    successorCode: 'CLR-GRD',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Fine grading after bulk earthworks reach rough design levels',
+  },
+  {
+    predecessorCode: 'CLR-GRD',
+    successorCode: 'CLR-ERC',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Erosion & sediment control after final grades established',
+  },
+];
+
+// ── Combined sub-activity relationship map ───────────────────────────────
+
+const SUB_ACTIVITY_RELATIONSHIP_MAP: SubActivityRelationshipMap[] = [
+  { wagonCode: 'STR-EXC', relationships: EXC_SUB_RELATIONSHIPS },
+  { wagonCode: 'STR-IKS', relationships: IKS_SUB_RELATIONSHIPS },
+  { wagonCode: 'STR-PIL', relationships: PIL_SUB_RELATIONSHIPS },
+  { wagonCode: 'STR-FND', relationships: FND_SUB_RELATIONSHIPS },
+  { wagonCode: 'STR-KRK', relationships: KRK_SUB_RELATIONSHIPS },
+  { wagonCode: 'LND-CLR', relationships: CLR_SUB_RELATIONSHIPS },
+];
+
+/**
+ * Get all sub-activity relationship maps.
+ * Returns relationships organized by parent wagon code.
+ */
+export function getAllSubActivityRelationships(): SubActivityRelationshipMap[] {
+  return SUB_ACTIVITY_RELATIONSHIP_MAP;
+}
+
+/**
+ * Get sub-activity relationships for a specific wagon.
+ * Returns the internal activity chain for drill-down scheduling.
+ */
+export function getSubActivityRelationships(
+  wagonCode: string,
+): ActivityRelationshipTemplate[] {
+  const map = SUB_ACTIVITY_RELATIONSHIP_MAP.find((m) => m.wagonCode === wagonCode);
+  return map ? map.relationships : [];
 }

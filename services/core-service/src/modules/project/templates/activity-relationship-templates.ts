@@ -64,57 +64,84 @@ export interface ActivityRelationshipTemplate {
 // ============================================================================
 
 const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  // ── WAGON-LEVEL: Excavation → [Shoring/Piling] → Foundation → Superstructure ─
   {
     predecessorCode: 'STR-EXC',
-    successorCode: 'STR-FRM',
+    successorCode: 'STR-FND',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Foundation formwork starts after excavation completes',
+    description: 'Foundation starts after excavation completes in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  // Shoring (İksa) — optional wagon, auto-filtered by getRelationshipsForTrades()
+  // Derin kazılarda: Önce iksa kazıkları çakılır, ardından kademeli kazı + iksa kirişleri
+  // eş zamanlı ilerler. İksa, kazıdan ÖNCE başlar ve kademeli olarak birlikte tamamlanır.
+  {
+    predecessorCode: 'STR-IKS',
+    successorCode: 'STR-EXC',
+    type: 'SS',
+    lagDays: 3,
+    mandatory: true,
+    description: 'Staged excavation starts after shoring piles installed (3 day lag for pile installation)',
+    category: 'logistical',
+    configurable: true,
+    defaultLagDays: 3,
+  },
+  {
+    predecessorCode: 'STR-IKS',
+    successorCode: 'STR-FND',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Foundation starts after shoring fully complete in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  // Piling — optional wagon, auto-filtered by getRelationshipsForTrades()
+  {
+    predecessorCode: 'STR-EXC',
+    successorCode: 'STR-PIL',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Piling starts after excavation to pile cut-off level in zone',
     category: 'logistical',
     configurable: false,
     defaultLagDays: 0,
   },
   {
-    predecessorCode: 'STR-FRM',
-    successorCode: 'STR-RBR',
+    predecessorCode: 'STR-PIL',
+    successorCode: 'STR-FND',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Rebar installation starts after formwork is in place',
+    description: 'Foundation starts after piling provides bearing capacity in zone',
     category: 'logistical',
     configurable: false,
     defaultLagDays: 0,
   },
   {
-    predecessorCode: 'STR-RBR',
-    successorCode: 'STR-CON',
-    type: 'FS',
-    lagDays: 0,
-    mandatory: true,
-    description: 'Concrete pour after rebar placement and inspection',
-    category: 'regulatory',
-    configurable: false,
-    defaultLagDays: 0,
-  },
-  {
-    predecessorCode: 'STR-CON',
-    successorCode: 'STR-STP',
+    predecessorCode: 'STR-FND',
+    successorCode: 'STR-KRK',
     type: 'FS',
     lagDays: 3,
     mandatory: true,
-    description: 'Formwork stripping after concrete curing (min 3 days per ACI 347)',
+    description: 'Superstructure starts after foundation concrete cures (min 3 days per ACI 347)',
     category: 'physical',
     configurable: true,
     defaultLagDays: 3,
   },
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-KRK',
     successorCode: 'STR-WPR',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Waterproofing after formwork stripping exposes surfaces',
+    description: 'Waterproofing after superstructure frame complete in zone',
     category: 'logistical',
     configurable: false,
     defaultLagDays: 0,
@@ -138,7 +165,7 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 
 const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-KRK',
     successorCode: 'MEC-PLB',
     type: 'FS',
     lagDays: 0,
@@ -149,7 +176,7 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     defaultLagDays: 0,
   },
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-KRK',
     successorCode: 'MEC-HVC',
     type: 'FS',
     lagDays: 0,
@@ -244,7 +271,7 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 
 const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-KRK',
     successorCode: 'ELC-RGH',
     type: 'FS',
     lagDays: 0,
@@ -392,7 +419,7 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   // ── MASONRY PHASE ──────────────────────────────────────────────────────
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-KRK',
     successorCode: 'ARC-MSN',
     type: 'FS',
     lagDays: 0,
@@ -490,7 +517,7 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 
   // ── FACADE / ENVELOPE ─────────────────────────────────────────────────
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-KRK',
     successorCode: 'ARC-FAC',
     type: 'FS',
     lagDays: 0,
@@ -778,6 +805,7 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 // ============================================================================
 
 const LANDSCAPE_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  // ── WAGON-LEVEL: Site Clearing → Landscape finishes ────────────────────
   {
     predecessorCode: 'LND-CLR',
     successorCode: 'LND-HRD',
@@ -874,7 +902,7 @@ const LANDSCAPE_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 
 const HOSPITAL_EXTRA_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   {
-    predecessorCode: 'STR-STP',
+    predecessorCode: 'STR-KRK',
     successorCode: 'MEC-MED',
     type: 'FS',
     lagDays: 0,
@@ -942,6 +970,37 @@ const COMMERCIAL_EXTRA_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Raised access floor after under-floor electrical rough-in',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+];
+
+// ============================================================================
+// CROSS-DISCIPLINE: SITE PREPARATION → EXCAVATION & FOUNDATION
+// ============================================================================
+// Saha temizlenmeden, ağaç köklerinden arındırılmadan kazı yapılamaz,
+// temel atılamaz. Site clearing must complete before building excavation.
+
+const SITE_PREPARATION_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'LND-CLR',
+    successorCode: 'STR-EXC',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Excavation after site clearing — vegetation, roots, grading must be done',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'LND-CLR',
+    successorCode: 'STR-IKS',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Shoring after site clearing — site must be cleared before shoring piles',
     category: 'logistical',
     configurable: false,
     defaultLagDays: 0,
@@ -1027,6 +1086,7 @@ const ALL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   ...ELECTRICAL_RELATIONSHIPS,
   ...ARCHITECTURAL_RELATIONSHIPS,
   ...LANDSCAPE_RELATIONSHIPS,
+  ...SITE_PREPARATION_RELATIONSHIPS,
   ...CROSS_DISCIPLINE_FINISHING,
 ];
 
@@ -1287,4 +1347,369 @@ export function getPhysicalConstraintSummary(
   }
 
   return summary;
+}
+
+// ============================================================================
+// SUB-ACTIVITY RELATIONSHIPS (Internal to wagons)
+// ============================================================================
+//
+// These define the construction sequence WITHIN a wagon. When a user clicks
+// on a wagon in the Takt plan, these relationships show the internal workflow.
+// Sub-activity codes use parent prefix: EXC-SRV = Survey under STR-EXC wagon.
+//
+// Sub-activity relationships use the same ActivityRelationshipTemplate interface
+// but operate at a different level — they schedule work within a single wagon's
+// time window, not between wagons.
+
+export interface SubActivityRelationshipMap {
+  /** Parent wagon code (e.g., 'STR-EXC') */
+  wagonCode: string;
+  /** Relationships between sub-activities within this wagon */
+  relationships: ActivityRelationshipTemplate[];
+}
+
+// ── STR-EXC: Excavation & Foundation (internal chain) ────────────────────
+
+const EXC_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'EXC-SRV',
+    successorCode: 'EXC-BEX',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Bulk excavation starts after survey & setting out completes in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'EXC-BEX',
+    successorCode: 'EXC-SGP',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Sub-grade preparation after bulk excavation reaches formation level',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+];
+
+// ── STR-IKS: Shoring / İksa (internal chain) ─────────────────────────────
+
+const IKS_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'IKS-MOB',
+    successorCode: 'IKS-DRV',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Sheet pile / secant pile installation after equipment mobilized',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'IKS-DRV',
+    successorCode: 'IKS-ANC',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Anchoring & bracing after piles installed in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'IKS-ANC',
+    successorCode: 'IKS-MON',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Monitoring instrumentation after anchoring complete',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+];
+
+// ── STR-PIL: Piling (internal chain) ─────────────────────────────────────
+
+const PIL_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'PIL-MOB',
+    successorCode: 'PIL-DRV',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Pile driving / boring after rig mobilized in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'PIL-DRV',
+    successorCode: 'PIL-TST',
+    type: 'FS',
+    lagDays: 7,
+    mandatory: true,
+    description: 'Pile load testing after concrete piles cure (min 7 days)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 7,
+  },
+  {
+    predecessorCode: 'PIL-TST',
+    successorCode: 'PIL-CUT',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Pile head trimming after load test approved',
+    category: 'regulatory',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+];
+
+// ── STR-FND: Foundation (internal chain) ─────────────────────────────────
+
+const FND_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'FND-BLN',
+    successorCode: 'FND-FWP',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Foundation waterproofing after blinding concrete cures (min 1 day)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 1,
+  },
+  {
+    predecessorCode: 'FND-FWP',
+    successorCode: 'FND-FFM',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Foundation formwork placed on waterproofing membrane',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'FND-FFM',
+    successorCode: 'FND-FRB',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Foundation reinforcement after formwork in place',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'FND-FRB',
+    successorCode: 'FND-FCN',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Foundation concrete pour after rebar placement and inspection',
+    category: 'regulatory',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'FND-FCN',
+    successorCode: 'FND-BKF',
+    type: 'FS',
+    lagDays: 3,
+    mandatory: true,
+    description: 'Backfill after foundation concrete cures (min 3 days per ACI 347)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 3,
+  },
+];
+
+// ── STR-KRK: Superstructure Frame (internal chain) ───────────────────────
+
+const KRK_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'KRK-CFM',
+    successorCode: 'KRK-CRB',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Column/shear wall rebar after formwork in place',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'KRK-CRB',
+    successorCode: 'KRK-CCN',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Column/shear wall concrete pour after rebar and inspection',
+    category: 'regulatory',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'KRK-CCN',
+    successorCode: 'KRK-SFM',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Slab formwork after column concrete gains initial set (min 1 day)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 1,
+  },
+  {
+    predecessorCode: 'KRK-SFM',
+    successorCode: 'KRK-SRB',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Slab rebar after slab formwork in place',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'KRK-SRB',
+    successorCode: 'KRK-SCN',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Slab concrete pour after rebar placement and inspection',
+    category: 'regulatory',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'KRK-SCN',
+    successorCode: 'KRK-STP',
+    type: 'FS',
+    lagDays: 3,
+    mandatory: true,
+    description: 'Formwork stripping after slab concrete cures (min 3 days per ACI 347)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 3,
+  },
+];
+
+// ── LND-CLR: Site Clearing & Grading (internal chain) ────────────────────
+
+const CLR_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'CLR-SRV',
+    successorCode: 'CLR-VEG',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Vegetation clearing after site survey identifies boundaries and protected areas',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'CLR-SRV',
+    successorCode: 'CLR-DEM',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Demolition after survey marks existing structures and utilities',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'CLR-VEG',
+    successorCode: 'CLR-TOP',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Topsoil stripping after vegetation and root removal complete',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'CLR-TOP',
+    successorCode: 'CLR-CUT',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Cut & fill earthworks after topsoil stripped and stockpiled',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'CLR-DEM',
+    successorCode: 'CLR-CUT',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Earthworks after demolition debris cleared from zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'CLR-CUT',
+    successorCode: 'CLR-GRD',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Fine grading after bulk earthworks reach rough design levels',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  {
+    predecessorCode: 'CLR-GRD',
+    successorCode: 'CLR-ERC',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Erosion & sediment control after final grades established',
+    category: 'regulatory',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+];
+
+// ── Combined sub-activity relationship map ───────────────────────────────
+
+const SUB_ACTIVITY_RELATIONSHIP_MAP: SubActivityRelationshipMap[] = [
+  { wagonCode: 'STR-EXC', relationships: EXC_SUB_RELATIONSHIPS },
+  { wagonCode: 'STR-IKS', relationships: IKS_SUB_RELATIONSHIPS },
+  { wagonCode: 'STR-PIL', relationships: PIL_SUB_RELATIONSHIPS },
+  { wagonCode: 'STR-FND', relationships: FND_SUB_RELATIONSHIPS },
+  { wagonCode: 'STR-KRK', relationships: KRK_SUB_RELATIONSHIPS },
+  { wagonCode: 'LND-CLR', relationships: CLR_SUB_RELATIONSHIPS },
+];
+
+/**
+ * Get all sub-activity relationship maps.
+ * Returns relationships organized by parent wagon code.
+ */
+export function getAllSubActivityRelationships(): SubActivityRelationshipMap[] {
+  return SUB_ACTIVITY_RELATIONSHIP_MAP;
+}
+
+/**
+ * Get sub-activity relationships for a specific wagon.
+ * Returns the internal activity chain for drill-down scheduling.
+ */
+export function getSubActivityRelationships(
+  wagonCode: string,
+): ActivityRelationshipTemplate[] {
+  const map = SUB_ACTIVITY_RELATIONSHIP_MAP.find((m) => m.wagonCode === wagonCode);
+  return map ? map.relationships : [];
 }

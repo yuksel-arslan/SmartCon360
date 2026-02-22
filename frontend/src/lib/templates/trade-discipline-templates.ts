@@ -18,6 +18,21 @@
  */
 export type ContractType = 'labor_only' | 'supply_and_fix' | 'supply_install';
 
+/**
+ * Sub-activity within a wagon — visible when drilling into a wagon's detail view.
+ * Each sub-activity has its own crew, duration, and internal dependencies.
+ * Codes use parent prefix: EXC-SRV = Survey under Excavation & Foundation.
+ */
+export interface SubActivityTemplate {
+  name: string;
+  code: string;            // e.g., 'EXC-SRV' — prefixed with parent wagon abbreviation
+  color: string;
+  defaultCrewSize: number;
+  durationMultiplier: number;  // relative to parent wagon duration (1.0 = full wagon time)
+  predecessorCodes: string[];  // codes of sub-activities within the same wagon
+  sortOrder: number;
+}
+
 export interface SubTradeTemplate {
   name: string;
   code: string;
@@ -28,6 +43,7 @@ export interface SubTradeTemplate {
   predecessorCodes: string[];  // codes of trades that must finish before this starts
   sortOrder: number;
   defaultContractType: ContractType;  // typical contract arrangement
+  subActivities?: SubActivityTemplate[];  // drill-down detail within this wagon
 }
 
 export interface DisciplineTemplate {
@@ -42,13 +58,62 @@ export interface DisciplineTemplate {
 // ============================================================================
 
 const STRUCTURAL_TRADES: SubTradeTemplate[] = [
-  { name: 'Excavation & Foundation', code: 'STR-EXC', color: '#92400E', discipline: 'structural', defaultCrewSize: 8, durationMultiplier: 1.2, predecessorCodes: [], sortOrder: 1, defaultContractType: 'labor_only' },
-  { name: 'Formwork', code: 'STR-FRM', color: '#6366F1', discipline: 'structural', defaultCrewSize: 8, durationMultiplier: 1.0, predecessorCodes: ['STR-EXC'], sortOrder: 2, defaultContractType: 'labor_only' },
-  { name: 'Rebar / Reinforcement', code: 'STR-RBR', color: '#4F46E5', discipline: 'structural', defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: ['STR-FRM'], sortOrder: 3, defaultContractType: 'labor_only' },
-  { name: 'Concrete Pour', code: 'STR-CON', color: '#818CF8', discipline: 'structural', defaultCrewSize: 10, durationMultiplier: 0.5, predecessorCodes: ['STR-RBR'], sortOrder: 4, defaultContractType: 'labor_only' },
-  { name: 'Formwork Stripping', code: 'STR-STP', color: '#A78BFA', discipline: 'structural', defaultCrewSize: 4, durationMultiplier: 0.5, predecessorCodes: ['STR-CON'], sortOrder: 5, defaultContractType: 'labor_only' },
+  {
+    name: 'Excavation', code: 'STR-EXC', color: '#92400E', discipline: 'structural',
+    defaultCrewSize: 8, durationMultiplier: 1.0, predecessorCodes: [], sortOrder: 1, defaultContractType: 'labor_only',
+    subActivities: [
+      { name: 'Survey & Setting Out', code: 'EXC-SRV', color: '#78350F', defaultCrewSize: 3, durationMultiplier: 0.15, predecessorCodes: [], sortOrder: 1 },
+      { name: 'Bulk Excavation', code: 'EXC-BEX', color: '#92400E', defaultCrewSize: 8, durationMultiplier: 0.55, predecessorCodes: ['EXC-SRV'], sortOrder: 2 },
+      { name: 'Sub-grade Preparation', code: 'EXC-SGP', color: '#B45309', defaultCrewSize: 6, durationMultiplier: 0.30, predecessorCodes: ['EXC-BEX'], sortOrder: 3 },
+    ],
+  },
+  {
+    name: 'Shoring (İksa)', code: 'STR-IKS', color: '#DC2626', discipline: 'structural',
+    defaultCrewSize: 6, durationMultiplier: 0.8, predecessorCodes: [], sortOrder: 2, defaultContractType: 'supply_and_fix',
+    subActivities: [
+      { name: 'Equipment Mobilization', code: 'IKS-MOB', color: '#DC2626', defaultCrewSize: 4, durationMultiplier: 0.15, predecessorCodes: [], sortOrder: 1 },
+      { name: 'Sheet Pile / Secant Pile Installation', code: 'IKS-DRV', color: '#EF4444', defaultCrewSize: 6, durationMultiplier: 0.45, predecessorCodes: ['IKS-MOB'], sortOrder: 2 },
+      { name: 'Anchoring & Bracing', code: 'IKS-ANC', color: '#F87171', defaultCrewSize: 4, durationMultiplier: 0.25, predecessorCodes: ['IKS-DRV'], sortOrder: 3 },
+      { name: 'Monitoring & Instrumentation', code: 'IKS-MON', color: '#FCA5A5', defaultCrewSize: 2, durationMultiplier: 0.15, predecessorCodes: ['IKS-ANC'], sortOrder: 4 },
+    ],
+  },
+  {
+    name: 'Piling', code: 'STR-PIL', color: '#0369A1', discipline: 'structural',
+    defaultCrewSize: 8, durationMultiplier: 1.0, predecessorCodes: ['STR-EXC'], sortOrder: 3, defaultContractType: 'supply_install',
+    subActivities: [
+      { name: 'Rig Mobilization', code: 'PIL-MOB', color: '#0369A1', defaultCrewSize: 4, durationMultiplier: 0.10, predecessorCodes: [], sortOrder: 1 },
+      { name: 'Pile Driving / Boring', code: 'PIL-DRV', color: '#0284C7', defaultCrewSize: 8, durationMultiplier: 0.55, predecessorCodes: ['PIL-MOB'], sortOrder: 2 },
+      { name: 'Pile Load Testing', code: 'PIL-TST', color: '#0EA5E9', defaultCrewSize: 3, durationMultiplier: 0.20, predecessorCodes: ['PIL-DRV'], sortOrder: 3 },
+      { name: 'Pile Head Trimming', code: 'PIL-CUT', color: '#38BDF8', defaultCrewSize: 4, durationMultiplier: 0.15, predecessorCodes: ['PIL-TST'], sortOrder: 4 },
+    ],
+  },
+  {
+    name: 'Foundation', code: 'STR-FND', color: '#7C3AED', discipline: 'structural',
+    defaultCrewSize: 10, durationMultiplier: 1.2, predecessorCodes: ['STR-EXC'], sortOrder: 4, defaultContractType: 'labor_only',
+    subActivities: [
+      { name: 'Blinding Concrete', code: 'FND-BLN', color: '#A16207', defaultCrewSize: 4, durationMultiplier: 0.06, predecessorCodes: [], sortOrder: 1 },
+      { name: 'Foundation Waterproofing', code: 'FND-FWP', color: '#1E40AF', defaultCrewSize: 4, durationMultiplier: 0.10, predecessorCodes: ['FND-BLN'], sortOrder: 2 },
+      { name: 'Foundation Formwork', code: 'FND-FFM', color: '#6D28D9', defaultCrewSize: 8, durationMultiplier: 0.17, predecessorCodes: ['FND-FWP'], sortOrder: 3 },
+      { name: 'Foundation Reinforcement', code: 'FND-FRB', color: '#4338CA', defaultCrewSize: 8, durationMultiplier: 0.22, predecessorCodes: ['FND-FFM'], sortOrder: 4 },
+      { name: 'Foundation Concrete Pour', code: 'FND-FCN', color: '#818CF8', defaultCrewSize: 10, durationMultiplier: 0.10, predecessorCodes: ['FND-FRB'], sortOrder: 5 },
+      { name: 'Backfill & Compaction', code: 'FND-BKF', color: '#854D0E', defaultCrewSize: 6, durationMultiplier: 0.12, predecessorCodes: ['FND-FCN'], sortOrder: 6 },
+    ],
+  },
+  {
+    name: 'Superstructure (Frame)', code: 'STR-KRK', color: '#6366F1', discipline: 'structural',
+    defaultCrewSize: 10, durationMultiplier: 1.0, predecessorCodes: ['STR-FND'], sortOrder: 5, defaultContractType: 'labor_only',
+    subActivities: [
+      { name: 'Column/Shear Wall Formwork', code: 'KRK-CFM', color: '#6366F1', defaultCrewSize: 8, durationMultiplier: 0.15, predecessorCodes: [], sortOrder: 1 },
+      { name: 'Column/Shear Wall Rebar', code: 'KRK-CRB', color: '#4F46E5', defaultCrewSize: 6, durationMultiplier: 0.15, predecessorCodes: ['KRK-CFM'], sortOrder: 2 },
+      { name: 'Column/Shear Wall Concrete', code: 'KRK-CCN', color: '#818CF8', defaultCrewSize: 10, durationMultiplier: 0.08, predecessorCodes: ['KRK-CRB'], sortOrder: 3 },
+      { name: 'Slab Formwork', code: 'KRK-SFM', color: '#8B5CF6', defaultCrewSize: 8, durationMultiplier: 0.18, predecessorCodes: ['KRK-CCN'], sortOrder: 4 },
+      { name: 'Slab Rebar', code: 'KRK-SRB', color: '#7C3AED', defaultCrewSize: 8, durationMultiplier: 0.18, predecessorCodes: ['KRK-SFM'], sortOrder: 5 },
+      { name: 'Slab Concrete Pour', code: 'KRK-SCN', color: '#A78BFA', defaultCrewSize: 10, durationMultiplier: 0.08, predecessorCodes: ['KRK-SRB'], sortOrder: 6 },
+      { name: 'Formwork Stripping', code: 'KRK-STP', color: '#C4B5FD', defaultCrewSize: 4, durationMultiplier: 0.18, predecessorCodes: ['KRK-SCN'], sortOrder: 7 },
+    ],
+  },
   { name: 'Steel Structure', code: 'STR-STL', color: '#3730A3', discipline: 'structural', defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: [], sortOrder: 6, defaultContractType: 'supply_install' },
-  { name: 'Waterproofing', code: 'STR-WPR', color: '#2563EB', discipline: 'structural', defaultCrewSize: 4, durationMultiplier: 0.6, predecessorCodes: ['STR-STP'], sortOrder: 7, defaultContractType: 'supply_and_fix' },
+  { name: 'Waterproofing', code: 'STR-WPR', color: '#2563EB', discipline: 'structural', defaultCrewSize: 4, durationMultiplier: 0.6, predecessorCodes: ['STR-KRK'], sortOrder: 7, defaultContractType: 'supply_and_fix' },
   { name: 'Insulation', code: 'STR-INS', color: '#D946EF', discipline: 'structural', defaultCrewSize: 4, durationMultiplier: 0.6, predecessorCodes: ['STR-WPR'], sortOrder: 8, defaultContractType: 'supply_and_fix' },
 ];
 
@@ -57,8 +122,8 @@ const STRUCTURAL_TRADES: SubTradeTemplate[] = [
 // ============================================================================
 
 const MECHANICAL_TRADES: SubTradeTemplate[] = [
-  { name: 'Plumbing Rough-in', code: 'MEC-PLB', color: '#3B82F6', discipline: 'mechanical', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['STR-STP'], sortOrder: 1, defaultContractType: 'supply_and_fix' },
-  { name: 'HVAC Ductwork', code: 'MEC-HVC', color: '#06B6D4', discipline: 'mechanical', defaultCrewSize: 5, durationMultiplier: 1.0, predecessorCodes: ['STR-STP'], sortOrder: 2, defaultContractType: 'supply_and_fix' },
+  { name: 'Plumbing Rough-in', code: 'MEC-PLB', color: '#3B82F6', discipline: 'mechanical', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['STR-KRK'], sortOrder: 1, defaultContractType: 'supply_and_fix' },
+  { name: 'HVAC Ductwork', code: 'MEC-HVC', color: '#06B6D4', discipline: 'mechanical', defaultCrewSize: 5, durationMultiplier: 1.0, predecessorCodes: ['STR-KRK'], sortOrder: 2, defaultContractType: 'supply_and_fix' },
   { name: 'Fire Suppression (Sprinklers)', code: 'MEC-FPR', color: '#EF4444', discipline: 'mechanical', defaultCrewSize: 3, durationMultiplier: 0.6, predecessorCodes: ['MEC-HVC'], sortOrder: 3, defaultContractType: 'supply_install' },
   { name: 'Piping Systems', code: 'MEC-PIP', color: '#0EA5E9', discipline: 'mechanical', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['MEC-PLB'], sortOrder: 4, defaultContractType: 'supply_and_fix' },
   { name: 'Mechanical Equipment Installation', code: 'MEC-EQP', color: '#14B8A6', discipline: 'mechanical', defaultCrewSize: 4, durationMultiplier: 1.0, predecessorCodes: ['MEC-HVC', 'MEC-PIP'], sortOrder: 5, defaultContractType: 'supply_install' },
@@ -71,7 +136,7 @@ const MECHANICAL_TRADES: SubTradeTemplate[] = [
 // ============================================================================
 
 const ELECTRICAL_TRADES: SubTradeTemplate[] = [
-  { name: 'Electrical Rough-in (Conduit)', code: 'ELC-RGH', color: '#F59E0B', discipline: 'electrical', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['STR-STP'], sortOrder: 1, defaultContractType: 'supply_and_fix' },
+  { name: 'Electrical Rough-in (Conduit)', code: 'ELC-RGH', color: '#F59E0B', discipline: 'electrical', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['STR-KRK'], sortOrder: 1, defaultContractType: 'supply_and_fix' },
   { name: 'Cable Tray & Containment', code: 'ELC-CTR', color: '#D97706', discipline: 'electrical', defaultCrewSize: 4, durationMultiplier: 0.6, predecessorCodes: ['ELC-RGH'], sortOrder: 2, defaultContractType: 'supply_and_fix' },
   { name: 'Cable Pulling', code: 'ELC-CBL', color: '#B45309', discipline: 'electrical', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['ELC-CTR'], sortOrder: 3, defaultContractType: 'supply_and_fix' },
   { name: 'Switchgear & Panels', code: 'ELC-SWG', color: '#92400E', discipline: 'electrical', defaultCrewSize: 3, durationMultiplier: 0.6, predecessorCodes: ['ELC-CBL'], sortOrder: 4, defaultContractType: 'supply_install' },
@@ -87,10 +152,10 @@ const ELECTRICAL_TRADES: SubTradeTemplate[] = [
 // ============================================================================
 
 const ARCHITECTURAL_TRADES: SubTradeTemplate[] = [
-  { name: 'Masonry / Blockwork', code: 'ARC-MSN', color: '#D97706', discipline: 'architectural', defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: ['STR-STP'], sortOrder: 1, defaultContractType: 'labor_only' },
+  { name: 'Masonry / Blockwork', code: 'ARC-MSN', color: '#D97706', discipline: 'architectural', defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: ['STR-KRK'], sortOrder: 1, defaultContractType: 'labor_only' },
   { name: 'Plastering (Internal)', code: 'ARC-PLS', color: '#FBBF24', discipline: 'architectural', defaultCrewSize: 5, durationMultiplier: 0.8, predecessorCodes: ['ARC-MSN', 'MEC-PLB', 'ELC-RGH'], sortOrder: 2, defaultContractType: 'labor_only' },
   { name: 'Drywall / Partitions', code: 'ARC-DRW', color: '#A78BFA', discipline: 'architectural', defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: ['MEC-PLB', 'ELC-RGH'], sortOrder: 3, defaultContractType: 'supply_and_fix' },
-  { name: 'Facade / Curtain Wall', code: 'ARC-FAC', color: '#0EA5E9', discipline: 'architectural', defaultCrewSize: 6, durationMultiplier: 1.2, predecessorCodes: ['STR-STP'], sortOrder: 4, defaultContractType: 'supply_install' },
+  { name: 'Facade / Curtain Wall', code: 'ARC-FAC', color: '#0EA5E9', discipline: 'architectural', defaultCrewSize: 6, durationMultiplier: 1.2, predecessorCodes: ['STR-KRK'], sortOrder: 4, defaultContractType: 'supply_install' },
   { name: 'Tiling (Floors & Walls)', code: 'ARC-TIL', color: '#10B981', discipline: 'architectural', defaultCrewSize: 4, durationMultiplier: 1.0, predecessorCodes: ['ARC-PLS', 'MEC-PLB'], sortOrder: 5, defaultContractType: 'labor_only' },
   { name: 'Flooring', code: 'ARC-FLR', color: '#059669', discipline: 'architectural', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['ARC-DRW'], sortOrder: 6, defaultContractType: 'supply_and_fix' },
   { name: 'Suspended Ceiling', code: 'ARC-CLG', color: '#64748B', discipline: 'architectural', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['MEC-EQP', 'ELC-LGT'], sortOrder: 7, defaultContractType: 'supply_and_fix' },
@@ -106,7 +171,19 @@ const ARCHITECTURAL_TRADES: SubTradeTemplate[] = [
 // ============================================================================
 
 const LANDSCAPE_TRADES: SubTradeTemplate[] = [
-  { name: 'Site Clearing & Grading', code: 'LND-CLR', color: '#854D0E', discipline: 'landscape', defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: [], sortOrder: 1, defaultContractType: 'labor_only' },
+  {
+    name: 'Site Clearing & Grading', code: 'LND-CLR', color: '#854D0E', discipline: 'landscape',
+    defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: [], sortOrder: 1, defaultContractType: 'labor_only',
+    subActivities: [
+      { name: 'Site Survey & Staking', code: 'CLR-SRV', color: '#78350F', defaultCrewSize: 3, durationMultiplier: 0.10, predecessorCodes: [], sortOrder: 1 },
+      { name: 'Vegetation Clearing', code: 'CLR-VEG', color: '#15803D', defaultCrewSize: 6, durationMultiplier: 0.15, predecessorCodes: ['CLR-SRV'], sortOrder: 2 },
+      { name: 'Topsoil Stripping', code: 'CLR-TOP', color: '#A16207', defaultCrewSize: 5, durationMultiplier: 0.12, predecessorCodes: ['CLR-VEG'], sortOrder: 3 },
+      { name: 'Demolition & Removal', code: 'CLR-DEM', color: '#991B1B', defaultCrewSize: 8, durationMultiplier: 0.20, predecessorCodes: ['CLR-SRV'], sortOrder: 4 },
+      { name: 'Cut & Fill Earthworks', code: 'CLR-CUT', color: '#854D0E', defaultCrewSize: 8, durationMultiplier: 0.23, predecessorCodes: ['CLR-TOP', 'CLR-DEM'], sortOrder: 5 },
+      { name: 'Fine Grading & Compaction', code: 'CLR-GRD', color: '#92400E', defaultCrewSize: 6, durationMultiplier: 0.12, predecessorCodes: ['CLR-CUT'], sortOrder: 6 },
+      { name: 'Erosion & Sediment Control', code: 'CLR-ERC', color: '#1D4ED8', defaultCrewSize: 4, durationMultiplier: 0.08, predecessorCodes: ['CLR-GRD'], sortOrder: 7 },
+    ],
+  },
   { name: 'Hard Landscaping (Paving)', code: 'LND-HRD', color: '#78716C', discipline: 'landscape', defaultCrewSize: 5, durationMultiplier: 1.0, predecessorCodes: ['LND-CLR'], sortOrder: 2, defaultContractType: 'supply_and_fix' },
   { name: 'External Drainage', code: 'LND-DRN', color: '#2563EB', discipline: 'landscape', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['LND-CLR'], sortOrder: 3, defaultContractType: 'supply_and_fix' },
   { name: 'External Electrical & Lighting', code: 'LND-ELC', color: '#F59E0B', discipline: 'landscape', defaultCrewSize: 3, durationMultiplier: 0.6, predecessorCodes: ['LND-HRD'], sortOrder: 4, defaultContractType: 'supply_install' },
@@ -183,7 +260,7 @@ const PROJECT_DISCIPLINE_CONFIGS: ProjectTypeDisciplineConfig[] = [
     disciplines: [
       { discipline: 'structural', included: true },
       { discipline: 'mechanical', included: true, extraTrades: [
-        { name: 'Medical Gas Systems', code: 'MEC-MED', color: '#14B8A6', discipline: 'mechanical', defaultCrewSize: 3, durationMultiplier: 0.8, predecessorCodes: ['STR-STP'], sortOrder: 8, defaultContractType: 'supply_install' },
+        { name: 'Medical Gas Systems', code: 'MEC-MED', color: '#14B8A6', discipline: 'mechanical', defaultCrewSize: 3, durationMultiplier: 0.8, predecessorCodes: ['STR-KRK'], sortOrder: 8, defaultContractType: 'supply_install' },
         { name: 'Clean Room Systems', code: 'MEC-CLN', color: '#22D3EE', discipline: 'mechanical', defaultCrewSize: 4, durationMultiplier: 1.0, predecessorCodes: ['MEC-EQP'], sortOrder: 9, defaultContractType: 'supply_install' },
       ]},
       { discipline: 'electrical', included: true, extraTrades: [
@@ -229,7 +306,7 @@ const PROJECT_DISCIPLINE_CONFIGS: ProjectTypeDisciplineConfig[] = [
   {
     projectType: 'infrastructure',
     disciplines: [
-      { discipline: 'structural', included: true, excludeCodes: ['STR-FRM', 'STR-RBR', 'STR-CON', 'STR-STP', 'STR-INS'] },
+      { discipline: 'structural', included: true, excludeCodes: ['STR-KRK', 'STR-INS'] },
       { discipline: 'mechanical', included: false },
       { discipline: 'electrical', included: true, excludeCodes: ['ELC-DAT', 'ELC-SEC', 'ELC-BMS'] },
       { discipline: 'architectural', included: false },
