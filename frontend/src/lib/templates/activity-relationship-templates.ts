@@ -1,0 +1,740 @@
+/**
+ * Activity Relationship Templates
+ *
+ * Defines logical dependencies between construction activities (trades/wagons)
+ * using standard scheduling relationship types:
+ *
+ *   FS (Finish-to-Start)  — Predecessor finishes before successor starts (most common)
+ *   SS (Start-to-Start)   — Successor starts when predecessor starts (+ optional lag)
+ *   FF (Finish-to-Finish) — Successor finishes when predecessor finishes (+ optional lag)
+ *   SF (Start-to-Finish)  — Successor can't finish until predecessor starts (rare)
+ *
+ * Lag: positive = delay (days), negative = lead/overlap (days)
+ *
+ * These templates are used by the plan generator (AI-1 Core) to schedule
+ * activities with proper construction logic. Without these, the takt grid
+ * would be a simple sequential layout without respecting real dependencies.
+ */
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export type RelationshipType = 'FS' | 'SS' | 'FF' | 'SF';
+
+export interface ActivityRelationshipTemplate {
+  /** Predecessor trade code (e.g., 'STR-FRM') */
+  predecessorCode: string;
+  /** Successor trade code (e.g., 'STR-RBR') */
+  successorCode: string;
+  /** Relationship type: FS, SS, FF, SF */
+  type: RelationshipType;
+  /** Lag in days (positive = delay, negative = lead/overlap). 0 = no lag. */
+  lagDays: number;
+  /** Whether this relationship is mandatory (hard logic) or preferred (soft logic) */
+  mandatory: boolean;
+  /** Human-readable description of the relationship */
+  description: string;
+}
+
+// ============================================================================
+// STRUCTURAL RELATIONSHIPS
+// ============================================================================
+
+const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'STR-EXC',
+    successorCode: 'STR-FRM',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Foundation formwork starts after excavation completes',
+  },
+  {
+    predecessorCode: 'STR-FRM',
+    successorCode: 'STR-RBR',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Rebar installation starts after formwork is in place',
+  },
+  {
+    predecessorCode: 'STR-RBR',
+    successorCode: 'STR-CON',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Concrete pour after rebar placement and inspection',
+  },
+  {
+    predecessorCode: 'STR-CON',
+    successorCode: 'STR-STP',
+    type: 'FS',
+    lagDays: 3,
+    mandatory: true,
+    description: 'Formwork stripping after concrete curing (min 3 days)',
+  },
+  {
+    predecessorCode: 'STR-STP',
+    successorCode: 'STR-WPR',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Waterproofing after formwork stripping exposes surfaces',
+  },
+  {
+    predecessorCode: 'STR-WPR',
+    successorCode: 'STR-INS',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Insulation after waterproofing cures (min 1 day)',
+  },
+];
+
+// ============================================================================
+// MECHANICAL RELATIONSHIPS
+// ============================================================================
+
+const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'STR-STP',
+    successorCode: 'MEC-PLB',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Plumbing rough-in starts after structural formwork stripped',
+  },
+  {
+    predecessorCode: 'STR-STP',
+    successorCode: 'MEC-HVC',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'HVAC ductwork starts after structural formwork stripped',
+  },
+  {
+    predecessorCode: 'MEC-PLB',
+    successorCode: 'MEC-HVC',
+    type: 'SS',
+    lagDays: 2,
+    mandatory: false,
+    description: 'HVAC can start 2 days after plumbing rough-in starts (coordination)',
+  },
+  {
+    predecessorCode: 'MEC-HVC',
+    successorCode: 'MEC-FPR',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Fire sprinklers after HVAC ductwork (needs duct routing first)',
+  },
+  {
+    predecessorCode: 'MEC-PLB',
+    successorCode: 'MEC-PIP',
+    type: 'SS',
+    lagDays: 3,
+    mandatory: true,
+    description: 'Piping systems start 3 days after plumbing rough-in starts',
+  },
+  {
+    predecessorCode: 'MEC-HVC',
+    successorCode: 'MEC-EQP',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Mechanical equipment after HVAC ductwork is routed',
+  },
+  {
+    predecessorCode: 'MEC-PIP',
+    successorCode: 'MEC-EQP',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Mechanical equipment after piping systems are in place',
+  },
+  {
+    predecessorCode: 'MEC-EQP',
+    successorCode: 'MEC-TAB',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'HVAC testing & balancing after all equipment installed',
+  },
+  {
+    predecessorCode: 'MEC-EQP',
+    successorCode: 'MEC-FIX',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Plumbing fixtures after equipment installation',
+  },
+];
+
+// ============================================================================
+// ELECTRICAL RELATIONSHIPS
+// ============================================================================
+
+const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'STR-STP',
+    successorCode: 'ELC-RGH',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Electrical rough-in starts after structural formwork stripped',
+  },
+  {
+    predecessorCode: 'MEC-PLB',
+    successorCode: 'ELC-RGH',
+    type: 'SS',
+    lagDays: 1,
+    mandatory: false,
+    description: 'Electrical rough-in can start 1 day after plumbing (avoid clashes)',
+  },
+  {
+    predecessorCode: 'ELC-RGH',
+    successorCode: 'ELC-CTR',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Cable tray after conduit rough-in establishes routing',
+  },
+  {
+    predecessorCode: 'ELC-CTR',
+    successorCode: 'ELC-CBL',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Cable pulling after trays and containment installed',
+  },
+  {
+    predecessorCode: 'ELC-CTR',
+    successorCode: 'ELC-DAT',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Data & communications cables after tray installation',
+  },
+  {
+    predecessorCode: 'ELC-CBL',
+    successorCode: 'ELC-SWG',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Switchgear & panels after power cables pulled',
+  },
+  {
+    predecessorCode: 'ELC-CBL',
+    successorCode: 'ELC-LGT',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Lighting installation after cables pulled',
+  },
+  {
+    predecessorCode: 'ELC-CBL',
+    successorCode: 'ELC-FAD',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Fire alarm & detection after cables pulled',
+  },
+  {
+    predecessorCode: 'ELC-CBL',
+    successorCode: 'ELC-SEC',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Security & CCTV after cables pulled',
+  },
+  {
+    predecessorCode: 'ELC-SWG',
+    successorCode: 'ELC-BMS',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'BMS controls after switchgear energized',
+  },
+  {
+    predecessorCode: 'MEC-TAB',
+    successorCode: 'ELC-BMS',
+    type: 'FF',
+    lagDays: 0,
+    mandatory: true,
+    description: 'BMS commissioning finishes with HVAC T&B (integrated testing)',
+  },
+];
+
+// ============================================================================
+// ARCHITECTURAL RELATIONSHIPS
+// ============================================================================
+
+const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'STR-STP',
+    successorCode: 'ARC-MSN',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Masonry/blockwork after structure is exposed',
+  },
+  {
+    predecessorCode: 'ARC-MSN',
+    successorCode: 'ARC-PLS',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Plastering after masonry walls built',
+  },
+  {
+    predecessorCode: 'MEC-PLB',
+    successorCode: 'ARC-PLS',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Plastering after plumbing rough-in (pipes concealed)',
+  },
+  {
+    predecessorCode: 'ELC-RGH',
+    successorCode: 'ARC-PLS',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Plastering after electrical rough-in (conduits concealed)',
+  },
+  {
+    predecessorCode: 'MEC-PLB',
+    successorCode: 'ARC-DRW',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Drywall after plumbing rough-in behind walls',
+  },
+  {
+    predecessorCode: 'ELC-RGH',
+    successorCode: 'ARC-DRW',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Drywall after electrical rough-in behind walls',
+  },
+  {
+    predecessorCode: 'STR-STP',
+    successorCode: 'ARC-FAC',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Facade starts after structural formwork stripped',
+  },
+  {
+    predecessorCode: 'ARC-PLS',
+    successorCode: 'ARC-TIL',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Tiling after plaster cures (min 1 day)',
+  },
+  {
+    predecessorCode: 'MEC-PLB',
+    successorCode: 'ARC-TIL',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Tiling after plumbing rough-in (floor drains in place)',
+  },
+  {
+    predecessorCode: 'ARC-DRW',
+    successorCode: 'ARC-FLR',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Flooring after drywall partitions complete',
+  },
+  {
+    predecessorCode: 'MEC-EQP',
+    successorCode: 'ARC-CLG',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Suspended ceiling after above-ceiling MEP installed',
+  },
+  {
+    predecessorCode: 'ELC-LGT',
+    successorCode: 'ARC-CLG',
+    type: 'SS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Ceiling grid can start with lighting (concurrent install)',
+  },
+  {
+    predecessorCode: 'ARC-DRW',
+    successorCode: 'ARC-PNT',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Painting after drywall finishing/sanding (1 day dust settle)',
+  },
+  {
+    predecessorCode: 'ARC-CLG',
+    successorCode: 'ARC-PNT',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Painting after ceiling installed (avoid overspray)',
+  },
+  {
+    predecessorCode: 'ARC-PNT',
+    successorCode: 'ARC-DOR',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Doors & hardware after painting dries (1 day)',
+  },
+  {
+    predecessorCode: 'ARC-MSN',
+    successorCode: 'ARC-WND',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Windows after masonry openings are ready',
+  },
+  {
+    predecessorCode: 'ARC-PNT',
+    successorCode: 'ARC-CAB',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Cabinetry after painting (1 day to dry)',
+  },
+  {
+    predecessorCode: 'ARC-FLR',
+    successorCode: 'ARC-FFE',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Furniture after flooring is complete',
+  },
+  {
+    predecessorCode: 'ARC-PNT',
+    successorCode: 'ARC-FFE',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Furniture after painting dries (1 day)',
+  },
+];
+
+// ============================================================================
+// LANDSCAPE RELATIONSHIPS
+// ============================================================================
+
+const LANDSCAPE_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'LND-CLR',
+    successorCode: 'LND-HRD',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Hard landscaping after site is cleared and graded',
+  },
+  {
+    predecessorCode: 'LND-CLR',
+    successorCode: 'LND-DRN',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Drainage after site clearing (trench before paving)',
+  },
+  {
+    predecessorCode: 'LND-DRN',
+    successorCode: 'LND-HRD',
+    type: 'SS',
+    lagDays: 2,
+    mandatory: false,
+    description: 'Paving can start 2 days after drainage starts (different areas)',
+  },
+  {
+    predecessorCode: 'LND-HRD',
+    successorCode: 'LND-ELC',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'External electrical after hard landscaping (cable routes)',
+  },
+  {
+    predecessorCode: 'LND-DRN',
+    successorCode: 'LND-IRR',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Irrigation after drainage infrastructure in place',
+  },
+  {
+    predecessorCode: 'LND-IRR',
+    successorCode: 'LND-PLT',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Planting after irrigation systems installed',
+  },
+  {
+    predecessorCode: 'LND-HRD',
+    successorCode: 'LND-FNC',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Fencing after hard landscaping (boundary definition)',
+  },
+  {
+    predecessorCode: 'LND-PLT',
+    successorCode: 'LND-FRN',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'External furniture & signage as last landscape activity',
+  },
+];
+
+// ============================================================================
+// CROSS-DISCIPLINE RELATIONSHIPS (Hospital Extras)
+// ============================================================================
+
+const HOSPITAL_EXTRA_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'STR-STP',
+    successorCode: 'MEC-MED',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Medical gas systems after structure complete',
+  },
+  {
+    predecessorCode: 'MEC-EQP',
+    successorCode: 'MEC-CLN',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Clean room systems after MEP equipment installed',
+  },
+  {
+    predecessorCode: 'ELC-SWG',
+    successorCode: 'ELC-UPS',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'UPS / emergency power after switchgear installed',
+  },
+  {
+    predecessorCode: 'ELC-CBL',
+    successorCode: 'ELC-NCS',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Nurse call systems after cabling pulled',
+  },
+];
+
+// ============================================================================
+// COMMERCIAL EXTRAS
+// ============================================================================
+
+const COMMERCIAL_EXTRA_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  {
+    predecessorCode: 'MEC-PLB',
+    successorCode: 'ARC-RAF',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Raised access floor after under-floor MEP rough-in',
+  },
+  {
+    predecessorCode: 'ELC-RGH',
+    successorCode: 'ARC-RAF',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Raised access floor after under-floor electrical rough-in',
+  },
+];
+
+// ============================================================================
+// ALL RELATIONSHIPS — COMBINED
+// ============================================================================
+
+const ALL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  ...STRUCTURAL_RELATIONSHIPS,
+  ...MECHANICAL_RELATIONSHIPS,
+  ...ELECTRICAL_RELATIONSHIPS,
+  ...ARCHITECTURAL_RELATIONSHIPS,
+  ...LANDSCAPE_RELATIONSHIPS,
+];
+
+// ============================================================================
+// PUBLIC API
+// ============================================================================
+
+/**
+ * Get all activity relationship templates (base set for all project types).
+ */
+export function getAllRelationshipTemplates(): ActivityRelationshipTemplate[] {
+  return ALL_RELATIONSHIPS;
+}
+
+/**
+ * Get activity relationship templates filtered for a specific project type.
+ * Only returns relationships where both predecessor and successor codes
+ * exist in the given trade code list.
+ */
+export function getRelationshipsForTrades(
+  tradeCodes: string[],
+  projectType?: string,
+): ActivityRelationshipTemplate[] {
+  const codeSet = new Set(tradeCodes);
+
+  let relationships = [...ALL_RELATIONSHIPS];
+
+  // Add project-type-specific extra relationships
+  if (projectType === 'hospital') {
+    relationships.push(...HOSPITAL_EXTRA_RELATIONSHIPS);
+  }
+  if (projectType === 'commercial') {
+    relationships.push(...COMMERCIAL_EXTRA_RELATIONSHIPS);
+  }
+
+  // Filter to only relationships where both trades exist in the project
+  return relationships.filter(
+    (r) => codeSet.has(r.predecessorCode) && codeSet.has(r.successorCode),
+  );
+}
+
+/**
+ * Get relationships grouped by successor code.
+ * Useful for the takt calculator to determine when an activity can start.
+ */
+export function getRelationshipsBySuccessor(
+  relationships: ActivityRelationshipTemplate[],
+): Map<string, ActivityRelationshipTemplate[]> {
+  const map = new Map<string, ActivityRelationshipTemplate[]>();
+  for (const r of relationships) {
+    const list = map.get(r.successorCode) || [];
+    list.push(r);
+    map.set(r.successorCode, list);
+  }
+  return map;
+}
+
+/**
+ * Get relationships grouped by predecessor code.
+ * Useful for determining what depends on a given activity.
+ */
+export function getRelationshipsByPredecessor(
+  relationships: ActivityRelationshipTemplate[],
+): Map<string, ActivityRelationshipTemplate[]> {
+  const map = new Map<string, ActivityRelationshipTemplate[]>();
+  for (const r of relationships) {
+    const list = map.get(r.predecessorCode) || [];
+    list.push(r);
+    map.set(r.predecessorCode, list);
+  }
+  return map;
+}
+
+/**
+ * Validate that relationships have no circular dependencies.
+ * Returns an array of codes involved in cycles (empty if valid).
+ */
+export function detectCircularDependencies(
+  relationships: ActivityRelationshipTemplate[],
+): string[] {
+  const graph = new Map<string, string[]>();
+  const allCodes = new Set<string>();
+
+  for (const r of relationships) {
+    allCodes.add(r.predecessorCode);
+    allCodes.add(r.successorCode);
+    const successors = graph.get(r.predecessorCode) || [];
+    successors.push(r.successorCode);
+    graph.set(r.predecessorCode, successors);
+  }
+
+  const visited = new Set<string>();
+  const inStack = new Set<string>();
+  const cycleNodes: string[] = [];
+
+  function dfs(node: string): boolean {
+    if (inStack.has(node)) {
+      cycleNodes.push(node);
+      return true;
+    }
+    if (visited.has(node)) return false;
+
+    visited.add(node);
+    inStack.add(node);
+
+    for (const neighbor of graph.get(node) || []) {
+      if (dfs(neighbor)) return true;
+    }
+
+    inStack.delete(node);
+    return false;
+  }
+
+  for (const code of allCodes) {
+    if (!visited.has(code)) {
+      dfs(code);
+    }
+  }
+
+  return cycleNodes;
+}
+
+/**
+ * Compute topological sort order for trades based on relationships.
+ * Returns an ordered list of trade codes respecting all dependencies.
+ * Falls back to input order if circular dependencies exist.
+ */
+export function topologicalSort(
+  tradeCodes: string[],
+  relationships: ActivityRelationshipTemplate[],
+): string[] {
+  const inDegree = new Map<string, number>();
+  const graph = new Map<string, string[]>();
+
+  for (const code of tradeCodes) {
+    inDegree.set(code, 0);
+    graph.set(code, []);
+  }
+
+  const codeSet = new Set(tradeCodes);
+  for (const r of relationships) {
+    if (!codeSet.has(r.predecessorCode) || !codeSet.has(r.successorCode)) continue;
+    graph.get(r.predecessorCode)!.push(r.successorCode);
+    inDegree.set(r.successorCode, (inDegree.get(r.successorCode) || 0) + 1);
+  }
+
+  // Kahn's algorithm
+  const queue: string[] = [];
+  for (const [code, degree] of inDegree) {
+    if (degree === 0) queue.push(code);
+  }
+
+  const sorted: string[] = [];
+  while (queue.length > 0) {
+    const node = queue.shift()!;
+    sorted.push(node);
+
+    for (const neighbor of graph.get(node) || []) {
+      const newDegree = (inDegree.get(neighbor) || 1) - 1;
+      inDegree.set(neighbor, newDegree);
+      if (newDegree === 0) queue.push(neighbor);
+    }
+  }
+
+  // If not all nodes were sorted, there's a cycle — fall back to input order
+  if (sorted.length < tradeCodes.length) {
+    return tradeCodes;
+  }
+
+  return sorted;
+}

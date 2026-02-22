@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import pino from 'pino';
 import { getTradesForProjectType, getDisciplineOptions } from '../templates/trade-discipline-templates';
+import { getRelationshipsForTrades } from '../templates/activity-relationship-templates';
 import { getAvailableStandards } from '../templates/wbs-templates';
 import { CBS_STANDARDS, getDefaultCbsStandard } from '../templates/cbs-templates';
 import { notifyHubSetupComplete } from '../utils/service-client';
@@ -226,9 +227,66 @@ export default function setupRoutes(prisma: PrismaClient) {
         }
       }
 
+      // Build code → id map for resolving relationships
+      const codeToId = new Map(created.map((t) => [t.code, t.id]));
+
+      // Resolve predecessorTradeIds from template predecessorCodes
+      for (const template of tradesToApply) {
+        const tradeId = codeToId.get(template.code);
+        if (!tradeId || template.predecessorCodes.length === 0) continue;
+
+        const resolvedIds = template.predecessorCodes
+          .map((code) => codeToId.get(code))
+          .filter((id): id is string => !!id);
+
+        if (resolvedIds.length > 0) {
+          await prisma.trade.update({
+            where: { id: tradeId },
+            data: { predecessorTradeIds: resolvedIds },
+          });
+        }
+      }
+
+      // Create activity relationships from templates
+      const tradeCodes = created.map((t) => t.code);
+      const relationshipTemplates = getRelationshipsForTrades(tradeCodes, project.projectType);
+      const createdRelationships = [];
+
+      for (const rel of relationshipTemplates) {
+        const predId = codeToId.get(rel.predecessorCode);
+        const succId = codeToId.get(rel.successorCode);
+        if (!predId || !succId) continue;
+
+        try {
+          const relationship = await prisma.tradeRelationship.create({
+            data: {
+              projectId,
+              predecessorTradeId: predId,
+              successorTradeId: succId,
+              type: rel.type,
+              lagDays: rel.lagDays,
+              defaultLagDays: rel.defaultLagDays,
+              mandatory: rel.mandatory,
+              description: rel.description,
+              category: rel.category,
+              configurable: rel.configurable,
+              source: 'template',
+            },
+          });
+          createdRelationships.push(relationship);
+        } catch (err: any) {
+          // Skip duplicates
+          if (err.code !== 'P2002') throw err;
+        }
+      }
+
       res.status(201).json({
         data: created,
-        meta: { requested: tradesToApply.length, created: created.length },
+        meta: {
+          requested: tradesToApply.length,
+          created: created.length,
+          relationshipsCreated: createdRelationships.length,
+        },
         error: null,
       });
     } catch (err: any) {
