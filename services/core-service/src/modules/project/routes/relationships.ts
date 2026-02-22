@@ -118,13 +118,23 @@ export default function relationshipRoutes(prisma: PrismaClient) {
         SF: templates.filter((t) => t.type === 'SF').length,
       };
 
+      // Group by category for summary
+      const byCategory = {
+        physical: templates.filter((t) => t.category === 'physical').length,
+        logistical: templates.filter((t) => t.category === 'logistical').length,
+        regulatory: templates.filter((t) => t.category === 'regulatory').length,
+        preferential: templates.filter((t) => t.category === 'preferential').length,
+      };
+
       return res.json({
         data: templates,
         meta: {
           total: templates.length,
           byType,
+          byCategory,
           mandatory: templates.filter((t) => t.mandatory).length,
           preferred: templates.filter((t) => !t.mandatory).length,
+          configurable: templates.filter((t) => t.configurable).length,
         },
         error: null,
       });
@@ -245,8 +255,11 @@ export default function relationshipRoutes(prisma: PrismaClient) {
               successorTradeId: succId,
               type: rel.type,
               lagDays: rel.lagDays,
+              defaultLagDays: rel.defaultLagDays,
               mandatory: rel.mandatory,
               description: rel.description,
+              category: rel.category,
+              configurable: rel.configurable,
               source: 'template',
             },
           });
@@ -332,6 +345,104 @@ export default function relationshipRoutes(prisma: PrismaClient) {
   });
 
   /**
+   * PATCH /projects/:id/relationships/:relationshipId/reset-lag
+   * Reset a configurable relationship's lag to its factory default
+   */
+  router.patch('/projects/:id/relationships/:relationshipId/reset-lag', async (req, res) => {
+    try {
+      const { relationshipId } = req.params;
+
+      const existing = await prisma.tradeRelationship.findUnique({
+        where: { id: relationshipId },
+      });
+
+      if (!existing) {
+        return res.status(404).json({
+          data: null,
+          error: { code: 'NOT_FOUND', message: 'Relationship not found' },
+        });
+      }
+
+      if (!existing.configurable) {
+        return res.status(400).json({
+          data: null,
+          error: { code: 'NOT_CONFIGURABLE', message: 'This relationship\'s lag cannot be modified' },
+        });
+      }
+
+      const relationship = await prisma.tradeRelationship.update({
+        where: { id: relationshipId },
+        data: { lagDays: existing.defaultLagDays },
+      });
+
+      return res.json({ data: relationship, error: null });
+    } catch (err: unknown) {
+      const error = err as Error;
+      return res.status(500).json({
+        data: null,
+        error: { code: 'INTERNAL', message: error.message },
+      });
+    }
+  });
+
+  /**
+   * GET /projects/:id/relationships/physical-constraints
+   * Get only physical constraints with curing/drying lag info
+   */
+  router.get('/projects/:id/relationships/physical-constraints', async (req, res) => {
+    try {
+      const projectId = req.params.id;
+
+      const relationships = await prisma.tradeRelationship.findMany({
+        where: { projectId, category: 'physical', isActive: true },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      // Enrich with trade names
+      const tradeIds = new Set<string>();
+      for (const r of relationships) {
+        tradeIds.add(r.predecessorTradeId);
+        tradeIds.add(r.successorTradeId);
+      }
+
+      const trades = await prisma.trade.findMany({
+        where: { id: { in: [...tradeIds] } },
+        select: { id: true, name: true, code: true, color: true },
+      });
+      const tradeMap = new Map(trades.map((t) => [t.id, t]));
+
+      const enriched = relationships.map((r) => {
+        const pred = tradeMap.get(r.predecessorTradeId);
+        const succ = tradeMap.get(r.successorTradeId);
+        return {
+          ...r,
+          predecessorTradeName: pred?.name || '',
+          predecessorTradeCode: pred?.code || '',
+          successorTradeName: succ?.name || '',
+          successorTradeCode: succ?.code || '',
+          isOverridden: r.lagDays !== r.defaultLagDays,
+        };
+      });
+
+      return res.json({
+        data: enriched,
+        meta: {
+          total: enriched.length,
+          overridden: enriched.filter((r) => r.isOverridden).length,
+          configurable: enriched.filter((r) => r.configurable).length,
+        },
+        error: null,
+      });
+    } catch (err: unknown) {
+      const error = err as Error;
+      return res.status(500).json({
+        data: null,
+        error: { code: 'INTERNAL', message: error.message },
+      });
+    }
+  });
+
+  /**
    * GET /projects/:id/relationships/summary
    * Get a summary of relationships with dependency graph info
    */
@@ -358,6 +469,9 @@ export default function relationshipRoutes(prisma: PrismaClient) {
         lagDays: r.lagDays,
         mandatory: r.mandatory,
         description: r.description || '',
+        category: (r.category || 'logistical') as ActivityRelationshipTemplate['category'],
+        configurable: r.configurable,
+        defaultLagDays: r.defaultLagDays,
       }));
 
       const cycles = detectCircularDependencies(templateFormat);
@@ -378,13 +492,23 @@ export default function relationshipRoutes(prisma: PrismaClient) {
       const predecessorIds = new Set(relationships.map((r) => r.predecessorTradeId));
       const endActivities = trades.filter((t) => !predecessorIds.has(t.id));
 
+      // Count relationships per category
+      const byCategory = {
+        physical: relationships.filter((r) => r.category === 'physical').length,
+        logistical: relationships.filter((r) => r.category === 'logistical').length,
+        regulatory: relationships.filter((r) => r.category === 'regulatory').length,
+        preferential: relationships.filter((r) => r.category === 'preferential').length,
+      };
+
       return res.json({
         data: {
           totalRelationships: relationships.length,
           totalTrades: trades.length,
           byType,
+          byCategory,
           mandatory: relationships.filter((r) => r.mandatory).length,
           preferred: relationships.filter((r) => !r.mandatory).length,
+          configurable: relationships.filter((r) => r.configurable).length,
           hasCircularDependencies: cycles.length > 0,
           circularCodes: cycles,
           startActivities: startActivities.map((t) => ({ id: t.id, code: t.code, name: t.name })),

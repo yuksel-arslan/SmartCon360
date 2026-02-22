@@ -265,8 +265,11 @@ export default function setupRoutes(prisma: PrismaClient) {
               successorTradeId: succId,
               type: rel.type,
               lagDays: rel.lagDays,
+              defaultLagDays: rel.defaultLagDays,
               mandatory: rel.mandatory,
               description: rel.description,
+              category: rel.category,
+              configurable: rel.configurable,
               source: 'template',
             },
           });

@@ -672,18 +672,21 @@ model TaktAssignment {
 // ============================================================================
 
 model TradeRelationship {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  projectId         String   @map("project_id") @db.Uuid
-  predecessorTradeId String  @map("predecessor_trade_id") @db.Uuid
-  successorTradeId   String  @map("successor_trade_id") @db.Uuid
-  type              String   @db.VarChar(2)   // FS, SS, FF, SF
-  lagDays           Int      @default(0) @map("lag_days")
-  mandatory         Boolean  @default(true)
-  description       String?
-  source            String   @default("template") @db.VarChar(20)  // template, manual, ai
-  isActive          Boolean  @default(true) @map("is_active")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId          String   @map("project_id") @db.Uuid
+  predecessorTradeId String   @map("predecessor_trade_id") @db.Uuid
+  successorTradeId   String   @map("successor_trade_id") @db.Uuid
+  type               String   @db.VarChar(2)   // FS, SS, FF, SF
+  lagDays            Int      @default(0) @map("lag_days")
+  defaultLagDays     Int      @default(0) @map("default_lag_days")  // Factory default for reset
+  mandatory          Boolean  @default(true)
+  description        String?
+  category           String   @default("logistical") @db.VarChar(20)  // physical, logistical, regulatory, preferential
+  configurable       Boolean  @default(false)  // Whether lag can be modified per project
+  source             String   @default("template") @db.VarChar(20)   // template, manual, ai
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at")
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -691,6 +694,7 @@ model TradeRelationship {
   @@index([projectId])
   @@index([predecessorTradeId])
   @@index([successorTradeId])
+  @@index([category])
   @@map("trade_relationships")
   @@schema("public")
 }

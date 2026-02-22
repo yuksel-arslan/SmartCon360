@@ -2,7 +2,7 @@
  * Activity Relationship Templates
  *
  * Defines logical dependencies between construction activities (trades/wagons)
- * using standard scheduling relationship types:
+ * using standard scheduling relationship types per PMI PMBOK Guide & ISO 21500:
  *
  *   FS (Finish-to-Start)  — Predecessor finishes before successor starts (most common)
  *   SS (Start-to-Start)   — Successor starts when predecessor starts (+ optional lag)
@@ -11,9 +11,22 @@
  *
  * Lag: positive = delay (days), negative = lead/overlap (days)
  *
- * These templates are used by the plan generator (AI-1 Core) to schedule
- * activities with proper construction logic. Without these, the takt grid
- * would be a simple sequential layout without respecting real dependencies.
+ * Constraint Categories:
+ *   physical    — Dictated by material/physics (e.g., concrete curing, plaster drying)
+ *   logistical  — Construction sequence logic (e.g., rough-in before close-up)
+ *   regulatory  — Code/permit requirements (e.g., inspection hold points)
+ *   preferential — Best-practice optimization (e.g., MEP coordination)
+ *
+ * Zone-Based Enforcement:
+ *   All relationships are enforced per zone — within each zone, the predecessor
+ *   activity must satisfy the constraint before the successor can start in that
+ *   same zone. This models real construction: "in Zone A, masonry must finish
+ *   before plastering starts in Zone A."
+ *
+ * Configurable:
+ *   Physical constraints have factory-default lag times based on material science
+ *   (curing, drying, settling). These defaults can be overridden per project via
+ *   the TradeRelationship model, but the physical minimum is preserved as guidance.
  */
 
 // ============================================================================
@@ -21,6 +34,9 @@
 // ============================================================================
 
 export type RelationshipType = 'FS' | 'SS' | 'FF' | 'SF';
+
+/** Constraint category — why this relationship exists */
+export type ConstraintCategory = 'physical' | 'logistical' | 'regulatory' | 'preferential';
 
 export interface ActivityRelationshipTemplate {
   /** Predecessor trade code (e.g., 'STR-FRM') */
@@ -35,6 +51,12 @@ export interface ActivityRelationshipTemplate {
   mandatory: boolean;
   /** Human-readable description of the relationship */
   description: string;
+  /** Why this constraint exists — physical, logistical, regulatory, or preferential */
+  category: ConstraintCategory;
+  /** Whether the lag can be modified per project (physical constraints have defaults but can be adjusted) */
+  configurable: boolean;
+  /** Factory default lag in days — preserved when user overrides lagDays, for reset/guidance */
+  defaultLagDays: number;
 }
 
 // ============================================================================
@@ -49,6 +71,9 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Foundation formwork starts after excavation completes',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'STR-FRM',
@@ -57,6 +82,9 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Rebar installation starts after formwork is in place',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'STR-RBR',
@@ -65,6 +93,9 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Concrete pour after rebar placement and inspection',
+    category: 'regulatory',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'STR-CON',
@@ -72,7 +103,10 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 3,
     mandatory: true,
-    description: 'Formwork stripping after concrete curing (min 3 days)',
+    description: 'Formwork stripping after concrete curing (min 3 days per ACI 347)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 3,
   },
   {
     predecessorCode: 'STR-STP',
@@ -81,6 +115,9 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Waterproofing after formwork stripping exposes surfaces',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'STR-WPR',
@@ -88,7 +125,10 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 1,
     mandatory: true,
-    description: 'Insulation after waterproofing cures (min 1 day)',
+    description: 'Insulation after waterproofing membrane cures (min 24h)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 1,
   },
 ];
 
@@ -104,6 +144,9 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Plumbing rough-in starts after structural formwork stripped',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'STR-STP',
@@ -112,6 +155,9 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'HVAC ductwork starts after structural formwork stripped',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'MEC-PLB',
@@ -120,6 +166,9 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 2,
     mandatory: false,
     description: 'HVAC can start 2 days after plumbing rough-in starts (coordination)',
+    category: 'preferential',
+    configurable: true,
+    defaultLagDays: 2,
   },
   {
     predecessorCode: 'MEC-HVC',
@@ -128,6 +177,9 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Fire sprinklers after HVAC ductwork (needs duct routing first)',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'MEC-PLB',
@@ -136,6 +188,9 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 3,
     mandatory: true,
     description: 'Piping systems start 3 days after plumbing rough-in starts',
+    category: 'logistical',
+    configurable: true,
+    defaultLagDays: 3,
   },
   {
     predecessorCode: 'MEC-HVC',
@@ -144,6 +199,9 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Mechanical equipment after HVAC ductwork is routed',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'MEC-PIP',
@@ -152,6 +210,9 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Mechanical equipment after piping systems are in place',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'MEC-EQP',
@@ -160,6 +221,9 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'HVAC testing & balancing after all equipment installed',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'MEC-EQP',
@@ -168,6 +232,9 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Plumbing fixtures after equipment installation',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
 ];
 
@@ -183,6 +250,9 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Electrical rough-in starts after structural formwork stripped',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'MEC-PLB',
@@ -191,6 +261,9 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 1,
     mandatory: false,
     description: 'Electrical rough-in can start 1 day after plumbing (avoid clashes)',
+    category: 'preferential',
+    configurable: true,
+    defaultLagDays: 1,
   },
   {
     predecessorCode: 'ELC-RGH',
@@ -199,6 +272,9 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Cable tray after conduit rough-in establishes routing',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ELC-CTR',
@@ -207,6 +283,9 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Cable pulling after trays and containment installed',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ELC-CTR',
@@ -215,6 +294,9 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Data & communications cables after tray installation',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ELC-CBL',
@@ -223,6 +305,9 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Switchgear & panels after power cables pulled',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ELC-CBL',
@@ -231,6 +316,9 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Lighting installation after cables pulled',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ELC-CBL',
@@ -239,6 +327,9 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Fire alarm & detection after cables pulled',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ELC-CBL',
@@ -247,6 +338,9 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Security & CCTV after cables pulled',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ELC-SWG',
@@ -255,6 +349,9 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'BMS controls after switchgear energized',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'MEC-TAB',
@@ -263,6 +360,9 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'BMS commissioning finishes with HVAC T&B (integrated testing)',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
 ];
 
@@ -270,30 +370,63 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 // ARCHITECTURAL RELATIONSHIPS
 // ============================================================================
 
+// ---------------------------------------------------------------------------
+// ARCHITECTURAL RELATIONSHIPS — Zone-Based Physical Constraints
+//
+// These constraints model real construction physics within each zone:
+// - Material curing/drying times (physical)
+// - Construction sequence requirements (logistical)
+// - Building envelope dependencies (physical/logistical)
+//
+// Physical lag values based on:
+//   - ACI 347 (concrete/formwork)
+//   - BS EN 13914 / ASTM C926 (plaster curing)
+//   - BS 6150 / ASTM D6083 (paint drying)
+//   - BS EN 12004 / ANSI A108 (tile adhesive curing)
+//   - Manufacturer data sheets (typical conditions: 20°C, 50% RH)
+//
+// All constraints are per-zone: "in Zone X, predecessor must satisfy
+// the constraint before successor starts in Zone X."
+// ---------------------------------------------------------------------------
+
 const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  // ── MASONRY PHASE ──────────────────────────────────────────────────────
   {
     predecessorCode: 'STR-STP',
     successorCode: 'ARC-MSN',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Masonry/blockwork after structure is exposed',
+    description: 'Masonry/blockwork starts after structure is exposed in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
+
+  // ── PLASTERING PHASE ───────────────────────────────────────────────────
+  // Plaster cannot start until masonry mortar has cured (2 days min)
   {
     predecessorCode: 'ARC-MSN',
     successorCode: 'ARC-PLS',
     type: 'FS',
-    lagDays: 0,
+    lagDays: 2,
     mandatory: true,
-    description: 'Plastering after masonry walls built',
+    description: 'Plastering after masonry mortar cures in zone (min 2 days per BS EN 1996)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 2,
   },
+  // MEP rough-in must be complete and concealed before wet plaster
   {
     predecessorCode: 'MEC-PLB',
     successorCode: 'ARC-PLS',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Plastering after plumbing rough-in (pipes concealed)',
+    description: 'Plastering after plumbing rough-in — pipes must be concealed in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ELC-RGH',
@@ -301,15 +434,35 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Plastering after electrical rough-in (conduits concealed)',
+    description: 'Plastering after electrical rough-in — conduits must be concealed in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
+  // Building envelope must be weather-tight before wet interior works
+  {
+    predecessorCode: 'ARC-FAC',
+    successorCode: 'ARC-PLS',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Interior plastering after facade/envelope is weather-tight in zone',
+    category: 'physical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+
+  // ── DRYWALL PHASE ─────────────────────────────────────────────────────
   {
     predecessorCode: 'MEC-PLB',
     successorCode: 'ARC-DRW',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Drywall after plumbing rough-in behind walls',
+    description: 'Drywall after plumbing rough-in behind walls in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ELC-RGH',
@@ -317,23 +470,74 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Drywall after electrical rough-in behind walls',
+    description: 'Drywall after electrical rough-in behind walls in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
+  // Insulation must be in place behind drywall
+  {
+    predecessorCode: 'STR-INS',
+    successorCode: 'ARC-DRW',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Drywall after insulation installed behind wall cavities in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+
+  // ── FACADE / ENVELOPE ─────────────────────────────────────────────────
   {
     predecessorCode: 'STR-STP',
     successorCode: 'ARC-FAC',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Facade starts after structural formwork stripped',
+    description: 'Facade starts after structural formwork stripped in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
+
+  // ── WINDOWS ────────────────────────────────────────────────────────────
+  {
+    predecessorCode: 'ARC-MSN',
+    successorCode: 'ARC-WND',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Windows after masonry openings ready and lintel mortar cured (1 day)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 1,
+  },
+  // Windows should be in before interior plastering around reveals
+  {
+    predecessorCode: 'ARC-WND',
+    successorCode: 'ARC-PLS',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: false,
+    description: 'Plaster window reveals after window frames installed in zone',
+    category: 'preferential',
+    configurable: true,
+    defaultLagDays: 0,
+  },
+
+  // ── TILING PHASE ───────────────────────────────────────────────────────
+  // Plaster must cure sufficiently before tile adhesive application
   {
     predecessorCode: 'ARC-PLS',
     successorCode: 'ARC-TIL',
     type: 'FS',
-    lagDays: 1,
+    lagDays: 3,
     mandatory: true,
-    description: 'Tiling after plaster cures (min 1 day)',
+    description: 'Tiling after plaster cures in zone (min 3 days per BS EN 12004)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 3,
   },
   {
     predecessorCode: 'MEC-PLB',
@@ -341,23 +545,60 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Tiling after plumbing rough-in (floor drains in place)',
+    description: 'Tiling after plumbing rough-in — floor drains set in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
+  // Waterproofing must be tested before tiling wet areas
+  {
+    predecessorCode: 'STR-WPR',
+    successorCode: 'ARC-TIL',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Tiling wet areas after waterproofing membrane cures and tested (1 day)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 1,
+  },
+
+  // ── FLOORING PHASE ─────────────────────────────────────────────────────
   {
     predecessorCode: 'ARC-DRW',
     successorCode: 'ARC-FLR',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Flooring after drywall partitions complete',
+    description: 'Flooring after drywall partitions define room boundaries in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
+  // Self-leveling screed needs curing before finish flooring
+  {
+    predecessorCode: 'ARC-PLS',
+    successorCode: 'ARC-FLR',
+    type: 'FS',
+    lagDays: 2,
+    mandatory: true,
+    description: 'Flooring after floor screed/plaster cures in zone (min 2 days)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 2,
+  },
+
+  // ── SUSPENDED CEILING PHASE ────────────────────────────────────────────
   {
     predecessorCode: 'MEC-EQP',
     successorCode: 'ARC-CLG',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Suspended ceiling after above-ceiling MEP installed',
+    description: 'Suspended ceiling after above-ceiling MEP equipment installed in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ELC-LGT',
@@ -365,15 +606,48 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'SS',
     lagDays: 0,
     mandatory: true,
-    description: 'Ceiling grid can start with lighting (concurrent install)',
+    description: 'Ceiling grid starts with lighting rough-in (concurrent install in zone)',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
+  // Fire sprinkler heads must be positioned before ceiling closes
+  {
+    predecessorCode: 'MEC-FPR',
+    successorCode: 'ARC-CLG',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Suspended ceiling after sprinkler heads positioned in zone',
+    category: 'regulatory',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+
+  // ── PAINTING PHASE ─────────────────────────────────────────────────────
+  // CRITICAL: Plaster must fully cure before painting — physical constraint
+  {
+    predecessorCode: 'ARC-PLS',
+    successorCode: 'ARC-PNT',
+    type: 'FS',
+    lagDays: 5,
+    mandatory: true,
+    description: 'Painting after plaster fully cures in zone (min 5 days — cement plaster per ASTM C926)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 5,
+  },
+  // Drywall joint compound must dry before painting
   {
     predecessorCode: 'ARC-DRW',
     successorCode: 'ARC-PNT',
     type: 'FS',
-    lagDays: 1,
+    lagDays: 2,
     mandatory: true,
-    description: 'Painting after drywall finishing/sanding (1 day dust settle)',
+    description: 'Painting after drywall joint compound cures in zone (min 2 days per USG specs)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 2,
   },
   {
     predecessorCode: 'ARC-CLG',
@@ -381,39 +655,98 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Painting after ceiling installed (avoid overspray)',
+    description: 'Painting after ceiling installed in zone — avoid overspray damage',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
+  // Windows must be in for weather-tight painting environment
+  {
+    predecessorCode: 'ARC-WND',
+    successorCode: 'ARC-PNT',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Painting after windows installed — zone must be weather-tight for proper curing',
+    category: 'physical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+
+  // ── DOORS & HARDWARE ──────────────────────────────────────────────────
+  // Paint must dry before door frames and hardware installed
   {
     predecessorCode: 'ARC-PNT',
     successorCode: 'ARC-DOR',
     type: 'FS',
     lagDays: 1,
     mandatory: true,
-    description: 'Doors & hardware after painting dries (1 day)',
+    description: 'Doors after paint dries in zone (min 1 day per paint manufacturer specs)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 1,
   },
+  // Floor level must be set for proper door clearance
   {
-    predecessorCode: 'ARC-MSN',
-    successorCode: 'ARC-WND',
+    predecessorCode: 'ARC-FLR',
+    successorCode: 'ARC-DOR',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Windows after masonry openings are ready',
+    description: 'Door hanging after flooring — finished floor level determines clearance in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
+
+  // ── CABINETRY & MILLWORK ──────────────────────────────────────────────
   {
     predecessorCode: 'ARC-PNT',
     successorCode: 'ARC-CAB',
     type: 'FS',
     lagDays: 1,
     mandatory: true,
-    description: 'Cabinetry after painting (1 day to dry)',
+    description: 'Cabinetry after paint dries in zone (min 1 day)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 1,
   },
+  // Floor level for base cabinet alignment
+  {
+    predecessorCode: 'ARC-FLR',
+    successorCode: 'ARC-CAB',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Base cabinets after flooring — finished floor level required in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  // Tile grout must cure before wet-area cabinet mounting
+  {
+    predecessorCode: 'ARC-TIL',
+    successorCode: 'ARC-CAB',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Cabinets in wet areas after tile grout cures in zone (min 1 day)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 1,
+  },
+
+  // ── FF&E (FURNITURE, FIXTURES & EQUIPMENT) ─────────────────────────────
   {
     predecessorCode: 'ARC-FLR',
     successorCode: 'ARC-FFE',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Furniture after flooring is complete',
+    description: 'Furniture after flooring complete in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ARC-PNT',
@@ -421,7 +754,22 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     type: 'FS',
     lagDays: 1,
     mandatory: true,
-    description: 'Furniture after painting dries (1 day)',
+    description: 'Furniture after painting dries in zone (min 1 day)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 1,
+  },
+  // Tile grout must cure before placing furniture in tiled areas
+  {
+    predecessorCode: 'ARC-TIL',
+    successorCode: 'ARC-FFE',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'FF&E after tile grout cures in zone (min 1 day per ANSI A108)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 1,
   },
 ];
 
@@ -437,6 +785,9 @@ const LANDSCAPE_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Hard landscaping after site is cleared and graded',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'LND-CLR',
@@ -445,6 +796,9 @@ const LANDSCAPE_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Drainage after site clearing (trench before paving)',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'LND-DRN',
@@ -453,6 +807,9 @@ const LANDSCAPE_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 2,
     mandatory: false,
     description: 'Paving can start 2 days after drainage starts (different areas)',
+    category: 'preferential',
+    configurable: true,
+    defaultLagDays: 2,
   },
   {
     predecessorCode: 'LND-HRD',
@@ -461,6 +818,9 @@ const LANDSCAPE_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'External electrical after hard landscaping (cable routes)',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'LND-DRN',
@@ -469,6 +829,9 @@ const LANDSCAPE_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Irrigation after drainage infrastructure in place',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'LND-IRR',
@@ -477,6 +840,9 @@ const LANDSCAPE_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Planting after irrigation systems installed',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'LND-HRD',
@@ -485,6 +851,9 @@ const LANDSCAPE_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Fencing after hard landscaping (boundary definition)',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'LND-PLT',
@@ -493,6 +862,9 @@ const LANDSCAPE_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'External furniture & signage as last landscape activity',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
 ];
 
@@ -508,6 +880,9 @@ const HOSPITAL_EXTRA_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Medical gas systems after structure complete',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'MEC-EQP',
@@ -516,6 +891,9 @@ const HOSPITAL_EXTRA_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Clean room systems after MEP equipment installed',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ELC-SWG',
@@ -524,6 +902,9 @@ const HOSPITAL_EXTRA_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'UPS / emergency power after switchgear installed',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ELC-CBL',
@@ -532,6 +913,9 @@ const HOSPITAL_EXTRA_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Nurse call systems after cabling pulled',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
 ];
 
@@ -547,6 +931,9 @@ const COMMERCIAL_EXTRA_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Raised access floor after under-floor MEP rough-in',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
   },
   {
     predecessorCode: 'ELC-RGH',
@@ -555,6 +942,78 @@ const COMMERCIAL_EXTRA_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     lagDays: 0,
     mandatory: true,
     description: 'Raised access floor after under-floor electrical rough-in',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+];
+
+// ============================================================================
+// CROSS-DISCIPLINE FINISHING CONSTRAINTS
+// ============================================================================
+// These constraints enforce the proper finishing sequence where architectural
+// work must be complete before final MEP fixture installation in each zone.
+
+const CROSS_DISCIPLINE_FINISHING: ActivityRelationshipTemplate[] = [
+  // Plumbing fixtures (taps, basins, toilets) after painting to avoid paint damage
+  {
+    predecessorCode: 'ARC-PNT',
+    successorCode: 'MEC-FIX',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Plumbing fixtures after painting dries in zone (protect chrome/porcelain)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 1,
+  },
+  // Plumbing fixtures after tiling in wet areas
+  {
+    predecessorCode: 'ARC-TIL',
+    successorCode: 'MEC-FIX',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: true,
+    description: 'Plumbing fixtures after tile grout cures in zone (min 1 day)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 1,
+  },
+  // Floor must be finished before fixture pedestals/bases
+  {
+    predecessorCode: 'ARC-FLR',
+    successorCode: 'MEC-FIX',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Plumbing fixtures after flooring — pedestal/base alignment in zone',
+    category: 'logistical',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  // Fire alarm devices mount on finished ceiling
+  {
+    predecessorCode: 'ARC-CLG',
+    successorCode: 'ELC-FAD',
+    type: 'FS',
+    lagDays: 0,
+    mandatory: true,
+    description: 'Fire alarm devices after ceiling grid installed in zone',
+    category: 'regulatory',
+    configurable: false,
+    defaultLagDays: 0,
+  },
+  // Security devices after painting (wall-mounted sensors/cameras)
+  {
+    predecessorCode: 'ARC-PNT',
+    successorCode: 'ELC-SEC',
+    type: 'FS',
+    lagDays: 1,
+    mandatory: false,
+    description: 'Security devices after painting dries in zone (wall-mounted equipment)',
+    category: 'preferential',
+    configurable: true,
+    defaultLagDays: 1,
   },
 ];
 
@@ -568,6 +1027,7 @@ const ALL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   ...ELECTRICAL_RELATIONSHIPS,
   ...ARCHITECTURAL_RELATIONSHIPS,
   ...LANDSCAPE_RELATIONSHIPS,
+  ...CROSS_DISCIPLINE_FINISHING,
 ];
 
 // ============================================================================
@@ -737,4 +1197,94 @@ export function topologicalSort(
   }
 
   return sorted;
+}
+
+// ============================================================================
+// CATEGORY-BASED QUERIES
+// ============================================================================
+
+/**
+ * Get only physical constraints (material curing, drying, chemical reactions).
+ * These have scientifically-determined lag times that serve as minimums.
+ */
+export function getPhysicalConstraints(
+  relationships: ActivityRelationshipTemplate[],
+): ActivityRelationshipTemplate[] {
+  return relationships.filter((r) => r.category === 'physical');
+}
+
+/**
+ * Get relationships filtered by one or more categories.
+ */
+export function getRelationshipsByCategory(
+  relationships: ActivityRelationshipTemplate[],
+  categories: ConstraintCategory[],
+): ActivityRelationshipTemplate[] {
+  const categorySet = new Set(categories);
+  return relationships.filter((r) => categorySet.has(r.category));
+}
+
+/**
+ * Get only configurable relationships (those whose lag can be modified per project).
+ * Returns relationships with their defaultLagDays for UI display.
+ */
+export function getConfigurableRelationships(
+  relationships: ActivityRelationshipTemplate[],
+): ActivityRelationshipTemplate[] {
+  return relationships.filter((r) => r.configurable);
+}
+
+/**
+ * Apply project-level overrides to template relationships.
+ * Overrides only change lagDays — type, mandatory, and category are preserved.
+ *
+ * @param templates - Base relationship templates
+ * @param overrides - Map of "predecessorCode:successorCode:type" → lagDays
+ * @returns New relationship array with overrides applied
+ */
+export function applyLagOverrides(
+  templates: ActivityRelationshipTemplate[],
+  overrides: Map<string, number>,
+): ActivityRelationshipTemplate[] {
+  return templates.map((r) => {
+    const key = `${r.predecessorCode}:${r.successorCode}:${r.type}`;
+    const overrideLag = overrides.get(key);
+    if (overrideLag !== undefined && r.configurable) {
+      return { ...r, lagDays: overrideLag };
+    }
+    return r;
+  });
+}
+
+/**
+ * Reset a relationship's lag back to its factory default.
+ */
+export function resetToDefaultLag(
+  relationship: ActivityRelationshipTemplate,
+): ActivityRelationshipTemplate {
+  return { ...relationship, lagDays: relationship.defaultLagDays };
+}
+
+/**
+ * Get a summary of all physical constraint lag times for display/reporting.
+ * Groups by successor code showing all physical predecessors and their curing times.
+ */
+export function getPhysicalConstraintSummary(
+  relationships: ActivityRelationshipTemplate[],
+): Map<string, { predecessorCode: string; lagDays: number; defaultLagDays: number; description: string }[]> {
+  const summary = new Map<string, { predecessorCode: string; lagDays: number; defaultLagDays: number; description: string }[]>();
+
+  for (const r of relationships) {
+    if (r.category !== 'physical' || r.lagDays === 0) continue;
+    const list = summary.get(r.successorCode) || [];
+    list.push({
+      predecessorCode: r.predecessorCode,
+      lagDays: r.lagDays,
+      defaultLagDays: r.defaultLagDays,
+      description: r.description,
+    });
+    summary.set(r.successorCode, list);
+  }
+
+  return summary;
 }
