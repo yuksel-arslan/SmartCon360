@@ -19,6 +19,11 @@ import {
   type Assignment,
 } from '@/lib/core/takt-calculator';
 import {
+  getAllRelationshipTemplates,
+  getSubActivityRelationships,
+  type ActivityRelationshipTemplate,
+} from '@/lib/templates/activity-relationship-templates';
+import {
   GripVertical,
   Save,
   Undo2,
@@ -44,6 +49,10 @@ import {
   Loader2,
   Wrench,
   Building2,
+  Link2,
+  ChevronDown,
+  ChevronUp,
+  RefreshCw,
 } from 'lucide-react';
 import {
   type TaktPhase,
@@ -297,6 +306,23 @@ export default function TaktEditorPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [showSubActivities, setShowSubActivities] = useState(false);
+
+  // ── Project Relationships (loaded from DB) ──
+  interface ProjectRelationship {
+    predecessorTradeCode: string;
+    successorTradeCode: string;
+    type: string;
+    lagDays: number;
+    mandatory: boolean;
+    description: string;
+    predecessorTradeName: string;
+    successorTradeName: string;
+    predecessorTradeColor: string;
+    successorTradeColor: string;
+  }
+  const [projectRelationships, setProjectRelationships] = useState<ProjectRelationship[]>([]);
 
   // ── Drag & Drop State ──
   const [draggedTradeId, setDraggedTradeId] = useState<string | null>(null);
@@ -485,6 +511,59 @@ export default function TaktEditorPage() {
 
     return { cell, trade, zone, predecessor, successor };
   }, [selectedCell, cells, trades, zones]);
+
+  // ── Activity Relationships for selected wagon ──
+  // Use DB relationships if available (project-specific), fallback to templates
+  const allRelationships = useMemo(() => {
+    if (projectRelationships.length > 0) {
+      // Convert DB relationships to template format for compatibility
+      return projectRelationships.map((r) => ({
+        predecessorCode: r.predecessorTradeCode,
+        successorCode: r.successorTradeCode,
+        type: r.type as 'FS' | 'SS' | 'FF' | 'SF',
+        lagDays: r.lagDays,
+        mandatory: r.mandatory,
+        description: r.description,
+      }));
+    }
+    return getAllRelationshipTemplates();
+  }, [projectRelationships]);
+
+  const selectedWagonRelationships = useMemo(() => {
+    if (!selectedCellData) return { predecessors: [] as (ActivityRelationshipTemplate & { tradeName: string; tradeColor: string })[], successors: [] as (ActivityRelationshipTemplate & { tradeName: string; tradeColor: string })[] };
+
+    // Find trade code by matching trade name/id against known codes
+    const tradeCodeMap = new Map<string, { name: string; color: string }>();
+    for (const t of trades) {
+      tradeCodeMap.set(t.id, { name: t.name, color: t.color });
+    }
+
+    // Get relationships where this trade is predecessor or successor
+    const tradeCodes = trades.map((t) => t.id);
+    const codeSet = new Set(tradeCodes);
+    const currentCode = selectedCellData.trade.id;
+
+    const predecessors = allRelationships
+      .filter((r) => r.successorCode === currentCode && codeSet.has(r.predecessorCode))
+      .map((r) => {
+        const t = tradeCodeMap.get(r.predecessorCode);
+        return { ...r, tradeName: t?.name || r.predecessorCode, tradeColor: t?.color || '#999' };
+      });
+
+    const successors = allRelationships
+      .filter((r) => r.predecessorCode === currentCode && codeSet.has(r.successorCode))
+      .map((r) => {
+        const t = tradeCodeMap.get(r.successorCode);
+        return { ...r, tradeName: t?.name || r.successorCode, tradeColor: t?.color || '#999' };
+      });
+
+    return { predecessors, successors };
+  }, [selectedCellData, trades, allRelationships]);
+
+  const selectedSubActivities = useMemo(() => {
+    if (!selectedCellData) return [];
+    return getSubActivityRelationships(selectedCellData.trade.id);
+  }, [selectedCellData]);
 
   // ── Drag & Drop Handlers ──
   const handleDragStart = useCallback((e: React.DragEvent, tradeId: string) => {
@@ -759,6 +838,57 @@ export default function TaktEditorPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeProjectId]);
 
+  // ── Load project relationships from DB ──
+  useEffect(() => {
+    if (!activeProjectId) return;
+    const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    (async () => {
+      try {
+        const res = await fetch(`/api/v1/projects/${activeProjectId}/relationships`, { headers: authHeaders });
+        if (!res.ok) return;
+        const { data } = await res.json();
+        setProjectRelationships(data.map((r: Record<string, unknown>) => ({
+          predecessorTradeCode: r.predecessorTradeCode || '',
+          successorTradeCode: r.successorTradeCode || '',
+          type: r.type || 'FS',
+          lagDays: r.lagDays || 0,
+          mandatory: r.mandatory ?? true,
+          description: r.description || '',
+          predecessorTradeName: r.predecessorTradeName || '',
+          successorTradeName: r.successorTradeName || '',
+          predecessorTradeColor: r.predecessorTradeColor || '#999',
+          successorTradeColor: r.successorTradeColor || '#999',
+        })));
+      } catch { /* relationships not available */ }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeProjectId]);
+
+  // ── Sync Templates ──
+  const handleSyncTemplates = useCallback(async () => {
+    if (!activeProjectId) return;
+    setIsSyncing(true);
+    try {
+      const authHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) authHeaders['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`/api/v1/projects/${activeProjectId}/setup/sync-templates`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({ removeOrphans: false }),
+      });
+
+      if (res.ok) {
+        // Reload the page data by re-fetching
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error('Sync failed:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [activeProjectId, token]);
+
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
@@ -1005,6 +1135,18 @@ export default function TaktEditorPage() {
               {isSaving ? 'Saving...' : 'Save'}
             </button>
 
+            {/* Sync Templates */}
+            <button
+              onClick={handleSyncTemplates}
+              disabled={isSyncing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:opacity-80 disabled:opacity-50"
+              style={{ background: 'var(--color-purple)', color: 'white' }}
+              title="Sync trades &amp; relationships with latest templates"
+            >
+              {isSyncing ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+              {isSyncing ? 'Syncing...' : 'Sync Templates'}
+            </button>
+
             {/* Simulate */}
             <button
               onClick={handleSimulate}
@@ -1029,6 +1171,7 @@ export default function TaktEditorPage() {
               { label: 'End', value: formatDate(stats.endDate), icon: CalendarDays, color: 'var(--color-danger)' },
               { label: 'Trades', value: stats.tradeCount, icon: Layers, color: 'var(--color-warning)' },
               { label: 'Zones', value: stats.zoneCount, icon: Activity, color: 'var(--color-cyan)' },
+              { label: 'Relationships', value: projectRelationships.length || allRelationships.length, icon: Link2, color: 'var(--color-purple)' },
               { label: 'Stacking', value: stats.stackingCount, icon: AlertTriangle, color: stats.stackingCount > 0 ? 'var(--color-danger)' : 'var(--color-success)' },
               { label: 'Buffer Health', value: `${stats.bufferHealth}%`, icon: TrendingUp, color: stats.bufferHealth >= 80 ? 'var(--color-success)' : stats.bufferHealth >= 50 ? 'var(--color-warning)' : 'var(--color-danger)' },
             ].map((stat) => (
@@ -1106,11 +1249,24 @@ export default function TaktEditorPage() {
                       )}
                     </div>
                   </div>
-                  {i < sortedTrades.length - 1 && (
-                    <div className="flex-shrink-0 text-[10px] px-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                      {trade.bufferAfter > 0 ? `\u2192 b${trade.bufferAfter} \u2192` : '\u2192'}
-                    </div>
-                  )}
+                  {i < sortedTrades.length - 1 && (() => {
+                    const nextTrade = sortedTrades[i + 1];
+                    const rel = allRelationships.find(
+                      (r) => r.predecessorCode === trade.id && r.successorCode === nextTrade.id,
+                    );
+                    return (
+                      <div className="flex-shrink-0 flex flex-col items-center px-0.5 gap-0">
+                        {rel && (
+                          <span className="text-[7px] font-bold px-1 rounded" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--color-purple)', fontFamily: 'var(--font-mono)' }}>
+                            {rel.type}{rel.lagDays > 0 ? `+${rel.lagDays}` : ''}
+                          </span>
+                        )}
+                        <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                          {trade.bufferAfter > 0 ? `\u2192 b${trade.bufferAfter} \u2192` : '\u2192'}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
             </div>
@@ -1489,24 +1645,19 @@ export default function TaktEditorPage() {
                     </div>
                   </div>
 
-                  {/* Predecessor & Successor Wagons */}
+                  {/* Activity Relationships */}
                   <div className="space-y-2">
-                    <label className="text-[9px] font-semibold uppercase tracking-wider block" style={{ color: 'var(--color-text-muted)' }}>
-                      Sequence
-                    </label>
-                    {selectedCellData.predecessor && (
-                      <div
-                        className="flex items-center gap-2 p-2 rounded-lg"
-                        style={{ background: 'var(--color-bg-input)' }}
-                      >
-                        <div className="w-2.5 h-2.5 rounded-sm" style={{ background: selectedCellData.predecessor.color }} />
-                        <span className="text-[10px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>
-                          {selectedCellData.predecessor.name}
-                        </span>
-                        <ChevronRight size={10} style={{ color: 'var(--color-text-muted)' }} />
-                        <span className="text-[10px] font-medium" style={{ color: 'var(--color-accent)' }}>Predecessor</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      <Link2 size={10} style={{ color: 'var(--color-purple)' }} />
+                      <label className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
+                        Activity Relationships
+                      </label>
+                      <span className="text-[8px] font-medium px-1 py-0.5 rounded-full ml-auto" style={{ background: 'var(--color-bg-input)', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                        {selectedWagonRelationships.predecessors.length + selectedWagonRelationships.successors.length}
+                      </span>
+                    </div>
+
+                    {/* Current wagon */}
                     <div
                       className="flex items-center gap-2 p-2 rounded-lg"
                       style={{ background: `${selectedCellData.trade.color}15`, border: `1px solid ${selectedCellData.trade.color}40` }}
@@ -1519,20 +1670,126 @@ export default function TaktEditorPage() {
                         #{selectedCellData.trade.sequence}
                       </span>
                     </div>
-                    {selectedCellData.successor && (
-                      <div
-                        className="flex items-center gap-2 p-2 rounded-lg"
-                        style={{ background: 'var(--color-bg-input)' }}
-                      >
-                        <div className="w-2.5 h-2.5 rounded-sm" style={{ background: selectedCellData.successor.color }} />
-                        <span className="text-[10px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>
-                          {selectedCellData.successor.name}
+
+                    {/* Predecessors */}
+                    {selectedWagonRelationships.predecessors.length > 0 && (
+                      <div className="space-y-1">
+                        <span className="text-[8px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-accent)' }}>
+                          Predecessors
                         </span>
-                        <ChevronRight size={10} style={{ color: 'var(--color-text-muted)' }} />
-                        <span className="text-[10px] font-medium" style={{ color: 'var(--color-success)' }}>Successor</span>
+                        {selectedWagonRelationships.predecessors.map((r, i) => (
+                          <div
+                            key={`pred-${i}`}
+                            className="flex items-center gap-1.5 p-2 rounded-lg"
+                            style={{ background: 'var(--color-bg-input)' }}
+                          >
+                            <div className="w-2 h-2 rounded-sm flex-shrink-0" style={{ background: r.tradeColor }} />
+                            <span className="text-[9px] font-medium flex-1 truncate" style={{ color: 'var(--color-text-secondary)' }}>
+                              {r.tradeName}
+                            </span>
+                            <span className="text-[8px] font-bold px-1 py-0.5 rounded flex-shrink-0" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--color-purple)', fontFamily: 'var(--font-mono)' }}>
+                              {r.type}
+                            </span>
+                            {r.lagDays !== 0 && (
+                              <span className="text-[8px] font-medium px-1 py-0.5 rounded flex-shrink-0" style={{ background: r.lagDays > 0 ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)', color: r.lagDays > 0 ? 'var(--color-warning)' : 'var(--color-success)', fontFamily: 'var(--font-mono)' }}>
+                                {r.lagDays > 0 ? `+${r.lagDays}d` : `${r.lagDays}d`}
+                              </span>
+                            )}
+                            {!r.mandatory && (
+                              <span className="text-[7px] font-medium px-1 py-0.5 rounded" style={{ background: 'rgba(156,163,175,0.1)', color: 'var(--color-text-muted)' }}>
+                                soft
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Successors */}
+                    {selectedWagonRelationships.successors.length > 0 && (
+                      <div className="space-y-1">
+                        <span className="text-[8px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-success)' }}>
+                          Successors
+                        </span>
+                        {selectedWagonRelationships.successors.map((r, i) => (
+                          <div
+                            key={`succ-${i}`}
+                            className="flex items-center gap-1.5 p-2 rounded-lg"
+                            style={{ background: 'var(--color-bg-input)' }}
+                          >
+                            <div className="w-2 h-2 rounded-sm flex-shrink-0" style={{ background: r.tradeColor }} />
+                            <span className="text-[9px] font-medium flex-1 truncate" style={{ color: 'var(--color-text-secondary)' }}>
+                              {r.tradeName}
+                            </span>
+                            <span className="text-[8px] font-bold px-1 py-0.5 rounded flex-shrink-0" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--color-purple)', fontFamily: 'var(--font-mono)' }}>
+                              {r.type}
+                            </span>
+                            {r.lagDays !== 0 && (
+                              <span className="text-[8px] font-medium px-1 py-0.5 rounded flex-shrink-0" style={{ background: r.lagDays > 0 ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)', color: r.lagDays > 0 ? 'var(--color-warning)' : 'var(--color-success)', fontFamily: 'var(--font-mono)' }}>
+                                {r.lagDays > 0 ? `+${r.lagDays}d` : `${r.lagDays}d`}
+                              </span>
+                            )}
+                            {!r.mandatory && (
+                              <span className="text-[7px] font-medium px-1 py-0.5 rounded" style={{ background: 'rgba(156,163,175,0.1)', color: 'var(--color-text-muted)' }}>
+                                soft
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {selectedWagonRelationships.predecessors.length === 0 && selectedWagonRelationships.successors.length === 0 && (
+                      <div className="text-[9px] py-2 text-center" style={{ color: 'var(--color-text-muted)' }}>
+                        No relationships defined
                       </div>
                     )}
                   </div>
+
+                  {/* Sub-Activities */}
+                  {selectedSubActivities.length > 0 && (
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => setShowSubActivities(!showSubActivities)}
+                        className="flex items-center gap-1.5 w-full text-left"
+                      >
+                        {showSubActivities ? <ChevronUp size={10} style={{ color: 'var(--color-text-muted)' }} /> : <ChevronDown size={10} style={{ color: 'var(--color-text-muted)' }} />}
+                        <label className="text-[9px] font-semibold uppercase tracking-wider cursor-pointer" style={{ color: 'var(--color-text-muted)' }}>
+                          Sub-Activities
+                        </label>
+                        <span className="text-[8px] font-medium px-1 py-0.5 rounded-full ml-auto" style={{ background: 'var(--color-bg-input)', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                          {selectedSubActivities.length}
+                        </span>
+                      </button>
+
+                      <AnimatePresence>
+                        {showSubActivities && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden space-y-1"
+                          >
+                            {selectedSubActivities.map((r, i) => (
+                              <div
+                                key={`sub-${i}`}
+                                className="flex items-center gap-1.5 p-1.5 rounded-lg text-[8px]"
+                                style={{ background: 'var(--color-bg-input)' }}
+                              >
+                                <span className="font-mono font-medium flex-shrink-0" style={{ color: 'var(--color-accent)' }}>{r.predecessorCode}</span>
+                                <span style={{ color: 'var(--color-text-muted)' }}>{'\u2192'}</span>
+                                <span className="font-mono font-medium flex-shrink-0" style={{ color: 'var(--color-success)' }}>{r.successorCode}</span>
+                                <span className="font-bold px-1 py-0.5 rounded" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--color-purple)' }}>{r.type}</span>
+                                {r.lagDays !== 0 && (
+                                  <span className="font-medium" style={{ color: 'var(--color-warning)', fontFamily: 'var(--font-mono)' }}>+{r.lagDays}d</span>
+                                )}
+                              </div>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
 
                   {/* Zone-to-Zone Flow for this Trade */}
                   <div>

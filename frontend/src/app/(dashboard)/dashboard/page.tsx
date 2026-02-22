@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import {
   DEMO_FLOWLINE, DEMO_ZONES, DEMO_TODAY_X, DEMO_TOTAL_PERIODS,
-  DEMO_KPIS, DEMO_ACTIVITIES, DEMO_CONSTRAINTS,
+  DEMO_KPIS,
 } from '@/lib/mockData';
 import type { FlowlineWagon } from '@/lib/mockData';
 import { getCurrentPPC } from '@/lib/stores/progress-store';
@@ -81,7 +81,6 @@ export default function DashboardPage() {
   const [todayX, setTodayX] = useState(0);
   const [totalPeriods, setTotalPeriods] = useState(0);
   const [openConstraints, setOpenConstraints] = useState<ConstraintData[]>([]);
-  const [activities] = useState(DEMO_ACTIVITIES);
 
   const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
   const { loadFlowlineData: loadFlowline, flowlineData: sharedFlowline } = useTaktPlanStore();
@@ -415,10 +414,11 @@ export default function DashboardPage() {
           {/* Recent Activity */}
           <Card padding="lg">
             <SectionHeader icon={Clock} title="Recent Activity" />
-            <div className="divide-y" style={{ borderColor: 'var(--color-border-subtle)' }}>
-              {activities.slice(0, 5).map((act) => (
-                <ActivityItem key={act.id} message={act.message} time={act.time} color={act.color} />
-              ))}
+            <div className="flex flex-col items-center justify-center py-8">
+              <Clock size={24} style={{ color: 'var(--color-text-muted)' }} strokeWidth={1} />
+              <p className="text-[12px] mt-2" style={{ color: 'var(--color-text-muted)' }}>
+                No recent activity yet
+              </p>
             </div>
           </Card>
 
