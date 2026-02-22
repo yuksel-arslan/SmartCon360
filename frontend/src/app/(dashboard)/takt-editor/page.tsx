@@ -44,6 +44,7 @@ import {
   Loader2,
   Wrench,
   Building2,
+  Wand2,
 } from 'lucide-react';
 import {
   type TaktPhase,
@@ -294,6 +295,7 @@ export default function TaktEditorPage() {
   const [editValue, setEditValue] = useState('');
   // Trades and zones come from Project Setup — no add modals needed
   const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -813,6 +815,77 @@ export default function TaktEditorPage() {
     }
   }, [projectId, currentPlanId, globalTaktTime, globalBuffer, zones, trades, cells, projectStart, wsEmit]);
 
+  // ── Generate Plan ──
+  const handleGenerate = useCallback(async () => {
+    if (!projectId) return;
+    setIsGenerating(true);
+    try {
+      const created = await generatePlan(projectId);
+      setCurrentPlanId(created.id);
+
+      // Reload the plan data into the editor
+      if (created.zones.length > 0) {
+        setZones(created.zones.map((z) => ({
+          id: z.id,
+          name: z.name,
+          sequence: z.sequence,
+          parentFloor: '',
+          group: null,
+        })));
+      }
+      if (created.wagons.length > 0) {
+        setTrades(created.wagons.map((w) => ({
+          id: w.tradeId,
+          name: w.tradeName,
+          color: w.tradeColor || '#6366F1',
+          sequence: w.sequence,
+          taktTime: w.durationDays,
+          bufferAfter: w.bufferAfter,
+          crewSize: w.crewSize || 5,
+          notes: '',
+          discipline: '',
+          taktPhase: classifyTradePhase('', w.tradeName),
+        })));
+      }
+      if (created.assignments.length > 0) {
+        const wagonToTradeId = new Map(created.wagons.map((w) => [w.id, w.tradeId]));
+        const overrides: Record<string, Partial<GridCell>> = {};
+        for (const a of created.assignments) {
+          const tradeId = wagonToTradeId.get(a.wagonId) || a.wagonId;
+          const key = `${tradeId}::${a.zoneId}`;
+          overrides[key] = {
+            status: (a.status as CellStatus) || 'planned',
+            notes: a.notes || '',
+          };
+        }
+        setCellOverrides(overrides);
+      }
+      setGlobalTaktTime(created.taktTime);
+      setGlobalBuffer(created.bufferSize);
+      if (created.startDate) setProjectStart(new Date(created.startDate));
+
+      // Broadcast & invalidate shared store
+      wsEmit('plan:updated', { projectId, planId: created.id });
+      useTaktPlanStore.getState().invalidate();
+    } catch (err) {
+      console.error('Generate failed:', err);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [projectId, wsEmit]);
+
+  // ── Auto-generate plan on first visit when project has data but no plan ──
+  const autoGenerateAttemptedRef = useRef(false);
+  useEffect(() => {
+    if (autoGenerateAttemptedRef.current) return;
+    if (!projectId) return;
+    // Only auto-generate if: we have trades and zones loaded, but no plan exists
+    if (trades.length > 0 && zones.length > 0 && !currentPlanId && !isGenerating) {
+      autoGenerateAttemptedRef.current = true;
+      handleGenerate();
+    }
+  }, [trades, zones, currentPlanId, isGenerating, projectId, handleGenerate]);
+
   // ── Simulate ──
   const handleSimulate = useCallback(async () => {
     setIsSimulating(true);
@@ -994,10 +1067,22 @@ export default function TaktEditorPage() {
               </span>
             )}
 
+            {/* Generate Plan */}
+            <button
+              onClick={handleGenerate}
+              disabled={isGenerating || trades.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:opacity-80 disabled:opacity-50"
+              style={{ background: 'var(--color-accent)', color: 'white' }}
+              title={currentPlanId ? 'Regenerate takt plan from project data' : 'Generate takt plan automatically'}
+            >
+              {isGenerating ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
+              {isGenerating ? 'Generating...' : currentPlanId ? 'Regenerate' : 'Generate Plan'}
+            </button>
+
             {/* Save */}
             <button
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || trades.length === 0}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:opacity-80 disabled:opacity-50"
               style={{ background: 'var(--color-success)', color: 'white' }}
             >
@@ -1069,11 +1154,17 @@ export default function TaktEditorPage() {
                     onDrop={(e) => handleDrop(e, trade.id)}
                     className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-grab active:cursor-grabbing flex-shrink-0 transition-all"
                     style={{
-                      background: `${trade.color}15`,
-                      border: `1.5px solid ${trade.color}60`,
-                      opacity: draggedTradeId === trade.id ? 0.5 : 1,
-                      borderTopWidth: dragOverTradeId === trade.id && draggedTradeId !== trade.id ? 3 : 1.5,
-                      borderTopColor: dragOverTradeId === trade.id && draggedTradeId !== trade.id ? 'var(--color-accent)' : `${trade.color}60`,
+                      background: dragOverTradeId === trade.id && draggedTradeId !== trade.id
+                        ? 'rgba(232,115,26,0.15)'
+                        : `${trade.color}15`,
+                      border: dragOverTradeId === trade.id && draggedTradeId !== trade.id
+                        ? '2px dashed var(--color-accent)'
+                        : `1.5px solid ${trade.color}60`,
+                      opacity: draggedTradeId === trade.id ? 0.4 : 1,
+                      transform: dragOverTradeId === trade.id && draggedTradeId !== trade.id ? 'scale(1.05)' : 'scale(1)',
+                      boxShadow: dragOverTradeId === trade.id && draggedTradeId !== trade.id
+                        ? '0 0 0 3px rgba(232,115,26,0.25)'
+                        : 'none',
                     }}
                   >
                     <GripVertical size={10} style={{ color: `${trade.color}80` }} />
@@ -1125,15 +1216,48 @@ export default function TaktEditorPage() {
                   className="rounded-xl border p-8 text-center"
                   style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
                 >
-                  <Layers size={32} style={{ color: 'var(--color-text-muted)' }} className="mx-auto mb-3" />
-                  <h3 className="text-sm font-medium mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
-                    No {TAKT_PLAN_GROUPS.find((g) => g.id === planGroup)?.label || planGroup} Data
-                  </h3>
-                  <p className="text-[11px] max-w-md mx-auto" style={{ color: 'var(--color-text-muted)' }}>
-                    {sortedTrades.length === 0
-                      ? `No trades classified as "${planGroup}" phase were found. Add trades with matching disciplines (e.g., ${planGroup === 'substructure' ? 'Excavation, Piling, Foundation' : planGroup === 'shell' ? 'Formwork, Structure, Facade' : 'Drywall, MEP Finish, Painting'}) in Project Setup, or switch to another plan group tab.`
-                      : `No ${planGroup === 'substructure' ? 'sector/grid' : 'zone'} locations found for this phase. Add locations in Project Setup.`}
-                  </p>
+                  {isGenerating ? (
+                    <>
+                      <Loader2 size={32} className="animate-spin mx-auto mb-3" style={{ color: 'var(--color-accent)' }} />
+                      <h3 className="text-sm font-medium mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
+                        Generating Takt Plan...
+                      </h3>
+                      <p className="text-[11px] max-w-md mx-auto" style={{ color: 'var(--color-text-muted)' }}>
+                        Computing takt grid, zone assignments, and buffer configuration from your project data.
+                      </p>
+                    </>
+                  ) : trades.length > 0 && zones.length > 0 ? (
+                    <>
+                      <Wand2 size={32} style={{ color: 'var(--color-accent)' }} className="mx-auto mb-3" />
+                      <h3 className="text-sm font-medium mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
+                        No {TAKT_PLAN_GROUPS.find((g) => g.id === planGroup)?.label || planGroup} Trades
+                      </h3>
+                      <p className="text-[11px] max-w-md mx-auto mb-4" style={{ color: 'var(--color-text-muted)' }}>
+                        No trades classified as &ldquo;{planGroup}&rdquo; phase. Try switching to another plan group tab above, or click Generate Plan to auto-classify your trades.
+                      </p>
+                      <button
+                        onClick={handleGenerate}
+                        disabled={isGenerating}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
+                        style={{ background: 'var(--color-accent)', color: 'white' }}
+                      >
+                        <Wand2 size={14} />
+                        Generate Plan
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Layers size={32} style={{ color: 'var(--color-text-muted)' }} className="mx-auto mb-3" />
+                      <h3 className="text-sm font-medium mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
+                        No Project Data
+                      </h3>
+                      <p className="text-[11px] max-w-md mx-auto" style={{ color: 'var(--color-text-muted)' }}>
+                        {sortedTrades.length === 0
+                          ? `No trades found. Add trades and zones in Project Setup to generate a takt plan.`
+                          : `No zone locations found. Add locations in Project Setup.`}
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
               {sortedTrades.length > 0 && sortedZones.length > 0 && (

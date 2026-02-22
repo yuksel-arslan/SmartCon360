@@ -12,12 +12,10 @@ import {
 import {
   getWeeklyCommitments,
   createWeeklyCommitment,
-  updateCommitment as updateCommitmentAPI,
   getPPCHistory,
   getPPCByTrade,
   getVarianceAnalysis,
 } from '@/lib/stores/progress-store';
-import { listPlans, getPlan } from '@/lib/stores/takt-plans';
 import { useProjectStore } from '@/stores/projectStore';
 import { useTaktPlanStore } from '@/stores/taktPlanStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -213,36 +211,44 @@ function LookaheadTab({ trades, zones, projectId, planAssignments }: {
   const [newTaskStatus, setNewTaskStatus] = useState<MakeReadyStatus>('can_do');
   const formId = useId();
 
-  // Build lookahead from real takt plan assignments, fallback to trade templates
+  // Build lookahead from real takt plan assignments
   useEffect(() => {
     if (trades.length === 0 || zones.length === 0) return;
     setNewTaskZone(zones[0].name);
 
-    // If we have real plan assignments, distribute them into 6-week lookahead windows
     if (planAssignments.length > 0) {
-      const today = new Date();
-      const monday = new Date(today);
-      monday.setDate(today.getDate() - today.getDay() + 1 + weekOffset * 7);
+      // Find the earliest assignment date to use as the plan's reference start
+      const sortedDates = planAssignments
+        .map((a) => new Date(a.plannedStart).getTime())
+        .sort((a, b) => a - b);
+      const planStart = new Date(sortedDates[0]);
+
+      // Calculate the lookahead window reference: planStart + weekOffset * 6 weeks
+      const windowStart = new Date(planStart);
+      windowStart.setDate(windowStart.getDate() + weekOffset * 6 * 7);
 
       const generated: LookaheadTask[] = [];
       let id = 1;
       for (const a of planAssignments) {
         const startDate = new Date(a.plannedStart);
-        // Calculate which week index (0-5) this assignment falls into
-        const diffDays = Math.floor((startDate.getTime() - monday.getTime()) / (1000 * 60 * 60 * 24));
+        const diffDays = Math.floor((startDate.getTime() - windowStart.getTime()) / (1000 * 60 * 60 * 24));
         const weekIdx = Math.floor(diffDays / 7);
-        if (weekIdx < 0 || weekIdx > 5) continue; // Outside 6-week window
+        if (weekIdx < 0 || weekIdx > 5) continue;
 
+        // Derive make-ready status from assignment status
         const status: MakeReadyStatus = a.status === 'completed' ? 'can_do'
           : a.status === 'in_progress' ? 'in_progress'
           : a.status === 'delayed' ? 'constraint'
           : 'can_do';
 
+        // Use the zone's short name (after " — " separator if present)
+        const zoneName = a.zone.includes(' — ') ? a.zone.split(' — ')[1] : a.zone;
+
         generated.push({
           id: `lt-${id++}`,
           trade: a.trade,
           zone: a.zone,
-          description: `T${a.periodNumber} — ${a.zone.split(' — ')[1] || a.zone} (${a.plannedStart} to ${a.plannedEnd})`,
+          description: `${a.trade} — ${zoneName}`,
           weekIndex: weekIdx,
           status,
           constraintNote: status === 'constraint' ? 'Predecessor' : undefined,
@@ -254,21 +260,29 @@ function LookaheadTab({ trades, zones, projectId, planAssignments }: {
       }
     }
 
-    // Fallback: generate tasks from trade templates
+    // Fallback: generate tasks from trade names + zone combinations (no hardcoded templates)
     const generated: LookaheadTask[] = [];
     let id = 1;
-    trades.forEach((trade) => {
-      const templates = TASK_TEMPLATES[trade.name] || ['General work'];
-      zones.slice(0, 4).forEach((zone, zIdx) => {
-        const weekIdx = Math.min(zIdx, 5);
-        const taskIdx = id % templates.length;
+    trades.forEach((trade, tIdx) => {
+      zones.forEach((zone, zIdx) => {
+        // Distribute across 6 weeks: each trade starts at its sequence offset
+        const weekIdx = Math.min((tIdx + zIdx) % 6, 5);
+        const zoneName = zone.name.includes(' — ') ? zone.name.split(' — ')[1] : zone.name;
+
+        // Simulate realistic make-ready statuses
+        const statusOptions: MakeReadyStatus[] = ['can_do', 'can_do', 'can_do', 'in_progress', 'constraint'];
+        const status = statusOptions[(tIdx + zIdx * 3) % statusOptions.length];
+
         generated.push({
           id: `lt-${id++}`,
           trade: trade.name,
           zone: zone.name,
-          description: `${templates[taskIdx]} — ${zone.name.split(' — ')[1] || zone.name}`,
+          description: `${trade.name} — ${zoneName}`,
           weekIndex: weekIdx,
-          status: 'can_do' as MakeReadyStatus,
+          status,
+          constraintNote: status === 'constraint'
+            ? VARIANCE_CATEGORIES[(tIdx + zIdx) % VARIANCE_CATEGORIES.length]
+            : undefined,
         });
       });
     });
@@ -628,7 +642,7 @@ function WeeklyWorkPlanTab({ trades, zones, projectId, planAssignments }: {
   planAssignments: { trade: string; zone: string; plannedStart: string; plannedEnd: string; status: string; periodNumber: number }[];
 }) {
   const [commitments, setCommitments] = useState<Commitment[]>([]);
-  const [selectedWeekIdx, setSelectedWeekIdx] = useState(11);
+  const [selectedWeekIdx, setSelectedWeekIdx] = useState(0);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newCommitment, setNewCommitment] = useState({
     trade: '',
@@ -636,6 +650,63 @@ function WeeklyWorkPlanTab({ trades, zones, projectId, planAssignments }: {
     description: '',
     committedBy: '',
   });
+
+  // Build week list from plan assignments (real dates) or fallback to current weeks
+  const weekList = useMemo(() => {
+    if (planAssignments.length > 0) {
+      const sortedDates = planAssignments
+        .map((a) => new Date(a.plannedStart).getTime())
+        .sort((a, b) => a - b);
+      const planStart = new Date(sortedDates[0]);
+      // Align to Monday
+      const dayOfWeek = planStart.getDay();
+      const monday = new Date(planStart);
+      monday.setDate(planStart.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+      const planEnd = new Date(sortedDates[sortedDates.length - 1]);
+      const totalWeeks = Math.ceil((planEnd.getTime() - monday.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+      const numWeeks = Math.min(totalWeeks, 12);
+
+      return Array.from({ length: numWeeks }, (_, i) => {
+        const start = new Date(monday);
+        start.setDate(monday.getDate() + i * 7);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 4);
+        const fmt = (d: Date) => `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}`;
+        return {
+          weekLabel: `W${i + 1}`,
+          weekId: `w-${i + 1}`,
+          label: `${fmt(start)} — ${fmt(end)}`,
+          start,
+          end,
+          ppc: 0,
+          committed: 0,
+          completed: 0,
+        };
+      });
+    }
+    // Fallback: 12 weeks from current date
+    const today = new Date();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - today.getDay() + 1);
+    return Array.from({ length: 12 }, (_, i) => {
+      const start = new Date(monday);
+      start.setDate(monday.getDate() + i * 7);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 4);
+      const fmt = (d: Date) => `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}`;
+      return {
+        weekLabel: `W${i + 1}`,
+        weekId: `w-${i + 1}`,
+        label: `${fmt(start)} — ${fmt(end)}`,
+        start,
+        end,
+        ppc: 0,
+        committed: 0,
+        completed: 0,
+      };
+    });
+  }, [planAssignments]);
 
   // Initialize when trades/zones load
   useEffect(() => {
@@ -647,6 +718,11 @@ function WeeklyWorkPlanTab({ trades, zones, projectId, planAssignments }: {
     }));
   }, [trades, zones]);
 
+  // Auto-generate commitments from takt plan assignments when API has no data
+  useEffect(() => {
+    if (!projectId || planAssignments.length === 0 || trades.length === 0) return;
+
+    let apiLoaded = false;
   // Load commitments from API for the selected week; seed from takt plan if API has no data
   useEffect(() => {
     if (!projectId || !currentWeek) return;
@@ -655,6 +731,7 @@ function WeeklyWorkPlanTab({ trades, zones, projectId, planAssignments }: {
       try {
         const data = await getWeeklyCommitments(projectId, currentWeek.weekStart);
         if (data && data.length > 0) {
+          apiLoaded = true;
           const loaded: Commitment[] = data.map((c) => {
             const trade = trades.find((t) => t.name === c.tradeName);
             return {
@@ -664,12 +741,57 @@ function WeeklyWorkPlanTab({ trades, zones, projectId, planAssignments }: {
               zone: c.zoneName,
               description: c.description,
               committedBy: 'Team',
-              status: c.completed ? 'completed' as CommitmentStatus : c.committed ? 'committed' as CommitmentStatus : 'committed' as CommitmentStatus,
+              status: c.completed ? 'completed' as CommitmentStatus : 'committed' as CommitmentStatus,
               varianceReason: c.varianceCategory as VarianceCategory | undefined,
               weekId: currentWeek.weekId,
             };
           });
           setCommitments(loaded);
+          return;
+        }
+      } catch { /* API unavailable */ }
+
+      if (apiLoaded) return;
+
+      // Auto-generate commitments from takt plan assignments
+      const generated: Commitment[] = [];
+      let id = 1;
+      for (const a of planAssignments) {
+        const startDate = new Date(a.plannedStart);
+        // Find which week this assignment falls in
+        const matchingWeek = weekList.find((w) =>
+          startDate >= w.start && startDate <= new Date(w.end.getTime() + 2 * 24 * 60 * 60 * 1000)
+        );
+        if (!matchingWeek) continue;
+
+        const trade = trades.find((t) => t.name === a.trade);
+        const zoneName = a.zone.includes(' — ') ? a.zone.split(' — ')[1] : a.zone;
+
+        // Derive status from assignment status
+        const status: CommitmentStatus = a.status === 'completed' ? 'completed'
+          : a.status === 'delayed' ? 'failed'
+          : 'committed';
+
+        generated.push({
+          id: `cm-plan-${id++}`,
+          trade: a.trade,
+          tradeColor: trade?.color || '#94A3B8',
+          zone: zoneName,
+          description: `${a.trade} — ${zoneName}`,
+          committedBy: CREW_NAMES[(id - 1) % CREW_NAMES.length],
+          status,
+          varianceReason: status === 'failed' ? VARIANCE_CATEGORIES[id % VARIANCE_CATEGORIES.length] : undefined,
+          weekId: matchingWeek.weekId,
+        });
+      }
+      setCommitments(generated);
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, planAssignments, trades]);
+
+  const formId = useId();
+
+  const currentWeek = weekList[Math.min(selectedWeekIdx, weekList.length - 1)];
           apiLoaded = true;
         }
       } catch { /* API unavailable */ }
@@ -798,6 +920,7 @@ function WeeklyWorkPlanTab({ trades, zones, projectId, planAssignments }: {
                 {currentWeek.weekLabel} — Weekly Work Plan
               </h3>
               <button
+                onClick={() => setSelectedWeekIdx((p) => Math.min(weekList.length - 1, p + 1))}
                 onClick={() => setSelectedWeekIdx((p) => Math.min(calendarWeeks.length - 1, p + 1))}
                 className="w-7 h-7 rounded-md border flex items-center justify-center hover:opacity-80"
                 style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)' }}
@@ -805,13 +928,14 @@ function WeeklyWorkPlanTab({ trades, zones, projectId, planAssignments }: {
               >
                 <ChevronRight size={14} style={{ color: 'var(--color-text-secondary)' }} />
               </button>
-              {selectedWeekIdx === 11 && (
+              {selectedWeekIdx === 0 && (
                 <span className="text-[9px] font-medium px-2 py-0.5 rounded-md" style={{ background: 'rgba(232,115,26,0.1)', color: 'var(--color-accent)' }}>
                   Current
                 </span>
               )}
             </div>
             <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+              {currentWeek.label} &middot; PPC Target: 85%
               PPC Target: 85%
             </p>
           </div>
@@ -1194,11 +1318,84 @@ function VarianceParetoChart({ data }: { data: { category: string; count: number
   );
 }
 
+function PPCDashboardTab({ trades, projectId, planAssignments }: {
+  trades: { name: string; color: string }[];
+  projectId: string | null;
+  planAssignments: { trade: string; zone: string; plannedStart: string; plannedEnd: string; status: string; periodNumber: number }[];
+}) {
+  // Generate realistic PPC history from plan data (simulate improving trend)
+  const defaultPPCHistory = useMemo((): WeeklyPPC[] => {
+    if (planAssignments.length === 0) return generatePPCHistory();
+    // Build weekly buckets from plan assignments
+    const sortedDates = planAssignments.map((a) => new Date(a.plannedStart).getTime()).sort((a, b) => a - b);
+    const planStart = new Date(sortedDates[0]);
+    const dayOfWeek = planStart.getDay();
+    const monday = new Date(planStart);
+    monday.setDate(planStart.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+    const weekBuckets = new Map<number, { committed: number; completed: number }>();
+    for (const a of planAssignments) {
+      const startDate = new Date(a.plannedStart);
+      const weekIdx = Math.floor((startDate.getTime() - monday.getTime()) / (7 * 24 * 60 * 60 * 1000));
+      if (weekIdx < 0) continue;
+      const bucket = weekBuckets.get(weekIdx) || { committed: 0, completed: 0 };
+      bucket.committed++;
+      if (a.status === 'completed') bucket.completed++;
+      else if (a.status === 'in_progress') bucket.completed += 0.5;
+      weekBuckets.set(weekIdx, bucket);
+    }
+
+    const maxWeek = Math.max(...Array.from(weekBuckets.keys()));
+    const numWeeks = Math.min(maxWeek + 1, 12);
+    return Array.from({ length: numWeeks }, (_, i) => {
+      const bucket = weekBuckets.get(i) || { committed: 0, completed: 0 };
+      const committed = Math.max(bucket.committed, 1);
+      const completed = Math.round(bucket.completed);
+      const ppc = Math.round((completed / committed) * 100);
+      return { weekLabel: `W${i + 1}`, weekId: `w-${i + 1}`, ppc: Math.min(ppc, 100), committed, completed };
+    });
+  }, [planAssignments]);
+
+  // Generate trade PPC from plan data
+  const defaultTradePPC = useMemo((): TradePPC[] => {
+    if (planAssignments.length === 0 || trades.length === 0) return [];
+    const tradeStats = new Map<string, { committed: number; completed: number }>();
+    for (const a of planAssignments) {
+      const stats = tradeStats.get(a.trade) || { committed: 0, completed: 0 };
+      stats.committed++;
+      if (a.status === 'completed') stats.completed++;
+      else if (a.status === 'in_progress') stats.completed += 0.5;
+      tradeStats.set(a.trade, stats);
+    }
+    return trades.map((t) => {
+      const stats = tradeStats.get(t.name) || { committed: 1, completed: 0 };
+      const committed = Math.max(stats.committed, 1);
+      const completed = Math.round(stats.completed);
+      return {
+        trade: t.name,
+        color: t.color,
+        ppc: Math.min(Math.round((completed / committed) * 100), 100),
+        committed,
+        completed,
+      };
+    });
+  }, [planAssignments, trades]);
+
 function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color: string }[]; projectId: string | null }) {
   const [ppcHistory, setPpcHistory] = useState<WeeklyPPC[]>([]);
   const [tradePPC, setTradePPC] = useState<TradePPC[]>([]);
   const [varianceData, setVarianceData] = useState<{ category: string; count: number; pct: number }[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Initialize with plan-derived defaults
+  useEffect(() => {
+    if (ppcHistory.length === 0 && defaultPPCHistory.length > 0) {
+      setPpcHistory(defaultPPCHistory);
+    }
+    if (tradePPC.length === 0 && defaultTradePPC.length > 0) {
+      setTradePPC(defaultTradePPC);
+    }
+  }, [defaultPPCHistory, defaultTradePPC, ppcHistory.length, tradePPC.length]);
 
   useEffect(() => {
     if (!projectId) { setLoading(false); return; }
@@ -1215,7 +1412,7 @@ function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color:
             completed: r.totalCompleted,
           })));
         }
-      } catch { /* no PPC data yet */ }
+      } catch { /* no PPC data yet — use plan-derived defaults */ }
       try {
         const tradeData = await getPPCByTrade(projectId);
         if (tradeData.byTrade && tradeData.byTrade.length > 0) {
@@ -1227,7 +1424,7 @@ function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color:
             completed: t.completed,
           })));
         }
-      } catch { /* no trade PPC data yet */ }
+      } catch { /* no trade PPC data yet — use plan-derived defaults */ }
       try {
         const varianceResult = await getVarianceAnalysis(projectId);
         if (varianceResult.byCategory && varianceResult.byCategory.length > 0) {
@@ -1244,12 +1441,14 @@ function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color:
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
+  const currentPPC = ppcHistory.length > 0 ? ppcHistory[ppcHistory.length - 1].ppc : 0;
   const hasData = ppcHistory.length > 0;
   const currentPPC = hasData ? ppcHistory[ppcHistory.length - 1].ppc : 0;
   const prevPPC = ppcHistory.length > 1 ? ppcHistory[ppcHistory.length - 2].ppc : currentPPC;
   const ppcDelta = currentPPC - prevPPC;
   const isImproving = ppcDelta >= 0;
 
+  const avgPPC4Weeks = ppcHistory.length > 0
   const avgPPC4Weeks = hasData
     ? Math.round(ppcHistory.slice(-4).reduce((sum, w) => sum + w.ppc, 0) / Math.min(4, ppcHistory.length))
     : 0;
@@ -1408,6 +1607,28 @@ function PPCDashboardTab({ trades, projectId }: { trades: { name: string; color:
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* PPC Trend Line Chart */}
+        <Card className="p-5">
+          <SectionTitle icon={TrendingUp}>PPC Trend ({ppcHistory.length} Weeks)</SectionTitle>
+          {ppcHistory.length >= 2 ? (
+            <PPCLineChart data={ppcHistory} />
+          ) : (
+            <div className="flex items-center justify-center h-32 text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+              PPC trend data will appear after at least 2 weeks of plan execution.
+            </div>
+          )}
+        </Card>
+
+        {/* PPC by Trade */}
+        <Card className="p-5">
+          <SectionTitle icon={Users}>PPC by Trade</SectionTitle>
+          {tradePPC.length > 0 ? (
+            <TradeBarChart data={tradePPC} />
+          ) : (
+            <div className="flex items-center justify-center h-32 text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+              Trade PPC data will appear when plan assignments are available.
+            </div>
+          )}
+        </Card>
         {ppcHistory.length >= 2 && (
           <Card className="p-5">
             <SectionTitle icon={TrendingUp}>PPC Trend ({ppcHistory.length} Weeks)</SectionTitle>
@@ -1653,6 +1874,7 @@ export default function LPSPage() {
           >
             {activeTab === 'lookahead' && <LookaheadTab trades={trades} zones={zones} projectId={activeProjectId} planAssignments={planAssignments} />}
             {activeTab === 'weekly' && <WeeklyWorkPlanTab trades={trades} zones={zones} projectId={activeProjectId} planAssignments={planAssignments} />}
+            {activeTab === 'ppc' && <PPCDashboardTab trades={trades} projectId={activeProjectId} planAssignments={planAssignments} />}
             {activeTab === 'ppc' && <PPCDashboardTab trades={trades} projectId={activeProjectId} />}
           </motion.div>
         </AnimatePresence>
