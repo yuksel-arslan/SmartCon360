@@ -24,6 +24,10 @@ import {
   type ActivityRelationshipTemplate,
 } from '@/lib/templates/activity-relationship-templates';
 import {
+  getTradesForProjectType,
+  type SubTradeTemplate,
+} from '@/lib/templates/trade-discipline-templates';
+import {
   GripVertical,
   Save,
   Undo2,
@@ -53,6 +57,12 @@ import {
   ChevronDown,
   ChevronUp,
   RefreshCw,
+  Plus,
+  Trash2,
+  Eye,
+  EyeOff,
+  Pencil,
+  Palette,
 } from 'lucide-react';
 import {
   type TaktPhase,
@@ -301,13 +311,18 @@ export default function TaktEditorPage() {
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
   const [editingField, setEditingField] = useState<{ tradeId: string; field: 'taktTime' | 'buffer' | 'crewSize' } | null>(null);
   const [editValue, setEditValue] = useState('');
-  // Trades and zones come from Project Setup — no add modals needed
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showSubActivities, setShowSubActivities] = useState(false);
+
+  // ── Wagon Editing State ──
+  const [showAddWagon, setShowAddWagon] = useState(false);
+  const [hiddenTradeIds, setHiddenTradeIds] = useState<Set<string>>(new Set());
+  const [editingName, setEditingName] = useState<{ tradeId: string; value: string } | null>(null);
+  const [editingColor, setEditingColor] = useState<string | null>(null); // tradeId being color-edited
 
   // ── Project Relationships (loaded from DB) ──
   interface ProjectRelationship {
@@ -400,8 +415,8 @@ export default function TaktEditorPage() {
   // ── Filtered & sorted trades/zones by plan group (OmniClass aligned) ──
   // Must be computed before grid so the grid only contains trades/zones for the active plan group
   const filteredTrades = useMemo(() => {
-    return trades.filter((t) => phaseMatchesGroup(t.taktPhase, planGroup));
-  }, [trades, planGroup]);
+    return trades.filter((t) => phaseMatchesGroup(t.taktPhase, planGroup) && !hiddenTradeIds.has(t.id));
+  }, [trades, planGroup, hiddenTradeIds]);
 
   const filteredZones = useMemo(() => {
     return zones.filter((z) => z.group === null || z.group === planGroup);
@@ -687,6 +702,78 @@ export default function TaktEditorPage() {
       [key]: { ...prev[key], notes },
     }));
   }, [selectedCell]);
+
+  // ── Wagon Editing Handlers ──
+
+  // Available template trades not yet in the plan
+  const availableTemplateTrades = useMemo(() => {
+    const projectType = activeProject?.projectType || 'hotel';
+    const allTemplates = getTradesForProjectType(projectType);
+    const existingCodes = new Set(trades.map((t) => {
+      // Match by code if available, otherwise try to find by name
+      const templateMatch = allTemplates.find((tmpl) => tmpl.name === t.name);
+      return templateMatch?.code || '';
+    }));
+    // Also check if any trades have a code stored somewhere
+    return allTemplates.filter((t) => !existingCodes.has(t.code));
+  }, [trades, activeProject]);
+
+  const handleAddWagon = useCallback((template: SubTradeTemplate) => {
+    pushHistory();
+    const maxSeq = trades.length > 0 ? Math.max(...trades.map((t) => t.sequence)) : 0;
+    const newTrade: TradeRow = {
+      id: `new-${template.code}-${Date.now()}`,
+      name: template.name,
+      color: template.color,
+      sequence: maxSeq + 1,
+      taktTime: globalTaktTime,
+      bufferAfter: 1,
+      crewSize: template.defaultCrewSize,
+      notes: '',
+      discipline: template.discipline,
+      taktPhase: classifyTradePhase(template.discipline, template.name),
+    };
+    setTrades((prev) => [...prev, newTrade]);
+    setShowAddWagon(false);
+  }, [trades, globalTaktTime, pushHistory]);
+
+  const handleRemoveWagon = useCallback((tradeId: string) => {
+    pushHistory();
+    setTrades((prev) => {
+      const filtered = prev.filter((t) => t.id !== tradeId);
+      return filtered.map((t, i) => ({ ...t, sequence: i + 1 }));
+    });
+    if (selectedCell?.tradeId === tradeId) setSelectedCell(null);
+  }, [pushHistory, selectedCell]);
+
+  const handleToggleWagonVisibility = useCallback((tradeId: string) => {
+    setHiddenTradeIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(tradeId)) next.delete(tradeId);
+      else next.add(tradeId);
+      return next;
+    });
+  }, []);
+
+  const handleRenameWagon = useCallback((tradeId: string, newName: string) => {
+    if (!newName.trim()) return;
+    pushHistory();
+    setTrades((prev) => prev.map((t) => t.id === tradeId ? { ...t, name: newName.trim() } : t));
+    setEditingName(null);
+  }, [pushHistory]);
+
+  const handleChangeColor = useCallback((tradeId: string, newColor: string) => {
+    pushHistory();
+    setTrades((prev) => prev.map((t) => t.id === tradeId ? { ...t, color: newColor } : t));
+    setEditingColor(null);
+  }, [pushHistory]);
+
+  const PRESET_COLORS = [
+    '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#EF4444',
+    '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#0EA5E9',
+    '#92400E', '#DC2626', '#0369A1', '#059669', '#7C3AED',
+    '#D97706', '#BE185D', '#334155', '#475569', '#14B8A6',
+  ];
 
   // ── Save ──
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
@@ -1199,6 +1286,66 @@ export default function TaktEditorPage() {
               <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: 'var(--color-bg-input)', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
                 {sortedTrades.length} wagon{sortedTrades.length !== 1 ? 's' : ''} → {sortedZones.length} zone{sortedZones.length !== 1 ? 's' : ''}
               </span>
+              {hiddenTradeIds.size > 0 && (
+                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.1)', color: 'var(--color-warning)', fontFamily: 'var(--font-mono)' }}>
+                  {hiddenTradeIds.size} hidden
+                </span>
+              )}
+              <div className="flex-1" />
+              {/* Add Wagon Button */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowAddWagon(!showAddWagon)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all hover:opacity-80"
+                  style={{ background: 'var(--color-accent)', color: 'white' }}
+                >
+                  <Plus size={11} />
+                  Add Wagon
+                </button>
+                {/* Add Wagon Dropdown */}
+                <AnimatePresence>
+                  {showAddWagon && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className="absolute right-0 top-full mt-1 z-50 w-64 rounded-xl border shadow-xl overflow-hidden"
+                      style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+                    >
+                      <div className="p-2 border-b" style={{ borderColor: 'var(--color-border)' }}>
+                        <span className="text-[10px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+                          Available Wagons ({availableTemplateTrades.length})
+                        </span>
+                      </div>
+                      <div className="max-h-60 overflow-auto p-1">
+                        {availableTemplateTrades.length === 0 ? (
+                          <div className="text-[10px] text-center py-4" style={{ color: 'var(--color-text-muted)' }}>
+                            All template trades are already in the plan
+                          </div>
+                        ) : (
+                          availableTemplateTrades.map((tmpl) => (
+                            <button
+                              key={tmpl.code}
+                              onClick={() => handleAddWagon(tmpl)}
+                              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all hover:opacity-80"
+                              style={{ background: 'transparent' }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-bg-input)')}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                            >
+                              <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: tmpl.color }} />
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[10px] font-medium truncate" style={{ color: 'var(--color-text)' }}>{tmpl.name}</span>
+                                <span className="text-[8px] uppercase" style={{ color: 'var(--color-text-muted)' }}>{tmpl.code} · {tmpl.discipline}</span>
+                              </div>
+                              <Plus size={10} className="flex-shrink-0 ml-auto" style={{ color: 'var(--color-accent)' }} />
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
             <div className="flex items-center gap-1 overflow-x-auto pb-1">
               {sortedTrades.map((trade, i) => (
@@ -1210,7 +1357,7 @@ export default function TaktEditorPage() {
                     onDragOver={(e) => handleDragOver(e, trade.id)}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, trade.id)}
-                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-grab active:cursor-grabbing flex-shrink-0 transition-all"
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-grab active:cursor-grabbing flex-shrink-0 transition-all group relative"
                     style={{
                       background: `${trade.color}15`,
                       border: `1.5px solid ${trade.color}60`,
@@ -1220,13 +1367,57 @@ export default function TaktEditorPage() {
                     }}
                   >
                     <GripVertical size={10} style={{ color: `${trade.color}80` }} />
-                    <span className="text-[8px] font-bold w-4 h-4 rounded flex items-center justify-center flex-shrink-0" style={{ background: trade.color, color: 'white', fontFamily: 'var(--font-mono)' }}>
-                      {i + 1}
-                    </span>
+                    {/* Color swatch — click to edit color */}
+                    <div className="relative">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setEditingColor(editingColor === trade.id ? null : trade.id); }}
+                        className="text-[8px] font-bold w-4 h-4 rounded flex items-center justify-center flex-shrink-0 hover:ring-2 hover:ring-offset-1 transition-all"
+                        style={{ background: trade.color, color: 'white', fontFamily: 'var(--font-mono)' }}
+                        title="Change color"
+                      >
+                        {i + 1}
+                      </button>
+                      {editingColor === trade.id && (
+                        <div
+                          className="absolute top-full left-0 mt-1 z-50 p-2 rounded-lg border shadow-xl grid grid-cols-5 gap-1"
+                          style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {PRESET_COLORS.map((c) => (
+                            <button
+                              key={c}
+                              onClick={() => handleChangeColor(trade.id, c)}
+                              className="w-5 h-5 rounded-sm transition-all hover:scale-110"
+                              style={{ background: c, border: c === trade.color ? '2px solid white' : 'none', boxShadow: c === trade.color ? `0 0 0 1px ${c}` : 'none' }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-semibold whitespace-nowrap leading-tight" style={{ color: 'var(--color-text)' }}>
-                        {trade.name}
-                      </span>
+                      {/* Editable wagon name */}
+                      {editingName?.tradeId === trade.id ? (
+                        <input
+                          type="text"
+                          value={editingName.value}
+                          onChange={(e) => setEditingName({ tradeId: trade.id, value: e.target.value })}
+                          onBlur={() => handleRenameWagon(trade.id, editingName.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleRenameWagon(trade.id, editingName.value); if (e.key === 'Escape') setEditingName(null); }}
+                          autoFocus
+                          className="text-[10px] font-semibold leading-tight bg-transparent border-b outline-none w-20"
+                          style={{ color: 'var(--color-text)', borderColor: 'var(--color-accent)' }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditingName({ tradeId: trade.id, value: trade.name }); }}
+                          className="text-[10px] font-semibold whitespace-nowrap leading-tight text-left hover:underline"
+                          style={{ color: 'var(--color-text)' }}
+                          title="Click to rename"
+                        >
+                          {trade.name}
+                        </button>
+                      )}
                       <span className="text-[7px] font-medium uppercase leading-tight" style={{ color: TAKT_PHASE_MAP.get(trade.taktPhase)?.color || 'var(--color-text-muted)' }}>
                         Wagon {i + 1} · {TAKT_PHASE_MAP.get(trade.taktPhase)?.shortLabel || trade.taktPhase}
                       </span>
@@ -1247,6 +1438,25 @@ export default function TaktEditorPage() {
                       ) : (
                         <button onClick={() => startInlineEdit(trade.id, 'crewSize', trade.crewSize)} className="text-[9px] font-medium px-1 py-0.5 rounded hover:opacity-70" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)', fontFamily: 'var(--font-mono)' }} title="Crew size"><span className="inline-flex items-center gap-0.5"><Users size={8} />{trade.crewSize}</span></button>
                       )}
+                    </div>
+                    {/* Wagon action buttons — visible on hover */}
+                    <div className="flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleToggleWagonVisibility(trade.id); }}
+                        className="p-0.5 rounded hover:opacity-70"
+                        style={{ color: 'var(--color-text-muted)' }}
+                        title="Hide from takt plan"
+                      >
+                        <EyeOff size={10} />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleRemoveWagon(trade.id); }}
+                        className="p-0.5 rounded hover:opacity-70"
+                        style={{ color: 'var(--color-danger)' }}
+                        title="Remove wagon"
+                      >
+                        <Trash2 size={10} />
+                      </button>
                     </div>
                   </div>
                   {i < sortedTrades.length - 1 && (() => {
@@ -1270,6 +1480,25 @@ export default function TaktEditorPage() {
                 </div>
               ))}
             </div>
+            {/* Hidden wagons bar */}
+            {hiddenTradeIds.size > 0 && (
+              <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t flex-wrap" style={{ borderColor: 'var(--color-border)' }}>
+                <EyeOff size={10} style={{ color: 'var(--color-text-muted)' }} />
+                <span className="text-[9px] font-medium mr-1" style={{ color: 'var(--color-text-muted)' }}>Hidden:</span>
+                {trades.filter((t) => hiddenTradeIds.has(t.id)).map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => handleToggleWagonVisibility(t.id)}
+                    className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium transition-all hover:opacity-80"
+                    style={{ background: `${t.color}15`, color: t.color, border: `1px dashed ${t.color}40` }}
+                    title="Click to show"
+                  >
+                    <Eye size={9} />
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* ── Takt Grid — Wagons flowing through Zones per Takt Period ── */}
@@ -1285,11 +1514,21 @@ export default function TaktEditorPage() {
                   <h3 className="text-sm font-medium mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>
                     No {TAKT_PLAN_GROUPS.find((g) => g.id === planGroup)?.label || planGroup} Data
                   </h3>
-                  <p className="text-[11px] max-w-md mx-auto" style={{ color: 'var(--color-text-muted)' }}>
+                  <p className="text-[11px] max-w-md mx-auto mb-3" style={{ color: 'var(--color-text-muted)' }}>
                     {sortedTrades.length === 0
-                      ? `No trades classified as "${planGroup}" phase were found. Add trades with matching disciplines (e.g., ${planGroup === 'substructure' ? 'Excavation, Piling, Foundation' : planGroup === 'shell' ? 'Formwork, Structure, Facade' : 'Drywall, MEP Finish, Painting'}) in Project Setup, or switch to another plan group tab.`
-                      : `No ${planGroup === 'substructure' ? 'sector/grid' : 'zone'} locations found for this phase. Add locations in Project Setup.`}
+                      ? `No trades for "${planGroup}" phase. Use the "Add Wagon" button above to add trades, or switch to another plan group tab.`
+                      : `No ${planGroup === 'substructure' ? 'sector/grid' : 'zone'} locations found. Add locations in Project Setup.`}
                   </p>
+                  {sortedTrades.length === 0 && (
+                    <button
+                      onClick={() => setShowAddWagon(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:opacity-80"
+                      style={{ background: 'var(--color-accent)', color: 'white' }}
+                    >
+                      <Plus size={12} />
+                      Add Wagon
+                    </button>
+                  )}
                 </div>
               )}
               {sortedTrades.length > 0 && sortedZones.length > 0 && (
