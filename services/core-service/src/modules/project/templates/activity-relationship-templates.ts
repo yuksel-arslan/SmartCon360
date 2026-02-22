@@ -64,14 +64,14 @@ export interface ActivityRelationshipTemplate {
 // ============================================================================
 
 const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
-  // ── WAGON-LEVEL: Excavation → [Shoring/Piling] → Foundation → Superstructure ─
+  // ── WAGON-LEVEL: [Shoring] → Excavation → [Piling] → FRC ────────────────
   {
     predecessorCode: 'STR-EXC',
-    successorCode: 'STR-FND',
+    successorCode: 'STR-FRC',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Foundation starts after excavation completes in zone',
+    description: 'FRC (Formwork+Rebar+Concrete) starts after excavation completes in zone',
     category: 'logistical',
     configurable: false,
     defaultLagDays: 0,
@@ -92,11 +92,11 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   },
   {
     predecessorCode: 'STR-IKS',
-    successorCode: 'STR-FND',
+    successorCode: 'STR-FRC',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Foundation starts after shoring fully complete in zone',
+    description: 'FRC starts after shoring fully complete in zone',
     category: 'logistical',
     configurable: false,
     defaultLagDays: 0,
@@ -115,28 +115,17 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   },
   {
     predecessorCode: 'STR-PIL',
-    successorCode: 'STR-FND',
+    successorCode: 'STR-FRC',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'Foundation starts after piling provides bearing capacity in zone',
+    description: 'FRC starts after piling provides bearing capacity in zone',
     category: 'logistical',
     configurable: false,
     defaultLagDays: 0,
   },
   {
-    predecessorCode: 'STR-FND',
-    successorCode: 'STR-KRK',
-    type: 'FS',
-    lagDays: 3,
-    mandatory: true,
-    description: 'Superstructure starts after foundation concrete cures (min 3 days per ACI 347)',
-    category: 'physical',
-    configurable: true,
-    defaultLagDays: 3,
-  },
-  {
-    predecessorCode: 'STR-KRK',
+    predecessorCode: 'STR-FRC',
     successorCode: 'STR-WPR',
     type: 'FS',
     lagDays: 0,
@@ -165,7 +154,7 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 
 const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   {
-    predecessorCode: 'STR-KRK',
+    predecessorCode: 'STR-FRC',
     successorCode: 'MEC-PLB',
     type: 'FS',
     lagDays: 0,
@@ -176,7 +165,7 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     defaultLagDays: 0,
   },
   {
-    predecessorCode: 'STR-KRK',
+    predecessorCode: 'STR-FRC',
     successorCode: 'MEC-HVC',
     type: 'FS',
     lagDays: 0,
@@ -271,7 +260,7 @@ const MECHANICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 
 const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   {
-    predecessorCode: 'STR-KRK',
+    predecessorCode: 'STR-FRC',
     successorCode: 'ELC-RGH',
     type: 'FS',
     lagDays: 0,
@@ -419,7 +408,7 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   // ── MASONRY PHASE ──────────────────────────────────────────────────────
   {
-    predecessorCode: 'STR-KRK',
+    predecessorCode: 'STR-FRC',
     successorCode: 'ARC-MSN',
     type: 'FS',
     lagDays: 0,
@@ -517,7 +506,7 @@ const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 
   // ── FACADE / ENVELOPE ─────────────────────────────────────────────────
   {
-    predecessorCode: 'STR-KRK',
+    predecessorCode: 'STR-FRC',
     successorCode: 'ARC-FAC',
     type: 'FS',
     lagDays: 0,
@@ -902,7 +891,7 @@ const LANDSCAPE_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 
 const HOSPITAL_EXTRA_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   {
-    predecessorCode: 'STR-KRK',
+    predecessorCode: 'STR-FRC',
     successorCode: 'MEC-MED',
     type: 'FS',
     lagDays: 0,
@@ -1471,9 +1460,10 @@ const PIL_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   },
 ];
 
-// ── STR-FND: Foundation (internal chain) ─────────────────────────────────
+// ── STR-FRC: Formwork + Reinforcement + Concrete (Foundation + Superstructure) ─
 
-const FND_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+const FRC_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  // ── Foundation Phase (Temel) ────────────────────────────────────────────
   {
     predecessorCode: 'FND-BLN',
     successorCode: 'FND-FWP',
@@ -1529,14 +1519,22 @@ const FND_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     configurable: true,
     defaultLagDays: 3,
   },
-];
-
-// ── STR-KRK: Superstructure Frame (internal chain) ───────────────────────
-
-const KRK_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
+  // ── Foundation → Superstructure transition ──────────────────────────────
   {
-    predecessorCode: 'KRK-CFM',
-    successorCode: 'KRK-CRB',
+    predecessorCode: 'FND-FCN',
+    successorCode: 'FRC-CFM',
+    type: 'FS',
+    lagDays: 3,
+    mandatory: true,
+    description: 'Column formwork after foundation concrete cures (min 3 days per ACI 347)',
+    category: 'physical',
+    configurable: true,
+    defaultLagDays: 3,
+  },
+  // ── Superstructure Phase (Karkas) ───────────────────────────────────────
+  {
+    predecessorCode: 'FRC-CFM',
+    successorCode: 'FRC-CRB',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
@@ -1546,8 +1544,8 @@ const KRK_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     defaultLagDays: 0,
   },
   {
-    predecessorCode: 'KRK-CRB',
-    successorCode: 'KRK-CCN',
+    predecessorCode: 'FRC-CRB',
+    successorCode: 'FRC-CCN',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
@@ -1557,8 +1555,8 @@ const KRK_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     defaultLagDays: 0,
   },
   {
-    predecessorCode: 'KRK-CCN',
-    successorCode: 'KRK-SFM',
+    predecessorCode: 'FRC-CCN',
+    successorCode: 'FRC-SFM',
     type: 'FS',
     lagDays: 1,
     mandatory: true,
@@ -1568,8 +1566,8 @@ const KRK_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     defaultLagDays: 1,
   },
   {
-    predecessorCode: 'KRK-SFM',
-    successorCode: 'KRK-SRB',
+    predecessorCode: 'FRC-SFM',
+    successorCode: 'FRC-SRB',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
@@ -1579,8 +1577,8 @@ const KRK_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     defaultLagDays: 0,
   },
   {
-    predecessorCode: 'KRK-SRB',
-    successorCode: 'KRK-SCN',
+    predecessorCode: 'FRC-SRB',
+    successorCode: 'FRC-SCN',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
@@ -1590,8 +1588,8 @@ const KRK_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     defaultLagDays: 0,
   },
   {
-    predecessorCode: 'KRK-SCN',
-    successorCode: 'KRK-STP',
+    predecessorCode: 'FRC-SCN',
+    successorCode: 'FRC-STP',
     type: 'FS',
     lagDays: 3,
     mandatory: true,
@@ -1690,8 +1688,7 @@ const SUB_ACTIVITY_RELATIONSHIP_MAP: SubActivityRelationshipMap[] = [
   { wagonCode: 'STR-EXC', relationships: EXC_SUB_RELATIONSHIPS },
   { wagonCode: 'STR-IKS', relationships: IKS_SUB_RELATIONSHIPS },
   { wagonCode: 'STR-PIL', relationships: PIL_SUB_RELATIONSHIPS },
-  { wagonCode: 'STR-FND', relationships: FND_SUB_RELATIONSHIPS },
-  { wagonCode: 'STR-KRK', relationships: KRK_SUB_RELATIONSHIPS },
+  { wagonCode: 'STR-FRC', relationships: FRC_SUB_RELATIONSHIPS },
   { wagonCode: 'LND-CLR', relationships: CLR_SUB_RELATIONSHIPS },
 ];
 
