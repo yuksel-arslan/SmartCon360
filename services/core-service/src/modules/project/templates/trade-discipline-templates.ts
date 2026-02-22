@@ -79,33 +79,29 @@ const STRUCTURAL_TRADES: SubTradeTemplate[] = [
     ],
   },
   {
-    name: 'Foundation', code: 'STR-FND', color: '#7C3AED', discipline: 'structural',
-    defaultCrewSize: 10, durationMultiplier: 1.2, predecessorCodes: ['STR-EXC'], sortOrder: 4,
+    name: 'Superstructure (FRC)', code: 'STR-FRC', color: '#6366F1', discipline: 'structural',
+    defaultCrewSize: 10, durationMultiplier: 1.0, predecessorCodes: ['STR-EXC'], sortOrder: 4,
     subActivities: [
-      { name: 'Blinding Concrete', code: 'FND-BLN', color: '#A16207', defaultCrewSize: 4, durationMultiplier: 0.06, predecessorCodes: [], sortOrder: 1 },
-      { name: 'Foundation Waterproofing', code: 'FND-FWP', color: '#1E40AF', defaultCrewSize: 4, durationMultiplier: 0.10, predecessorCodes: ['FND-BLN'], sortOrder: 2 },
-      { name: 'Foundation Formwork', code: 'FND-FFM', color: '#6D28D9', defaultCrewSize: 8, durationMultiplier: 0.17, predecessorCodes: ['FND-FWP'], sortOrder: 3 },
-      { name: 'Foundation Reinforcement', code: 'FND-FRB', color: '#4338CA', defaultCrewSize: 8, durationMultiplier: 0.22, predecessorCodes: ['FND-FFM'], sortOrder: 4 },
-      { name: 'Foundation Concrete Pour', code: 'FND-FCN', color: '#818CF8', defaultCrewSize: 10, durationMultiplier: 0.10, predecessorCodes: ['FND-FRB'], sortOrder: 5 },
-      { name: 'Backfill & Compaction', code: 'FND-BKF', color: '#854D0E', defaultCrewSize: 6, durationMultiplier: 0.12, predecessorCodes: ['FND-FCN'], sortOrder: 6 },
+      // ── Foundation Phase (Temel) ────────────────────────────────────────
+      { name: 'Blinding Concrete', code: 'FND-BLN', color: '#A16207', defaultCrewSize: 4, durationMultiplier: 0.03, predecessorCodes: [], sortOrder: 1 },
+      { name: 'Foundation Waterproofing', code: 'FND-FWP', color: '#1E40AF', defaultCrewSize: 4, durationMultiplier: 0.05, predecessorCodes: ['FND-BLN'], sortOrder: 2 },
+      { name: 'Foundation Formwork', code: 'FND-FFM', color: '#6D28D9', defaultCrewSize: 8, durationMultiplier: 0.08, predecessorCodes: ['FND-FWP'], sortOrder: 3 },
+      { name: 'Foundation Reinforcement', code: 'FND-FRB', color: '#4338CA', defaultCrewSize: 8, durationMultiplier: 0.10, predecessorCodes: ['FND-FFM'], sortOrder: 4 },
+      { name: 'Foundation Concrete Pour', code: 'FND-FCN', color: '#818CF8', defaultCrewSize: 10, durationMultiplier: 0.05, predecessorCodes: ['FND-FRB'], sortOrder: 5 },
+      { name: 'Backfill & Compaction', code: 'FND-BKF', color: '#854D0E', defaultCrewSize: 6, durationMultiplier: 0.06, predecessorCodes: ['FND-FCN'], sortOrder: 6 },
+      // ── Superstructure Phase (Karkas) ───────────────────────────────────
+      { name: 'Column/Shear Wall Formwork', code: 'FRC-CFM', color: '#6366F1', defaultCrewSize: 8, durationMultiplier: 0.10, predecessorCodes: ['FND-FCN'], sortOrder: 7 },
+      { name: 'Column/Shear Wall Rebar', code: 'FRC-CRB', color: '#4F46E5', defaultCrewSize: 6, durationMultiplier: 0.10, predecessorCodes: ['FRC-CFM'], sortOrder: 8 },
+      { name: 'Column/Shear Wall Concrete', code: 'FRC-CCN', color: '#818CF8', defaultCrewSize: 10, durationMultiplier: 0.05, predecessorCodes: ['FRC-CRB'], sortOrder: 9 },
+      { name: 'Slab Formwork', code: 'FRC-SFM', color: '#8B5CF6', defaultCrewSize: 8, durationMultiplier: 0.12, predecessorCodes: ['FRC-CCN'], sortOrder: 10 },
+      { name: 'Slab Rebar', code: 'FRC-SRB', color: '#7C3AED', defaultCrewSize: 8, durationMultiplier: 0.12, predecessorCodes: ['FRC-SFM'], sortOrder: 11 },
+      { name: 'Slab Concrete Pour', code: 'FRC-SCN', color: '#A78BFA', defaultCrewSize: 10, durationMultiplier: 0.05, predecessorCodes: ['FRC-SRB'], sortOrder: 12 },
+      { name: 'Formwork Stripping', code: 'FRC-STP', color: '#C4B5FD', defaultCrewSize: 4, durationMultiplier: 0.09, predecessorCodes: ['FRC-SCN'], sortOrder: 13 },
     ],
   },
-  {
-    name: 'Superstructure (Frame)', code: 'STR-KRK', color: '#6366F1', discipline: 'structural',
-    defaultCrewSize: 10, durationMultiplier: 1.0, predecessorCodes: ['STR-FND'], sortOrder: 5,
-    subActivities: [
-      { name: 'Column/Shear Wall Formwork', code: 'KRK-CFM', color: '#6366F1', defaultCrewSize: 8, durationMultiplier: 0.15, predecessorCodes: [], sortOrder: 1 },
-      { name: 'Column/Shear Wall Rebar', code: 'KRK-CRB', color: '#4F46E5', defaultCrewSize: 6, durationMultiplier: 0.15, predecessorCodes: ['KRK-CFM'], sortOrder: 2 },
-      { name: 'Column/Shear Wall Concrete', code: 'KRK-CCN', color: '#818CF8', defaultCrewSize: 10, durationMultiplier: 0.08, predecessorCodes: ['KRK-CRB'], sortOrder: 3 },
-      { name: 'Slab Formwork', code: 'KRK-SFM', color: '#8B5CF6', defaultCrewSize: 8, durationMultiplier: 0.18, predecessorCodes: ['KRK-CCN'], sortOrder: 4 },
-      { name: 'Slab Rebar', code: 'KRK-SRB', color: '#7C3AED', defaultCrewSize: 8, durationMultiplier: 0.18, predecessorCodes: ['KRK-SFM'], sortOrder: 5 },
-      { name: 'Slab Concrete Pour', code: 'KRK-SCN', color: '#A78BFA', defaultCrewSize: 10, durationMultiplier: 0.08, predecessorCodes: ['KRK-SRB'], sortOrder: 6 },
-      { name: 'Formwork Stripping', code: 'KRK-STP', color: '#C4B5FD', defaultCrewSize: 4, durationMultiplier: 0.18, predecessorCodes: ['KRK-SCN'], sortOrder: 7 },
-    ],
-  },
-  { name: 'Steel Structure', code: 'STR-STL', color: '#3730A3', discipline: 'structural', defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: [], sortOrder: 6 },
-  { name: 'Waterproofing', code: 'STR-WPR', color: '#2563EB', discipline: 'structural', defaultCrewSize: 4, durationMultiplier: 0.6, predecessorCodes: ['STR-KRK'], sortOrder: 7 },
-  { name: 'Insulation', code: 'STR-INS', color: '#D946EF', discipline: 'structural', defaultCrewSize: 4, durationMultiplier: 0.6, predecessorCodes: ['STR-WPR'], sortOrder: 8 },
+  { name: 'Steel Structure', code: 'STR-STL', color: '#3730A3', discipline: 'structural', defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: [], sortOrder: 5 },
+  { name: 'Waterproofing', code: 'STR-WPR', color: '#2563EB', discipline: 'structural', defaultCrewSize: 4, durationMultiplier: 0.6, predecessorCodes: ['STR-FRC'], sortOrder: 6 },
+  { name: 'Insulation', code: 'STR-INS', color: '#D946EF', discipline: 'structural', defaultCrewSize: 4, durationMultiplier: 0.6, predecessorCodes: ['STR-WPR'], sortOrder: 7 },
 ];
 
 // ============================================================================
@@ -113,8 +109,8 @@ const STRUCTURAL_TRADES: SubTradeTemplate[] = [
 // ============================================================================
 
 const MECHANICAL_TRADES: SubTradeTemplate[] = [
-  { name: 'Plumbing Rough-in', code: 'MEC-PLB', color: '#3B82F6', discipline: 'mechanical', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['STR-KRK'], sortOrder: 1 },
-  { name: 'HVAC Ductwork', code: 'MEC-HVC', color: '#06B6D4', discipline: 'mechanical', defaultCrewSize: 5, durationMultiplier: 1.0, predecessorCodes: ['STR-KRK'], sortOrder: 2 },
+  { name: 'Plumbing Rough-in', code: 'MEC-PLB', color: '#3B82F6', discipline: 'mechanical', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['STR-FRC'], sortOrder: 1 },
+  { name: 'HVAC Ductwork', code: 'MEC-HVC', color: '#06B6D4', discipline: 'mechanical', defaultCrewSize: 5, durationMultiplier: 1.0, predecessorCodes: ['STR-FRC'], sortOrder: 2 },
   { name: 'Fire Suppression (Sprinklers)', code: 'MEC-FPR', color: '#EF4444', discipline: 'mechanical', defaultCrewSize: 3, durationMultiplier: 0.6, predecessorCodes: ['MEC-HVC'], sortOrder: 3 },
   { name: 'Piping Systems', code: 'MEC-PIP', color: '#0EA5E9', discipline: 'mechanical', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['MEC-PLB'], sortOrder: 4 },
   { name: 'Mechanical Equipment Installation', code: 'MEC-EQP', color: '#14B8A6', discipline: 'mechanical', defaultCrewSize: 4, durationMultiplier: 1.0, predecessorCodes: ['MEC-HVC', 'MEC-PIP'], sortOrder: 5 },
@@ -127,7 +123,7 @@ const MECHANICAL_TRADES: SubTradeTemplate[] = [
 // ============================================================================
 
 const ELECTRICAL_TRADES: SubTradeTemplate[] = [
-  { name: 'Electrical Rough-in (Conduit)', code: 'ELC-RGH', color: '#F59E0B', discipline: 'electrical', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['STR-KRK'], sortOrder: 1 },
+  { name: 'Electrical Rough-in (Conduit)', code: 'ELC-RGH', color: '#F59E0B', discipline: 'electrical', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['STR-FRC'], sortOrder: 1 },
   { name: 'Cable Tray & Containment', code: 'ELC-CTR', color: '#D97706', discipline: 'electrical', defaultCrewSize: 4, durationMultiplier: 0.6, predecessorCodes: ['ELC-RGH'], sortOrder: 2 },
   { name: 'Cable Pulling', code: 'ELC-CBL', color: '#B45309', discipline: 'electrical', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['ELC-CTR'], sortOrder: 3 },
   { name: 'Switchgear & Panels', code: 'ELC-SWG', color: '#92400E', discipline: 'electrical', defaultCrewSize: 3, durationMultiplier: 0.6, predecessorCodes: ['ELC-CBL'], sortOrder: 4 },
@@ -143,10 +139,10 @@ const ELECTRICAL_TRADES: SubTradeTemplate[] = [
 // ============================================================================
 
 const ARCHITECTURAL_TRADES: SubTradeTemplate[] = [
-  { name: 'Masonry / Blockwork', code: 'ARC-MSN', color: '#D97706', discipline: 'architectural', defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: ['STR-KRK'], sortOrder: 1 },
+  { name: 'Masonry / Blockwork', code: 'ARC-MSN', color: '#D97706', discipline: 'architectural', defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: ['STR-FRC'], sortOrder: 1 },
   { name: 'Plastering (Internal)', code: 'ARC-PLS', color: '#FBBF24', discipline: 'architectural', defaultCrewSize: 5, durationMultiplier: 0.8, predecessorCodes: ['ARC-MSN', 'MEC-PLB', 'ELC-RGH'], sortOrder: 2 },
   { name: 'Drywall / Partitions', code: 'ARC-DRW', color: '#A78BFA', discipline: 'architectural', defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: ['MEC-PLB', 'ELC-RGH'], sortOrder: 3 },
-  { name: 'Facade / Curtain Wall', code: 'ARC-FAC', color: '#0EA5E9', discipline: 'architectural', defaultCrewSize: 6, durationMultiplier: 1.2, predecessorCodes: ['STR-KRK'], sortOrder: 4 },
+  { name: 'Facade / Curtain Wall', code: 'ARC-FAC', color: '#0EA5E9', discipline: 'architectural', defaultCrewSize: 6, durationMultiplier: 1.2, predecessorCodes: ['STR-FRC'], sortOrder: 4 },
   { name: 'Tiling (Floors & Walls)', code: 'ARC-TIL', color: '#10B981', discipline: 'architectural', defaultCrewSize: 4, durationMultiplier: 1.0, predecessorCodes: ['ARC-PLS', 'MEC-PLB'], sortOrder: 5 },
   { name: 'Flooring', code: 'ARC-FLR', color: '#059669', discipline: 'architectural', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['ARC-DRW'], sortOrder: 6 },
   { name: 'Suspended Ceiling', code: 'ARC-CLG', color: '#64748B', discipline: 'architectural', defaultCrewSize: 4, durationMultiplier: 0.8, predecessorCodes: ['MEC-EQP', 'ELC-LGT'], sortOrder: 7 },
@@ -251,7 +247,7 @@ const PROJECT_DISCIPLINE_CONFIGS: ProjectTypeDisciplineConfig[] = [
     disciplines: [
       { discipline: 'structural', included: true },
       { discipline: 'mechanical', included: true, extraTrades: [
-        { name: 'Medical Gas Systems', code: 'MEC-MED', color: '#14B8A6', discipline: 'mechanical', defaultCrewSize: 3, durationMultiplier: 0.8, predecessorCodes: ['STR-KRK'], sortOrder: 8 },
+        { name: 'Medical Gas Systems', code: 'MEC-MED', color: '#14B8A6', discipline: 'mechanical', defaultCrewSize: 3, durationMultiplier: 0.8, predecessorCodes: ['STR-FRC'], sortOrder: 8 },
         { name: 'Clean Room Systems', code: 'MEC-CLN', color: '#22D3EE', discipline: 'mechanical', defaultCrewSize: 4, durationMultiplier: 1.0, predecessorCodes: ['MEC-EQP'], sortOrder: 9 },
       ]},
       { discipline: 'electrical', included: true, extraTrades: [
@@ -297,7 +293,7 @@ const PROJECT_DISCIPLINE_CONFIGS: ProjectTypeDisciplineConfig[] = [
   {
     projectType: 'infrastructure',
     disciplines: [
-      { discipline: 'structural', included: true, excludeCodes: ['STR-KRK', 'STR-INS'] },
+      { discipline: 'structural', included: true, excludeCodes: ['STR-FRC', 'STR-INS'] },
       { discipline: 'mechanical', included: false },
       { discipline: 'electrical', included: true, excludeCodes: ['ELC-DAT', 'ELC-SEC', 'ELC-BMS'] },
       { discipline: 'architectural', included: false },
