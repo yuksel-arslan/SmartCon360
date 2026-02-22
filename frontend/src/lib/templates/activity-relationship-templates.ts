@@ -47,14 +47,18 @@ export interface ActivityRelationshipTemplate {
 // ============================================================================
 
 const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
-  // ── WAGON-LEVEL: [Shoring] → Excavation → [Piling] → FRC ────────────────
+  // ── SUBSTRUCTURE: [Shoring] → Excavation → [Piling] → Foundation ─────────
+  // W1: Kazı (Excavation)
+  // W2: İksa (Shoring) — optional, auto-filtered by getRelationshipsForTrades()
+  // W3: Kazık (Piling) — optional, auto-filtered by getRelationshipsForTrades()
+  // W4: Temel (Foundation Waterproofing + Concrete)
   {
     predecessorCode: 'STR-EXC',
-    successorCode: 'STR-FRC',
+    successorCode: 'STR-FND',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'FRC (Formwork+Rebar+Concrete) starts after excavation completes in zone',
+    description: 'Foundation works start after excavation completes in zone',
   },
   // Shoring (İksa) — optional wagon, auto-filtered by getRelationshipsForTrades()
   // Derin kazılarda: Önce iksa kazıkları çakılır, ardından kademeli kazı + iksa kirişleri
@@ -69,11 +73,11 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   },
   {
     predecessorCode: 'STR-IKS',
-    successorCode: 'STR-FRC',
+    successorCode: 'STR-FND',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'FRC starts after shoring fully complete in zone',
+    description: 'Foundation works start after shoring fully complete in zone',
   },
   // Piling — optional wagon, auto-filtered by getRelationshipsForTrades()
   {
@@ -86,11 +90,20 @@ const STRUCTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   },
   {
     predecessorCode: 'STR-PIL',
-    successorCode: 'STR-FRC',
+    successorCode: 'STR-FND',
     type: 'FS',
     lagDays: 0,
     mandatory: true,
-    description: 'FRC starts after piling provides bearing capacity in zone',
+    description: 'Foundation works start after piling provides bearing capacity in zone',
+  },
+  // ── SHELL & CORE: Foundation → Superstructure ────────────────────────────
+  {
+    predecessorCode: 'STR-FND',
+    successorCode: 'STR-FRC',
+    type: 'FS',
+    lagDays: 3,
+    mandatory: true,
+    description: 'Superstructure (Karkas) starts after foundation concrete cures (min 3 days)',
   },
   {
     predecessorCode: 'STR-FRC',
@@ -289,14 +302,18 @@ const ELECTRICAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
 // ============================================================================
 
 const ARCHITECTURAL_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
-  // ── MASONRY PHASE ──────────────────────────────────────────────────────
+  // ── MASONRY / BLOCK WALL PHASE (Tuğla Duvar) ─────────────────────────────
+  // Block masonry starts 3 floors behind structural work (3 kat sonra).
+  // SS relationship: masonry can START in zone X when structure STARTS in zone X + lagDays.
+  // Default lagDays = 3 × taktTime. At taktTime=5: lag=15d → 3 floors lead.
+  // Adjust lagDays if taktTime differs: lagDays = 3 × taktTime.
   {
     predecessorCode: 'STR-FRC',
     successorCode: 'ARC-MSN',
-    type: 'FS',
-    lagDays: 0,
+    type: 'SS',
+    lagDays: 15,
     mandatory: true,
-    description: 'Masonry/blockwork starts after structure is exposed in zone',
+    description: 'Block masonry starts 3 floors behind structural (SS+15d = 3×taktTime lag)',
   },
   // ── PLASTERING PHASE ───────────────────────────────────────────────────
   {
@@ -1027,10 +1044,9 @@ const PIL_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   },
 ];
 
-// ── STR-FRC: Formwork + Reinforcement + Concrete (Foundation + Superstructure) ─
+// ── STR-FND: Foundation Works (Temel — substructure W4) ───────────────────
 
-const FRC_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
-  // ── Foundation Phase (Temel) ────────────────────────────────────────────
+const FND_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   {
     predecessorCode: 'FND-BLN',
     successorCode: 'FND-FWP',
@@ -1071,16 +1087,11 @@ const FRC_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
     mandatory: true,
     description: 'Backfill after foundation concrete cures (min 3 days)',
   },
-  // ── Foundation → Superstructure transition ──────────────────────────────
-  {
-    predecessorCode: 'FND-FCN',
-    successorCode: 'FRC-CFM',
-    type: 'FS',
-    lagDays: 3,
-    mandatory: true,
-    description: 'Column formwork after foundation concrete cures (min 3 days)',
-  },
-  // ── Superstructure Phase (Karkas) ───────────────────────────────────────
+];
+
+// ── STR-FRC: Superstructure / Karkas (shell & core) ──────────────────────
+
+const FRC_SUB_RELATIONSHIPS: ActivityRelationshipTemplate[] = [
   {
     predecessorCode: 'FRC-CFM',
     successorCode: 'FRC-CRB',
@@ -1198,6 +1209,7 @@ const SUB_ACTIVITY_RELATIONSHIP_MAP: SubActivityRelationshipMap[] = [
   { wagonCode: 'STR-EXC', relationships: EXC_SUB_RELATIONSHIPS },
   { wagonCode: 'STR-IKS', relationships: IKS_SUB_RELATIONSHIPS },
   { wagonCode: 'STR-PIL', relationships: PIL_SUB_RELATIONSHIPS },
+  { wagonCode: 'STR-FND', relationships: FND_SUB_RELATIONSHIPS },
   { wagonCode: 'STR-FRC', relationships: FRC_SUB_RELATIONSHIPS },
   { wagonCode: 'LND-CLR', relationships: CLR_SUB_RELATIONSHIPS },
 ];

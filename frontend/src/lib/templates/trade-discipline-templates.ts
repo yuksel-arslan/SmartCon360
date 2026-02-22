@@ -88,29 +88,33 @@ const STRUCTURAL_TRADES: SubTradeTemplate[] = [
     ],
   },
   {
-    name: 'Superstructure (FRC)', code: 'STR-FRC', color: '#6366F1', discipline: 'structural',
+    name: 'Foundation Works (Temel)', code: 'STR-FND', color: '#4338CA', discipline: 'structural',
     defaultCrewSize: 10, durationMultiplier: 1.0, predecessorCodes: ['STR-EXC'], sortOrder: 4, defaultContractType: 'labor_only',
     subActivities: [
-      // ── Foundation Phase (Temel) ────────────────────────────────────────
-      { name: 'Blinding Concrete', code: 'FND-BLN', color: '#A16207', defaultCrewSize: 4, durationMultiplier: 0.03, predecessorCodes: [], sortOrder: 1 },
-      { name: 'Foundation Waterproofing', code: 'FND-FWP', color: '#1E40AF', defaultCrewSize: 4, durationMultiplier: 0.05, predecessorCodes: ['FND-BLN'], sortOrder: 2 },
-      { name: 'Foundation Formwork', code: 'FND-FFM', color: '#6D28D9', defaultCrewSize: 8, durationMultiplier: 0.08, predecessorCodes: ['FND-FWP'], sortOrder: 3 },
-      { name: 'Foundation Reinforcement', code: 'FND-FRB', color: '#4338CA', defaultCrewSize: 8, durationMultiplier: 0.10, predecessorCodes: ['FND-FFM'], sortOrder: 4 },
-      { name: 'Foundation Concrete Pour', code: 'FND-FCN', color: '#818CF8', defaultCrewSize: 10, durationMultiplier: 0.05, predecessorCodes: ['FND-FRB'], sortOrder: 5 },
-      { name: 'Backfill & Compaction', code: 'FND-BKF', color: '#854D0E', defaultCrewSize: 6, durationMultiplier: 0.06, predecessorCodes: ['FND-FCN'], sortOrder: 6 },
-      // ── Superstructure Phase (Karkas) ───────────────────────────────────
-      { name: 'Column/Shear Wall Formwork', code: 'FRC-CFM', color: '#6366F1', defaultCrewSize: 8, durationMultiplier: 0.10, predecessorCodes: ['FND-FCN'], sortOrder: 7 },
-      { name: 'Column/Shear Wall Rebar', code: 'FRC-CRB', color: '#4F46E5', defaultCrewSize: 6, durationMultiplier: 0.10, predecessorCodes: ['FRC-CFM'], sortOrder: 8 },
-      { name: 'Column/Shear Wall Concrete', code: 'FRC-CCN', color: '#818CF8', defaultCrewSize: 10, durationMultiplier: 0.05, predecessorCodes: ['FRC-CRB'], sortOrder: 9 },
-      { name: 'Slab Formwork', code: 'FRC-SFM', color: '#8B5CF6', defaultCrewSize: 8, durationMultiplier: 0.12, predecessorCodes: ['FRC-CCN'], sortOrder: 10 },
-      { name: 'Slab Rebar', code: 'FRC-SRB', color: '#7C3AED', defaultCrewSize: 8, durationMultiplier: 0.12, predecessorCodes: ['FRC-SFM'], sortOrder: 11 },
-      { name: 'Slab Concrete Pour', code: 'FRC-SCN', color: '#A78BFA', defaultCrewSize: 10, durationMultiplier: 0.05, predecessorCodes: ['FRC-SRB'], sortOrder: 12 },
-      { name: 'Formwork Stripping', code: 'FRC-STP', color: '#C4B5FD', defaultCrewSize: 4, durationMultiplier: 0.09, predecessorCodes: ['FRC-SCN'], sortOrder: 13 },
+      { name: 'Blinding Concrete', code: 'FND-BLN', color: '#A16207', defaultCrewSize: 4, durationMultiplier: 0.08, predecessorCodes: [], sortOrder: 1 },
+      { name: 'Foundation Waterproofing', code: 'FND-FWP', color: '#1E40AF', defaultCrewSize: 4, durationMultiplier: 0.12, predecessorCodes: ['FND-BLN'], sortOrder: 2 },
+      { name: 'Foundation Formwork', code: 'FND-FFM', color: '#6D28D9', defaultCrewSize: 8, durationMultiplier: 0.18, predecessorCodes: ['FND-FWP'], sortOrder: 3 },
+      { name: 'Foundation Reinforcement', code: 'FND-FRB', color: '#4338CA', defaultCrewSize: 8, durationMultiplier: 0.22, predecessorCodes: ['FND-FFM'], sortOrder: 4 },
+      { name: 'Foundation Concrete Pour', code: 'FND-FCN', color: '#818CF8', defaultCrewSize: 10, durationMultiplier: 0.15, predecessorCodes: ['FND-FRB'], sortOrder: 5 },
+      { name: 'Backfill & Compaction', code: 'FND-BKF', color: '#854D0E', defaultCrewSize: 6, durationMultiplier: 0.25, predecessorCodes: ['FND-FCN'], sortOrder: 6 },
     ],
   },
-  { name: 'Steel Structure', code: 'STR-STL', color: '#3730A3', discipline: 'structural', defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: [], sortOrder: 5, defaultContractType: 'supply_install' },
-  { name: 'Waterproofing', code: 'STR-WPR', color: '#2563EB', discipline: 'structural', defaultCrewSize: 4, durationMultiplier: 0.6, predecessorCodes: ['STR-FRC'], sortOrder: 6, defaultContractType: 'supply_and_fix' },
-  { name: 'Insulation', code: 'STR-INS', color: '#D946EF', discipline: 'structural', defaultCrewSize: 4, durationMultiplier: 0.6, predecessorCodes: ['STR-WPR'], sortOrder: 7, defaultContractType: 'supply_and_fix' },
+  {
+    name: 'Superstructure (Karkas)', code: 'STR-FRC', color: '#6366F1', discipline: 'structural',
+    defaultCrewSize: 10, durationMultiplier: 1.0, predecessorCodes: ['STR-FND'], sortOrder: 5, defaultContractType: 'labor_only',
+    subActivities: [
+      { name: 'Column/Shear Wall Formwork', code: 'FRC-CFM', color: '#6366F1', defaultCrewSize: 8, durationMultiplier: 0.16, predecessorCodes: [], sortOrder: 1 },
+      { name: 'Column/Shear Wall Rebar', code: 'FRC-CRB', color: '#4F46E5', defaultCrewSize: 6, durationMultiplier: 0.16, predecessorCodes: ['FRC-CFM'], sortOrder: 2 },
+      { name: 'Column/Shear Wall Concrete', code: 'FRC-CCN', color: '#818CF8', defaultCrewSize: 10, durationMultiplier: 0.08, predecessorCodes: ['FRC-CRB'], sortOrder: 3 },
+      { name: 'Slab Formwork', code: 'FRC-SFM', color: '#8B5CF6', defaultCrewSize: 8, durationMultiplier: 0.18, predecessorCodes: ['FRC-CCN'], sortOrder: 4 },
+      { name: 'Slab Rebar', code: 'FRC-SRB', color: '#7C3AED', defaultCrewSize: 8, durationMultiplier: 0.18, predecessorCodes: ['FRC-SFM'], sortOrder: 5 },
+      { name: 'Slab Concrete Pour', code: 'FRC-SCN', color: '#A78BFA', defaultCrewSize: 10, durationMultiplier: 0.08, predecessorCodes: ['FRC-SRB'], sortOrder: 6 },
+      { name: 'Formwork Stripping', code: 'FRC-STP', color: '#C4B5FD', defaultCrewSize: 4, durationMultiplier: 0.16, predecessorCodes: ['FRC-SCN'], sortOrder: 7 },
+    ],
+  },
+  { name: 'Steel Structure', code: 'STR-STL', color: '#3730A3', discipline: 'structural', defaultCrewSize: 6, durationMultiplier: 1.0, predecessorCodes: [], sortOrder: 6, defaultContractType: 'supply_install' },
+  { name: 'Waterproofing', code: 'STR-WPR', color: '#2563EB', discipline: 'structural', defaultCrewSize: 4, durationMultiplier: 0.6, predecessorCodes: ['STR-FRC'], sortOrder: 7, defaultContractType: 'supply_and_fix' },
+  { name: 'Insulation', code: 'STR-INS', color: '#D946EF', discipline: 'structural', defaultCrewSize: 4, durationMultiplier: 0.6, predecessorCodes: ['STR-WPR'], sortOrder: 8, defaultContractType: 'supply_and_fix' },
 ];
 
 // ============================================================================
