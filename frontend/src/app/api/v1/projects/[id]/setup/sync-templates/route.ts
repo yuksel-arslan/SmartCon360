@@ -11,18 +11,17 @@ type Params = { params: Promise<{ id: string }> };
  * POST /api/v1/projects/:id/setup/sync-templates
  *
  * Synchronize existing project trades with the latest template definitions.
- * - Updates name, color, sortOrder, discipline for existing trades (matched by code)
- * - Creates missing trades from templates
- * - Optionally removes trades no longer in templates
- * - Re-applies activity relationships from templates
+ * ONLY updates trades that already exist in the project (matched by code).
+ * Never creates new trades — trade selection is done in Project Setup.
+ *
+ * - Updates name, color, sortOrder, discipline for existing trades
+ * - Rebuilds predecessorTradeIds from template definitions
+ * - Re-applies activity relationships for existing trades
  */
 export async function POST(request: NextRequest, { params }: Params) {
   try {
     requireAuth(request);
     const { id: projectId } = await params;
-
-    const body = await request.json().catch(() => ({}));
-    const removeOrphans = body.removeOrphans ?? false;
 
     const project = await prisma.project.findUnique({
       where: { id: projectId },
@@ -39,17 +38,14 @@ export async function POST(request: NextRequest, { params }: Params) {
     const templates = getTradesForProjectType(project.projectType);
     const templateByCode = new Map(templates.map((t) => [t.code, t]));
 
-    // Get existing trades
+    // Get existing project trades — these are what the user selected in Project Setup
     const existingTrades = await prisma.trade.findMany({
-      where: { projectId },
+      where: { projectId, isActive: true },
     });
-    const existingByCode = new Map(existingTrades.map((t) => [t.code, t]));
 
     const updated: string[] = [];
-    const created: string[] = [];
-    const removed: string[] = [];
 
-    // 1. Update existing trades to match templates
+    // Update existing trades to match latest template definitions
     for (const trade of existingTrades) {
       const template = templateByCode.get(trade.code);
       if (template) {
@@ -64,65 +60,29 @@ export async function POST(request: NextRequest, { params }: Params) {
           },
         });
         updated.push(trade.code);
-      } else if (removeOrphans) {
-        // Trade no longer in templates — deactivate it
-        await prisma.trade.update({
-          where: { id: trade.id },
-          data: { isActive: false },
-        });
-        removed.push(trade.code);
       }
     }
 
-    // 2. Create missing trades from templates
-    for (const template of templates) {
-      if (!existingByCode.has(template.code)) {
-        try {
-          await prisma.trade.create({
-            data: {
-              projectId,
-              name: template.name,
-              code: template.code,
-              color: template.color,
-              defaultCrewSize: template.defaultCrewSize,
-              discipline: template.discipline,
-              sortOrder: template.sortOrder,
-              predecessorTradeIds: [],
-              contractType: template.defaultContractType || 'supply_and_fix',
-            },
-          });
-          created.push(template.code);
-        } catch (err: unknown) {
-          if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code !== 'P2002') throw err;
-        }
-      }
-    }
+    // Rebuild code → id map with active trades only
+    const codeToId = new Map(existingTrades.map((t) => [t.code, t.id]));
+    const tradeCodes = existingTrades.map((t) => t.code);
 
-    // 3. Rebuild code → id map with all active trades
-    const allTrades = await prisma.trade.findMany({
-      where: { projectId, isActive: true },
-      select: { id: true, code: true },
-    });
-    const codeToId = new Map(allTrades.map((t) => [t.code, t.id]));
-    const tradeCodes = allTrades.map((t) => t.code);
-
-    // 4. Resolve predecessorTradeIds from template predecessorCodes
-    for (const template of templates) {
-      const tradeId = codeToId.get(template.code);
-      if (!tradeId) continue;
+    // Resolve predecessorTradeIds from template predecessorCodes
+    for (const trade of existingTrades) {
+      const template = templateByCode.get(trade.code);
+      if (!template) continue;
 
       const resolvedIds = template.predecessorCodes
         .map((code) => codeToId.get(code))
         .filter((id): id is string => !!id);
 
       await prisma.trade.update({
-        where: { id: tradeId },
+        where: { id: trade.id },
         data: { predecessorTradeIds: resolvedIds },
       });
     }
 
-    // 5. Re-apply activity relationships
-    // Delete existing template-sourced relationships
+    // Re-apply activity relationships for existing trades only
     await prisma.tradeRelationship.deleteMany({
       where: { projectId, source: 'template' },
     });
@@ -157,13 +117,11 @@ export async function POST(request: NextRequest, { params }: Params) {
     return NextResponse.json({
       data: {
         updated,
-        created,
-        removed,
         relationshipsCreated: relCreated,
       },
       meta: {
         templateCount: templates.length,
-        totalActive: allTrades.length,
+        totalActive: existingTrades.length,
       },
       error: null,
     });
