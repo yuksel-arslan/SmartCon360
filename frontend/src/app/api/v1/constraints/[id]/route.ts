@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (!existing) throw new AppError('Constraint not found', 'NOT_FOUND', 404);
 
     // Build update data explicitly to satisfy Prisma's strict types
-    const data: Prisma.ConstraintUpdateInput = {};
+    const data: Prisma.ConstraintUncheckedUpdateInput = {};
 
     if (input.title !== undefined) data.title = input.title;
     if (input.description !== undefined) data.description = input.description;
