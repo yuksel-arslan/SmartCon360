@@ -569,7 +569,7 @@ export default function ConstraintsPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       <div className="sm:col-span-2 lg:col-span-3">
-                        <label htmlFor={`${formId}-title`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>Title</label>
+                        <label htmlFor={`${formId}-title`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-secondary)' }}>Title</label>
                         <input id={`${formId}-title`} value={newConstraint.title}
                           onChange={(e) => setNewConstraint((p) => ({ ...p, title: e.target.value }))}
                           placeholder="e.g., MEP material delivery delayed"
@@ -577,7 +577,7 @@ export default function ConstraintsPage() {
                           style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }} autoFocus />
                       </div>
                       <div>
-                        <label htmlFor={`${formId}-cat`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>Category</label>
+                        <label htmlFor={`${formId}-cat`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-secondary)' }}>Category</label>
                         <select id={`${formId}-cat`} value={newConstraint.category}
                           onChange={(e) => setNewConstraint((p) => ({ ...p, category: e.target.value }))}
                           className="w-full text-xs px-3 py-2 rounded-lg border outline-none"
@@ -586,7 +586,7 @@ export default function ConstraintsPage() {
                         </select>
                       </div>
                       <div>
-                        <label htmlFor={`${formId}-pri`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>Priority</label>
+                        <label htmlFor={`${formId}-pri`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-secondary)' }}>Priority</label>
                         <select id={`${formId}-pri`} value={newConstraint.priority}
                           onChange={(e) => setNewConstraint((p) => ({ ...p, priority: e.target.value }))}
                           className="w-full text-xs px-3 py-2 rounded-lg border outline-none"
@@ -595,14 +595,14 @@ export default function ConstraintsPage() {
                         </select>
                       </div>
                       <div>
-                        <label htmlFor={`${formId}-due`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>Due Date</label>
+                        <label htmlFor={`${formId}-due`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-secondary)' }}>Due Date</label>
                         <input id={`${formId}-due`} type="date" value={newConstraint.dueDate}
                           onChange={(e) => setNewConstraint((p) => ({ ...p, dueDate: e.target.value }))}
                           className="w-full text-xs px-3 py-2 rounded-lg border outline-none"
                           style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }} />
                       </div>
                       <div>
-                        <label htmlFor={`${formId}-zone`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>Zone</label>
+                        <label htmlFor={`${formId}-zone`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-secondary)' }}>Zone</label>
                         <input id={`${formId}-zone`} value={newConstraint.zoneId}
                           onChange={(e) => setNewConstraint((p) => ({ ...p, zoneId: e.target.value }))}
                           placeholder="e.g., Zone A"
@@ -610,7 +610,7 @@ export default function ConstraintsPage() {
                           style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }} />
                       </div>
                       <div>
-                        <label htmlFor={`${formId}-trade`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>Trade</label>
+                        <label htmlFor={`${formId}-trade`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-secondary)' }}>Trade</label>
                         <input id={`${formId}-trade`} value={newConstraint.tradeId}
                           onChange={(e) => setNewConstraint((p) => ({ ...p, tradeId: e.target.value }))}
                           placeholder="e.g., MEP"
@@ -618,7 +618,7 @@ export default function ConstraintsPage() {
                           style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }} />
                       </div>
                       <div>
-                        <label htmlFor={`${formId}-assigned`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>Assigned To</label>
+                        <label htmlFor={`${formId}-assigned`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-secondary)' }}>Assigned To</label>
                         <input id={`${formId}-assigned`} value={newConstraint.assignedTo}
                           onChange={(e) => setNewConstraint((p) => ({ ...p, assignedTo: e.target.value }))}
                           placeholder="e.g., M. Yilmaz"
@@ -626,7 +626,7 @@ export default function ConstraintsPage() {
                           style={{ background: 'var(--color-bg-input)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }} />
                       </div>
                       <div className="sm:col-span-2 lg:col-span-3">
-                        <label htmlFor={`${formId}-desc`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>Description</label>
+                        <label htmlFor={`${formId}-desc`} className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-secondary)' }}>Description</label>
                         <textarea id={`${formId}-desc`} value={newConstraint.description}
                           onChange={(e) => setNewConstraint((p) => ({ ...p, description: e.target.value }))}
                           placeholder="Describe the constraint and its impact..." rows={2}
@@ -731,7 +731,7 @@ export default function ConstraintsPage() {
                             >
                               <div className="flex items-end gap-2">
                                 <div className="flex-1">
-                                  <label className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>Resolution Notes</label>
+                                  <label className="text-[10px] font-semibold block mb-1" style={{ color: 'var(--color-text-secondary)' }}>Resolution Notes</label>
                                   <input value={resolutionNotes}
                                     onChange={(e) => setResolutionNotes(e.target.value)}
                                     placeholder="How was this resolved?"

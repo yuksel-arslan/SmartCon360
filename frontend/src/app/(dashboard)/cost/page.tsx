@@ -82,7 +82,7 @@ export default function CostPage() {
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors"
               style={{
                 background: isActive ? 'var(--color-accent-muted)' : 'transparent',
-                color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)',
+                color: isActive ? 'var(--color-accent)' : 'var(--color-text-secondary)',
               }}>
               <tab.icon size={14} /> {tab.label}
             </button>

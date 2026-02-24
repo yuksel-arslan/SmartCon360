@@ -41,7 +41,7 @@ export default function ModulePageHeader({ moduleId, description, children }: Mo
           <h1 className="text-lg sm:text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
             {mod.brandName}
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
             {description ?? mod.description}
           </p>
         </div>
