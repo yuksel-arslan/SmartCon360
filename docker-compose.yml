@@ -4,9 +4,9 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: taktflow
-      POSTGRES_PASSWORD: taktflow_dev
-      POSTGRES_DB: taktflow
+      POSTGRES_USER: smartcon360
+      POSTGRES_PASSWORD: smartcon360_dev
+      POSTGRES_DB: smartcon360
     ports: ["5432:5432"]
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -45,7 +45,7 @@ services:
     env_file: .env
     environment:
       PORT: 3001
-      DATABASE_URL: ${DATABASE_URL:-postgresql://taktflow:taktflow_dev@postgres:5432/taktflow}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://smartcon360:smartcon360_dev@postgres:5432/smartcon360}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     depends_on: [postgres, redis]
@@ -58,7 +58,7 @@ services:
     env_file: .env
     environment:
       PORT: 3002
-      DATABASE_URL: ${DATABASE_URL:-postgresql://taktflow:taktflow_dev@postgres:5432/taktflow}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://smartcon360:smartcon360_dev@postgres:5432/smartcon360}
       CORE_SERVICE_URL: http://core-service:3001
     depends_on: [postgres]
 
@@ -70,7 +70,7 @@ services:
     env_file: .env
     environment:
       PORT: 3003
-      DATABASE_URL: ${DATABASE_URL:-postgresql://taktflow:taktflow_dev@postgres:5432/taktflow}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://smartcon360:smartcon360_dev@postgres:5432/smartcon360}
       CORE_SERVICE_URL: http://core-service:3001
       OPS_SERVICE_URL: http://ops-service:3002
     depends_on: [postgres]
@@ -83,7 +83,7 @@ services:
     env_file: .env
     environment:
       PORT: 8001
-      DATABASE_URL: ${DATABASE_URL:-postgresql://taktflow:taktflow_dev@postgres:5432/taktflow}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://smartcon360:smartcon360_dev@postgres:5432/smartcon360}
       CORE_SERVICE_URL: http://core-service:3001
       MONTE_CARLO_ITERATIONS: 10000
 
@@ -99,6 +99,15 @@ services:
       AI_MODEL: gemini-2.0-flash
       CORE_SERVICE_URL: http://core-service:3001
 
+  # ── BIM Engine (Standalone IFC/BIM parsing) — Python ──
+
+  bim-engine:
+    build: ./smartcon_bim_engine
+    ports: ["8005:8005"]
+    env_file: .env
+    environment:
+      PORT: 8005
+
   # ── AI Risk Engine (Extension — Intelligence Layer) — Python ──
 
   ai-risk-engine:
@@ -109,7 +118,7 @@ services:
       PORT: 8010
       CORE_SERVICE_URL: http://core-service:3001
       OPS_SERVICE_URL: http://ops-service:3002
-      DATABASE_URL: ${DATABASE_URL:-postgresql://taktflow:taktflow_dev@postgres:5432/taktflow}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://smartcon360:smartcon360_dev@postgres:5432/smartcon360}
     depends_on: [core-service]
 
 volumes:
