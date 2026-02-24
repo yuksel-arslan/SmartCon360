@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { translations, type Lang } from '@/lib/i18n/login-translations';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { LoginForm } from '@/components/landing/LoginForm';
 
-export default function LoginPage() {
+function LoginContent() {
   const [lang, setLang] = useState<Lang>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('lang');
@@ -55,5 +55,13 @@ export default function LoginPage() {
         i={i}
       />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }
