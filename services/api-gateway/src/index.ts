@@ -82,6 +82,7 @@ const OPS_SERVICE = process.env.OPS_SERVICE_URL || 'http://localhost:3002';
 const PLATFORM_SERVICE = process.env.PLATFORM_SERVICE_URL || 'http://localhost:3003';
 const TAKT_SERVICE = process.env.TAKT_SERVICE_URL || 'http://localhost:8001';
 const AI_SERVICE = process.env.AI_SERVICE_URL || 'http://localhost:8002';
+const RISK_ENGINE_SERVICE = process.env.RISK_ENGINE_SERVICE_URL || 'http://localhost:8010';
 
 function proxy(target: string, pathRewrite?: Record<string, string>) {
   return createProxyMiddleware({
@@ -156,6 +157,13 @@ app.use('/api/v1/vision', aiLimiter, authMiddleware, requireModuleAccess('vision
 app.use('/api/v1/bim', defaultLimiter, authMiddleware, requireModuleAccess('bim'), proxy(AI_SERVICE, { '^/api/v1': '' }));
 app.use('/api/v1/analytics', defaultLimiter, authMiddleware, requireModuleAccess('analytics'), proxy(AI_SERVICE, { '^/api/v1': '' }));
 app.use('/api/v1/drl', aiLimiter, authMiddleware, requireModuleAccess('drl'), proxy(AI_SERVICE, { '^/api/v1': '' }));
+
+// ══════════════════════════════════════════════════════
+// EXTENSION SERVICES (Intelligence Layer)
+// ══════════════════════════════════════════════════════
+
+// AI Risk Engine — rule-based risk assessment (feature flag gated)
+app.use('/api/v1/risk-engine', aiLimiter, authMiddleware, proxy(RISK_ENGINE_SERVICE, { '^/api/v1': '' }));
 
 // ── 404 ──
 app.use((_req, res) => {
