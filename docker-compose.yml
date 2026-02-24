@@ -28,12 +28,14 @@ services:
       PLATFORM_SERVICE_URL: http://platform-service:3003
       TAKT_SERVICE_URL: http://takt-service:8001
       AI_SERVICE_URL: http://ai-service:8002
+      RISK_ENGINE_SERVICE_URL: http://ai-risk-engine:8010
     depends_on:
       - core-service
       - ops-service
       - platform-service
       - takt-service
       - ai-service
+      - ai-risk-engine
 
   # ── Core Service (auth + project + constraint + progress + cost) ──
 
@@ -96,6 +98,19 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       AI_MODEL: gemini-2.0-flash
       CORE_SERVICE_URL: http://core-service:3001
+
+  # ── AI Risk Engine (Extension — Intelligence Layer) — Python ──
+
+  ai-risk-engine:
+    build: ./services/extensions/ai-risk-engine
+    ports: ["8010:8010"]
+    env_file: .env
+    environment:
+      PORT: 8010
+      CORE_SERVICE_URL: http://core-service:3001
+      OPS_SERVICE_URL: http://ops-service:3002
+      DATABASE_URL: ${DATABASE_URL:-postgresql://taktflow:taktflow_dev@postgres:5432/taktflow}
+    depends_on: [core-service]
 
 volumes:
   pgdata:

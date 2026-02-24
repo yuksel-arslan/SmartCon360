@@ -1,8 +1,21 @@
--- TaktFlow AI — Database Initialization
+-- SmartCon360 — Database Initialization
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- Create schemas for modules
+CREATE SCHEMA IF NOT EXISTS cost;
+CREATE SCHEMA IF NOT EXISTS quality;
+CREATE SCHEMA IF NOT EXISTS safety;
+CREATE SCHEMA IF NOT EXISTS resources;
+CREATE SCHEMA IF NOT EXISTS claims;
+CREATE SCHEMA IF NOT EXISTS risk;
+CREATE SCHEMA IF NOT EXISTS comm;
+CREATE SCHEMA IF NOT EXISTS supply;
+CREATE SCHEMA IF NOT EXISTS stakeholder;
+CREATE SCHEMA IF NOT EXISTS sustainability;
+CREATE SCHEMA IF NOT EXISTS platform;
 
 -- Seed default roles
 INSERT INTO roles (id, name, description, permissions, is_system) VALUES

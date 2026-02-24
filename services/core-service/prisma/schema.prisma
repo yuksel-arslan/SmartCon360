@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public", "cost", "quality", "safety", "resources", "claims", "risk", "comm", "supply", "stakeholder", "sustainability"]
+  schemas  = ["public", "cost", "quality", "safety", "resources", "claims", "risk", "comm", "supply", "stakeholder", "sustainability", "platform"]
 }
 
 // ============================================================================
@@ -1987,4 +1987,120 @@ model Certification {
   @@index([currentStatus])
   @@map("certifications")
   @@schema("sustainability")
+}
+
+// ============================================================================
+// PLATFORM INFRASTRUCTURE — Audit Logs, Feature Flags
+// ============================================================================
+
+model AuditLog {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  timestamp     DateTime @default(now())
+  tenantId      String?  @map("tenant_id") @db.Uuid
+  actorUserId   String   @map("actor_user_id") @db.Uuid
+  actorRole     String   @map("actor_role") @db.VarChar(50)
+  actorSource   String   @map("actor_source") @db.VarChar(20) // human, ai, system
+  action        String   @db.VarChar(100) // e.g. plan.update, ai.recommendation.created
+  entityType    String   @map("entity_type") @db.VarChar(50) // schedule, cost, risk, task
+  entityId      String   @map("entity_id") @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  before        Json     @default("{}")
+  after         Json     @default("{}")
+  metadata      Json     @default("{}")
+
+  @@index([projectId])
+  @@index([tenantId])
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([timestamp])
+  @@map("audit_logs")
+  @@schema("platform")
+}
+
+model FeatureFlag {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  flag            String   @unique @db.VarChar(100)
+  enabled         Boolean  @default(false)
+  description     String   @default("")
+  tenantOverrides Json     @default("{}") @map("tenant_overrides")
+  metadata        Json     @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("feature_flags")
+  @@schema("platform")
+}
+
+// ============================================================================
+// AI RISK ENGINE — Risk Assessments & Outcomes (for ML training data)
+// ============================================================================
+
+model RiskAssessment {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId           String   @map("project_id") @db.Uuid
+  tenantId            String?  @map("tenant_id") @db.Uuid
+  timestamp           DateTime @default(now())
+  overallRisk         String   @map("overall_risk") @db.VarChar(20) // low, medium, high, critical
+  delayProbability    Decimal  @map("delay_probability") @db.Decimal(5, 4) // 0.0000 - 1.0000
+  confidenceScore     Decimal  @map("confidence_score") @db.Decimal(5, 2)  // 0.00 - 100.00
+  factors             Json     @default("[]") // RiskFactor[]
+  recommendations     Json     @default("[]") // string[]
+  engineStage         String   @default("rule_based_v1") @map("engine_stage") @db.VarChar(30)
+  dataCompleteness    Decimal  @default(1.0) @map("data_completeness") @db.Decimal(3, 2)
+  rulesEvaluated      Int      @default(0) @map("rules_evaluated")
+  rulesTriggered      Int      @default(0) @map("rules_triggered")
+  requiresApproval    Boolean  @default(true) @map("requires_approval")
+  approvedBy          String?  @map("approved_by") @db.Uuid
+  approvedAt          DateTime? @map("approved_at")
+
+  outcomes            AssessmentOutcome[]
+
+  @@index([projectId])
+  @@index([tenantId])
+  @@index([timestamp])
+  @@index([overallRisk])
+  @@map("risk_assessments")
+  @@schema("risk")
+}
+
+model AssessmentOutcome {
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assessmentId            String    @map("assessment_id") @db.Uuid
+  projectId               String    @map("project_id") @db.Uuid
+  predictedRisk           String    @map("predicted_risk") @db.VarChar(20)
+  predictedDelayProbability Decimal @map("predicted_delay_probability") @db.Decimal(5, 4)
+  actualDelayed           Boolean   @map("actual_delayed")
+  actualDelayDays         Int?      @map("actual_delay_days")
+  outcomeDate             DateTime  @map("outcome_date")
+  notes                   String?
+  createdAt               DateTime  @default(now()) @map("created_at")
+
+  assessment              RiskAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId])
+  @@index([projectId])
+  @@map("assessment_outcomes")
+  @@schema("risk")
+}
+
+model RiskRule {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId           String?  @map("project_id") @db.Uuid // null = global default rule
+  ruleCode            String   @map("rule_code") @db.VarChar(20) // R001, R002, etc.
+  name                String   @db.VarChar(100)
+  category            String   @db.VarChar(30) // schedule, resource, weather, dependency, complexity
+  condition           String   // Rule condition expression
+  weight              Decimal  @db.Decimal(3, 2) // 0.00 - 1.00
+  riskContribution    Decimal  @map("risk_contribution") @db.Decimal(3, 2)
+  explanationTemplate String   @map("explanation_template")
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([projectId, ruleCode])
+  @@index([projectId])
+  @@index([category])
+  @@map("risk_rules")
+  @@schema("risk")
 }
