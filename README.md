@@ -31,11 +31,13 @@ cp .env.example .env
 # 2. Start infrastructure
 docker-compose up -d postgres redis
 
-# 3. Start backend services
-cd services/auth-service && npm install && npm run dev
-cd services/project-service && npm install && npm run dev
-cd services/takt-engine && pip install -r requirements.txt && uvicorn src.main:app --reload --port 8001
-cd services/api-gateway && npm install && npm run dev
+# 3. Start backend services (6 consolidated services)
+cd services/core-service && npm install && npm run dev      # Port 3001
+cd services/ops-service && npm install && npm run dev       # Port 3002
+cd services/platform-service && npm install && npm run dev  # Port 3003
+cd services/takt-service && pip install -r requirements.txt && uvicorn src.main:app --reload --port 8001
+cd services/ai-service && pip install -r requirements.txt && uvicorn src.main:app --reload --port 8002
+cd services/api-gateway && npm install && npm run dev       # Port 3000
 
 # 4. Start frontend
 cd frontend && npm install && npm run dev
@@ -45,7 +47,7 @@ Open http://localhost:3100
 
 ## Architecture
 
-27 microservices · Node.js 22 + Python 3.11 · Next.js 15 · Tailwind CSS 4 · PostgreSQL · Redis
+6 consolidated services · Node.js 22 + Python 3.11 · Next.js 15 · Tailwind CSS 4 · PostgreSQL · Redis
 
 See [CLAUDE.md](./CLAUDE.md) for full architecture details.
 

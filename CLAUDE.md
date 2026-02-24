@@ -111,7 +111,10 @@ SmartCon360 is an AI-powered **unified construction management platform** that i
 
 **The system MUST work fully at Layer 1 without any AI/DRL dependency.**
 
-### Service Architecture
+### Service Architecture (Consolidated)
+
+> **Note:** The original 27 microservices have been consolidated into 6 services + 1 extension.
+> The old services are archived in `services/_deprecated/` for reference.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -123,51 +126,36 @@ SmartCon360 is an AI-powered **unified construction management platform** that i
 ┌───────────────────────────────▼──────────────────────────────────────┐
 │                      API GATEWAY (Port 3000)                         │
 │            Express · JWT Auth · Rate Limiting · Module Access Ctrl   │
-└──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬─┘
-   │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │
-   ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼  ▼
- EXISTING 16 SERVICES (TaktFlow Core)                    7 NEW SERVICES
- Auth Proj Takt AI  Flow Cnst Prog Sim  Res  Ntfy       Qlty Sfty Cost
- 3001 3002 8001 8002 3003 3004 3005 8003 3006 3007      3009 3010 3011
- Rpt  BIM  Cncg Anly DRL                                Clm  Risk Supp
- 8004 8005 3008 8006 8007                                3012 3014 3013
-                                                         Stkh Grn  Vis  Hub
-                                                         3016 3017 8008 3018
+└──────┬──────────┬──────────────┬──────────────┬──────────────┬──────┘
+       │          │              │              │              │
+       ▼          ▼              ▼              ▼              ▼
+  CORE-SVC   OPS-SVC     PLATFORM-SVC    TAKT-SVC        AI-SVC
+  Port 3001  Port 3002   Port 3003       Port 8001       Port 8002
+  Node.js    Node.js     Node.js         Python 3.11     Python 3.11
+  ┌────────┐ ┌─────────┐ ┌────────────┐  ┌────────────┐  ┌──────────┐
+  │ auth   │ │ quality │ │ hub        │  │ takt-engine│  │ planner  │
+  │ project│ │ safety  │ │ notification│  │ flowline   │  │ reporting│
+  │ constr.│ │ cost    │ │ resource   │  │ simulation │  │ bim      │
+  │ progres│ │ claims  │ └────────────┘  └────────────┘  │ analytics│
+  └────────┘ │ risk    │                                  │ drl      │
+             │ supply  │       EXTENSION                  └──────────┘
+             │ comm    │   AI-RISK-ENGINE
+             │ stakeh. │   Port 8010
+             │ sustain.│   Python 3.11
+             └─────────┘
 ```
 
 ### Complete Service Map
 
-| # | Service | Module | Tech | Port | Layer | Purpose |
-|---|---------|--------|------|------|-------|---------|
-| | **--- TAKTFLOW (Planning & Scheduling) ---** | | | | | |
-| 1 | api-gateway | Platform | Node.js 22 / Express | 3000 | 1 | Routing, auth middleware, rate limiting, module access |
-| 2 | auth-service | Platform | Node.js 22 / Passport | 3001 | 1 | JWT, OAuth2, RBAC, module licensing |
-| 3 | project-service | TaktFlow | Node.js 22 / Prisma | 3002 | 1 | Project CRUD, LBS, metadata |
-| 4 | takt-engine | TaktFlow | Python 3.11 / FastAPI | 8001 | 1 | Takt plan computation, template generation |
-| 5 | ai-planner | TaktFlow | Python 3.11 / LangChain | 8002 | 2 | AI plan generation & refinement (Gemini) |
-| 6 | flowline-service | TaktFlow | Node.js 22 | 3003 | 1 | Flowline computation & visualization data |
-| 7 | constraint-service | TaktFlow | Node.js 22 / Prisma | 3004 | 1 | Constraint CRUD + algorithmic detection |
-| 8 | progress-service | TaktFlow | Node.js 22 / Prisma | 3005 | 1 | Progress tracking, PPC calculation |
-| 9 | simulation-service | TaktFlow | Python 3.11 / NumPy | 8003 | 1+3 | What-if scenarios (L1: param sweep, L3: DRL) |
-| 10 | resource-service | CrewFlow | Node.js 22 / Prisma | 3006 | 1 | Labor, equipment, materials |
-| 11 | notification-service | CommHub | Node.js 22 / Socket.io | 3007 | 1 | Real-time alerts, escalation engine |
-| 12 | reporting-service | TaktFlow | Python 3.11 / Jinja2 | 8004 | 1+2 | Reports (L1: data export, L2: AI narrative) |
-| 13 | bim-service | TaktFlow | Python 3.11 / ifcopenshell | 8005 | 2 | IFC/BIM integration + Gemini Vision |
-| 14 | ai-concierge | Platform | Node.js 22 / Gemini | 3008 | 2 | Natural language project interface |
-| 15 | analytics-service | Hub | Python 3.11 / Pandas | 8006 | 1+3 | Dashboard KPIs + Project DNA (L3) |
-| 16 | drl-engine | TaktFlow | Python 3.11 / PyTorch | 8007 | 3 | DRL adaptive replanning, WDM zone optimization |
-| | **--- NEW MODULES ---** | | | | | |
-| 17 | quality-service | QualityGate | Node.js 22 / Prisma | 3009 | 1 | NCR, checklists, inspections, FTR, COPQ |
-| 18 | safety-service | SafeZone | Node.js 22 / Prisma | 3010 | 1 | OHS risk matrix, incident reporting, PTW, toolbox talks |
-| 19 | cost-service | CostPilot | Node.js 22 / Prisma | 3011 | 1 | Budgets, EVM (CPI/SPI), S-curve, forecasting |
-| 20 | claims-service | ClaimShield | Node.js 22 / Prisma | 3012 | 1 | Change orders, claims register, delay analysis |
-| 21 | supply-chain-service | SupplyChain | Node.js 22 / Prisma | 3013 | 1 | MRP, procurement, JIT delivery, supplier management |
-| 22 | risk-service | RiskRadar | Node.js 22 / Prisma | 3014 | 1 | Risk register, heat map, mitigation tracking |
-| 23 | comm-service | CommHub | Node.js 22 / Prisma | 3015 | 1 | RFI, transmittals, meeting minutes, escalation |
-| 24 | stakeholder-service | StakeHub | Node.js 22 / Prisma | 3016 | 1 | Stakeholder register, authority matrix, engagement |
-| 25 | sustainability-service | GreenSite | Node.js 22 / Prisma | 3017 | 1 | Carbon tracking, waste management, LEED/BREEAM |
-| 26 | vision-service | VisionAI | Python 3.11 / FastAPI | 8008 | 2 | Photo progress analysis, defect detection (Gemini Vision) |
-| 27 | hub-service | Hub | Node.js 22 / Prisma | 3018 | 1+2 | Cross-module orchestration, Project Health Score, licensing |
+| # | Service | Tech | Port | Modules | Purpose |
+|---|---------|------|------|---------|---------|
+| 1 | **api-gateway** | Node.js 22 / Express | 3000 | — | Routing, JWT auth, rate limiting, module licensing |
+| 2 | **core-service** | Node.js 22 / Prisma | 3001 | auth, project, constraint, progress | Auth + project CRUD + LBS/WBS/CBS/BOQ + LPS + constraints |
+| 3 | **ops-service** | Node.js 22 / Prisma | 3002 | quality, safety, cost, claims, risk, supply-chain, comm, stakeholder, sustainability | All operational modules (QualityGate, SafeZone, CostPilot, ClaimShield, RiskRadar, SupplyChain, CommHub, StakeHub, GreenSite) |
+| 4 | **platform-service** | Node.js 22 / Express | 3003 | hub, notification, resource | Cross-module orchestration, Project Health Score, notifications, CrewFlow |
+| 5 | **takt-service** | Python 3.11 / FastAPI | 8001 | takt, flowline, simulation | Takt computation, flowline visualization, Monte Carlo simulation |
+| 6 | **ai-service** | Python 3.11 / FastAPI | 8002 | planner, reporting, bim, analytics, drl | AI plan generation (Gemini), BIM/IFC parsing, report generation, analytics stubs |
+| 7 | **ai-risk-engine** (ext.) | Python 3.11 / FastAPI | 8010 | — | Rule-based risk assessment, delay domino analysis, explainable scoring |
 
 ### Cross-Module Synergy Pipeline
 
@@ -216,39 +204,25 @@ smartcon360/
 ├── API.md                       # API endpoint documentation
 ├── README.md
 ├── docker-compose.yml
-├── docker-compose.prod.yml
 ├── .env.example
 ├── packages/
 │   └── shared/                  # Shared types, utils, constants
 ├── services/
-│   ├── api-gateway/             # Port 3000 — Platform
-│   ├── auth-service/            # Port 3001 — Platform
-│   ├── project-service/         # Port 3002 — TaktFlow
-│   ├── takt-engine/             # Port 8001 — TaktFlow
-│   ├── ai-planner/              # Port 8002 — TaktFlow (Layer 2)
-│   ├── flowline-service/        # Port 3003 — TaktFlow
-│   ├── constraint-service/      # Port 3004 — TaktFlow
-│   ├── progress-service/        # Port 3005 — TaktFlow
-│   ├── simulation-service/      # Port 8003 — TaktFlow (Layer 1+3)
-│   ├── resource-service/        # Port 3006 — CrewFlow
-│   ├── notification-service/    # Port 3007 — CommHub
-│   ├── reporting-service/       # Port 8004 — TaktFlow (Layer 1+2)
-│   ├── bim-service/             # Port 8005 — TaktFlow (Layer 2)
-│   ├── ai-concierge/            # Port 3008 — Platform (Layer 2)
-│   ├── analytics-service/       # Port 8006 — Hub (Layer 1+3)
-│   ├── drl-engine/              # Port 8007 — TaktFlow (Layer 3)
-│   ├── quality-service/         # Port 3009 — QualityGate
-│   ├── safety-service/          # Port 3010 — SafeZone
-│   ├── cost-service/            # Port 3011 — CostPilot
-│   ├── claims-service/          # Port 3012 — ClaimShield
-│   ├── supply-chain-service/    # Port 3013 — SupplyChain
-│   ├── risk-service/            # Port 3014 — RiskRadar
-│   ├── comm-service/            # Port 3015 — CommHub
-│   ├── stakeholder-service/     # Port 3016 — StakeHub
-│   ├── sustainability-service/  # Port 3017 — GreenSite
-│   ├── vision-service/          # Port 8008 — VisionAI (Layer 2)
-│   └── hub-service/             # Port 3018 — Hub (orchestrator)
+│   ├── api-gateway/             # Port 3000 — Routing, auth, rate limiting
+│   ├── core-service/            # Port 3001 — auth + project + constraint + progress
+│   ├── ops-service/             # Port 3002 — quality + safety + cost + claims + risk + supply + comm + stakeholder + sustainability
+│   ├── platform-service/        # Port 3003 — hub + notification + resource
+│   ├── takt-service/            # Port 8001 — takt-engine + flowline + simulation (Python)
+│   ├── ai-service/              # Port 8002 — ai-planner + bim + reporting + analytics + drl (Python)
+│   ├── extensions/
+│   │   └── ai-risk-engine/      # Port 8010 — Rule-based risk assessment (Python)
+│   └── _deprecated/             # Archived: original 27 microservices (pre-consolidation)
+├── engines/                     # Standalone engine utilities
+├── smartcon_bim_engine/         # Standalone BIM/IFC parsing engine (Python)
+├── scripts/                     # DB init, data parsing scripts
 └── frontend/                    # Next.js 15+ app (single unified frontend)
+    ├── prisma/                  # Prisma schema (single source of truth)
+    ├── vercel.json              # Vercel deployment config
     └── src/app/
         ├── (auth)/              # Login, register
         └── (dashboard)/         # All module pages
@@ -442,16 +416,18 @@ docker-compose up -d
 cd frontend && npm run dev
 
 # Start individual Node.js service
-cd services/auth-service && npm run dev
+cd services/core-service && npm run dev    # Port 3001
+cd services/ops-service && npm run dev     # Port 3002
+cd services/platform-service && npm run dev # Port 3003
+cd services/api-gateway && npm run dev     # Port 3000
 
 # Start individual Python service
-cd services/takt-engine && uvicorn src.main:app --reload --port 8001
+cd services/takt-service && uvicorn src.main:app --reload --port 8001
+cd services/ai-service && uvicorn src.main:app --reload --port 8002
 
-# Run migrations
-cd services/project-service && npx prisma migrate dev
-
-# Generate Prisma client
-npx prisma generate
+# Run migrations (from frontend or core-service — same schema)
+cd frontend && npx prisma migrate dev
+cd frontend && npx prisma generate
 
 # Run tests
 npm test                    # Node.js services

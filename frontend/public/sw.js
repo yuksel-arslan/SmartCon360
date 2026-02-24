@@ -1,12 +1,14 @@
-// SmartCon360 Service Worker
-const CACHE_NAME = 'smartcon360-v1';
+// SmartCon360 Service Worker — Enhanced PWA
+const CACHE_NAME = 'smartcon360-v2';
 const STATIC_ASSETS = [
   '/',
+  '/login',
   '/dashboard',
   '/manifest.json',
   '/icons/smartcon360-icon.svg',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  '/offline.html',
 ];
 
 // Install: pre-cache essential static assets
@@ -33,7 +35,8 @@ self.addEventListener('activate', (event) => {
 
 // Fetch strategy:
 // - API routes: network-only (don't cache auth/data)
-// - Static assets (JS, CSS, images, fonts): cache-first
+// - Static assets (JS, CSS, fonts): cache-first
+// - Images: stale-while-revalidate
 // - Navigation: network-first with offline fallback
 self.addEventListener('fetch', (event) => {
   const { request } = event;
@@ -45,9 +48,30 @@ self.addEventListener('fetch', (event) => {
   // Skip API routes — always go to network
   if (url.pathname.startsWith('/api/')) return;
 
-  // Static assets: cache-first
+  // Skip external requests (Google fonts are cached by browser)
+  if (url.origin !== self.location.origin) return;
+
+  // Images: stale-while-revalidate
+  if (url.pathname.match(/\.(png|jpg|jpeg|svg|ico|webp|avif)$/)) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        const fetchPromise = fetch(request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        }).catch(() => cached);
+
+        return cached || fetchPromise;
+      })
+    );
+    return;
+  }
+
+  // Static assets (JS, CSS, fonts): cache-first
   if (
-    url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|ico|woff2?|ttf|eot)$/) ||
+    url.pathname.match(/\.(js|css|woff2?|ttf|eot)$/) ||
     url.pathname.startsWith('/_next/static/')
   ) {
     event.respondWith(
@@ -65,7 +89,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navigation: network-first with cache fallback
+  // Navigation: network-first with offline fallback
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
@@ -74,7 +98,10 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           return response;
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/dashboard')))
+        .catch(() =>
+          caches.match(request)
+            .then((cached) => cached || caches.match('/offline.html'))
+        )
     );
     return;
   }
