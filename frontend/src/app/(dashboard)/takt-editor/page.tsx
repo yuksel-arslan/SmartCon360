@@ -195,8 +195,12 @@ function computeGrid(
 
   const assignments = generateTaktGrid(zoneInputs, wagonInputs, projectStart, globalTaktTime);
 
+  // totalDays = last day (end) of last assignment
   const maxPeriod = assignments.length > 0
-    ? Math.max(...assignments.map((a) => a.periodNumber), 1)
+    ? Math.max(...assignments.map((a) => {
+        const wagon = wagonInputs.find((w) => w.id === a.wagonId);
+        return a.periodNumber + (wagon?.durationDays || globalTaktTime) - 1;
+      }), 1)
     : 0;
 
   const cells = new Map<string, GridCell>();
@@ -439,34 +443,58 @@ export default function TaktEditorPage() {
     [sortedTrades, sortedZones, globalTaktTime, cellOverrides, projectStart],
   );
 
-  // ── Period Grid (Zone x Period orientation) ──
-  const periodGrid = useMemo(() => {
-    const grid = new Map<string, GridCell & { trade: TradeRow }>();
-    for (const a of assignments) {
-      const key = `${a.zoneId}::${a.periodNumber}`;
-      const trade = sortedTrades.find((t) => t.id === a.wagonId);
-      if (!trade) continue;
-      const cellKey = `${a.wagonId}::${a.zoneId}`;
-      const override = cellOverrides[cellKey];
-      grid.set(key, {
-        tradeId: a.wagonId,
-        zoneId: a.zoneId,
-        periodNumber: a.periodNumber,
-        plannedStart: a.plannedStart,
-        plannedEnd: a.plannedEnd,
-        status: override?.status ?? computeCellStatus(),
-        crewSize: override?.crewSize ?? trade.crewSize,
-        notes: override?.notes ?? '',
-        trade,
-      });
-    }
-    return grid;
-  }, [assignments, sortedTrades, cellOverrides]);
-
-  const periods = useMemo(
+  // ── Day columns (1 column = 1 working day) ──
+  const dayColumns = useMemo(
     () => Array.from({ length: totalPeriods }, (_, i) => i + 1),
     [totalPeriods],
   );
+
+  // ── Zone Row Segments (wagon cells span taktTime columns) ──
+  interface ZoneSegment {
+    type: 'wagon' | 'gap';
+    startDay: number;
+    colSpan: number;
+    cell?: GridCell;
+    trade?: TradeRow;
+  }
+
+  const buildZoneSegments = useCallback((zoneId: string): ZoneSegment[] => {
+    const zoneAssigns = assignments
+      .filter((a) => a.zoneId === zoneId)
+      .sort((a, b) => a.periodNumber - b.periodNumber);
+
+    const segs: ZoneSegment[] = [];
+    let currentDay = 1;
+
+    for (const assign of zoneAssigns) {
+      const trade = sortedTrades.find((t) => t.id === assign.wagonId);
+      const duration = trade?.taktTime || globalTaktTime;
+
+      // Gap before this wagon (buffer + empty space)
+      if (assign.periodNumber > currentDay) {
+        segs.push({ type: 'gap', startDay: currentDay, colSpan: assign.periodNumber - currentDay });
+      }
+
+      // Wagon cell spanning its duration
+      const cellKey = `${assign.wagonId}::${zoneId}`;
+      const cellData = cells.get(cellKey);
+      segs.push({
+        type: 'wagon',
+        startDay: assign.periodNumber,
+        colSpan: duration,
+        cell: cellData,
+        trade: trade || undefined,
+      });
+      currentDay = assign.periodNumber + duration;
+    }
+
+    // Trailing gap
+    if (currentDay <= totalPeriods) {
+      segs.push({ type: 'gap', startDay: currentDay, colSpan: totalPeriods - currentDay + 1 });
+    }
+
+    return segs;
+  }, [assignments, sortedTrades, cells, totalPeriods, globalTaktTime]);
 
   // ── Warnings ──
   const warnings = useMemo(
@@ -1252,7 +1280,7 @@ export default function TaktEditorPage() {
             style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
           >
             {[
-              { label: 'Periods', value: stats.totalPeriods, icon: Hash, color: 'var(--color-accent)' },
+              { label: 'Days', value: stats.totalPeriods, icon: Hash, color: 'var(--color-accent)' },
               { label: 'Duration', value: `${stats.totalDurationDays}d`, icon: Calendar, color: 'var(--color-purple)' },
               { label: 'Start', value: formatDate(stats.startDate), icon: CalendarDays, color: 'var(--color-success)' },
               { label: 'End', value: formatDate(stats.endDate), icon: CalendarDays, color: 'var(--color-danger)' },
@@ -1537,7 +1565,7 @@ export default function TaktEditorPage() {
                 style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
               >
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse" style={{ minWidth: Math.max(800, 140 + periods.length * 90) }}>
+                  <table className="w-full border-collapse" style={{ minWidth: Math.max(800, 140 + dayColumns.length * 36) }}>
                     <thead>
                       <tr>
                         <th
@@ -1546,13 +1574,13 @@ export default function TaktEditorPage() {
                         >
                           Zone / LBS
                         </th>
-                        {periods.map((p) => (
+                        {dayColumns.map((d) => (
                           <th
-                            key={p}
-                            className="text-center text-[9px] font-semibold uppercase tracking-wider px-2 py-3 border-b border-l"
-                            style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border)', background: 'var(--color-bg-secondary)', minWidth: 90 }}
+                            key={d}
+                            className="text-center text-[8px] font-semibold px-0 py-3 border-b border-l"
+                            style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border)', background: 'var(--color-bg-secondary)', minWidth: 36, width: 36 }}
                           >
-                            T{p}
+                            {d}
                           </th>
                         ))}
                       </tr>
@@ -1587,15 +1615,18 @@ export default function TaktEditorPage() {
                               )}
                             </div>
                           </td>
-                          {periods.map((p) => {
-                            const pgKey = `${zone.id}::${p}`;
-                            const cell = periodGrid.get(pgKey);
-                            if (!cell) {
+                          {buildZoneSegments(zone.id).map((seg, segIdx) => {
+                            if (seg.type === 'gap') {
                               return (
-                                <td key={p} className="px-1 py-1 border-b border-l text-center" style={{ borderColor: 'var(--color-border)' }}>
-                                  <div className="h-14 rounded-lg" style={{ background: 'var(--color-bg-input)', opacity: 0.3 }} />
+                                <td key={`gap-${segIdx}`} colSpan={seg.colSpan} className="px-0 py-1 border-b border-l" style={{ borderColor: 'var(--color-border)' }}>
+                                  <div className="h-14" />
                                 </td>
                               );
+                            }
+                            const trade = seg.trade;
+                            const cell = seg.cell;
+                            if (!trade || !cell) {
+                              return <td key={`empty-${segIdx}`} colSpan={seg.colSpan} className="border-b border-l" style={{ borderColor: 'var(--color-border)' }} />;
                             }
                             const statusCfg = STATUS_CONFIG[cell.status];
                             const isSelected = selectedCell?.tradeId === cell.tradeId && selectedCell?.zoneId === zone.id;
@@ -1603,43 +1634,45 @@ export default function TaktEditorPage() {
                             const isHovered = hoveredCell === hoverKey;
                             return (
                               <td
-                                key={p}
-                                className="px-1 py-1 border-b border-l text-center cursor-pointer"
+                                key={`w-${segIdx}`}
+                                colSpan={seg.colSpan}
+                                className="px-0.5 py-1 border-b border-l text-center cursor-pointer"
                                 style={{ borderColor: 'var(--color-border)' }}
                                 onClick={() => handleCellClick(cell.tradeId, zone.id)}
                                 onMouseEnter={() => setHoveredCell(hoverKey)}
                                 onMouseLeave={() => setHoveredCell(null)}
                               >
                                 <motion.div
-                                  className="rounded-lg px-1.5 py-1 mx-auto relative"
+                                  className="rounded-lg px-1.5 py-1 relative h-14 flex flex-col justify-center"
                                   style={{
-                                    background: `${cell.trade.color}20`,
-                                    maxWidth: 90,
+                                    background: `${trade.color}20`,
                                     boxShadow: isSelected
-                                      ? `0 0 0 2px ${cell.trade.color}, 0 0 0 4px var(--color-bg-card)`
+                                      ? `0 0 0 2px ${trade.color}, 0 0 0 4px var(--color-bg-card)`
                                       : isHovered
-                                      ? `0 0 0 1px ${cell.trade.color}40`
+                                      ? `0 0 0 1px ${trade.color}40`
                                       : 'none',
                                   }}
-                                  whileHover={{ scale: 1.04 }}
+                                  whileHover={{ scale: 1.02 }}
                                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                                 >
-                                  <div className="flex items-center gap-0.5">
-                                    <span className="text-[7px] font-bold w-3 h-3 rounded flex items-center justify-center flex-shrink-0" style={{ background: cell.trade.color, color: 'white', fontFamily: 'var(--font-mono)' }}>
-                                      {sortedTrades.findIndex((t) => t.id === cell.trade.id) + 1}
+                                  <div className="flex items-center gap-0.5 justify-center">
+                                    <span className="text-[7px] font-bold w-3 h-3 rounded flex items-center justify-center flex-shrink-0" style={{ background: trade.color, color: 'white', fontFamily: 'var(--font-mono)' }}>
+                                      {sortedTrades.findIndex((t) => t.id === trade.id) + 1}
                                     </span>
-                                    <span className="text-[9px] font-bold truncate" style={{ color: cell.trade.color }}>
-                                      {cell.trade.name.length > 6 ? cell.trade.name.substring(0, 6) + '\u2026' : cell.trade.name}
+                                    <span className="text-[9px] font-bold truncate" style={{ color: trade.color }}>
+                                      {seg.colSpan >= 3 ? trade.name : (trade.name.length > 8 ? trade.name.substring(0, 8) + '\u2026' : trade.name)}
                                     </span>
                                   </div>
                                   <div className="flex items-center justify-center gap-0.5 mt-0.5">
                                     <statusCfg.icon size={8} style={{ color: statusCfg.text }} />
                                     <span className="text-[7px] font-semibold" style={{ color: statusCfg.text }}>{statusCfg.label}</span>
                                   </div>
-                                  <div className="text-[7px] mt-0.5" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-                                    {formatDate(cell.plannedStart)}
-                                  </div>
-                                  <div className="absolute bottom-0 left-0 right-0 h-[2px] rounded-b-lg" style={{ background: cell.trade.color }} />
+                                  {seg.colSpan >= 2 && (
+                                    <div className="text-[7px] mt-0.5 text-center" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                                      {formatDate(cell.plannedStart)}{seg.colSpan >= 4 ? ` – ${formatDate(cell.plannedEnd)}` : ''}
+                                    </div>
+                                  )}
+                                  <div className="absolute bottom-0 left-0 right-0 h-[2px] rounded-b-lg" style={{ background: trade.color }} />
                                   <AnimatePresence>
                                     {isHovered && !isSelected && (
                                       <motion.div
@@ -1650,13 +1683,13 @@ export default function TaktEditorPage() {
                                       >
                                         <div className="rounded-lg px-3 py-2 shadow-lg text-left whitespace-nowrap" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
                                           <div className="text-[10px] font-medium" style={{ color: 'var(--color-text)' }}>
-                                            {cell.trade.name} — {zone.name}
+                                            {trade.name} — {zone.name}
                                           </div>
-                                          <div className="text-[8px] mt-0.5 font-semibold uppercase" style={{ color: TAKT_PHASE_MAP.get(cell.trade.taktPhase)?.color || 'var(--color-text-muted)' }}>
-                                            {TAKT_PHASE_MAP.get(cell.trade.taktPhase)?.label} ({TAKT_PHASE_MAP.get(cell.trade.taktPhase)?.omniclass})
+                                          <div className="text-[8px] mt-0.5 font-semibold uppercase" style={{ color: TAKT_PHASE_MAP.get(trade.taktPhase)?.color || 'var(--color-text-muted)' }}>
+                                            {TAKT_PHASE_MAP.get(trade.taktPhase)?.label} ({TAKT_PHASE_MAP.get(trade.taktPhase)?.omniclass})
                                           </div>
                                           <div className="text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-                                            Period T{cell.periodNumber} | {formatDate(cell.plannedStart)} – {formatDate(cell.plannedEnd)}
+                                            Day {cell.periodNumber} ({seg.colSpan}d) | {formatDate(cell.plannedStart)} – {formatDate(cell.plannedEnd)}
                                           </div>
                                           <div className="text-[9px] mt-0.5" style={{ color: statusCfg.text }}>
                                             {STATUS_SYMBOLS[cell.status]} {statusCfg.label}

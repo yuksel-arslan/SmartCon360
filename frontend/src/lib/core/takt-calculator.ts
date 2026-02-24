@@ -79,19 +79,16 @@ export function addWorkingDays(
 }
 
 /**
- * Generate the full takt assignment grid.
+ * Generate the full takt assignment grid (day-based).
  *
- * Each column in the takt grid represents one TAKT PERIOD (= taktTime working days).
- * Wagons flow through zones with one takt period per zone.
+ * Each column represents one WORKING DAY. Wagon cells span taktTime columns.
+ * Buffer between wagons = bufferAfter days (empty day columns).
  *
- * For each zone z (0-indexed from sequence) and wagon w (0-indexed):
- *   taktPeriod = z + w + cumulativeBufferPeriods(w) + 1  (1-indexed)
- *   dayOffset = (taktPeriod - 1) * taktTime
+ * For each zone z (0-indexed) and wagon w (0-indexed):
+ *   dayOffset = z * taktTime + w * taktTime + cumulativeBufferDays(w)
+ *   periodNumber = dayOffset + 1 (1-indexed day position = start day)
  *   start = project_start + dayOffset working days
  *   end = start + wagon.durationDays - 1 working days
- *
- * Buffer is in TAKT PERIODS (not days). bufferAfter=1 means one full takt
- * period gap between consecutive wagons in the same zone.
  *
  * Returns list of Assignment objects.
  */
@@ -105,10 +102,10 @@ export function generateTaktGrid(
   const sortedZones = [...zones].sort((a, b) => a.sequence - b.sequence);
   const sortedWagons = [...wagons].sort((a, b) => a.sequence - b.sequence);
 
-  // Pre-compute cumulative buffer offsets in TAKT PERIODS
-  const bufferPeriodOffsets = [0];
+  // Pre-compute cumulative buffer offsets in DAYS
+  const bufferDayOffsets = [0];
   for (let i = 1; i < sortedWagons.length; i++) {
-    bufferPeriodOffsets.push(bufferPeriodOffsets[i - 1] + sortedWagons[i - 1].bufferAfter);
+    bufferDayOffsets.push(bufferDayOffsets[i - 1] + sortedWagons[i - 1].bufferAfter);
   }
 
   const assignments: Assignment[] = [];
@@ -117,12 +114,10 @@ export function generateTaktGrid(
     for (let i = 0; i < sortedWagons.length; i++) {
       const wagon = sortedWagons[i];
 
-      // Takt period number (1-indexed): zone + wagon offset + buffer periods
-      const taktPeriodOffset = (zone.sequence - 1) + i + bufferPeriodOffsets[i];
-      const periodNumber = taktPeriodOffset + 1;
+      // Day-based offset: zone progression + wagon progression + buffer days
+      const dayOffset = (zone.sequence - 1) * taktTime + i * taktTime + bufferDayOffsets[i];
+      const periodNumber = dayOffset + 1; // 1-indexed start day
 
-      // Calendar dates: each takt period = taktTime working days
-      const dayOffset = taktPeriodOffset * taktTime;
       const plannedStart = addWorkingDays(startDate, dayOffset, workingDays);
       const plannedEnd = addWorkingDays(plannedStart, wagon.durationDays - 1, workingDays);
 
@@ -411,8 +406,8 @@ export function computeFlowlineData(
 
       const segments = wagonAssigns.map((a) => {
         const y = zoneSeqMap.get(a.zoneId) ?? 0;
-        const xStart = a.periodNumber - 1; // 0-indexed takt period
-        const xEnd = xStart + Math.ceil(wagon.durationDays / taktTime); // 1 period per taktTime
+        const xStart = a.periodNumber - 1; // 0-indexed day position
+        const xEnd = xStart + wagon.durationDays; // spans durationDays columns
 
         return {
           zoneIndex: y,
