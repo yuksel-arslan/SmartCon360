@@ -33,15 +33,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Debug: log credential info (safe — only lengths and prefixes)
-      console.log('[Google OAuth] Config check:', {
-        clientIdLength: CLIENT_ID.length,
-        clientIdPrefix: CLIENT_ID.substring(0, 20) + '...',
-        clientSecretLength: CLIENT_SECRET.length,
-        clientSecretPrefix: CLIENT_SECRET.substring(0, 8) + '...',
-        codeLength: code.length,
-      });
-
       // Use direct HTTP request to Google token endpoint for better error visibility
       let tokens: { id_token?: string | null; refresh_token?: string | null; access_token?: string | null };
       try {

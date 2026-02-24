@@ -182,7 +182,7 @@ app.listen(PORT, () => {
     env: process.env.NODE_ENV || 'development',
     modules: ['quality', 'safety', 'cost', 'claims', 'risk', 'supply-chain', 'stakeholder', 'sustainability', 'comm'],
   });
-  console.log(`ops-service running on port ${PORT}`);
+  logger.info(`ops-service running on port ${PORT}`);
 });
 
 export default app;

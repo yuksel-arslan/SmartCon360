@@ -11,3 +11,4 @@ __pycache__/
 *.tsbuildinfo
 yarn.lock
 coverage/
+data/raw/
