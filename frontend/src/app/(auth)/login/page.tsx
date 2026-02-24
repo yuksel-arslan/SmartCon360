@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, ArrowRight, Globe, Layers, Sun, Moon } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { BRAND } from '@/lib/modules';
@@ -136,7 +136,8 @@ export default function LoginPage() {
     }
     return 'en';
   });
-  const [isLogin, setIsLogin] = useState(true);
+  const searchParams = useSearchParams();
+  const [isLogin, setIsLogin] = useState(searchParams.get('mode') !== 'register');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

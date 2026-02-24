@@ -3,4 +3,4 @@ Allow: /
 Disallow: /api/
 Disallow: /_next/
 
-Sitemap: https://taktflow.ai/sitemap.xml
+Sitemap: https://app.smartcon360.com/sitemap.xml
