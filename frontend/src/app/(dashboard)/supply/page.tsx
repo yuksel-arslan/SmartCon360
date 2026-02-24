@@ -11,27 +11,28 @@ const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString() : '
 const fmtCurrency = (v: number, c = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: c, maximumFractionDigits: 0 }).format(v);
 
 function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-    active: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-    approved: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-    probation: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-    blacklisted: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-    inactive: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
-    submitted: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-    ordered: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
-    partial_received: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-    received: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-    cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-    scheduled: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-    in_transit: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
-    delivered: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-    inspected: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
-    accepted: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-    rejected: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+  const colors: Record<string, { bg: string; text: string }> = {
+    draft: { bg: 'var(--color-bg-hover)', text: 'var(--color-text-secondary)' },
+    active: { bg: 'rgba(34,197,94,0.15)', text: 'var(--color-success)' },
+    approved: { bg: 'rgba(34,197,94,0.15)', text: 'var(--color-success)' },
+    probation: { bg: 'rgba(234,179,8,0.15)', text: 'var(--color-warning)' },
+    blacklisted: { bg: 'rgba(239,68,68,0.15)', text: 'var(--color-danger)' },
+    inactive: { bg: 'var(--color-bg-hover)', text: 'var(--color-text-muted)' },
+    submitted: { bg: 'rgba(59,130,246,0.15)', text: '#3B82F6' },
+    ordered: { bg: 'rgba(6,182,212,0.15)', text: 'var(--color-cyan)' },
+    partial_received: { bg: 'rgba(234,179,8,0.15)', text: 'var(--color-warning)' },
+    received: { bg: 'rgba(34,197,94,0.15)', text: 'var(--color-success)' },
+    cancelled: { bg: 'rgba(239,68,68,0.15)', text: 'var(--color-danger)' },
+    scheduled: { bg: 'rgba(59,130,246,0.15)', text: '#3B82F6' },
+    in_transit: { bg: 'rgba(6,182,212,0.15)', text: 'var(--color-cyan)' },
+    delivered: { bg: 'rgba(34,197,94,0.15)', text: 'var(--color-success)' },
+    inspected: { bg: 'rgba(168,85,247,0.15)', text: '#A855F7' },
+    accepted: { bg: 'rgba(34,197,94,0.15)', text: 'var(--color-success)' },
+    rejected: { bg: 'rgba(239,68,68,0.15)', text: 'var(--color-danger)' },
   };
+  const c = colors[status] || { bg: 'var(--color-bg-hover)', text: 'var(--color-text-secondary)' };
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}>
+    <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: c.bg, color: c.text }}>
       {capitalize(status)}
     </span>
   );
@@ -40,6 +41,17 @@ function StatusBadge({ status }: { status: string }) {
 const SUPPLY_POLICY_LABELS: Record<string, string> = {
   'procurement.responsibility': 'Procurement',
   'mrp.enabled': 'MRP Engine',
+};
+
+const inputStyle: React.CSSProperties = {
+  background: 'var(--color-bg-input)',
+  borderColor: 'var(--color-border)',
+  color: 'var(--color-text)',
+};
+
+const cardStyle: React.CSSProperties = {
+  background: 'var(--color-bg-card)',
+  borderColor: 'var(--color-border)',
 };
 
 const TABS = ['Overview', 'Suppliers', 'Purchase Orders', 'Deliveries'] as const;
@@ -58,25 +70,25 @@ export default function SupplyPage() {
   /* ─── Overview ─── */
   function Overview() {
     const s = store.summary;
-    if (!s) return <p className="text-sm text-gray-500 dark:text-gray-400">No data yet.</p>;
+    if (!s) return <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>No data yet.</p>;
 
     const kpis: { label: string; value: string | number; accent?: string }[] = [
       { label: 'Total Suppliers', value: s.totalSuppliers },
       { label: 'Active Suppliers', value: s.activeSuppliers },
       { label: 'Total POs', value: s.totalPOs },
-      { label: 'Open POs', value: s.openPOs, accent: s.openPOs > 0 ? 'text-blue-600 dark:text-blue-400' : undefined },
+      { label: 'Open POs', value: s.openPOs, accent: s.openPOs > 0 ? '#3B82F6' : undefined },
       { label: 'Total PO Value', value: fmtCurrency(s.totalPOAmount) },
       { label: 'Total Deliveries', value: s.totalDeliveries },
       { label: 'Pending Deliveries', value: s.pendingDeliveries },
-      { label: 'Overdue Deliveries', value: s.overdueDeliveries, accent: s.overdueDeliveries > 0 ? 'text-red-600 dark:text-red-400' : undefined },
+      { label: 'Overdue Deliveries', value: s.overdueDeliveries, accent: s.overdueDeliveries > 0 ? 'var(--color-danger)' : undefined },
     ];
 
     return (
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {kpis.map((k) => (
-          <div key={k.label} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{k.label}</p>
-            <p className={`text-2xl font-bold font-mono ${k.accent || 'text-gray-900 dark:text-gray-100'}`}>{k.value}</p>
+          <div key={k.label} className="rounded-xl border p-4" style={cardStyle}>
+            <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>{k.label}</p>
+            <p className="text-2xl font-bold font-mono" style={{ color: k.accent || 'var(--color-text)' }}>{k.value}</p>
           </div>
         ))}
       </div>
@@ -113,66 +125,66 @@ export default function SupplyPage() {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search suppliers..." className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
-          <button onClick={startNew} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">+ New Supplier</button>
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search suppliers..." className="flex-1 rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
+          <button onClick={startNew} className="rounded-lg px-4 py-2 text-sm font-medium text-white" style={{ background: 'var(--color-accent)' }}>+ New Supplier</button>
         </div>
 
         {showForm && (
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">{editId ? 'Edit Supplier' : 'New Supplier'}</h3>
+          <div className="rounded-xl border p-4 space-y-3" style={cardStyle}>
+            <h3 className="font-semibold" style={{ color: 'var(--color-text)' }}>{editId ? 'Edit Supplier' : 'New Supplier'}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input placeholder="Code *" value={form.code || ''} onChange={(e) => setForm({ ...form, code: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
-              <input placeholder="Name *" value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
-              <select value={form.category || 'materials'} onChange={(e) => setForm({ ...form, category: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+              <input placeholder="Code *" value={form.code || ''} onChange={(e) => setForm({ ...form, code: e.target.value })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
+              <input placeholder="Name *" value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
+              <select value={form.category || 'materials'} onChange={(e) => setForm({ ...form, category: e.target.value })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}>
                 {['materials', 'equipment', 'subcontractor', 'services', 'other'].map((c) => (<option key={c} value={c}>{capitalize(c)}</option>))}
               </select>
-              <select value={form.status || 'active'} onChange={(e) => setForm({ ...form, status: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+              <select value={form.status || 'active'} onChange={(e) => setForm({ ...form, status: e.target.value })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}>
                 {['active', 'approved', 'probation', 'blacklisted', 'inactive'].map((s) => (<option key={s} value={s}>{capitalize(s)}</option>))}
               </select>
-              <input placeholder="Contact Name" value={form.contactName || ''} onChange={(e) => setForm({ ...form, contactName: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
-              <input placeholder="Contact Email" value={form.contactEmail || ''} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
-              <input placeholder="Contact Phone" value={form.contactPhone || ''} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
-              <select value={form.rating || ''} onChange={(e) => setForm({ ...form, rating: e.target.value ? parseInt(e.target.value) : undefined })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+              <input placeholder="Contact Name" value={form.contactName || ''} onChange={(e) => setForm({ ...form, contactName: e.target.value })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
+              <input placeholder="Contact Email" value={form.contactEmail || ''} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
+              <input placeholder="Contact Phone" value={form.contactPhone || ''} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
+              <select value={form.rating || ''} onChange={(e) => setForm({ ...form, rating: e.target.value ? parseInt(e.target.value) : undefined })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}>
                 <option value="">Rating...</option>
                 {[1, 2, 3, 4, 5].map((r) => (<option key={r} value={r}>{r} Star{r > 1 ? 's' : ''}</option>))}
               </select>
             </div>
             <div className="flex gap-2">
-              <button onClick={save} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Save</button>
-              <button onClick={() => setShowForm(false)} className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm">Cancel</button>
+              <button onClick={save} className="rounded-lg px-4 py-2 text-sm font-medium text-white" style={{ background: 'var(--color-accent)' }}>Save</button>
+              <button onClick={() => setShowForm(false)} className="rounded-lg border px-4 py-2 text-sm" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>Cancel</button>
             </div>
           </div>
         )}
 
-        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="overflow-x-auto rounded-xl border" style={{ borderColor: 'var(--color-border)' }}>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800 text-left">
-              <tr>
-                <th className="px-4 py-3 font-medium">Code</th>
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Category</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Rating</th>
-                <th className="px-4 py-3 font-medium">Contact</th>
-                <th className="px-4 py-3 font-medium">Actions</th>
+            <thead style={{ background: 'var(--color-bg-secondary)' }}>
+              <tr style={{ color: 'var(--color-text-secondary)' }}>
+                <th className="px-4 py-3 font-medium text-left">Code</th>
+                <th className="px-4 py-3 font-medium text-left">Name</th>
+                <th className="px-4 py-3 font-medium text-left">Category</th>
+                <th className="px-4 py-3 font-medium text-left">Status</th>
+                <th className="px-4 py-3 font-medium text-left">Rating</th>
+                <th className="px-4 py-3 font-medium text-left">Contact</th>
+                <th className="px-4 py-3 font-medium text-left">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-900">
+            <tbody style={{ background: 'var(--color-bg-card)' }}>
               {filtered.map((s) => (
-                <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <tr key={s.id} className="border-t" style={{ borderColor: 'var(--color-border-subtle)', color: 'var(--color-text)' }}>
                   <td className="px-4 py-3 font-mono text-xs">{s.code}</td>
                   <td className="px-4 py-3">{s.name}</td>
-                  <td className="px-4 py-3 text-xs">{capitalize(s.category)}</td>
+                  <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-text-secondary)' }}>{capitalize(s.category)}</td>
                   <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
                   <td className="px-4 py-3 text-xs">{s.rating ? `${'★'.repeat(s.rating)}${'☆'.repeat(5 - s.rating)}` : '—'}</td>
-                  <td className="px-4 py-3 text-xs">{s.contactName || '—'}</td>
+                  <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-text-secondary)' }}>{s.contactName || '—'}</td>
                   <td className="px-4 py-3">
-                    <button onClick={() => startEdit(s)} className="text-blue-600 hover:underline text-xs mr-2">Edit</button>
-                    <button onClick={() => store.deleteSupplier(s.id)} className="text-red-600 hover:underline text-xs">Del</button>
+                    <button onClick={() => startEdit(s)} className="hover:underline text-xs mr-2" style={{ color: 'var(--color-accent)' }}>Edit</button>
+                    <button onClick={() => store.deleteSupplier(s.id)} className="hover:underline text-xs" style={{ color: 'var(--color-danger)' }}>Del</button>
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (<tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No suppliers found</td></tr>)}
+              {filtered.length === 0 && (<tr><td colSpan={7} className="px-4 py-8 text-center" style={{ color: 'var(--color-text-muted)' }}>No suppliers found</td></tr>)}
             </tbody>
           </table>
         </div>
@@ -210,69 +222,69 @@ export default function SupplyPage() {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search POs..." className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
-          <button onClick={startNew} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">+ New PO</button>
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search POs..." className="flex-1 rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
+          <button onClick={startNew} className="rounded-lg px-4 py-2 text-sm font-medium text-white" style={{ background: 'var(--color-accent)' }}>+ New PO</button>
         </div>
 
         {showForm && (
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">{editId ? 'Edit PO' : 'New Purchase Order'}</h3>
+          <div className="rounded-xl border p-4 space-y-3" style={cardStyle}>
+            <h3 className="font-semibold" style={{ color: 'var(--color-text)' }}>{editId ? 'Edit PO' : 'New Purchase Order'}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input placeholder="Title *" value={form.title || ''} onChange={(e) => setForm({ ...form, title: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
-              <select value={form.category || 'materials'} onChange={(e) => setForm({ ...form, category: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+              <input placeholder="Title *" value={form.title || ''} onChange={(e) => setForm({ ...form, title: e.target.value })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
+              <select value={form.category || 'materials'} onChange={(e) => setForm({ ...form, category: e.target.value })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}>
                 {['materials', 'equipment_rental', 'subcontract', 'services'].map((c) => (<option key={c} value={c}>{capitalize(c)}</option>))}
               </select>
-              <select value={form.priority || 'medium'} onChange={(e) => setForm({ ...form, priority: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+              <select value={form.priority || 'medium'} onChange={(e) => setForm({ ...form, priority: e.target.value })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}>
                 {['low', 'medium', 'high', 'urgent'].map((p) => (<option key={p} value={p}>{capitalize(p)}</option>))}
               </select>
               {editId && (
-                <select value={form.status || 'draft'} onChange={(e) => setForm({ ...form, status: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+                <select value={form.status || 'draft'} onChange={(e) => setForm({ ...form, status: e.target.value })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}>
                   {['draft', 'submitted', 'approved', 'ordered', 'partial_received', 'received', 'cancelled'].map((s) => (<option key={s} value={s}>{capitalize(s)}</option>))}
                 </select>
               )}
-              <input type="number" placeholder="Total Amount" value={form.totalAmount || ''} onChange={(e) => setForm({ ...form, totalAmount: parseFloat(e.target.value) || 0 })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
-              <select value={form.supplierId || ''} onChange={(e) => setForm({ ...form, supplierId: e.target.value || undefined })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+              <input type="number" placeholder="Total Amount" value={form.totalAmount || ''} onChange={(e) => setForm({ ...form, totalAmount: parseFloat(e.target.value) || 0 })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
+              <select value={form.supplierId || ''} onChange={(e) => setForm({ ...form, supplierId: e.target.value || undefined })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}>
                 <option value="">Select Supplier...</option>
                 {store.suppliers.map((s) => (<option key={s.id} value={s.id}>{s.name} ({s.code})</option>))}
               </select>
             </div>
-            <textarea placeholder="Description" value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
+            <textarea placeholder="Description" value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className="w-full rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
             <div className="flex gap-2">
-              <button onClick={save} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Save</button>
-              <button onClick={() => setShowForm(false)} className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm">Cancel</button>
+              <button onClick={save} className="rounded-lg px-4 py-2 text-sm font-medium text-white" style={{ background: 'var(--color-accent)' }}>Save</button>
+              <button onClick={() => setShowForm(false)} className="rounded-lg border px-4 py-2 text-sm" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>Cancel</button>
             </div>
           </div>
         )}
 
-        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="overflow-x-auto rounded-xl border" style={{ borderColor: 'var(--color-border)' }}>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800 text-left">
-              <tr>
-                <th className="px-4 py-3 font-medium">PO #</th>
-                <th className="px-4 py-3 font-medium">Title</th>
-                <th className="px-4 py-3 font-medium">Supplier</th>
-                <th className="px-4 py-3 font-medium">Category</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Amount</th>
-                <th className="px-4 py-3 font-medium">Actions</th>
+            <thead style={{ background: 'var(--color-bg-secondary)' }}>
+              <tr style={{ color: 'var(--color-text-secondary)' }}>
+                <th className="px-4 py-3 font-medium text-left">PO #</th>
+                <th className="px-4 py-3 font-medium text-left">Title</th>
+                <th className="px-4 py-3 font-medium text-left">Supplier</th>
+                <th className="px-4 py-3 font-medium text-left">Category</th>
+                <th className="px-4 py-3 font-medium text-left">Status</th>
+                <th className="px-4 py-3 font-medium text-left">Amount</th>
+                <th className="px-4 py-3 font-medium text-left">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-900">
+            <tbody style={{ background: 'var(--color-bg-card)' }}>
               {filtered.map((po) => (
-                <tr key={po.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <tr key={po.id} className="border-t" style={{ borderColor: 'var(--color-border-subtle)', color: 'var(--color-text)' }}>
                   <td className="px-4 py-3 font-mono text-xs">{po.poNumber}</td>
                   <td className="px-4 py-3">{po.title}</td>
-                  <td className="px-4 py-3 text-xs">{po.supplier?.name || '—'}</td>
-                  <td className="px-4 py-3 text-xs">{capitalize(po.category)}</td>
+                  <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-text-secondary)' }}>{po.supplier?.name || '—'}</td>
+                  <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-text-secondary)' }}>{capitalize(po.category)}</td>
                   <td className="px-4 py-3"><StatusBadge status={po.status} /></td>
                   <td className="px-4 py-3 font-mono text-xs">{fmtCurrency(po.totalAmount, po.currency)}</td>
                   <td className="px-4 py-3">
-                    <button onClick={() => startEdit(po)} className="text-blue-600 hover:underline text-xs mr-2">Edit</button>
-                    <button onClick={() => store.deletePO(po.id)} className="text-red-600 hover:underline text-xs">Del</button>
+                    <button onClick={() => startEdit(po)} className="hover:underline text-xs mr-2" style={{ color: 'var(--color-accent)' }}>Edit</button>
+                    <button onClick={() => store.deletePO(po.id)} className="hover:underline text-xs" style={{ color: 'var(--color-danger)' }}>Del</button>
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (<tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No purchase orders found</td></tr>)}
+              {filtered.length === 0 && (<tr><td colSpan={7} className="px-4 py-8 text-center" style={{ color: 'var(--color-text-muted)' }}>No purchase orders found</td></tr>)}
             </tbody>
           </table>
         </div>
@@ -310,63 +322,63 @@ export default function SupplyPage() {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search deliveries..." className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
-          <button onClick={startNew} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">+ New Delivery</button>
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search deliveries..." className="flex-1 rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
+          <button onClick={startNew} className="rounded-lg px-4 py-2 text-sm font-medium text-white" style={{ background: 'var(--color-accent)' }}>+ New Delivery</button>
         </div>
 
         {showForm && (
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">{editId ? 'Edit Delivery' : 'New Delivery'}</h3>
+          <div className="rounded-xl border p-4 space-y-3" style={cardStyle}>
+            <h3 className="font-semibold" style={{ color: 'var(--color-text)' }}>{editId ? 'Edit Delivery' : 'New Delivery'}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input type="date" value={typeof form.scheduledDate === 'string' ? form.scheduledDate.slice(0, 10) : ''} onChange={(e) => setForm({ ...form, scheduledDate: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
+              <input type="date" value={typeof form.scheduledDate === 'string' ? form.scheduledDate.slice(0, 10) : ''} onChange={(e) => setForm({ ...form, scheduledDate: e.target.value })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
               {editId && (
-                <select value={form.status || 'scheduled'} onChange={(e) => setForm({ ...form, status: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+                <select value={form.status || 'scheduled'} onChange={(e) => setForm({ ...form, status: e.target.value })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}>
                   {['scheduled', 'in_transit', 'delivered', 'inspected', 'accepted', 'rejected'].map((s) => (<option key={s} value={s}>{capitalize(s)}</option>))}
                 </select>
               )}
-              <select value={form.purchaseOrderId || ''} onChange={(e) => setForm({ ...form, purchaseOrderId: e.target.value || undefined })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm">
+              <select value={form.purchaseOrderId || ''} onChange={(e) => setForm({ ...form, purchaseOrderId: e.target.value || undefined })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle}>
                 <option value="">Link to PO...</option>
                 {store.purchaseOrders.map((po) => (<option key={po.id} value={po.id}>{po.poNumber} — {po.title}</option>))}
               </select>
-              <input type="number" placeholder="Item Count" value={form.itemCount || ''} onChange={(e) => setForm({ ...form, itemCount: parseInt(e.target.value) || 0 })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
+              <input type="number" placeholder="Item Count" value={form.itemCount || ''} onChange={(e) => setForm({ ...form, itemCount: parseInt(e.target.value) || 0 })} className="rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
             </div>
-            <textarea placeholder="Description" value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
+            <textarea placeholder="Description" value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className="w-full rounded-lg border px-3 py-2 text-sm" style={inputStyle} />
             <div className="flex gap-2">
-              <button onClick={save} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Save</button>
-              <button onClick={() => setShowForm(false)} className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm">Cancel</button>
+              <button onClick={save} className="rounded-lg px-4 py-2 text-sm font-medium text-white" style={{ background: 'var(--color-accent)' }}>Save</button>
+              <button onClick={() => setShowForm(false)} className="rounded-lg border px-4 py-2 text-sm" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>Cancel</button>
             </div>
           </div>
         )}
 
-        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="overflow-x-auto rounded-xl border" style={{ borderColor: 'var(--color-border)' }}>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800 text-left">
-              <tr>
-                <th className="px-4 py-3 font-medium">DEL #</th>
-                <th className="px-4 py-3 font-medium">Description</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Scheduled</th>
-                <th className="px-4 py-3 font-medium">Actual</th>
-                <th className="px-4 py-3 font-medium">Items</th>
-                <th className="px-4 py-3 font-medium">Actions</th>
+            <thead style={{ background: 'var(--color-bg-secondary)' }}>
+              <tr style={{ color: 'var(--color-text-secondary)' }}>
+                <th className="px-4 py-3 font-medium text-left">DEL #</th>
+                <th className="px-4 py-3 font-medium text-left">Description</th>
+                <th className="px-4 py-3 font-medium text-left">Status</th>
+                <th className="px-4 py-3 font-medium text-left">Scheduled</th>
+                <th className="px-4 py-3 font-medium text-left">Actual</th>
+                <th className="px-4 py-3 font-medium text-left">Items</th>
+                <th className="px-4 py-3 font-medium text-left">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-900">
+            <tbody style={{ background: 'var(--color-bg-card)' }}>
               {filtered.map((d) => (
-                <tr key={d.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <tr key={d.id} className="border-t" style={{ borderColor: 'var(--color-border-subtle)', color: 'var(--color-text)' }}>
                   <td className="px-4 py-3 font-mono text-xs">{d.deliveryNumber}</td>
                   <td className="px-4 py-3">{d.description || '—'}</td>
                   <td className="px-4 py-3"><StatusBadge status={d.status} /></td>
-                  <td className="px-4 py-3 text-xs">{fmtDate(d.scheduledDate)}</td>
-                  <td className="px-4 py-3 text-xs">{fmtDate(d.actualDate)}</td>
+                  <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-text-secondary)' }}>{fmtDate(d.scheduledDate)}</td>
+                  <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-text-secondary)' }}>{fmtDate(d.actualDate)}</td>
                   <td className="px-4 py-3 text-xs">{d.itemCount}</td>
                   <td className="px-4 py-3">
-                    <button onClick={() => startEdit(d)} className="text-blue-600 hover:underline text-xs mr-2">Edit</button>
-                    <button onClick={() => store.deleteDelivery(d.id)} className="text-red-600 hover:underline text-xs">Del</button>
+                    <button onClick={() => startEdit(d)} className="hover:underline text-xs mr-2" style={{ color: 'var(--color-accent)' }}>Edit</button>
+                    <button onClick={() => store.deleteDelivery(d.id)} className="hover:underline text-xs" style={{ color: 'var(--color-danger)' }}>Del</button>
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (<tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No deliveries found</td></tr>)}
+              {filtered.length === 0 && (<tr><td colSpan={7} className="px-4 py-8 text-center" style={{ color: 'var(--color-text-muted)' }}>No deliveries found</td></tr>)}
             </tbody>
           </table>
         </div>
@@ -380,23 +392,24 @@ export default function SupplyPage() {
       <ModulePageHeader moduleId="supply" />
       <ContractPolicyBanner module="supply_chain" policyLabels={SUPPLY_POLICY_LABELS} />
 
-      <div className="flex gap-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-1 overflow-x-auto">
+      <div className="flex gap-1 rounded-lg p-1 overflow-x-auto" style={{ background: 'var(--color-bg-secondary)' }}>
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
-              tab === t
-                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-            }`}
+            className="px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors"
+            style={{
+              background: tab === t ? 'var(--color-bg-card)' : 'transparent',
+              color: tab === t ? 'var(--color-text)' : 'var(--color-text-muted)',
+              boxShadow: tab === t ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+            }}
           >
             {t}
           </button>
         ))}
       </div>
 
-      {store.loading && <p className="text-sm text-gray-500 dark:text-gray-400">Loading...</p>}
+      {store.loading && <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Loading...</p>}
 
       {tab === 'Overview' && <Overview />}
       {tab === 'Suppliers' && <SuppliersTab />}

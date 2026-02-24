@@ -1,75 +1,75 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @theme {
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-display: 'Fraunces', Georgia, serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Dark theme (default) — hyper-minimal 2026 */
+  /* Dark theme (default) — improved contrast for readability */
   --color-bg: #09090B;
   --color-bg-secondary: #0C0C0F;
   --color-bg-card: #111114;
   --color-bg-sidebar: #0C0C0F;
   --color-bg-input: #18181B;
-  --color-bg-hover: #1C1C20;
+  --color-bg-hover: #27272A;
   --color-text: #FAFAFA;
-  --color-text-secondary: #A1A1AA;
-  --color-text-muted: #52525B;
-  --color-border: #1A1A1E;
-  --color-border-subtle: #141417;
+  --color-text-secondary: #B4B4BC;
+  --color-text-muted: #71717A;
+  --color-border: #27272A;
+  --color-border-subtle: #1E1E22;
 
   /* Corporate: Orange #E8731A → #F59E3F */
   --color-accent: #E8731A;
   --color-accent-hover: #D4651A;
-  --color-accent-muted: #E8731A18;
+  --color-accent-muted: #E8731A30;
   --color-accent-light: #F59E3F;
   --color-secondary: #3A3A3C;
   --color-secondary-light: #555557;
 
   /* Alias: --color-purple maps to accent-light for cross-page compat */
   --color-purple: #F59E3F;
-  --color-purple-muted: #F59E3F18;
+  --color-purple-muted: #F59E3F30;
 
   --color-success: #22C55E;
-  --color-success-muted: #22C55E18;
+  --color-success-muted: #22C55E30;
   --color-warning: #EAB308;
-  --color-warning-muted: #EAB30818;
+  --color-warning-muted: #EAB30830;
   --color-danger: #EF4444;
-  --color-danger-muted: #EF444418;
+  --color-danger-muted: #EF444430;
   --color-cyan: #06B6D4;
 }
 
-/* Light mode overrides */
+/* Light mode overrides — improved contrast for readability */
 .light {
-  --color-bg: #FAFAFA;
+  --color-bg: #F8F8FA;
   --color-bg-secondary: #FFFFFF;
   --color-bg-card: #FFFFFF;
-  --color-bg-sidebar: #FAFAFA;
-  --color-bg-input: #F4F4F5;
-  --color-bg-hover: #E4E4E7;
+  --color-bg-sidebar: #F4F4F5;
+  --color-bg-input: #EDEDF0;
+  --color-bg-hover: #DDDDE0;
   --color-text: #09090B;
-  --color-text-secondary: #52525B;
-  --color-text-muted: #A1A1AA;
-  --color-border: #E4E4E7;
-  --color-border-subtle: #F4F4F5;
+  --color-text-secondary: #3F3F46;
+  --color-text-muted: #636369;
+  --color-border: #D4D4D8;
+  --color-border-subtle: #E4E4E7;
 
-  --color-accent: #D4651A;
-  --color-accent-hover: #B8561A;
-  --color-accent-muted: #D4651A12;
-  --color-accent-light: #E8731A;
+  --color-accent: #C45A15;
+  --color-accent-hover: #A84D12;
+  --color-accent-muted: #C45A1520;
+  --color-accent-light: #D4651A;
   --color-secondary: #3A3A3C;
   --color-secondary-light: #6B6B6E;
-  --color-purple: #E8731A;
-  --color-purple-muted: #E8731A12;
+  --color-purple: #D4651A;
+  --color-purple-muted: #D4651A20;
 
-  --color-success: #16A34A;
-  --color-success-muted: #16A34A12;
-  --color-warning: #CA8A04;
-  --color-warning-muted: #CA8A0412;
-  --color-danger: #DC2626;
-  --color-danger-muted: #DC262612;
-  --color-cyan: #0891B2;
+  --color-success: #15803D;
+  --color-success-muted: #15803D18;
+  --color-warning: #A16207;
+  --color-warning-muted: #A1620718;
+  --color-danger: #B91C1C;
+  --color-danger-muted: #B91C1C18;
+  --color-cyan: #0E7490;
 }
 
 /* Base styles */
@@ -82,7 +82,7 @@
 
 body {
   font-family: var(--font-body);
-  font-weight: 300;
+  font-weight: 400;
   letter-spacing: 0.01em;
   background-color: var(--color-bg);
   color: var(--color-text);
@@ -96,12 +96,12 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
 ::-webkit-scrollbar-track { background: transparent; }
 
-/* Hyper-minimal font weight scale — centralized override */
-.font-extrabold { font-weight: 500 !important; }
-.font-bold      { font-weight: 500 !important; }
-.font-semibold  { font-weight: 400 !important; }
-.font-medium    { font-weight: 400 !important; }
-.font-normal    { font-weight: 300 !important; }
+/* Font weight scale — balanced for readability */
+.font-extrabold { font-weight: 600 !important; }
+.font-bold      { font-weight: 600 !important; }
+.font-semibold  { font-weight: 500 !important; }
+.font-medium    { font-weight: 500 !important; }
+.font-normal    { font-weight: 400 !important; }
 .font-light     { font-weight: 300 !important; }
 
 /* Selection */
