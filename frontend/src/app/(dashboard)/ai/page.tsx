@@ -393,9 +393,13 @@ export default function AIConciergePage() {
 
     // Try real API first, fall back to mock
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/concierge/ask`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ message: messageText }),
       });
 
@@ -404,7 +408,7 @@ export default function AIConciergePage() {
         const aiMessage: ChatMessage = {
           id: `ai-${Date.now()}`,
           role: 'assistant',
-          content: json.data?.response || json.data?.content || 'I received your message but could not generate a response.',
+          content: json.data?.response || json.data?.content || json.data?.answer || 'I received your message but could not generate a response.',
           timestamp: new Date(),
           intent: json.data?.intent,
           confidence: json.data?.confidence,
