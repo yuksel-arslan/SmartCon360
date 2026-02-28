@@ -17,10 +17,18 @@ export async function POST(request: NextRequest) {
     }
 
     const sessionId = session_id || uuidv4();
-    const response = askConcierge(sessionId, message);
+    const result = askConcierge(sessionId, message);
 
     return NextResponse.json({
-      data: { ...response, session_id: sessionId },
+      data: {
+        response: result.answer,
+        content: result.answer,
+        sources: result.sources,
+        suggestions: result.suggestions,
+        confidence: result.confidence,
+        intent: result.intent,
+        session_id: sessionId,
+      },
       error: null,
     });
   } catch (err) {

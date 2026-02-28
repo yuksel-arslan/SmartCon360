@@ -63,6 +63,11 @@ from .modules.bim.api.router import router as bim_qto_router
 
 app.include_router(bim_qto_router, prefix="/api/v1/bim", tags=["bim"])
 
+# Mount concierge router
+from .modules.concierge.router import router as concierge_router
+
+app.include_router(concierge_router, prefix="/concierge", tags=["concierge"])
+
 
 if __name__ == "__main__":
     import uvicorn
